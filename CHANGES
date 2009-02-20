@@ -1,0 +1,141 @@
+== 0.3.5.1 - 8-Feb-2007
+* Fixed a bug reported by Kirk Haines where string-inputs were sliced into
+  oblivion by Worksheet#write. This only concerns gem-installations of
+  Spreadsheet::Excel. Stupid, stupid maintainers should create gems from a
+  clean export, not a working directory containing highly experimental code!
+
+== 0.3.5 - 18-Aug-2006
+* Instead of making OLEWriter inherit from IO, just have it delegate
+  the IO method calls to an IO object reference in an instance variable. That
+  way the developer can specify an IO or IO-like object to which OLEWriter will
+  write. This allows developers to use StringIO objects (or any IO-like object).
+  Thanks go to Daniel Amelang for the feature request, the patch, and most of
+  this description.
+* Implemented a Feature Request by Randal Santia: it is now possible to specify 
+  alignment and border as additional values in the configuration-hash passed to 
+  Format.new as if alignment= or border= were called.
+
+== 0.3.4 - 17-Feb-2006
+* Added a workaround for a bug in Ruby 1.8.3 and Ruby 1.8.4 where subclasses
+  of IO are not guaranteed to call IO#close in block form.
+* Added support for hidden and outlined cells in the Worksheet#format_row
+  method.  Thanks go to Jade Meskill for the patch.
+
+== 0.3.3 - 5-Dec-2005
+* Made an change in the Workbook class, by splitting out the OLEWriter
+  handling into its own method.  This is an internal change only that was
+  made as an attempt to eliminate an Errno::EBADF bug reported by
+  Stephen Bannasch.  It's also cleaner code in general.
+
+== 0.3.2 - 12-Oct-2005
+* Fixed bug/quirk for MS Windows where the file mode wasn't being passed
+  properly.
+* Fix for the install.rb code.
+* Renamed "example_formula.rb" to "example_format.rb" (oops).
+* Minor update for the example programs.
+* Corrected the release dates for 0.3.0 and 0.3.1.
+
+== 0.3.1 - 11-Oct-2005
+* Directory layout change for the sake of gems.
+* Fixes, and rename, for the gemspec.
+
+== 0.3.0 - 10-Oct-2005
+* The OLEWriter class is now a subclass of IO instead of File, and takes a
+  string, fileno or IO object for an argument.  This means you are not bound
+  to write the contents to a file (RFE #1183036).
+* Bug fixed in the Format class that was causing black cells (Bug #1044052).
+* Removed the INSTALL file.  Installation instructions can now be found in
+  the README file.
+* Removed the InvalidTypeError class. Now just uses TypeError where
+  appropriate.
+* Added the Worksheet#format_rectangle method (RFE #1043418).
+* Removed the .rd and .html documents.  The .txt files, and most other
+  files, are now rdoc friendly.
+* Moved sample scripts to the 'examples' directory.
+* Test suite additions and changes.
+
+== 0.2.9 - 11-Jun-2004
+* Added 'brown','cyan' and 'magenta' to the list of valid color strings
+  for Format objects.
+* Fixed bugs and slightly modified handling with regards to color,
+  bg_color and fg_color attributes for Format objects.  Thanks go to
+  David Brady for the spot.
+* Minor optimization for the append and prepend methods in the BiffWriter
+  class
+* Minor $LOAD_PATH correction for test.rb
+* Added some more unit tests for Format ojbects.
+* Added warranty information
+
+== 0.2.8 - 2-Dec-2003
+* Eliminated warnings for 1.8.x
+* Added a README file (which you should, of course, read)
+* Tidied up test suite a bit, and made it MS Windows-friendly.
+* Separated rd docs from source.  They are now in the 'doc' directory.  In
+  the future, I plan to use RDoc for this package.
+* Eliminated warnings caused by worksheet.rb when $DEBUG mode was used
+  (method redefinitions).
+* Renamed test cases to "tc_" for (foolish?) consistency with my other
+  packages.
+* Removed the VERSION() class method - use the constant instead.
+
+== 0.2.7 - 18-May-2003
+* Modified worksheet.rb to truncate strings over 255 characters instead of
+  raising a MaxSizeError.  This is what it should have been doing.  Thanks
+  go to an anonymous sourceforge user.
+* Minor modifications to test.rb and the MANIFEST
+
+== 0.2.6 - 7-Apr-2003
+* Fixed minor bug in the write_blank() method which was accidentally
+  reintroduced.
+* The write_row() and write_column() methods now handle nil properly
+* Fixed a bug in the write_url() method.
+* Yet more unit tests added.
+* Minor doc tweaks/corrections.
+* Removed annoying MS Windows line formatting.
+
+== 0.2.5 - 8-Mar-2003
+* Added the format_row() and format_column() methods to worksheet.rb.
+  These are analogous to the set_row() and set_column() methods.
+* Updated the test suite for testunit 0.1.8
+* Fixed some bugs in the test suite
+* Updated and fixed some documentation
+
+== 0.2.4 - 30-Jan-2003
+* Fixed a bug in the write_blank method.  Thanks to moumar for the spot
+  and the patch.
+
+== 0.2.3 - 15-Jan-2003
+* Added the write_row and write_column methods
+* Some optimization
+
+== 0.2.2 - 20-Dec-2002
+* Fixed variable name typo's in worksheet.rb and format.rb. Thanks
+  go to Mark Slagell for the spot.
+* Modified the tarball directory layout a bit - nothing special
+* Added a copyright notice
+* Added a VERSION method to the Excel class (class method)
+* Some documentation corrections
+
+== 0.2.1 - 11-Dec-2002
+* Fixed a bug with num_format property in Format class
+* Added lots of documentation for Format class, mostly lifted
+  from John McNamara's documentation
+* Added block-style constructors for Format class
+* Added ability to pass Format instances to the add_format Workbook
+  method
+
+== 0.2.0 - 3-Dec-2002
+* Added formats!
+* Minor fix in worksheet.rb
+* Added verbose output for install.rb
+* A few more tests
+
+== 0.1.1 - 29-Nov-2002
+* Tarball fix
+* install.rb fix
+
+== 0.1.0 - 27-Nov-2002
+* Initial Release
+* Based on version .21 of Spreadsheet::WriteExcel (by John McNamara)
+* Well, technically, I did release version .11 of Spreadsheet::WriteExcel
+  on the web, but this is the first *official* release

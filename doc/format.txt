@@ -1,0 +1,330 @@
+== Description
+   Format objects contain format information which is applied to a cell, or
+   group of of cells, in an Excel object.
+   
+== Instance Methods
+Format#align
+   Returns the align property.
+
+Format#align=(value = "off")
+   Sets the horizontal and vertical alignment within a cell.  Vertical and
+   horizontal alignments can be combined.  Valid arguments are:
+
+   Horizontal: left, right, fill, justify, merge
+   Vertical: top, vcenter, bottom, vjustify
+
+   Text can be aligned across two or more adjacent cells using the merge
+   property.
+
+   The vjustify (vertical justify) option can be used to provide automatic
+   text wrapping in a cell. The height of the cell will be adjusted to
+   accommodate the wrapped text. To specify where the text wraps use the
+   Format#text_wrap= method.
+
+Formate#bg_color
+   Returns the value of the background color.
+    
+Format#bg_color=(value)
+   Sets the background color of a pattern.  Patterns are defined via the
+   Format#pattern= method. If a pattern hasn't been defined
+   then a solid fill pattern is used as the default.
+    
+Format#bold
+   Returns the bold value of the format.
+
+Format#bold=(weight)
+   Sets the bold property of the font.  Values in the range 100..1000 are
+   also valid. 400 is normal, 700 is bold and 1000 is very bold.  Some might
+   even say, daring.
+
+   You can also specify true or false, which sets the value to 1 and 0,
+   respectively.
+
+Format#border
+   Returns the border format.  The default is 0 (no border).
+    
+Format#border=(int)
+   Sets the border for a given cell.  A cell border is comprised of a border
+   on the bottom, top, left and right.
+
+   Valid arguments are as follows:
+   0 - No border
+   1 - Thin single border
+   2 - Medium single border
+   3 - Dashed border
+   4 - Dotted border
+   5 - Thick single border
+   6 - Double line border
+   7 - Hair border
+
+   Also see the Format#top=, Format#bottom=, Format#left=, and Format#right=
+   methods.
+
+Format#border_color
+   Returns the format border color. The default is black.
+
+Format#border_color=(value)
+   Sets the color of the cell borders. Valid values are the same as for the
+   Format#color= method.
+
+   Also see the Format#bottom_color=, Format#top_color=, Format#left_color=,
+   and Format#right_color= methods.
+    
+Format#bottom
+   Returns the bottom border value. The default is 0 (no border).
+
+Format#bottom=(integer)
+   Sets the bottom border of the cell. Valid arguments are the same as for the
+   Format#border= method.
+    
+Format#bottom_color
+   Returns the bottom border cell color value. The default is black.
+
+Format#bottom_color=(value)
+   Sets the bottom cell border color.  Valid values are the same as for the
+   Format#color= method.
+    
+Format#color
+   Returns the font color. The default is black.
+
+Format#color=(value)
+   Sets the font color of text within a cell (not the cell itself).  Any
+   integer from 8..63 is valid.  The following strings are also recognized:
+
+   black, blue, brown, cyan, gray/grey, green, lime, magenta, navy, orange,
+   purple, red, silver, white, yellow
+    
+Format#fg_color=(value = "off")
+   Sets the foreground color of a pattern or uses a solid fill pattern if
+   a pattern has not been defined.
+    
+Format#font
+   Returns the font name used for text. The default is "Arial".
+
+Format#font=(font_name)
+   Sets the font used. Excel can only display fonts that are installed on
+   the system that it is running on. Therefore it is best to use the fonts
+   that come as standard such as 'Arial', 'Times New Roman' or 'Courier New'.
+    
+Format#font_shadow
+   Returns the font shadow value.
+
+   Mac only.
+
+Format#font_shadow=(value)
+   Sets the font shadow property.  0/1 or false/true may be used.
+
+   Mac only.
+    
+Format#italic
+   Returns the italic property for the font. The default is 0 (false).
+
+Format#italic=(value)
+   Sets the italic property of the font.  
+
+   You can also specify true or false, which sets the value to 1 and 0,
+   respectively.
+    
+Format#left
+   Returns the left border value for the format.
+
+Format#left=(integer)
+   Sets the left border of the cell.  Valid arguments are the same as for the
+   Format#border= method.
+    
+Format#left_color
+   Returns the left cell border color. The default is black.
+
+Format#left_color=(value)
+   Sets the left cell border color. Valid values are the same as for the
+   Format#color= method.
+
+Format#num_format
+   Returns the numerical format for numbers.  The default is 1.
+    
+Format#num_format=(value)
+   This method is used to define the numerical format of a number in Excel.
+   It controls whether a number is displayed as an integer, a floating point
+   number, a date, a currency value or some other user defined format. 
+
+   The numerical format of a cell can be specified by using a format string
+   or an index to one of Excel's built-in formats, e.g.
+
+      format1 = Format.new(:num_format => "d mmm yyyy")
+      format2 = Format.new(:num_format => 0x0f)
+      workbook.addformat(format1)
+      workbook.addformat(format2)
+
+      worksheet.write(0,0,36892.521,format1) -> 1 Jan 2001
+      worksheet.write(0,0,36892.521,format2) -> 1-Jan-01
+
+   Using format strings you can define very sophisticated formatting of numbers.
+   Assume each of these is separate and has been added to a workbook:
+
+      format.num_format = '0.000'
+      worksheet.write(0,0,3.1415926,format) -> 3.142
+
+      format.num_format = '#,##0'
+      worksheet.write(1,0,1234.56,format)   -> 1,235
+
+      format.num_format = '#,##0.00'
+      worksheet.write(2,0,1234.56,format)   -> 1,234.56
+
+      format.num_format = '0.00'
+      worksheet.write(3,0,49.99,format)     -> 49.99
+
+      format.num_format = '£0.00'
+      worksheet.write(4,0,49.99,format)     -> £49.99
+
+      format.num_format = '¥0.00'
+      worksheet.write(5,0,49.99,format)     -> ¥49.99
+
+      format.num_format = 'mm/dd/yy'
+      worksheet.write(6,0,36892.521,format) -> 01/01/01
+
+      format.num_format = 'mmm d yyyy'
+      worksheet.write(7,0,36892.521,format) -> Jan 1 2001
+
+      format.num_format = 'd mmmm yyyy'
+      worksheet.write(8,0,36892.521,format) -> 1 January 2001
+
+      format.num_format = 'dd/mm/yyyy hh:mm AM/PM'
+      worksheet.write(9,0,36892.521,format) -> 01/01/2001 12:30 AM
+
+      format.num_format = '0 "dollar and" .00 "cents"'
+      worksheet.write(10,0,1.87,format)     -> 1 dollar and .87 cents
+
+      # Conditional formatting
+      format.num_format = '[Green]General;[Red]-General;General'
+      worksheet.write(11,0,123,format) -> > 0 Green
+      worksheet.write(12,0,-45,format) -> < 0 Red
+      worksheet.write(13,0, 0, format) -> = 0 Default colour
+
+      # Zip code
+      format.num_format = '00000'
+      worksheet.write(14,0,'01209',format)
+     
+Format#outline
+   Returns the outline property. The default is 0.
+
+   Mac only.
+
+Format#outline=(value)
+    Sets outline property.  Accepts 1/0 or true/false, respectively.
+
+   Mac only.
+    
+Format#pattern
+   Returns the background pattern value. The default is 0 (solid pattern).
+
+Format#pattern=(int)
+   Sets the background pattern. Valid arguments are 0..18.
+
+Format#right
+   Returns the right border value. The default is 0.
+    
+Format#right=(int)
+   Sets the right border of the cell. Valid arguments are the same as for the
+   Format#border= method.
+
+Format#right_color
+   Returns the right cell border color. The default is black.
+    
+Format#right_color=(value)
+   Sets the right cell border color. Valid values are the same as for the
+   Format#color= method.
+    
+Format#rotation
+   Returns the rotation value. The default is 0 (no rotation).
+
+Format#rotation=(int)
+   Sets the rotation of the text in the cell.
+
+   Valid arguments:
+      0 - No rotation
+      1 - Top to bottom
+      2 - 90 degrees counter-clockwise
+      3 - 90 degrees clockwise
+
+   Note that fractional rotation is not possible in the Excel 95 format.
+    
+Format#script
+   Returns the subscript/superscript property. The default is 0 (normal). 
+
+Format#script=(integer = 0)
+   Sets the subscript/superscript property of the font.
+
+   Valid arguments:
+      0 = Normal
+      1 = Superscript
+      2 = Subscript
+       
+Format#shadow
+   Returns the shadow property value. The default is 0 (none).
+
+   Mac only.
+
+Format#shadow=(value)
+   Sets the shadow property of the font. Accepts 1/0 or true/false, respectively.
+
+   Mac only.
+    
+Format#size
+   Returns the font size. The default font size is 10.
+
+Format#size=(size)
+   Set the font size. Note that MS Excel adjusts the height of a row to
+   accommodate the largest font size in the row.
+    
+Format#text_justlast
+   Returns the justlast value. The default is 0.
+
+   Only applicable to Far Eastern versions of MS Excel.
+
+Format#text_justlast=(value)
+   Sets the justlast value.  0/1 or false/true may be used here.
+
+   Only applicable to Far Eastern versions of MS Excel.
+    
+Format#text_wrap
+   Returns the text wrap value. The default is 0 (off).
+
+Format#text_wrap=(value)
+   Turn text wrap on.  Excel will adjust the height of the row to accommodate
+   the wrapped text. A similar effect can be obtained without newlines using
+   the Format#align= method.
+
+   Accepts 1/0 or true/false as valid values.
+    
+Format#top
+   Returns the top border value. The default is 0.
+
+Format#top=(integer)
+   Sets the top border of the cell. Valid arguments are the same as for the
+   Format#border= method.
+    
+Format#top_color
+   Returns the top cell border color. The default value is black.
+
+Format#top_color=(value)
+   Sets the top cell border color. Valid values are the same as for the
+   Format#color= method.
+
+Format#underline
+   Returns the value of the underline property. The default value is 0 (none).
+    
+Format#underline=(value = 0)
+   Sets the underline property of the font.
+
+   Valid arguments:
+      0/false - No underline
+      1/true  - Single underline
+      2       - Double underline
+      33      - Single accounting underline
+      34      - Double accounting underline
+     
+Format#strikeout
+   Returns the strikeout value. The default is 0 (none).
+
+Format#strikeout=(value)
+    Sets the strikeout property. 

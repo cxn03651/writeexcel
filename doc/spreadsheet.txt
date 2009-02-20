@@ -1,0 +1,178 @@
+== Description
+   spreadsheet - A package for generating MS Excel (95) compatable files on
+   any platform.
+
+   Based on version .43 of John McNamara's Perl module
+   Spreadsheet::WriteExcel.
+   
+== Synopsis
+   require "spreadsheet/excel"
+   include Spreadsheet
+
+   workbook = Excel.new("test.xls")
+
+   # There are three ways to create a format
+   format = workbook.add_format(:color=>"blue",:bold=>1,:underline=>1)
+
+   format2 = Format.new(
+      :color     => "green",
+      :bold      => true,
+      :underline => true
+   )
+   workbook.add_format(format2)
+
+   format3 = Format.new{ |f|
+      f.color = "red"
+      f.bold  = true
+      f.underline = true
+   }
+   workbook.add_format(format3)
+
+   worksheet1 = workbook.add_worksheet
+   worksheet2 = workbook.add_worksheet("Numbers")
+   worksheet3 = workbook.add_worksheet("Text")
+   
+   worksheet1.write(0,0,"Hello",format)
+   worksheet1.write(1,1,["Matz","Larry","Guido"])
+
+   worksheet2.write(1,3,8876,format2)
+   worksheet2.write_column(4,4,[1,2,3])
+
+   worksheet3.write(2,2,"World",format3)
+   worksheet3.write(3,3,[[1,2,3],[4,5,6],[7,8,9]])
+
+   worksheet1.format_row(1,25,format1)
+   worksheet2.format_column(0..2,30,format2)
+
+   workbook.close
+   
+== Constants
+VERSION
+   The current version number (a string).
+    
+== Classes
+=== Excel
+Excel.new(file_name)
+   Returns a workbook object.  You may only have one workbook per file.  A
+   ".xls" extension for your +file_name+ is recommended but not enforced.
+    
+=== Workbook
+Workbook#add_worksheet(sheet_name=nil)
+   Adds a worksheet named +sheet_name+ to the workbook object. If +sheet_name+
+   is nil it will default to 'Sheet1', 'Sheet2', etc.  Returns a Worksheet
+   instance.
+    
+Workbook#add_format(format)
+   Adds the +format+ to the workbook.  When included as part of the 'write'
+   method, the cells specified are formatted appropriately.  Returns a Format
+   instance.  Note that +format+ can be a format object, or a hash that is
+   automagically converted to a Format object.
+
+   See the synopsis above for different ways to add formats.
+    
+Workbook#close
+   Closes the workbook (and, hence, the IO stream). Be sure to do this.
+    
+=== Worksheet
+Worksheet#write(row, column, value, format=nil)
+   Writes data to the cell you provide.  If +value+ is an Array, the
+   write_row method is called internally.
+    
+   If +value+ is a multi-dimensional array, then each element of the array
+   is written within its own row at the appropriate column.  In other words,
+   it's written to the spreadsheet in the same manner you would visualize it.
+    
+   If +format+ is provided, the cells are each formatted appropriately.
+    
+Worksheet#write_row(row, column, Array, format=nil)
+    Writes a row of data starting at +row+ and +column+ in a left to
+    right manner, with one array element per cell.
+
+    If +format+ is provided, formatting will be applied to each cell.
+    
+Worksheet#write_column(row, column, Array, format=nil)
+    Writes a column of data starting at +row+ and +column+ in a top to
+    bottom manner, with one array element per cell.
+
+    If +format+ is provided, formatting will be applied to each cell.
+    
+Worksheet#format_row(row, height=nil, format=nil, hidden=0, level=0)
+    Applies formatting for an entire row or Range of rows. In addition, you
+    can specify the row height. If you wish to apply row-level formatting
+    without modifying the height, simply pass nil as the second argument.
+
+    Note that this will override any previously defined cell formatting.
+    
+Worksheet#format_column(col, width=nil, format=nil, hidden=false, level=0)
+    Applies formatting for an entire row or Range of columns. In addition, you
+    can specify the column width.  If you wish to apply column-level formatting
+    without modifying the width, simply pass nil as the second argument.
+    
+    If +hidden+ is any value other than false or nil, the row will be hidden.
+    
+    The +level+ value sets the outline level of the row.  Adjacent rows with
+    the same outline level are grouped together into a single outline.
+
+    Note that this will override any previously defined cell formatting.
+    
+=== Format
+Format.new
+Format.new({key=>val, ...})
+Format.new{ ... }
+   Creates a new Format object.  See the Format documentation (format.txt)
+   for more details.
+    
+== Notes
+   This is a port of John McNamara's Spreadsheet::WriteExcel Perl module,
+   version 0.43 (approximately). There is no support for formulas or large
+   files yet.
+
+   This package creates files in the Excel 95 format.
+    
+== Design Changes
+   The only somewhat major change was to make OLEWriter a subclass of IO,
+   rather than store a filehandle as an attribute within the class.  This
+   seems to have worked out fine.
+
+   The set_row() and set_column() methods were renamed as format_row()
+   and format_column(), respectively.  All other methods are either
+   identical in name or very similar.
+   
+   Other changes consisted mostly of minor code optimizations.  Occasionally
+   I was more terse than John was (for better or for worse).
+    
+== Questions
+   Questions about MS Excel should be directed to Microsoft.
+   Questions about the MS Excel format should be directed to Microsoft.
+   Questions about why I use the hex values that I use should be directed to
+   John McNamara (jmcnamara at cpan dot org) or to Microsoft.
+
+== Future Plans
+   Add support for files > 7MB - need help
+   Add formulas - need help
+    
+== Acknowledgements
+   Many thanks go to John McNamara for his tireless dedication to a very useful
+   and popular module.  I also thank him for taking the time to answer some of
+   the questions I had for him while porting his code.
+   
+   Thanks go to Jade Meskill for the outline patch.
+    
+== License
+   Ruby's
+    
+== Copyright
+   � 2002-2006, Daniel J. Berger
+
+   All Rights Reserved. This module is free software. It may be used,
+   redistributed and/or modified under the same terms as Ruby itself.
+
+== Warranty
+    This package is provided "as is" and without any express or
+    implied warranties, including, without limitation, the implied
+    warranties of merchantability and fitness for a particular purpose.
+    
+== Author
+   Daniel J. Berger
+   djberg96 at gmail dot com
+   imperator on IRC (freenode)
