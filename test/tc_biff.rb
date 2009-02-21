@@ -2,7 +2,7 @@
 # tc_biff.rb
 #
 # Test suite for the BIFFWriter class (biffwriter.rb)
-#######################################################
+  #######################################################
 base = File.basename(Dir.pwd)
 if base == "test" || base =~ /spreadsheet/i 
    Dir.chdir("..") if base == "test"
@@ -33,14 +33,16 @@ class TC_BIFFWriter < Test::Unit::TestCase
    end
 
    def test_data_prepended
+
       assert_nothing_raised{ @biff.append("Hello") }
       assert_nothing_raised{ @biff.prepend("World") }
       assert_equal("WorldHello", @biff.data, "Bad data contents")
+      assert_equal(10, @biff.datasize, "Bad data size")
    end
 
    def test_store_bof_length
       assert_nothing_raised{ @biff.store_bof }
-      assert_equal(12, @biff.datasize, "Bad data size after store_bof call")
+      assert_equal(20, @biff.datasize, "Bad data size after store_bof call")
    end
 
    def test_store_eof_length
@@ -53,7 +55,7 @@ class TC_BIFFWriter < Test::Unit::TestCase
       assert_nothing_raised{ @biff.prepend("World") }
       assert_nothing_raised{ @biff.store_bof }
       assert_nothing_raised{ @biff.store_eof }
-      assert_equal(26, @biff.datasize, "Bad data size for mixed data")
+      assert_equal(34, @biff.datasize, "Bad data size for mixed data")
    end
 
    def teardown
