@@ -560,12 +560,22 @@ class Format
    # 0x190 is normal. 0x2BC is bold. So is an excessive use of AUTOLOAD.
    #
    def set_bold(weight = nil)
-      weight = 0x2BC if weight.nil?        # Bold text
-      weight = 0x2BC if weight == 1        # Bold text
-      weight = 0x190 if weight == 0        # Normal text
-      weight = 0x190 if weight <  0x064    # Lower bound
-      weight = 0x190 if weight >  0x3E8    # Upper bound
-
+      if weight.nil?
+         weight = 0x2BC
+      elsif !weight.kind_of?(Numeric)
+         weight = 0x190
+      elsif weight == 1                    # Bold text
+         weight = 0x2BC
+      elsif weight == 0                    # Normal text
+         weight = 0x190 
+      elsif weight <  0x064                # Lower bound
+         weight = 0x190
+      elsif weight >  0x3E8                # Upper bound
+         weight = 0x190 
+      else
+         weight = weight.to_i
+      end
+      
       @bold = weight
    end
 

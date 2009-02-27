@@ -171,7 +171,42 @@ To set the colour of a cell use the set_bg_color() and set_pattern() methods.
 
    end
 
+=begin
+set_bold()
+
+    Default state:      bold is off  (internal value = 400)
+    Default action:     Turn bold on
+    Valid args:         0, 1 [1]
+
+Set the bold property of the font:
+
+    $format->set_bold();  # Turn bold on
+
+[1] Actually, values in the range 100..1000 are also valid.
+    400 is normal, 700 is bold and 1000 is very bold indeed.
+    It is probably best to set the value to 1 and use normal bold.
+=end
+
    def test_set_bold
+      # default state
+      assert_equal(400, @format.bold)
+      
+      # valid weight
+      fmt = Format.new
+      fmt.set_bold
+      assert_equal(700, fmt.bold)
+      {0 => 400, 1 => 700, 100 => 100, 1000 => 1000}.each do |weight, value|
+         fmt = Format.new
+         fmt.set_bold(weight)
+         assert_equal(value, fmt.bold)
+      end
+      
+      # invalid weight
+      [-1, 99, 1001, 'bold'].each do |weight|
+         fmt = Format.new
+         fmt.set_bold(weight)
+         assert_equal(400, fmt.bold, "weight : #{weight}")
+      end
    end
 
    def test_set_italic
