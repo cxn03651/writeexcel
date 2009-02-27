@@ -99,7 +99,76 @@ Set the font size. Excel adjusts the height of a row to accommodate the largest 
       end
    end
 
+=begin
+set_color()
+
+    Default state:      Excels default color, usually black
+    Default action:     Set the default color
+    Valid args:         Integers from 8..63 or the following strings:
+                        'black'
+                        'blue'
+                        'brown'
+                        'cyan'
+                        'gray'
+                        'green'
+                        'lime'
+                        'magenta'
+                        'navy'
+                        'orange'
+                        'pink'
+                        'purple'
+                        'red'
+                        'silver'
+                        'white'
+                        'yellow'
+
+Set the font colour. The set_color() method is used as follows:
+
+    format = workbook.add_format()
+    format.set_color('red')
+    worksheet.write(0, 0, 'wheelbarrow', format)
+
+Note: The set_color() method is used to set the colour of the font in a cell. 
+To set the colour of a cell use the set_bg_color() and set_pattern() methods.
+=end
    def test_set_color
+      # default state
+      default_col = 0x7FFF
+      assert_equal(default_col, @format.color)
+   
+      # valid color
+      # set by string
+      str_num = get_valid_color_string_number
+      str_num.each do |str,num|
+         fmt = Format.new
+         fmt.set_color(str)
+         assert_equal(num, fmt.color)
+      end
+
+      # valid color
+      # set by number
+      [8, 36, 63].each do |color|
+         fmt = Format.new
+         fmt.set_color(color)
+         assert_equal(color, fmt.color)
+      end
+
+      # invalid color
+      ['color', :col, -1, 63.5, 10*10].each do |color|
+         fmt = Format.new
+         fmt.set_color(color)
+         assert_equal(default_col, fmt.color, "color : #{color}")
+      end
+
+      # invalid color    ...but...
+      # 0 <= color < 8  then color += 8 in order to valid value
+      [0, 7.5].each do |color|
+         fmt = Format.new
+         fmt.set_color(color)
+         assert_equal((color + 8).to_i, fmt.color, "color : #{color}")
+      end
+
+
    end
 
    def test_set_bold

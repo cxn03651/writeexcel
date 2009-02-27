@@ -460,6 +460,31 @@ class Format
 
    ###############################################################################
    #
+   # set_color(color)
+   #
+   #    Default state:      Excels default color, usually black
+   #    Default action:     Set the default color
+   #    Valid args:         Integers from 8..63 or the following strings:
+   #                        'black', 'blue', 'brown', 'cyan', 'gray'
+   #                        'green', 'lime', 'magenta', 'navy', 'orange'
+   #                        'pink', 'purple', 'red', 'silver', 'white', 'yellow'
+   #
+   # Set the font colour. The set_color() method is used as follows:
+   #
+   #    format = workbook.add_format()
+   #    format.set_color('red')
+   #    worksheet.write(0, 0, 'wheelbarrow', format)
+   #
+   # Note: The set_color() method is used to set the colour of the font in a cell.
+   #       To set the colour of a cell use the set_bg_color()
+   #       and set_pattern() methods.
+   #
+   def set_color(color = 0x7FFF)
+      @color = get_color(color)
+   end
+   
+   ###############################################################################
+   #
    # set_align()
    #
    # Set cell alignment.
