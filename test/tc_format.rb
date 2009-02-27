@@ -72,7 +72,31 @@ class TC_Format < Test::Unit::TestCase
    def test_set_font
    end
 
+=begin
+set_size()
+    Default state:      Font size is 10
+    Default action:     Set font size to 1
+    Valid args:         Integer values from 1 to as big as your screen.
+Set the font size. Excel adjusts the height of a row to accommodate the largest font size in the row. You can also explicitly specify the height of a row using the set_row() worksheet method.
+=end
    def test_set_size
+      # default state
+      assert_equal(10, @format.size)
+      
+      # valid size from low to high
+      [1, 100, 100**10].each do |size|
+         fmt = Format.new
+         fmt.set_size(size)
+         assert_equal(size, fmt.size, "valid size:#{size} - doesn't match.")
+      end
+      
+      # invalid size  -- size doesn't change
+      [-1, 0, 1/2.0, 'hello', true, false, nil, [0,0], {:invalid => "val"}].each do |size|
+         fmt = Format.new
+         default = fmt.size
+         fmt.set_size(size)
+         assert_equal(default, fmt.size, "size:#{size.inspect} doesn't match.")
+      end
    end
 
    def test_set_color

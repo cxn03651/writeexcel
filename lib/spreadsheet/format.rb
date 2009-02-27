@@ -441,6 +441,25 @@ class Format
 
    ###############################################################################
    #
+   # set_size(size)
+   #
+   #    Default state:      Font size is 10
+   #    Default action:     Set font size to 1
+   #    Valid args:         Integer values from 1 to as big as your screen.
+   #                        Set the font size. Excel adjusts the height of a row
+   #                        to accommodate the
+   #
+   # largest font size in the row. You can also explicitly specify the height
+   # of a row using the set_row() worksheet method.Set cell alignment.
+   #
+   def set_size(size = 1)
+      if size.kind_of?(Numeric) && size >= 1
+         @size = size.to_i
+      end
+   end
+
+   ###############################################################################
+   #
    # set_align()
    #
    # Set cell alignment.
