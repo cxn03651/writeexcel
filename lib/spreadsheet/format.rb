@@ -556,8 +556,17 @@ class Format
    #
    # set_bold()
    #
-   # Bold has a range 0x64..0x3E8.
-   # 0x190 is normal. 0x2BC is bold. So is an excessive use of AUTOLOAD.
+   #    Default state:      bold is off  (internal value = 400)
+   #    Default action:     Turn bold on
+   #    Valid args:         0, 1 [1]
+   #
+   # Set the bold property of the font:
+   #
+   #    format.set_bold()   # Turn bold on
+   #
+   #[1] Actually, values in the range 100..1000 are also valid.
+   #    400 is normal, 700 is bold and 1000 is very bold indeed.
+   #    It is probably best to set the value to 1 and use normal bold.
    #
    def set_bold(weight = nil)
       if weight.nil?
