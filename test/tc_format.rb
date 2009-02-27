@@ -209,7 +209,37 @@ Set the bold property of the font:
       end
    end
 
+=begin
+set_italic()
+
+    Default state:      Italic is off
+    Default action:     Turn italic on
+    Valid args:         0, 1
+
+ Set the italic property of the font:
+
+    format.set_italic()  # Turn italic on
+=end
    def test_set_italic
+      # default state
+      assert_equal(0, @format.italic)
+      
+      # valid arg
+      fmt = Format.new
+      fmt.set_italic
+      assert_equal(1, fmt.italic)
+      {0=>0, 1=>1}.each do |arg,value|
+         fmt = Format.new
+         fmt.set_italic(arg)
+         assert_equal(value, fmt.italic, "arg : #{arg}")
+      end
+      
+      # invalid arg -- arg stored @italic.  it turns italic on
+      [-1, 0.2, 100, 'italic', true, false].each do |arg|
+         fmt = Format.new
+         fmt.set_italic(arg)
+         assert_equal(arg, fmt.italic, "arg : #{arg}")
+      end
    end
 
    def test_set_underline
