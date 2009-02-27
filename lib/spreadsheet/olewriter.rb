@@ -8,7 +8,7 @@ class MaxSizeError < StandardError; end
 class OLEWriter
 
    # Not meant for public consumption
-   MaxSize    = 7087104
+   MaxSize    = 7087104 # Use Spreadsheet::WriteExcel::Big to exceed this
    BlockSize  = 4096
    BlockDiv   = 512
    ListBlocks = 127
@@ -58,11 +58,13 @@ class OLEWriter
    # Set the size of the data to be written to the OLE stream
    #
    # @big_blocks = (109 depot block x (128 -1 marker word)
-   # - (1 x end words)) = 13842
-   #
+   #               - (1 x end words)) = 13842
    # MaxSize = @big_blocks * 512 bytes = 7087104
+   #
    def set_size(size = BlockSize)
-      raise MaxSizeError if size > MaxSize
+      if size > MaxSize
+         return @size_allowed = false
+      end
 
       @biff_size = size
 
@@ -97,46 +99,63 @@ class OLEWriter
       return if @biff_only == true
       calculate_sizes
       root_start = @root_start
+      num_lists  = @list_blocks
 
-      write([0xD0CF11E0, 0xA1B11AE1].pack("NN"))
-      write([0x00, 0x00, 0x00, 0x00].pack("VVVV"))
-      write([0x3E, 0x03, -2, 0x09].pack("vvvv"))
-      write([0x06, 0x00, 0x00].pack("VVV"))
-      write([@list_blocks, root_start].pack("VV"))
-      write([0x00, 0x1000,-2].pack("VVV"))
-      write([0x00, -2 ,0x00].pack("VVV"))
+      id              = [0xD0CF11E0, 0xA1B11AE1].pack("NN")
+      unknown1        = [0x00, 0x00, 0x00, 0x00].pack("VVVV")
+      unknown2        = [0x3E, 0x03].pack("vv")
+      unknown3        = [-2].pack("v")
+      unknown4        = [0x09].pack("v")
+      unknown5        = [0x06, 0x00, 0x00].pack("VVV")
+      num_bbd_blocks  = [num_lists].pack("V")
+      root_startblock = [root_start].pack("V")
+      unknown6        = [0x00, 0x1000].pack("VV")
+      sbd_startblock  = [-2].pack("V")
+      unknown7        = [0x00, -2 ,0x00].pack("VVV")
+
+      write(id)
+      write(unknown1)
+      write(unknown2)
+      write(unknown3)
+      write(unknown4)
+      write(unknown5)
+      write(num_bbd_blocks)
+      write(root_startblock)
+      write(unknown6)
+      write(sbd_startblock)
+      write(unknown7)
 
       unused = [-1].pack("V")
 
-      1.upto(@list_blocks){
+      1.upto(num_lists){
          root_start += 1
          write([root_start].pack("V"))
       }
 
-      @list_blocks.upto(108){
+      num_lists.upto(108){
          write(unused)
       }
    end
 
    # Write a big block depot
    def write_big_block_depot
-      total_blocks = @list_blocks * 128
-      used_blocks  = @big_blocks + @list_blocks + 2
+      num_blocks   = @big_blocks
+      num_lists    = @list_blocks
+      total_blocks = num_lists * 128
+      used_blocks  = num_blocks + num_lists + 2
       
-      marker = [-3].pack("V")
-      eoc    = [-2].pack("V")
-      unused = [-1].pack("V")
+      marker          = [-3].pack("V")
+      end_of_chain    = [-2].pack("V")
+      unused          = [-1].pack("V")
 
-      num_blocks = @big_blocks - 1
-
-      1.upto(num_blocks){|n|
+      1.upto(num_blocks-1){|n|
          write([n].pack("V"))
       }
 
-      write eoc
-      write eoc
+      write end_of_chain
+      write end_of_chain
 
-      1.upto(@list_blocks){ write(marker) }
+      1.upto(num_lists){ write(marker) }
 
       used_blocks.upto(total_blocks){ write(unused) }
       
@@ -144,6 +163,8 @@ class OLEWriter
 
    # Write property storage
    def write_property_storage
+   
+      #########  name         type  dir start size
       write_pps('Root Entry', 0x05,  1,   -2, 0x00)
       write_pps('Book',       0x02, -1, 0x00, @book_size)
       write_pps("",           0x00, -1, 0x00, 0x0000)
@@ -160,26 +181,42 @@ class OLEWriter
          length = name.length * 2
       end
 
-      zero = [0].pack("C")
+      rawname        = ord_name.pack("v*")
+      zero           = [0].pack("C")
+      
+      pps_sizeofname = [length].pack("v")   #0x40
+      pps_type       = [type].pack("v")     #0x42
+      pps_prev       = [-1].pack("V")       #0x44
+      pps_next       = [-1].pack("V")       #0x48
+      pps_dir        = [dir].pack("V")      #0x4c
+      
       unknown = [0].pack("V")
       
-      write(ord_name.pack("v*"))
+      pps_ts1s       = [0].pack("V")        #0x64
+      pps_ts1d       = [0].pack("V")        #0x68
+      pps_ts2s       = [0].pack("V")        #0x6c
+      pps_ts2d       = [0].pack("V")        #0x70
+      pps_sb         = [start].pack("V")    #0x74
+      pps_size       = [size].pack("V")     #0x78
 
+      write(rawname)
       for n in 1..64-length
          write(zero)
       end
-
-      write([length,type,-1,-1,dir].pack("vvVVV"))
-
+      write(pps_sizeofname)
+      write(pps_type)
+      write(pps_prev)
+      write(pps_next)
+      write(pps_dir)
       for n in 1..5
          write(unknown)
       end
-      
-      for n in 1..4
-         write([0].pack("V"))
-      end
-
-      write([start,size].pack("VV"))
+      write(pps_ts1s)
+      write(pps_ts1d)
+      write(pps_ts2s)
+      write(pps_ts2d)
+      write(pps_sb)
+      write(pps_size)
       write(unknown)
    end
 

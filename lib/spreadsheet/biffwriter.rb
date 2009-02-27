@@ -11,7 +11,7 @@ class BIFFWriter
    BIFF_Version = 0x0600
    byte_order = ''
 
-#   BigEndian    = [1].pack("I") == [1].pack("N")
+   BigEndian    = [1].pack("I") == [1].pack("N")
 
    attr_reader :byte_order, :data, :datasize
 

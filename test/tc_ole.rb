@@ -46,8 +46,7 @@ class TC_OLE < Test::Unit::TestCase
    end
 
    def test_set_size_too_big
-      err = "Should have raised MaxSizeError"
-      assert_raises(MaxSizeError, err){ @ole.set_size(999999999) }
+      assert(!@ole.set_size(999999999))
    end
 
    def test_book_size_large

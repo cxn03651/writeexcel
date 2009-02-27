@@ -1,372 +1,648 @@
+##############################################################################
+#
+# Format - A class for defining Excel formatting.
+#
+#
+# Used in conjunction with Spreadsheet::WriteExcel
+#
+# Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
+#
 class Format
 
    COLORS = {
       'aqua'    => 0x0F,
+      'cyan'    => 0x0F,
       'black'   => 0x08,
       'blue'    => 0x0C,
       'brown'   => 0x10,
-      'cyan'    => 0x0F,
+      'magenta' => 0x0E,
       'fuchsia' => 0x0E,
       'gray'    => 0x17,
       'grey'    => 0x17,
       'green'   => 0x11,
       'lime'    => 0x0B,
-      'magenta' => 0x0E,
       'navy'    => 0x12,
-      'orange'  => 0x1D,
-      'purple'  => 0x24,
+      'orange'  => 0x35,
+      'pink'    => 0x21,
+      'purple'  => 0x14,
       'red'     => 0x0A,
       'silver'  => 0x16,
       'white'   => 0x09,
-      'yellow'  => 0x0D
+      'yellow'  => 0x0D,
    }
 
-   attr_accessor :xf_index
+   attr_accessor :xf_index, :used_merge
+   attr_accessor :bold, :italic, :underline, :strikeout, :text_wrap, :text_justlast
+   attr_accessor :text_h_align, :text_v_align
+   attr_accessor :fg_color, :bg_color, :color, :font, :size, :font_outline, :font_shadow
+   attr_accessor :align, :border
+   attr_reader   :font, :size, :font_strikeout, :font_script, :num_format, :locked, :hidden
+   attr_reader   :rotation, :indent, :shrink, :pattern, :bottom, :top, :left, :right
+   attr_reader   :bottom_color, :top_color, :left_color, :right_color
 
-   def initialize(args={}, xf_index=0)
-      defaults = {}
+   ###############################################################################
+   #
+   # initialize(xf_index=0, properties = nil)
+   #    xf_index   : 
+   #    properties : Hash of property => value
+   #
+   # Constructor
+   #
+   def initialize(xf_index=0, properties = [])
+      @type           = 0
+      @font_index     = 0
+      @font           = 'Arial'
+      @size           = 10
+      @bold           = 0x0190
+      @italic         = 0
+      @color          = 0x7FFF
+      @underline      = 0
+      @strikeout      = 0
+      @font_outline   = 0
+      @font_shadow    = 0
+      @font_script    = 0
+      @font_family    = 0
+      @font_charset   = 0
+      @font_encoding  = 0
 
-      defaults.update(:color     => 0x7FFF, :bold   => 0x0190)
-      defaults.update(:fg_color  => 0x40, :pattern  => 0,  :size => 10)
-      defaults.update(:bg_color  => 0x41, :rotation => 0,  :font => "Arial")
-      defaults.update(:underline => 0,    :italic   => 0,  :top  => 0)
-      defaults.update(:bottom    => 0,    :right    => 0,  :left => 0)
+      @num_format     = 0
+      @num_format_enc = 0
 
-      defaults.update(:font_index     => 0, :font_family  => 0)
-      defaults.update(:font_strikeout => 0, :font_script  => 0)
-      defaults.update(:font_outline   => 0, :left_color   => 0)
-      defaults.update(:font_charset   => 0, :right_color  => 0)
-      defaults.update(:font_shadow    => 0, :top_color    => 0x40)
-      defaults.update(:text_v_align   => 2, :bottom_color => 0x40)
-      defaults.update(:text_h_align   => 0, :num_format   => 0)
-      defaults.update(:text_justlast  => 0, :text_wrap    => 0)
+      @hidden         = 0
+      @locked         = 1
+
+      @text_h_align   = 0
+      @text_wrap      = 0
+      @text_v_align   = 2
+      @text_justlast  = 0
+      @rotation       = 0
+
+      @fg_color       = 0x40
+      @bg_color       = 0x41
+
+      @pattern        = 0
+
+      @bottom         = 0
+      @top            = 0
+      @left           = 0
+      @right          = 0
+
+      @bottom_color   = 0x40
+      @top_color      = 0x40
+      @left_color     = 0x40
+      @right_color    = 0x40
+
+      @indent         = 0
+      @shrink         = 0
+      @merge_range    = 0
+      @reading_order  = 0
+
+      @diag_type      = 0
+      @diag_color     = 0x40
+      @diag_border    = 0
+
+      @font_only      = 0
+
+      # Temp code to prevent merged formats in non-merged cells.
+      @used_merge     = 0
 
       ## convenience methods
-      defaults.update(:border => 0, :align => 'left')
+      @border = 0
+      @align = 'left'
 
-      ########################################################################
-      # We must manually create accessors for these so that they can handle
-      # both 0/1 and true/false.
-      ########################################################################
-      no_acc = [:bold,:italic,:underline,:strikeout,:text_wrap,:text_justlast]
-      no_acc.push(:fg_color,:bg_color,:color,:font_outline,:font_shadow)
-      no_acc.push(:align,:border)
-
-      args.each{|key,val|
-         key = key.to_s.downcase.intern
-         val = 1 if val == true
-         val = 0 if val == false
-         defaults.fetch(key)
-         defaults.update(key=>val)
-      }
-
-      defaults.each{|key,val|
-         unless no_acc.member?(key)
-            self.class.send(:attr_accessor,"#{key}")
-         end
-         send("#{key}=",val)
-      }
+      set_format_properties(properties)
 
       @xf_index = xf_index
-
-      yield self if block_given?
    end
 
-   def color=(colour)
-      if COLORS.has_key?(colour)
-         @color = COLORS[colour]
+###############################################################################
+#
+# Note to porters. The majority of the set_property() methods are created
+# dynamically via Perl' AUTOLOAD sub, see below. You may prefer/have to specify
+# them explicitly in other implementation languages.
+#
+
+
+###############################################################################
+#
+# get_font()
+#
+# Generate an Excel BIFF FONT record.
+#
+   def get_xf
+
+      # Local Variable
+      #    record;     # Record identifier
+      #    length;     # Number of bytes to follow
+      #
+      #    ifnt;       # Index to FONT record
+      #    ifmt;       # Index to FORMAT record
+      #    style;      # Style and other options
+      #    align;      # Alignment
+      #    indent;     #
+      #    icv;        # fg and bg pattern colors
+      #    border1;    # Border line options
+      #    border2;    # Border line options
+      #    border3;    # Border line options
+   
+      # Set the type of the XF record and some of the attributes.
+      if @type == 0xFFF5 then
+         style = 0xFFF5
       else
-         if colour.kind_of?(String)
-            raise ArgumentError, "unknown color"
-         else
-            @color = colour
-         end
+         style  = @locked
+         style |= @hidden << 1
       end
-      @color
-   end
+   
+      # Flags to indicate if attributes have been set.
+      atr_num  = (@num_format   != 0) ? 1 : 0
+      atr_fnt  = (@font_index   != 0) ? 1 : 0
+      atr_alc  = (@text_h_align != 0 ||
+                  @text_v_align != 2 ||
+                  @shrink       != 0 ||
+                  @merge_range  != 0 ||
+                  @text_wrap    != 0 ||
+                  @indent       != 0) ? 1 : 0
+      atr_bdr  = (@bottom       != 0 ||
+                  @top          != 0 ||
+                  @left         != 0 ||
+                  @right        != 0 ||
+                  @diag_type    != 0) ? 1 : 0
+      atr_pat  = (@fg_color     != 0x40 ||
+                  @bg_color     != 0x41 ||
+                  @pattern      != 0x00) ? 1 : 0
+      atr_prot = (@hidden       != 0 ||
+                  @locked       != 1) ? 1 : 0
 
-   def bg_color=(colour)
-      if COLORS.has_key?(colour)
-         @bg_color = COLORS[colour]
-      else
-         if colour.kind_of?(String)
-            raise ArgumentError, "unknown color"
+      # Set attribute changed flags for the style formats.
+      if @xf_index != 0 and @type == 0xFFF5
+         if @xf_index >= 16
+            atr_num    = 0
+            atr_fnt    = 1
          else
-            @bg_color = colour
+            atr_num    = 1
+            atr_fnt    = 0
          end
+         atr_alc    = 1
+         atr_bdr    = 1
+         atr_pat    = 1
+         atr_prot   = 1
       end
-      @bg_color
-   end
 
-   def fg_color=(colour)
-      if COLORS.has_key?(colour)
-         @fg_color = COLORS[colour]
-      else
-         if colour.kind_of?(String)
-            raise ArgumentError, "unknown color"
-         else
-            @fg_color = colour
-         end
-      end
-      @fg_color
-   end
+      # Set a default diagonal border style if none was specified.
+      @diag_border = 1 if (@diag_border !=0 and @diag_type != 0)
 
-   def fg_color
-      @fg_color
-   end
+      # Reset the default colours for the non-font properties
+      @fg_color     = 0x40 if @fg_color     == 0x7FFF
+      @bg_color     = 0x41 if @bg_color     == 0x7FFF
+      @bottom_color = 0x40 if @bottom_color == 0x7FFF
+      @top_color    = 0x40 if @top_color    == 0x7FFF
+      @left_color   = 0x40 if @left_color   == 0x7FFF
+      @right_color  = 0x40 if @right_color  == 0x7FFF
+      @diag_color   = 0x40 if @diag_color   == 0x7FFF
 
-   def bg_color
-      @bg_color
-   end
+      # Zero the default border colour if the border has not been set.
+      @bottom_color = 0 if @bottom    == 0
+      @top_color    = 0 if @top       == 0
+      @right_color  = 0 if @right     == 0
+      @left_color   = 0 if @left      == 0
+      @diag_color   = 0 if @diag_type == 0
 
-   # Should I return the stringified version of the color if applicable?
-   def color
-      #COLORS.invert.fetch(@color)
-      @color
-   end
-
-   def italic
-      return true if @italic >= 1
-      return false
-   end
-
-   def italic=(val)
-      val = 1 if val == true
-      val = 0 if val == false
-      @italic = val
-   end
-
-   def font_shadow
-      return true if @font_shadow == 1
-      return false
-   end
-
-   def font_shadow=(val)
-      val = 1 if val == true
-      val = 0 if val == false
-      @font_shadow = val
-   end
-
-   def font_outline
-      return true if @font_outline == 1
-      return false
-   end
-
-   def font_outline=(val)
-      val = 1 if val == true
-      val = 0 if val == false
-      @font_outline = val
-   end
-
-   def text_justlast
-      return true if @text_justlast == 1
-      return false
-   end
-
-   def text_justlast=(val)
-      val = 1 if val == true
-      val = 0 if val == false
-      @text_justlast = val
-   end
-
-   def text_wrap
-      return true if @text_wrap == 1
-      return false
-   end
-
-   def text_wrap=(val)
-      val = 1 if val == true
-      val = 0 if val == false
-      @text_wrap = val
-   end
-
-   def strikeout
-      return true if @strikeout == 1
-      return false
-   end
-
-   def strikeout=(val)
-      val = 1 if val == true
-      val = 0 if val == false
-      @strikeout = val
-   end
-
-   def underline
-      return true if @underline == 1
-      return false
-   end
-
-   def underline=(val)
-      val = 1 if val == true
-      val = 0 if val == false
-      @underline = val
-   end
-
-
-   def xf_biff(style=0)
-      atr_num = 0
-      atr_num = 1 if @num_format != 0
-
-      atr_fnt = 0
-      atr_fnt = 1 if @font_index != 0
-
-      atr_alc = @text_wrap
-      atr_bdr = [@bottom,@top,@left,@right].find{ |n| n > 0 } || 0
-      atr_pat = [@fg_color,@bg_color,@pattern].find{ |n| n > 0 } || 0
-
-      atr_prot    = 0
-
-      @bottom_color = 0 if @bottom == 0
-      @top_color    = 0 if @top    == 0
-      @right_color  = 0 if @right  == 0
-      @left_color   = 0 if @left   == 0
-
-      record         = 0x00E0
-      length         = 0x0010
-
-      align  = @text_h_align
-      align  |= @text_wrap     << 3
-      align  |= @text_v_align  << 4
-      align  |= @text_justlast << 7
-      align  |= @rotation      << 8
-      align  |= atr_num        << 10
-      align  |= atr_fnt        << 11
-      align  |= atr_alc        << 12
-      align  |= atr_bdr        << 13
-      align  |= atr_pat        << 14
-      align  |= atr_prot       << 15
-
-      # Assume a solid fill color if the bg_color or fg_color are set but
-      # the pattern value is not set
-      if @pattern <= 0x01 and @bg_color != 0x41 and @fg_color == 0x40
+      # The following 2 logical statements take care of special cases in relation
+      # to cell colours and patterns:
+      # 1. For a solid fill (_pattern == 1) Excel reverses the role of foreground
+      #    and background colours.
+      # 2. If the user specifies a foreground or background colour without a
+      #    pattern they probably wanted a solid fill, so we fill in the defaults.
+      #
+      if (@pattern  <= 0x01 && @bg_color != 0x41 && @fg_color == 0x40)
          @fg_color = @bg_color
          @bg_color = 0x40
          @pattern  = 1
       end
 
-      if @pattern < 0x01 and @bg_color == 0x41 and @fg_color != 0x40
+      if (@pattern <= 0x01 && @bg_color == 0x41 && @fg_color != 0x40)
          @bg_color = 0x40
          @pattern  = 1
       end
 
-      icv   = @fg_color
-      icv  |= @bg_color << 7
+      # Set default alignment if indent is set.
+      @text_h_align = 1 if @indent != 0 and @text_h_align == 0
+      
+      
+      record         = 0x00E0
+      length         = 0x0014
 
-      fill = @pattern
-      fill |= @bottom << 6
-      fill |= @bottom_color << 9
+      ifnt           = @font_index
+      ifmt           = @num_format
 
-      border1 = @top
-      border1 |= @left      << 3
-      border1 |= @right     << 6
-      border1 |= @top_color << 9
 
-      border2 = @left_color
-      border2 |= @right_color << 7
+      align          = @text_h_align
+      align         |= @text_wrap     << 3
+      align         |= @text_v_align  << 4
+      align         |= @text_justlast << 7
+      align         |= @rotation      << 8
 
-      header = [record,length].pack("vv")
-      fields = [@font_index,@num_format,style,align,icv,fill,border1,border2]
-      data = fields.pack("vvvvvvvv")
+      indent         = @indent
+      indent        |= @shrink        << 4
+      indent        |= @merge_range   << 5
+      indent        |= @reading_order << 6
+      indent        |= atr_num        << 10
+      indent        |= atr_fnt        << 11
+      indent        |= atr_alc        << 12
+      indent        |= atr_bdr        << 13
+      indent        |= atr_pat        << 14
+      indent        |= atr_prot       << 15
 
-      rv = header + data
-      return rv
+
+      border1        = @left
+      border1       |= @right         << 4
+      border1       |= @top           << 8
+      border1       |= @bottom        << 12
+
+      border2        = @left_color
+      border2       |= @right_color   << 7
+      border2       |= @diag_type     << 14
+
+      border3        = 0
+      border3       |= @top_color
+      border3       |= @bottom_color  << 7
+      border3       |= @diag_color    << 14
+      border3       |= @diag_border   << 21
+      border3       |= @pattern       << 26
+
+      icv            = @fg_color
+      icv           |= @bg_color      << 7
+      
+      header = [record, length].pack("vv")
+      data   = [ifnt, ifmt, style, align, indent,
+                border1, border2, border3, icv].pack("vvvvvvvVv")
+
+      return header + data
    end
 
-   def font_biff
-      dyheight = @size * 20
-      cch      = @font.length
-      record   = 0x31
-      length   = 0x0F + cch
-      reserved = 0x00
+   ###############################################################################
+   #
+   # get_font()
+   #
+   # Generate an Excel BIFF FONT record.
+   #
+   def get_font
 
-      grbit = 0x00
-      grbit |= 0x02 if @italic > 0
-      grbit |= 0x08 if @font_strikeout > 0
-      grbit |= 0x10 if @font_outline > 0
-      grbit |= 0x20 if @font_shadow > 0
+   #   my $record;     # Record identifier
+   #   my $length;     # Record length
 
-      header = [record,length].pack("vv")
-      fields = [dyheight,grbit,@color,@bold,@font_script,@underline,@font_family]
-      fields.push(@font_charset,reserved,cch)
+   #   my $dyHeight;   # Height of font (1/20 of a point)
+   #   my $grbit;      # Font attributes
+   #   my $icv;        # Index to color palette
+   #   my $bls;        # Bold style
+   #   my $sss;        # Superscript/subscript
+   #   my $uls;        # Underline
+   #   my $bFamily;    # Font family
+   #   my $bCharSet;   # Character set
+   #   my $reserved;   # Reserved
+   #   my $cch;        # Length of font name
+   #   my $rgch;       # Font name
+   #   my $encoding;   # Font name character encoding
 
-      data = fields.pack("vvvvvCCCCC")
-      rv = header + data + @font
 
-      return rv
+      dyHeight   = @size * 20
+      icv        = @color
+      bls        = @bold
+      sss        = @font_script
+      uls        = @underline
+      bFamily    = @font_family
+      bCharSet   = @font_charset
+      rgch       = @font
+      encoding   = @font_encoding
+
+      # Handle utf8 strings in perl 5.8.
+#      if ($] >= 5.008) {
+#         require Encode;
+#
+#         if (Encode::is_utf8($rgch)) {
+#            $rgch = Encode::encode("UTF-16BE", $rgch);
+#            $encoding = 1;
+#         }
+#      }
+#
+      cch = rgch.length;
+#
+      # Handle Unicode font names.
+      if (encoding == 1)
+#         croak "Uneven number of bytes in Unicode font name" if cch % 2;
+         cch  /= 2 if encoding;
+         rgch  = rgch.unpack('n*').pack('v*')
+      end
+
+      record     = 0x31;
+      length     = 0x10 + rgch.length;
+      reserved   = 0x00;
+
+      grbit      = 0x00;
+      grbit     |= 0x02 if @italic != 0
+      grbit     |= 0x08 if @strikeout != 0
+      grbit     |= 0x10 if @font_outline != 0
+      grbit     |= 0x20 if @font_shadow != 0
+
+
+      header = [record, length].pack("vv")
+      data   = [dyHeight, grbit, icv, bls,
+                sss, uls, bFamily,
+                bCharSet, reserved, cch, encoding].pack('vvvvvCCCCCC')
+
+      return header + data + rgch
    end
 
-   def font_key
-      key = @font.to_s + @size.to_s + @font_script.to_s + @underline.to_s
-      key += @font_strikeout.to_s + @bold.to_s + @font_outline.to_s
-      key += @font_family.to_s + @font_charset.to_s + @font_shadow.to_s
-      key += @color.to_s + @italic.to_s
-      return key
+   ###############################################################################
+   #
+   # get_font_key()
+   #
+   # Returns a unique hash key for a font. Used by Workbook->_store_all_fonts()
+   #
+   def get_font_key
+      # The following elements are arranged to increase the probability of
+      # generating a unique key. Elements that hold a large range of numbers
+      # e.g. _color are placed between two binary elements such as _italic
+
+      key  = "#{@font}#{@size}#{@font_script}#{@underline}#{@strikeout}#{@bold}#{@font_outline}"
+      key += "#{@font_family}#{@font_charset}#{@font_shadow}#{@color}#{@italic}#{@font_encoding}"
+      result =  key.gsub(' ', '_') # Convert the key to a single word
+
+      return result
    end
 
-   def align=(location = nil)
-      return if location.nil?
-      return if location.kind_of?(Fixnum)
-      location.downcase!
+   ###############################################################################
+   #
+   # get_xf_index()
+   #
+   # Returns the used by Worksheet->_XF()
+   #
+   def get_xf_index
+      return @xf_index
+   end
 
-      case location
-      when 'left'
-        @text_h_align = 1
-      when 'center', 'centre'
-        @text_h_align = 2
-      when 'right'
-        @text_h_align = 3
-      when 'fill'
-        @text_h_align = 4 
-      when 'justify'
-        @text_h_align = 5 
-      when 'merge'
-        @text_h_align = 6
-      when 'top'
-        @text_v_align = 0
-      when 'vcentre', 'vcenter'
-        @text_v_align = 1
-      when 'bottom'
-        @text_v_align = 2
-      when 'vjustify'
-        @text_v_align = 3
+
+   ###############################################################################
+   #
+   # get_color(colour)
+   #
+   # Used in conjunction with the set_xxx_color methods to convert a color
+   # string into a number. Color range is 0..63 but we will restrict it
+   # to 8..63 to comply with Gnumeric. Colors 0..7 are repeated in 8..15.
+   #
+   def get_color(colour = nil)
+      # Return the default color, 0x7FFF, if undef,
+      return 0x7FFF if colour.nil?
+
+      if colour.kind_of?(Numeric)
+         if colour < 0
+            return 0x7FFF
+
+         # or an index < 8 mapped into the correct range,
+         elsif colour < 8
+            return (colour + 8).to_i
+
+         # or the default color if arg is outside range,
+         elsif 63 < colour
+            return 0x7FFF
+
+         # or an integer in the valid range
+         else
+            return colour.to_i
+         end
+      elsif colour.kind_of?(String)
+         # or the color string converted to an integer,
+         if COLORS.has_key?(colour)
+            return COLORS[colour]
+
+         # or the default color if string is unrecognised,
+         else
+            return 0x7FFF
+         end
+      else
+         return 0x7FFF
       end
    end
 
-   def align
-      [@text_h_align,@text_v_align]
+   ###############################################################################
+   #
+   # set_type()
+   #
+   # Set the XF object type as 0 = cell XF or 0xFFF5 = style XF.
+   #
+   def set_type(type = nil)
+
+      if !type.nil? and type == 0
+         @type = 0x0000
+      else
+         @type = 0xFFF5
+      end
    end
 
-   def bold=(weight)
-      weight = 1 if weight == true
-      weight = 0 if weight == false
-      weight = 0x2BC if weight.nil?
-      weight = 0x2BC if weight == 1
-      weight = 0x190 if weight == 0
-      weight = 0x190 if weight < 0x064
-      weight = 0x190 if weight > 0x3E8
+   ###############################################################################
+   #
+   # set_align()
+   #
+   # Set cell alignment.
+   #
+   def set_align(location = nil)
+   
+      return if location.nil?           # No default
+      return if location =~ /\d/;       # Ignore numbers
+
+      location.downcase!
+
+      case location
+      when 'left'             then set_text_h_align(1)
+      when 'centre', 'center' then set_text_h_align(2)
+      when 'right'            then set_text_h_align(3)
+      when 'fill'             then set_text_h_align(4)
+      when 'justify'          then set_text_h_align(5)
+      when 'center_across', 'centre_across' then set_text_h_align(6)
+      when 'merge'            then set_text_h_align(6) # S:WE name 
+      when 'distributed'      then set_text_h_align(7)
+      when 'equal_space'      then set_text_h_align(7) # ParseExcel 
+
+
+      when 'top'              then set_text_v_align(0)
+      when 'vcentre'          then set_text_v_align(1)
+      when 'vcenter'          then set_text_v_align(1)
+      when 'bottom'           then set_text_v_align(2)
+      when 'vjustify'         then set_text_v_align(3)
+      when 'vdistributed'     then set_text_v_align(4)
+      when 'vequal_space'     then set_text_v_align(4) # ParseExcel
+      end
+   end
+
+   ###############################################################################
+   #
+   # set_valign()
+   #
+   # Set vertical cell alignment. This is required by the set_format_properties()
+   # method to differentiate between the vertical and horizontal properties.
+   #
+   def set_valign(alignment)
+      set_align(alignment);
+   end
+
+   ###############################################################################
+   #
+   # set_center_across()
+   #
+   # Implements the Excel5 style "merge".
+   #
+   def set_center_across
+      set_text_h_align(6)
+   end
+
+   ###############################################################################
+   #
+   # set_merge()
+   #
+   # This was the way to implement a merge in Excel5. However it should have been
+   # called "center_across" and not "merge".
+   # This is now deprecated. Use set_center_across() or better merge_range().
+   #
+   #
+   def set_merge
+      set_text_h_align(6);
+   end
+
+   ###############################################################################
+   #
+   # set_bold()
+   #
+   # Bold has a range 0x64..0x3E8.
+   # 0x190 is normal. 0x2BC is bold. So is an excessive use of AUTOLOAD.
+   #
+   def set_bold(weight = nil)
+      weight = 0x2BC if weight.nil?        # Bold text
+      weight = 0x2BC if weight == 1        # Bold text
+      weight = 0x190 if weight == 0        # Normal text
+      weight = 0x190 if weight <  0x064    # Lower bound
+      weight = 0x190 if weight >  0x3E8    # Upper bound
+
       @bold = weight
-      @bold
    end
 
-   def bold
-      return true if @bold >= 1
-      return false
+
+   ###############################################################################
+   #
+   # set_border($style)
+   #
+   # Set cells borders to the same style
+   #
+   def set_border(style)
+      set_bottom(style)
+      set_top(style)
+      set_left(style)
+      set_right(style)
    end
 
-   def border=(style)
-      [@bottom,@top,@right,@left].each{ |attr| attr = style }
+
+   ###############################################################################
+   #
+   # set_border_color($color)
+   #
+   # Set cells border to the same color
+   #
+   def set_border_color(color)
+      set_bottom_color(color);
+      set_top_color(color);
+      set_left_color(color);
+      set_right_color(color);
    end
 
-   def border
-      [@bottom,@top,@right,@left]
+   ###############################################################################
+   #
+   # set_rotation($angle)
+   #
+   # Set the rotation angle of the text. An alignment property.
+   #
+   def set_rotation(rotation)
+      # Argument should be a number
+      return if !(rotation =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
+
+      # The arg type can be a double but the Excel dialog only allows integers.
+      rotation = rotation.to_i
+
+      if (rotation == 270)
+         rotation = 255
+      elsif (rotation >= -90 or rotation <= 90)
+         rotation = -rotation +90 if rotation < 0;
+      else
+         # carp "Rotation $rotation outside range: -90 <= angle <= 90";
+         rotation = 0;
+      end
+
+      @rotation = rotation;
    end
 
-   def border_color=(color)
-      [@bottom_color,@top_color,@left_color,@right_color].each{ |a| a = color }
+
+   ###############################################################################
+   #
+   # set_format_properties(*properties)
+   #    properties : Hash of properies
+   #  ex)   font  = { :color => 'red', :bold => 1 }
+   #        shade = { :bg_color => 'green', :pattern => 1 }
+   #     1) set_format_properties( :bold => 1 [, :color => 'red'..] )
+   #     2) set_format_properties( font [, shade, ..])
+   #     3) set_format_properties( :bold => 1, font, ...)
+   #
+   # Convert hashes of properties to method calls.
+   #
+   def set_format_properties(*properties)
+      return if properties.empty?
+      properties.each do |property|
+         property.each do |key, value|
+            # Strip leading "-" from Tk style properties e.g. -color => 'red'.
+            key.sub!(/^-/, '') if key.kind_of?(String)
+   
+            # Create a sub to set the property.
+            if value.kind_of?(String)
+               s = "set_#{key}('#{value}')"
+            else
+               s = "set_#{key}(#{value})"
+            end
+            eval s
+         end
+      end
    end
 
-   def border_color
-      [@bottom_color,@top_color,@left_color,@right_color]
+# Renamed rarely used set_properties() to set_format_properties() to avoid
+# confusion with Workbook method of the same name. The following acts as an
+# alias for any code that uses the old name.
+# *set_properties = *set_format_properties;
+
+   # Dynamically create set methods that aren't already defined.
+   def method_missing(name, *args)
+   # -- original perl comment --
+   # There are two types of set methods: set_property() and
+   # set_property_color(). When a method is AUTOLOADED we store a new anonymous
+   # sub in the appropriate slot in the symbol table. The speeds up subsequent
+   # calls to the same method.
+
+      method = "#{name}"
+
+      # Check for a valid method names, i.e. "set_xxx_yyy".
+      method =~ /set_(\w+)/ or raise "Unknown method: #{method}\n"
+
+      # Match the attribute, i.e. "@xxx_yyy".
+      attribute = "@#{$1}"
+
+      # Check that the attribute exists
+      # ........
+      if method =~ /set\w+color$/    # for "set_property_color" methods
+         value = get_color(args[0])
+      else                            # for "set_xxx" methods
+         value = args[0].nil? ? 1 : args[0]
+      end
+      if value.kind_of?(String)
+         s = "#{attribute} = \"#{value.to_s}\""
+      else
+         s = "#{attribute} =   #{value.to_s}"
+      end
+      eval s
    end
 
 end
