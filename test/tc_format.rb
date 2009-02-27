@@ -242,7 +242,35 @@ set_italic()
       end
    end
 
+=begin
+set_underline()
+
+    Default state:      Underline is off
+    Default action:     Turn on single underline
+    Valid args:         0  = No underline
+                        1  = Single underline
+                        2  = Double underline
+                        33 = Single accounting underline
+                        34 = Double accounting underline
+
+Set the underline property of the font.
+
+    format.set_underline()   # Single underline
+=end
    def test_set_underline
+      # default state
+      assert_equal(0, @format.underline, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_underline
+      assert_equal(1, fmt.underline, "No arg")
+      
+      [0, 1, 2, 33, 34].each do |arg|
+         fmt = Format.new
+         fmt.set_underline(arg)
+         assert_equal(arg, fmt.underline, "arg : #{arg}")
+      end
    end
 
    def test_set_font_strikeout
