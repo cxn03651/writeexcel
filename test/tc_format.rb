@@ -24,6 +24,130 @@ class TC_Format < Test::Unit::TestCase
       @format = Format.new
    end
 
+   def teardown
+      begin
+         @pfh.close
+      rescue NameError
+         # no op
+      end
+      File.delete(@ruby_file) if File.exist?(@ruby_file)
+      @format = nil
+   end
+
+   def test_set_format_properties
+   end
+
+   def test_format_properties_with_valid_value
+      valid_properties = get_valid_format_properties
+      valid_properties.each do |k,v|
+         format = Format.new
+         before = get_format_property(format)
+         format.set_format_properties(k => v)
+         after  = get_format_property(format)
+         after.delete_if {|key, val| before[key] == val }
+         assert_equal(1, after.size, "change 1 property[:#{k}] but #{after.size} was changed.#{after.inspect}")
+         assert_equal(v, after[k], "[:#{k}] doesn't match.")
+      end
+
+      # set_color by string
+      valid_color_string_number = get_valid_color_string_number
+      [:color , :bg_color, :fg_color].each do |coltype|
+         valid_color_string_number.each do |str, num|
+            format = Format.new
+            before = get_format_property(format)
+            format.set_format_properties(coltype => str)
+            after  = get_format_property(format)
+            after.delete_if {|key, val| before[key] == val }
+            assert_equal(1, after.size, "change 1 property[:#{coltype}:#{str}] but #{after.size} was changed.#{after.inspect}")
+            assert_equal(num, after[:"#{coltype}"], "[:#{coltype}:#{str}] doesn't match.")
+         end
+      end
+
+
+   end
+   
+   def test_format_properties_with_invalid_value
+   end
+
+   def test_set_font
+   end
+
+   def test_set_size
+   end
+
+   def test_set_color
+   end
+
+   def test_set_bold
+   end
+
+   def test_set_italic
+   end
+
+   def test_set_underline
+   end
+
+   def test_set_font_strikeout
+   end
+
+   def test_set_font_script
+   end
+
+   def test_set_font_outline
+   end
+
+   def test_set_font_shadow
+   end
+
+   def test_set_num_format
+   end
+
+   def test_set_locked
+   end
+
+   def test_set_hidden
+   end
+
+   def test_set_align
+   end
+
+   def test_set_center_across
+   end
+
+   def test_set_text_wrap
+   end
+
+   def test_set_rotation
+   end
+
+   def test_set_indent
+   end
+
+   def test_set_shrink
+   end
+
+   def test_set_text_justlast
+   end
+
+   def test_set_pattern
+   end
+
+   def test_set_bg_color
+   end
+
+   def test_set_fg_color
+   end
+
+   def test_set_border
+   end
+
+   def test_set_border_color
+   end
+
+   def test_copy
+   end
+
+
    def test_xf_biff_size
       perl_file = "perl_output/file_xf_biff"
       size = File.size(perl_file)
@@ -91,16 +215,6 @@ class TC_Format < Test::Unit::TestCase
                   :fg_color => 43, :align => 'top', :text_wrap => true,
                   :border => 1)
      }
-   end
-
-   def teardown
-      begin
-         @pfh.close
-      rescue NameError
-         # no op
-      end
-      File.delete(@ruby_file) if File.exist?(@ruby_file)
-      @format = nil
    end
 
    # added by Nakamura
@@ -195,65 +309,6 @@ class TC_Format < Test::Unit::TestCase
    def test_get_color
    end
    
-   def test_set_type
-   end
-   
-   def test_set_align
-   end
-   
-   def test_set_valign
-   end
-   
-   def test_set_center_across
-   end
-   
-   def test_set_merge
-   end
-   
-   def test_set_bold
-   end
-   
-   def test_set_border
-   end
-   
-   def test_set_border_color
-   end
-   
-   def test_set_rotation
-   end
-   
-   def test_format_properties_with_valid_value
-      valid_properties = get_valid_format_properties
-      valid_properties.each do |k,v|
-         format = Format.new
-         before = get_format_property(format)
-         format.set_format_properties(k => v)
-         after  = get_format_property(format)
-         after.delete_if {|key, val| before[key] == val }
-         assert_equal(1, after.size, "change 1 property[:#{k}] but #{after.size} was changed.#{after.inspect}")
-         assert_equal(v, after[k], "[:#{k}] doesn't match.")
-      end
-
-      # set_color by string
-      valid_color_string_number = get_valid_color_string_number
-      [:color , :bg_color, :fg_color].each do |coltype|
-         valid_color_string_number.each do |str, num|
-            format = Format.new
-            before = get_format_property(format)
-            format.set_format_properties(coltype => str)
-            after  = get_format_property(format)
-            after.delete_if {|key, val| before[key] == val }
-            assert_equal(1, after.size, "change 1 property[:#{coltype}:#{str}] but #{after.size} was changed.#{after.inspect}")
-            assert_equal(num, after[:"#{coltype}"], "[:#{coltype}:#{str}] doesn't match.")
-         end
-      end
-
-
-   end
-   
-   def test_format_properties_with_invalid_value
-   end
-
    def test_method_missing
    end
 
