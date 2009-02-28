@@ -1,4 +1,4 @@
-##############################################################################
+   ##############################################################################
 #
 # Format - A class for defining Excel formatting.
 #
@@ -619,6 +619,28 @@ class Format
       end
    end
 
+   ###############################################################################
+   #
+   # set_font_outline()
+   # 
+   #     Default state:      Outline is off
+   #     Default action:     Turn outline on
+   #     Valid args:         0, 1
+   # 
+   # Macintosh only.
+   #
+   def set_font_outline(arg = 1)
+      begin
+         if    arg == 0 then @font_outline = 0
+         elsif arg == 1 then @font_outline = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_font_outline(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:Strikeout )\n"
+         end   
+      end
+   end
+   
    ###############################################################################
    #
    # set_valign()

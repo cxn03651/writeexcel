@@ -388,7 +388,7 @@ Set the superscript/subscript property of the font. This format is currently not
       # invalid args
       [-1, 0.2, 100, 'script', true, false, nil].each do |arg|
          assert_raise(ArgumentError,
-             "set_font_script(#{arg}) : arg must be 0, 1 or none, or 2."){
+                "set_font_script(#{arg}) : arg must be 0, 1 or none, or 2."){
             fmt = Format.new
             fmt.set_font_script(arg)
          }
@@ -396,7 +396,38 @@ Set the superscript/subscript property of the font. This format is currently not
       
    end
 
+=begin
+set_font_outline()
+
+    Default state:      Outline is off
+    Default action:     Turn outline on
+    Valid args:         0, 1
+
+Macintosh only.
+=end
    def test_set_font_outline
+      # default state
+      assert_equal(0, @format.font_outline, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_font_outline
+      assert_equal(1, fmt.font_outline, "No arg")
+      
+      [0, 1].each do |arg|
+         fmt = Format.new
+         fmt.set_font_outline(arg)
+         assert_equal(arg, fmt.font_outline, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'outline', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_font_outline(#{arg}) : arg must be 0, 1 or none."){
+            fmt = Format.new
+            fmt.set_font_outline(arg)
+         }
+      end
    end
 
    def test_set_font_shadow
