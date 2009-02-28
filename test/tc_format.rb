@@ -62,6 +62,34 @@ class TC_Format < Test::Unit::TestCase
          assert_equal(700, after[:bold])
       end
 
+      # set_format_properties( hash_variable )
+      valid_properties = get_valid_format_properties
+      valid_properties.each do |k,v|
+         arg = {k => v}
+         fmt = Format.new
+         before = get_format_property(fmt)
+         fmt.set_format_properties(arg)
+         after  = get_format_property(fmt)
+         after.delete_if {|key, val| before[key] == val }
+         assert_equal(1, after.size, "change 1 property[:#{k}] but #{after.size} was changed.#{after.inspect}")
+         assert_equal(v, after[k], "[:#{k}] doesn't match.")
+      end
+
+      # set_format_properties( hash_variable, hash_variable... )
+      valid_properties = get_valid_format_properties
+      valid_properties.each do |k,v|
+         arg  = {k => v}
+         arg2 = {:bold => 1}
+         fmt = Format.new
+         before = get_format_property(fmt)
+         fmt.set_format_properties(arg, arg2)
+         after  = get_format_property(fmt)
+         after.delete_if {|key, val| before[key] == val }
+         assert_equal(2, after.size, "change 1 property[:#{k}] but #{after.size} was changed.#{after.inspect}")
+         assert_equal(v, after[k], "[:#{k}] doesn't match.")
+         assert_equal(700, after[:bold])
+      end
+
       # set_color by string
       valid_color_string_number = get_valid_color_string_number
       [:color , :bg_color, :fg_color].each do |coltype|
