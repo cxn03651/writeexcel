@@ -464,7 +464,32 @@ Macintosh only.
       end
    end
 
+=begin
+set_num_format()
+
+    Default state:      General format
+    Default action:     Format index 1
+    Valid args:         See the following table
+
+This method is used to define the numerical format of a number in Excel. It controls whether a number is displayed as an integer, a floating point number, a date, a currency value or some other user defined format.
+=end
    def test_set_num_format
+      # default state
+      assert_equal(0, @format.num_format)
+      
+      # Excel built in Format Index (0 .. 49)
+      [0, 49].each do |n|
+         fmt = Format.new
+         fmt.set_num_format(n)
+         assert_equal(n, fmt.num_format, "n: #{n}")
+      end
+      
+      # Format string
+      ["#,##0", "m/d/yy", "hh:mm:ss"].each do |string|
+         fmt = Format.new
+         fmt.set_num_format(string)
+         assert_equal(string, fmt.num_format, "string: #{string}")
+      end
    end
 
    def test_set_locked
