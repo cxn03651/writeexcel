@@ -234,11 +234,13 @@ set_italic()
          assert_equal(value, fmt.italic, "arg : #{arg}")
       end
       
-      # invalid arg -- arg stored @italic.  it turns italic on
-      [-1, 0.2, 100, 'italic', true, false].each do |arg|
-         fmt = Format.new
-         fmt.set_italic(arg)
-         assert_equal(arg, fmt.italic, "arg : #{arg}")
+      # invalid arg
+      [-1, 0.2, 100, 'italic', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_italic(#{arg}) : invalid arg. arg must be 0, 1 or none."){
+            fmt = Format.new
+            fmt.set_italic(arg)
+         }
       end
    end
 
@@ -270,6 +272,15 @@ Set the underline property of the font.
          fmt = Format.new
          fmt.set_underline(arg)
          assert_equal(arg, fmt.underline, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'under', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_underline(#{arg}) : arg must be 0, 1 or none, 2, 33, 34."){
+            fmt = Format.new
+            fmt.set_underline(arg)
+         }
       end
    end
 

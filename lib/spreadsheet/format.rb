@@ -1,4 +1,4 @@
-##############################################################################
+   ##############################################################################
 #
 # Format - A class for defining Excel formatting.
 #
@@ -32,13 +32,14 @@ class Format
    }
 
    attr_accessor :xf_index, :used_merge
-   attr_accessor :bold, :italic, :underline, :strikeout, :text_wrap, :text_justlast
+   attr_accessor :bold, :strikeout, :text_wrap, :text_justlast
    attr_accessor :text_h_align, :text_v_align
    attr_accessor :fg_color, :bg_color, :color, :font, :size, :font_outline, :font_shadow
    attr_accessor :align, :border
    attr_reader   :font, :size, :font_strikeout, :font_script, :num_format, :locked, :hidden
    attr_reader   :rotation, :indent, :shrink, :pattern, :bottom, :top, :left, :right
    attr_reader   :bottom_color, :top_color, :left_color, :right_color
+   attr_reader   :italic, :underline
 
    ###############################################################################
    #
@@ -483,6 +484,58 @@ class Format
       @color = get_color(color)
    end
    
+   ###############################################################################
+   #
+   # set_italic()
+   #
+   #    Default state:      Italic is off
+   #    Default action:     Turn italic on
+   #    Valid args:         0, 1
+   #
+   #  Set the italic property of the font:
+   #
+   #    format.set_italic()  # Turn italic on
+   #
+   def set_italic(arg = 1)
+      begin
+         if    arg == 1  then @italic = 1   # italic on
+         elsif arg == 0  then @italic = 0   # italic off
+         else
+            raise ArgumentError,
+            "\n\n  set_italic(arg)\n    arg must be 0, 1, or none. ( 0:OFF , 1 and none:ON )\n"
+         end
+      end
+   end
+
+   ###############################################################################
+   #
+   # set_underline()
+   #
+   #    Default state:      Underline is off
+   #    Default action:     Turn on single underline
+   #    Valid args:         0  = No underline
+   #                        1  = Single underline
+   #                        2  = Double underline
+   #                        33 = Single accounting underline
+   #                        34 = Double accounting underline
+   #
+   #  Set the underline property of the font.
+   #
+   def set_underline(arg = 1)
+      begin
+         case arg
+         when  0  then @underline =  0    # off
+         when  1  then @underline =  1    # Single
+         when  2  then @underline =  2    # Double
+         when 33  then @underline = 33    # Single accounting
+         when 34  then @underline = 34    # Double accounting
+         else
+            raise ArgumentError,
+            "\n\n  set_underline(arg)\n    arg must be 0, 1, or none, 2, 33, 34.\n"
+            " ( 0:OFF, 1 and none:Single, 2:Double, 33:Single accounting, 34:Double accounting )\n"
+         end
+      end
+   end
    ###############################################################################
    #
    # set_align()
