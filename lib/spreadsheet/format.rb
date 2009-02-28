@@ -33,13 +33,13 @@ class Format
 
    attr_accessor :xf_index, :used_merge
    attr_accessor :bold, :text_wrap, :text_justlast
-   attr_accessor :text_h_align, :text_v_align
    attr_accessor :fg_color, :bg_color, :color, :font, :size, :font_outline, :font_shadow
    attr_accessor :align, :border
    attr_reader   :font, :size, :font_strikeout, :font_script, :num_format, :locked, :hidden
    attr_reader   :rotation, :indent, :shrink, :pattern, :bottom, :top, :left, :right
    attr_reader   :bottom_color, :top_color, :left_color, :right_color
    attr_reader   :italic, :underline, :font_strikeout
+   attr_reader   :text_h_align, :text_v_align
 
    ###############################################################################
    #
@@ -716,12 +716,44 @@ class Format
    #
    # Set cell alignment.
    #
-   def set_align(location = nil)
+   #     Default state:      Alignment is off
+   #     Default action:     Left alignment
+   #     Valid args:         'left'              Horizontal
+   #                         'center'
+   #                         'right'
+   #                         'fill'
+   #                         'justify'
+   #                         'center_across'
+   # 
+   #                         'top'               Vertical
+   #                         'vcenter'
+   #                         'bottom'
+   #                         'vjustify'
+   # 
+   # This method is used to set the horizontal and vertical text alignment
+   # within a cell. Vertical and horizontal alignments can be combined.
+   #  The method is used as follows:
+   # 
+   #     my $format = $workbook->add_format();
+   #     $format->set_align('center');
+   #     $format->set_align('vcenter');
+   #     $worksheet->set_row(0, 30);
+   #     $worksheet->write(0, 0, 'X', $format);
+   # 
+   # Text can be aligned across two or more adjacent cells using
+   # the center_across property. However, for genuine merged cells
+   # it is better to use the merge_range() worksheet method.
+   # 
+   # The vjustify (vertical justify) option can be used to provide
+   # automatic text wrapping in a cell. The height of the cell will be
+   # adjusted to accommodate the wrapped text. To specify where the text
+   # wraps use the set_text_wrap() method.
+   # 
+   def set_align(align = 'left')
    
-      return if location.nil?           # No default
-      return if location =~ /\d/;       # Ignore numbers
+      return unless align.kind_of?(String)
 
-      location.downcase!
+      location = align.downcase
 
       case location
       when 'left'             then set_text_h_align(1)
@@ -733,7 +765,6 @@ class Format
       when 'merge'            then set_text_h_align(6) # S:WE name 
       when 'distributed'      then set_text_h_align(7)
       when 'equal_space'      then set_text_h_align(7) # ParseExcel 
-
 
       when 'top'              then set_text_v_align(0)
       when 'vcentre'          then set_text_v_align(1)

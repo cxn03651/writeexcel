@@ -597,7 +597,75 @@ Note: This offers weak protection even with a password,
       end
    end
 
+=begin
+set_align()
+
+    Default state:      Alignment is off
+    Default action:     Left alignment
+    Valid args:         'left'              Horizontal
+                        'center'
+                        'right'
+                        'fill'
+                        'justify'
+                        'center_across'
+
+                        'top'               Vertical
+                        'vcenter'
+                        'bottom'
+                        'vjustify'
+
+This method is used to set the horizontal and vertical text alignment
+within a cell. Vertical and horizontal alignments can be combined.
+ The method is used as follows:
+
+    my $format = $workbook->add_format();
+    $format->set_align('center');
+    $format->set_align('vcenter');
+    $worksheet->set_row(0, 30);
+    $worksheet->write(0, 0, 'X', $format);
+
+Text can be aligned across two or more adjacent cells using
+the center_across property. However, for genuine merged cells
+it is better to use the merge_range() worksheet method.
+
+The vjustify (vertical justify) option can be used to provide
+automatic text wrapping in a cell. The height of the cell will be
+adjusted to accommodate the wrapped text. To specify where the text
+wraps use the set_text_wrap() method.
+=end
    def test_set_align
+      # default state
+      assert_equal(0, @format.text_h_align)
+      assert_equal(2, @format.text_v_align)
+      
+      # valid arg
+      valid_args = {'left'=>1, 'center'=>2, 'centre'=>2, 'right'=>3,
+                    'fill'=>4, 'justify'=>5, 'center_across'=>6,
+                    'centre_across'=>6, 'merge'=>6,
+                    'top'=>0, 'vcenter'=>1, 'vcentre'=>1, 'bottom'=>2,
+                    'vjustify'=>3 }
+      valid_args.each do |arg, value|
+         fmt = Format.new
+         fmt.set_align(arg)
+         case arg
+         when 'left', 'center', 'centre', 'right', 'fill', 'justify', 
+              'center_across', 'centre_across', 'merge'
+            assert_equal(value, fmt.text_h_align, "arg: #{arg}")
+         when 'top', 'vcenter', 'vcentre', 'bottom', 'vjustify'
+            assert_equal(value, fmt.text_v_align, "arg: #{arg}")
+         end
+      end
+      
+       # invalid arg
+       [-1, 0, 1.5, nil, true, false, ['left','top'], {'top'=>0}].each do |arg|
+          fmt = Format.new
+          val = get_format_property(fmt)
+#print val.inspect
+#exit
+          fmt.set_align(arg)
+          assert_equal(val[:align], fmt.text_h_align, "arg: #{arg} - text_h_align changed.")
+          assert_equal(val[:valign], fmt.text_v_align, "arg: #{arg} - text_v_align changed.")
+       end
    end
 
    def test_set_center_across
@@ -816,7 +884,6 @@ Note: This offers weak protection even with a password,
          :font_shadow    => 1, 
          :locked         => 0, 
          :hidden         => 1, 
-         :valign         => 'top', 
          :text_wrap      => 1, 
          :text_justlast  => 1, 
          :indent         => 2, 
@@ -871,39 +938,39 @@ Note: This offers weak protection even with a password,
       }
 
       return {
-            :font => format.font, 
-            :size => format.size, 
-            :color => format.color, 
-            :bold => format.bold, 
-            :italic => format.italic, 
-            :underline => format.underline, 
-            :font_strikeout => format.font_strikeout, 
-            :font_script => format.font_script, 
-            :font_outline => format.font_outline, 
-            :font_shadow => format.font_shadow, 
-            :num_format => format.num_format, 
-            :locked => format.locked, 
-            :hidden => format.hidden, 
-            :align => text_h_align[format.text_h_align],
-            :valign => text_v_align[format.text_v_align], 
-            :rotation => format.rotation, 
-            :text_wrap => format.text_wrap, 
-            :text_justlast => format.text_justlast, 
-            :center_across => text_h_align[format.text_h_align], 
-            :indent => format.indent, 
-            :shrink => format.shrink, 
-            :pattern => format.pattern, 
-            :bg_color => format.bg_color, 
-            :fg_color => format.fg_color, 
-            :border => format.border,
-            :bottom => format.bottom, 
-            :top => format.top, 
-            :left => format.left, 
-            :right => format.right, 
-            :bottom_color => format.bottom_color, 
-            :top_color => format.top_color, 
-            :left_color => format.left_color, 
-            :right_color => format.right_color 
+            :font                => format.font, 
+            :size                => format.size, 
+            :color               => format.color, 
+            :bold                => format.bold, 
+            :italic              => format.italic, 
+            :underline           => format.underline, 
+            :font_strikeout      => format.font_strikeout, 
+            :font_script         => format.font_script, 
+            :font_outline        => format.font_outline, 
+            :font_shadow         => format.font_shadow, 
+            :num_format          => format.num_format, 
+            :locked              => format.locked, 
+            :hidden              => format.hidden, 
+            :align               => format.text_h_align,
+            :valign              => format.text_v_align,
+            :rotation            => format.rotation, 
+            :text_wrap           => format.text_wrap, 
+            :text_justlast       => format.text_justlast, 
+            :center_across       => format.text_h_align, 
+            :indent              => format.indent, 
+            :shrink              => format.shrink, 
+            :pattern             => format.pattern, 
+            :bg_color            => format.bg_color, 
+            :fg_color            => format.fg_color, 
+            :border              => format.border,
+            :bottom              => format.bottom, 
+            :top                 => format.top, 
+            :left                => format.left, 
+            :right               => format.right, 
+            :bottom_color        => format.bottom_color, 
+            :top_color           => format.top_color, 
+            :left_color          => format.left_color, 
+            :right_color         => format.right_color 
          }
    end
 
