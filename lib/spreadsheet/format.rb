@@ -674,6 +674,44 @@ class Format
 
    ###############################################################################
    #
+   # set_hidden()
+   # 
+   #     Default state:      Formula hiding is off
+   #     Default action:     Turn hiding on
+   #     Valid args:         0, 1
+   # 
+   # This property is used to hide a formula while still displaying
+   # its result. This is generally used to hide complex calculations
+   # from end users who are only interested in the result. It only has
+   # an effect if the worksheet has been protected,
+   # see the worksheet protect() method.
+   # 
+   #     my hidden = workbook.add_format()
+   #     hidden.set_hidden()
+   # 
+   #     # Enable worksheet protection
+   #     worksheet.protect()
+   # 
+   #     # The formula in this cell isn't visible
+   #     worksheet.write('A1', '=1+2', hidden)
+   # 
+   # Note: This offers weak protection even with a password,
+   #       see the note in relation to the protect() method  .
+   #
+   def set_hidden(arg = 1)
+      begin
+         if    arg == 0 then @hidden = 0
+         elsif arg == 1 then @hidden = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_hidden(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:hiding On )\n"
+         end   
+      end
+   end
+   
+   ###############################################################################
+   #
    # set_align()
    #
    # Set cell alignment.

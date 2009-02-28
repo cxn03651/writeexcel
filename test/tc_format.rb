@@ -547,8 +547,54 @@ Note: This offers weak protection even with a password,
          }
       end
    end
+=begin
+set_hidden()
 
+    Default state:      Formula hiding is off
+    Default action:     Turn hiding on
+    Valid args:         0, 1
+
+This property is used to hide a formula while still displaying
+ its result. This is generally used to hide complex calculations
+ from end users who are only interested in the result.
+ It only has an effect if the worksheet has been protected,
+ see the worksheet protect() method.
+
+    my hidden = workbook.add_format()
+    hidden.set_hidden()
+
+    # Enable worksheet protection
+    worksheet.protect()
+
+    # The formula in this cell isn't visible
+    worksheet.write('A1', '=1+2', hidden)
+
+Note: This offers weak protection even with a password,
+ see the note in relation to the protect() method.
+=end
    def test_set_hidden
+      # default state
+      assert_equal(0, @format.hidden, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_hidden
+      assert_equal(1, fmt.hidden, "No arg")
+      
+      [0, 1].each do |arg|
+         fmt = Format.new
+         fmt.set_hidden(arg)
+         assert_equal(arg, fmt.hidden, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'hidden', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_font_shadow(#{arg}) : arg must be 0, 1 or none."){
+            fmt = Format.new
+            fmt.set_hidden(arg)
+         }
+      end
    end
 
    def test_set_align
