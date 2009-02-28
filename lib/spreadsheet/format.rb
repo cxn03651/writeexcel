@@ -807,7 +807,34 @@ class Format
    #
    #
    def set_merge
-      set_text_h_align(6);
+      set_text_h_align(6)
+   end
+
+   ###############################################################################
+   #
+   #set_text_wrap()
+   #
+   #    Default state:      Text wrap is off
+   #    Default action:     Turn text wrap on
+   #    Valid args:         0, 1
+   #
+   # Here is an example using the text wrap property, the escape
+   # character \n is used to indicate the end of line:
+   #
+   #    format = workbook.add_format()
+   #    format.set_text_wrap()
+   #    worksheet.write(0, 0, "It's\na bum\nwrap", format)
+   #
+   def set_text_wrap(arg = 1)
+      begin
+         if    arg == 0 then @text_wrap = 0
+         elsif arg == 1 then @text_wrap = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_text_wrap(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:text wrap On )\n"
+         end   
+      end
    end
 
    ###############################################################################

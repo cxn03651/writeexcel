@@ -697,36 +697,102 @@ the other cells should be blank:
       assert_equal(6, @format.text_h_align)
    end
 
+=begin
+set_text_wrap()
+
+    Default state:      Text wrap is off
+    Default action:     Turn text wrap on
+    Valid args:         0, 1
+
+ Here is an example using the text wrap property, the escape
+ character \n is used to indicate the end of line:
+
+    format = workbook.add_format()
+    format.set_text_wrap()
+    worksheet.write(0, 0, "It's\na bum\nwrap", format)
+=end
    def test_set_text_wrap
+      # default state
+      assert_equal(0, @format.text_wrap, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_text_wrap
+      assert_equal(1, fmt.text_wrap, "No arg")
+      
+      [0, 1].each do |arg|
+         fmt = Format.new
+         fmt.set_text_wrap(arg)
+         assert_equal(arg, fmt.text_wrap, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'text_wrap', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_text_wrap(#{arg}) : arg must be 0, 1 or none."){
+            fmt = Format.new
+            fmt.set_text_wrap(arg)
+         }
+      end
    end
 
+=begin
+
+=end
    def test_set_rotation
    end
 
+=begin
+
+=end
    def test_set_indent
    end
 
+=begin
+
+=end
    def test_set_shrink
    end
 
+=begin
+
+=end
    def test_set_text_justlast
    end
 
+=begin
+
+=end
    def test_set_pattern
    end
 
+=begin
+
+=end
    def test_set_bg_color
    end
 
+=begin
+
+=end
    def test_set_fg_color
    end
 
+=begin
+
+=end
    def test_set_border
    end
 
+=begin
+
+=end
    def test_set_border_color
    end
 
+=begin
+
+=end
    def test_copy
    end
 
