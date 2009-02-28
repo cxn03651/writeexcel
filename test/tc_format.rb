@@ -38,25 +38,38 @@ class TC_Format < Test::Unit::TestCase
    end
 
    def test_format_properties_with_valid_value
+      # set_format_properties( propty => val )
       valid_properties = get_valid_format_properties
       valid_properties.each do |k,v|
-         format = Format.new
-         before = get_format_property(format)
-         format.set_format_properties(k => v)
-         after  = get_format_property(format)
+         fmt = Format.new
+         before = get_format_property(fmt)
+         fmt.set_format_properties(k => v)
+         after  = get_format_property(fmt)
          after.delete_if {|key, val| before[key] == val }
          assert_equal(1, after.size, "change 1 property[:#{k}] but #{after.size} was changed.#{after.inspect}")
          assert_equal(v, after[k], "[:#{k}] doesn't match.")
+      end
+
+      # set_format_properties( propty_1 => val1, propty_2 => val2)
+      valid_properties.each do |k,v|
+         fmt = Format.new
+         before = get_format_property(fmt)
+         fmt.set_format_properties(k => v, :bold => 1)
+         after  = get_format_property(fmt)
+         after.delete_if {|key, val| before[key] == val }
+         assert_equal(2, after.size, "change 1 property[:#{k}] but #{after.size} was changed.#{after.inspect}")
+         assert_equal(v, after[k], "[:#{k}] doesn't match.")
+         assert_equal(700, after[:bold])
       end
 
       # set_color by string
       valid_color_string_number = get_valid_color_string_number
       [:color , :bg_color, :fg_color].each do |coltype|
          valid_color_string_number.each do |str, num|
-            format = Format.new
-            before = get_format_property(format)
-            format.set_format_properties(coltype => str)
-            after  = get_format_property(format)
+            fmt = Format.new
+            before = get_format_property(fmt)
+            fmt.set_format_properties(coltype => str)
+            after  = get_format_property(fmt)
             after.delete_if {|key, val| before[key] == val }
             assert_equal(1, after.size, "change 1 property[:#{coltype}:#{str}] but #{after.size} was changed.#{after.inspect}")
             assert_equal(num, after[:"#{coltype}"], "[:#{coltype}:#{str}] doesn't match.")
@@ -513,25 +526,25 @@ Set the underline property of the font.
 
    def get_valid_format_properties
       {
-         :font => 'Times New Roman', 
-         :size => 30, 
-         :color => 8, 
-         :italic => 1, 
-         :underline => 1, 
+         :font           => 'Times New Roman', 
+         :size           => 30, 
+         :color          => 8, 
+         :italic         => 1, 
+         :underline      => 1, 
          :font_strikeout => 1, 
-         :font_script => 1, 
-         :font_outline => 1, 
-         :font_shadow => 1, 
-         :locked => 0, 
-         :hidden => 1, 
-         :valign => 'top', 
-         :text_wrap => 1, 
-         :text_justlast => 1, 
-         :indent => 2, 
-         :shrink => 1, 
-         :pattern => 18, 
-         :bg_color => 30, 
-         :fg_color => 63
+         :font_script    => 1, 
+         :font_outline   => 1, 
+         :font_shadow    => 1, 
+         :locked         => 0, 
+         :hidden         => 1, 
+         :valign         => 'top', 
+         :text_wrap      => 1, 
+         :text_justlast  => 1, 
+         :indent         => 2, 
+         :shrink         => 1, 
+         :pattern        => 18, 
+         :bg_color       => 30, 
+         :fg_color       => 63
       }
    end
    
