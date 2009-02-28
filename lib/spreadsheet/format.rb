@@ -584,6 +584,94 @@ class Format
          end   
       end
    end
+
+   ###############################################################################
+   #
+   # set_font_outline()
+   # 
+   #     Default state:      Outline is off
+   #     Default action:     Turn outline on
+   #     Valid args:         0, 1
+   # 
+   # Macintosh only.
+   #
+   def set_font_outline(arg = 1)
+      begin
+         if    arg == 0 then @font_outline = 0
+         elsif arg == 1 then @font_outline = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_font_outline(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:outline on )\n"
+         end   
+      end
+   end
+   
+   ###############################################################################
+   #
+   # set_font_shadow()
+   # 
+   #     Default state:      Shadow is off
+   #     Default action:     Turn shadow on
+   #     Valid args:         0, 1
+   # 
+   # Macintosh only.
+   #
+   def set_font_shadow(arg = 1)
+      begin
+         if    arg == 0 then @font_shadow = 0
+         elsif arg == 1 then @font_shadow = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_font_shadow(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:shadow on )\n"
+         end   
+      end
+   end
+   
+   ###############################################################################
+   #
+   # set_locked()
+   # 
+   #     Default state:      Cell locking is on
+   #     Default action:     Turn locking on
+   #     Valid args:         0, 1
+   # 
+   # This property can be used to prevent modification of a cells contents.
+   # Following Excel's convention, cell locking is turned on by default.
+   # However, it only has an effect if the worksheet has been protected,
+   # see the worksheet protect() method.
+   #
+   #     locked  = workbook.add_format()
+   #     locked.set_locked(1) # A non-op
+   # 
+   #     unlocked = workbook.add_format()
+   #     locked.set_locked(0)
+   # 
+   #     # Enable worksheet protection
+   #     worksheet.protect()
+   # 
+   #     # This cell cannot be edited.
+   #     worksheet.write('A1', '=1+2', locked)
+   # 
+   #     # This cell can be edited.
+   #     worksheet.write('A2', '=1+2', unlocked)
+   # 
+   # Note: This offers weak protection even with a password, see the note
+   # in relation to the protect() method.
+   #
+   def set_locked(arg = 1)
+      begin
+         if    arg == 0 then @locked = 0
+         elsif arg == 1 then @locked = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_locked(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:Lock On )\n"
+         end   
+      end
+   end
+
    ###############################################################################
    #
    # set_align()
@@ -619,50 +707,6 @@ class Format
       end
    end
 
-   ###############################################################################
-   #
-   # set_font_outline()
-   # 
-   #     Default state:      Outline is off
-   #     Default action:     Turn outline on
-   #     Valid args:         0, 1
-   # 
-   # Macintosh only.
-   #
-   def set_font_outline(arg = 1)
-      begin
-         if    arg == 0 then @font_outline = 0
-         elsif arg == 1 then @font_outline = 1
-         else
-            raise ArgumentError,
-               "\n\n  set_font_outline(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
-               " ( 0:OFF, 1 and none:Strikeout )\n"
-         end   
-      end
-   end
-   
-   ###############################################################################
-   #
-   # set_font_shadow()
-   # 
-   #     Default state:      Shadow is off
-   #     Default action:     Turn shadow on
-   #     Valid args:         0, 1
-   # 
-   # Macintosh only.
-   #
-   def set_font_shadow(arg = 1)
-      begin
-         if    arg == 0 then @font_shadow = 0
-         elsif arg == 1 then @font_shadow = 1
-         else
-            raise ArgumentError,
-               "\n\n  set_font_shadow(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
-               " ( 0:OFF, 1 and none:Strikeout )\n"
-         end   
-      end
-   end
-   
    ###############################################################################
    #
    # set_valign()

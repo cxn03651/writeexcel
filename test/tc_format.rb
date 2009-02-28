@@ -455,7 +455,7 @@ Macintosh only.
       end
       
       # invalid args
-      [-1, 0.2, 100, 'outline', true, false, nil].each do |arg|
+      [-1, 0.2, 100, 'shadow', true, false, nil].each do |arg|
          assert_raise(ArgumentError,
              "set_font_shadow(#{arg}) : arg must be 0, 1 or none."){
             fmt = Format.new
@@ -492,7 +492,60 @@ This method is used to define the numerical format of a number in Excel. It cont
       end
    end
 
+=begin
+set_locked()
+
+    Default state:      Cell locking is on
+    Default action:     Turn locking on
+    Valid args:         0, 1
+
+This property can be used to prevent modification of a cells
+ contents. Following Excel's convention, cell locking is 
+ turned on by default. However, it only has an effect if 
+ the worksheet has been protected, see the worksheet protect()
+  method.
+
+    locked  = workbook.add_format()
+    locked.set_locked(1)  # A non-op
+
+    unlocked = workbook.add_format()
+    locked.set_locked(0)
+
+    # Enable worksheet protection
+    worksheet.protect()
+
+    # This cell cannot be edited.
+    worksheet.write('A1', '=1+2', locked)
+
+    # This cell can be edited.
+    worksheet->write('A2', '=1+2', unlocked)
+
+Note: This offers weak protection even with a password,
+ see the note in relation to the protect() method.
+=end
    def test_set_locked
+      # default state
+      assert_equal(1, @format.locked, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_locked
+      assert_equal(1, fmt.locked, "No arg")
+      
+      [0, 1].each do |arg|
+         fmt = Format.new
+         fmt.set_locked(arg)
+         assert_equal(arg, fmt.locked, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'locked', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_font_shadow(#{arg}) : arg must be 0, 1 or none."){
+            fmt = Format.new
+            fmt.set_locked(arg)
+         }
+      end
    end
 
    def test_set_hidden
