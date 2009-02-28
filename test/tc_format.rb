@@ -668,7 +668,33 @@ wraps use the set_text_wrap() method.
        end
    end
 
+=begin
+set_center_across()
+
+    Default state:      Center across selection is off
+    Default action:     Turn center across on
+    Valid args:         1
+
+Text can be aligned across two or more adjacent cells
+using the set_center_across() method. This is an alias
+for the set_align('center_across') method call.
+
+Only one cell should contain the text,
+the other cells should be blank:
+
+    format = workbook.add_format()
+    format.set_center_across()
+
+    worksheet.write(1, 1, 'Center across selection', format)
+    worksheet.write_blank(1, 2, format)
+=end
    def test_set_center_across
+      # default state
+      assert_equal(0, @format.text_h_align)
+      
+      # method call then center_across is set. if arg is none, numeric, string, whatever.
+      @format.set_center_across
+      assert_equal(6, @format.text_h_align)
    end
 
    def test_set_text_wrap
