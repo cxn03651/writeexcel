@@ -1,4 +1,4 @@
-   ##############################################################################
+##############################################################################
 #
 # Format - A class for defining Excel formatting.
 #
@@ -32,14 +32,14 @@ class Format
    }
 
    attr_accessor :xf_index, :used_merge
-   attr_accessor :bold, :strikeout, :text_wrap, :text_justlast
+   attr_accessor :bold, :text_wrap, :text_justlast
    attr_accessor :text_h_align, :text_v_align
    attr_accessor :fg_color, :bg_color, :color, :font, :size, :font_outline, :font_shadow
    attr_accessor :align, :border
    attr_reader   :font, :size, :font_strikeout, :font_script, :num_format, :locked, :hidden
    attr_reader   :rotation, :indent, :shrink, :pattern, :bottom, :top, :left, :right
    attr_reader   :bottom_color, :top_color, :left_color, :right_color
-   attr_reader   :italic, :underline
+   attr_reader   :italic, :underline, :font_strikeout
 
    ###############################################################################
    #
@@ -58,7 +58,7 @@ class Format
       @italic         = 0
       @color          = 0x7FFF
       @underline      = 0
-      @strikeout      = 0
+      @font_strikeout      = 0
       @font_outline   = 0
       @font_shadow    = 0
       @font_script    = 0
@@ -341,7 +341,7 @@ class Format
 
       grbit      = 0x00;
       grbit     |= 0x02 if @italic != 0
-      grbit     |= 0x08 if @strikeout != 0
+      grbit     |= 0x08 if @font_strikeout != 0
       grbit     |= 0x10 if @font_outline != 0
       grbit     |= 0x20 if @font_shadow != 0
 
@@ -365,7 +365,7 @@ class Format
       # generating a unique key. Elements that hold a large range of numbers
       # e.g. _color are placed between two binary elements such as _italic
 
-      key  = "#{@font}#{@size}#{@font_script}#{@underline}#{@strikeout}#{@bold}#{@font_outline}"
+      key  = "#{@font}#{@size}#{@font_script}#{@underline}#{@font_strikeout}#{@bold}#{@font_outline}"
       key += "#{@font_family}#{@font_charset}#{@font_shadow}#{@color}#{@italic}#{@font_encoding}"
       result =  key.gsub(' ', '_') # Convert the key to a single word
 
@@ -502,7 +502,7 @@ class Format
          elsif arg == 0  then @italic = 0   # italic off
          else
             raise ArgumentError,
-            "\n\n  set_italic(arg)\n    arg must be 0, 1, or none. ( 0:OFF , 1 and none:ON )\n"
+            "\n\n  set_italic(#{arg.inspect})\n    arg must be 0, 1, or none. ( 0:OFF , 1 and none:ON )\n"
          end
       end
    end
@@ -531,11 +531,34 @@ class Format
          when 34  then @underline = 34    # Double accounting
          else
             raise ArgumentError,
-            "\n\n  set_underline(arg)\n    arg must be 0, 1, or none, 2, 33, 34.\n"
+            "\n\n  set_underline(#{arg.inspect})\n    arg must be 0, 1, or none, 2, 33, 34.\n"
             " ( 0:OFF, 1 and none:Single, 2:Double, 33:Single accounting, 34:Double accounting )\n"
          end
       end
    end
+
+   ###############################################################################
+   #
+   # set_font_strikeout()
+   # 
+   #     Default state:      Strikeout is off
+   #     Default action:     Turn strikeout on
+   #     Valid args:         0, 1
+   # 
+   # Set the strikeout property of the font.
+   #
+   def set_font_strikeout(arg = 1)
+      begin
+         if    arg == 0 then @font_strikeout = 0
+         elsif arg == 1 then @font_strikeout = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_font_strikeout(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:Strikeout )\n"
+         end   
+      end
+   end
+
    ###############################################################################
    #
    # set_align()

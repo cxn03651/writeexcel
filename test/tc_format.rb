@@ -325,7 +325,38 @@ Set the underline property of the font.
       end
    end
 
+=begin
+set_font_strikeout()
+
+    Default state:      Strikeout is off
+    Default action:     Turn strikeout on
+    Valid args:         0, 1
+
+Set the strikeout property of the font.
+=end
    def test_set_font_strikeout
+      # default state
+      assert_equal(0, @format.font_strikeout, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_font_strikeout
+      assert_equal(1, fmt.font_strikeout, "No arg")
+      
+      [0, 1].each do |arg|
+         fmt = Format.new
+         fmt.set_font_strikeout(arg)
+         assert_equal(arg, fmt.font_strikeout, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'strikeout', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_font_strikeout(#{arg}) : arg must be 0, 1 or none."){
+            fmt = Format.new
+            fmt.set_font_strikeout(arg)
+         }
+      end
    end
 
    def test_set_font_script
