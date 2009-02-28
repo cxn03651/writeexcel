@@ -643,6 +643,28 @@ class Format
    
    ###############################################################################
    #
+   # set_font_shadow()
+   # 
+   #     Default state:      Shadow is off
+   #     Default action:     Turn shadow on
+   #     Valid args:         0, 1
+   # 
+   # Macintosh only.
+   #
+   def set_font_shadow(arg = 1)
+      begin
+         if    arg == 0 then @font_shadow = 0
+         elsif arg == 1 then @font_shadow = 1
+         else
+            raise ArgumentError,
+               "\n\n  set_font_shadow(#{arg.inspect})\n    arg must be 0, 1, or none.\n"
+               " ( 0:OFF, 1 and none:Strikeout )\n"
+         end   
+      end
+   end
+   
+   ###############################################################################
+   #
    # set_valign()
    #
    # Set vertical cell alignment. This is required by the set_format_properties()

@@ -430,7 +430,38 @@ Macintosh only.
       end
    end
 
+=begin
+set_font_shadow()
+
+    Default state:      Shadow is off
+    Default action:     Turn shadow on
+    Valid args:         0, 1
+
+Macintosh only.
+=end
    def test_set_font_shadow
+      # default state
+      assert_equal(0, @format.font_shadow, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_font_shadow
+      assert_equal(1, fmt.font_shadow, "No arg")
+      
+      [0, 1].each do |arg|
+         fmt = Format.new
+         fmt.set_font_shadow(arg)
+         assert_equal(arg, fmt.font_shadow, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'outline', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_font_shadow(#{arg}) : arg must be 0, 1 or none."){
+            fmt = Format.new
+            fmt.set_font_shadow(arg)
+         }
+      end
    end
 
    def test_set_num_format
