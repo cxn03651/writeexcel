@@ -801,9 +801,21 @@ with vertical properties.
    end
 
 =begin
+set_shrink()
 
+    Default state:      Text shrinking is off
+    Default action:     Turn "shrink to fit" on
+    Valid args:         1
+
+ This method can be used to shrink text so that it fits in a cell.
+
+    format = workbook.add_format()
+    format.set_shrink()
+    worksheet.write(0, 0, 'Honey, I shrunk the text!', format)
 =end
    def test_set_shrink
+      # default state
+      assert_equal(0, @format.shrink)
    end
 
 =begin
