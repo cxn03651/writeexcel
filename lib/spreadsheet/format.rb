@@ -909,18 +909,26 @@ class Format
    #
    def set_rotation(rotation)
       # Argument should be a number
-      return if !(rotation =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
+      return unless rotation.kind_of?(Numeric)
 
       # The arg type can be a double but the Excel dialog only allows integers.
       rotation = rotation.to_i
 
-      if (rotation == 270)
-         rotation = 255
-      elsif (rotation >= -90 or rotation <= 90)
-         rotation = -rotation +90 if rotation < 0;
+#      if (rotation == 270)
+#         rotation = 255
+#      elsif (rotation >= -90 or rotation <= 90)
+#         rotation = -rotation +90 if rotation < 0;
+#      else
+#         # carp "Rotation $rotation outside range: -90 <= angle <= 90";
+#         rotation = 0;
+#      end
+#
+      if -90 <= rotation && rotation < 0
+         rotation = rotation + 360
+      elsif 0 <= rotation && rotation <= 90
+      elsif rotation == 270
       else
-         # carp "Rotation $rotation outside range: -90 <= angle <= 90";
-         rotation = 0;
+         rotation = 0
       end
 
       @rotation = rotation;

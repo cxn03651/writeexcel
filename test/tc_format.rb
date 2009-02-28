@@ -737,9 +737,32 @@ set_text_wrap()
    end
 
 =begin
+set_rotation()
 
+    Default state:      Text rotation is off
+    Default action:     None
+    Valid args:         Integers in the range -90 to 90 and 270
+
+ Set the rotation of the text in a cell. The rotation can be
+ any angle in the range -90 to 90 degrees.
+
+    format = workbook.add_format()
+    format.set_rotation(30)
+    worksheet.write(0, 0, 'This text is rotated', format)
+
+ The angle 270 is also supported. This indicates text where
+ the letters run from top to bottom.
 =end
    def test_set_rotation
+      # default state
+      assert(0, @format.rotation)
+      
+#      # valid args  -90 <= angle <=  90, 270   angle can be float or double
+#      [-90.0, 89, 0, 89, 90, 270].each do |angle|
+#         fmt = Format.new
+#         fmt.set_rotation(angle)
+#         assert_equal(angle, fmt.rotation, "angle: #{angle}")
+#      end
    end
 
 =begin
