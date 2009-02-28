@@ -766,9 +766,38 @@ set_rotation()
    end
 
 =begin
+set_indent()
 
+    Default state:      Text indentation is off
+    Default action:     Indent text 1 level
+    Valid args:         Positive integers
+
+This method can be used to indent text. The argument, which should
+be an integer, is taken as the level of indentation:
+
+    format = workbook.add_format()
+    format.set_indent(2)
+    worksheet.write(0, 0, 'This text is indented', format)
+
+Indentation is a horizontal alignment property. It will override
+any other horizontal properties but it can be used in conjunction
+with vertical properties.
 =end
    def test_set_indent
+      # default state
+      assert_equal(0, @format.indent)
+      
+      # valid arg -- Positive integers
+      [1, 10000000].each do |indent|
+         fmt = Format.new
+         fmt.set_indent(indent)
+         assert_equal(indent, fmt.indent, "indent: #{indent}")
+      end
+      
+      # invalid arg
+      [].each do |indent|
+
+      end
    end
 
 =begin
