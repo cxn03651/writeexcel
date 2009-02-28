@@ -561,6 +561,31 @@ class Format
 
    ###############################################################################
    #
+   # set_font_script()
+   # 
+   #     Default state:      Super/Subscript is off
+   #     Default action:     Turn Superscript on
+   #     Valid args:         0  = Normal
+   #                         1  = Superscript
+   #                         2  = Subscript
+   # 
+   # Set the superscript/subscript property of the font. 
+   # This format is currently not very useful.
+   #
+   def set_font_script(arg = 1)
+      begin
+         if    arg == 0 then @font_script = 0
+         elsif arg == 1 then @font_script = 1
+         elsif arg == 2 then @font_script = 2
+         else
+            raise ArgumentError,
+               "\n\n  set_font_script(#{arg.inspect})\n    arg must be 0, 1, or none. or 2\n"
+               " ( 0:OFF, 1 and none:Superscript, 2:Subscript )\n"
+         end   
+      end
+   end
+   ###############################################################################
+   #
    # set_align()
    #
    # Set cell alignment.

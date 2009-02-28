@@ -359,7 +359,41 @@ Set the strikeout property of the font.
       end
    end
 
+=begin
+set_font_script()
+
+    Default state:      Super/Subscript is off
+    Default action:     Turn Superscript on
+    Valid args:         0  = Normal
+                        1  = Superscript
+                        2  = Subscript
+
+Set the superscript/subscript property of the font. This format is currently not very useful.
+=end
    def test_set_font_script
+      # default state
+      assert_equal(0, @format.font_script, "default state")
+      
+      # valid args
+      fmt = Format.new
+      fmt.set_font_script
+      assert_equal(1, fmt.font_script, "No arg")
+      
+      [0, 1, 2].each do |arg|
+         fmt = Format.new
+         fmt.set_font_script(arg)
+         assert_equal(arg, fmt.font_script, "arg : #{arg}")
+      end
+      
+      # invalid args
+      [-1, 0.2, 100, 'script', true, false, nil].each do |arg|
+         assert_raise(ArgumentError,
+             "set_font_script(#{arg}) : arg must be 0, 1 or none, or 2."){
+            fmt = Format.new
+            fmt.set_font_script(arg)
+         }
+      end
+      
    end
 
    def test_set_font_outline
