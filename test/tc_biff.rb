@@ -16,6 +16,7 @@ require "biffwriter"
 class TC_BIFFWriter < Test::Unit::TestCase
    def setup
       @biff = BIFFWriter.new
+      @ruby_file = "delete_me"
    end
 
    def test_append_no_error
@@ -58,7 +59,18 @@ class TC_BIFFWriter < Test::Unit::TestCase
       assert_equal(34, @biff.datasize, "Bad data size for mixed data")
    end
 
+   def test_add_continue
+      perl_file = "perl_output/biff_add_continue_testdata"
+      size = File.size(perl_file)
+      @fh = File.new(@ruby_file,"w+")
+      @fh.print(@biff.add_continue('testdata'))
+      @fh.close
+      rsize = File.size(@ruby_file)
+      assert_equal(size,rsize,"File sizes not the same")
+   end
+
    def teardown
       @biff = nil
+#      File.delete(@ruby_file) if File.exist?(@ruby_file)
    end
 end

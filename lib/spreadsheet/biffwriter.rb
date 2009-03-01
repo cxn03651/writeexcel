@@ -86,4 +86,55 @@ class BIFFWriter
  
     append(header)
   end
+
+   ###############################################################################
+   #
+   # _add_continue()
+   #
+   # Excel limits the size of BIFF records. In Excel 5 the limit is 2084 bytes. In
+   # Excel 97 the limit is 8228 bytes. Records that are longer than these limits
+   # must be split up into CONTINUE blocks.
+   #
+   # This function take a long BIFF record and inserts CONTINUE records as
+   # necessary.
+   #
+   # Some records have their own specialised Continue blocks so there is also an
+   # option to bypass this function.
+   #
+   def add_continue(data)
+      record      = 0x003C # Record identifier
+
+      # Skip this if another method handles the continue blocks.
+      return data if @ignore_continue != 0
+
+      # The first 2080/8224 bytes remain intact. However, we have to change
+      # the length field of the record.
+      #
+
+      # in perl
+      #  $tmp = substr($data, 0, $limit, "");
+      if data.length > @limit
+         tmp = data[0, @limit]
+         data[0, @limit] = ''
+      else
+         tmp = data.dup
+         data = ''
+      end
+
+      tmp[2, 2] = [@limit-4].pack('v')
+
+      # Strip out chunks of 2080/8224 bytes +4 for the header.
+      while (data.length > @limit)
+         header  = [record, @limit].pack("vv")
+         tmp     = tmp + header + data[0, @limit]
+         data[0, @limit] = ''
+      end
+
+      # Mop up the last of the data
+      header  = [record, data.length].pack("vv")
+      tmp     = tmp + header + data
+
+      return tmp
+   end
+
 end   
