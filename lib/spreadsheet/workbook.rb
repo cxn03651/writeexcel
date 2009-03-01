@@ -246,7 +246,7 @@ class Workbook < BIFFWriter
    #
    # Returns: reference to a worksheet object
    #
-   def add_worksheet(name, encoding)
+   def add_worksheet(name, encoding = 0)
       name, encoding = check_sheetname(name, encoding)
 
       index = @worksheets.size
@@ -273,6 +273,131 @@ class Workbook < BIFFWriter
 #       @parser->set_ext_sheets($name, $index) # Store names in Formula.pm
        return worksheet
    end
+
+###############################################################################
+#
+# _check_sheetname($name, $encoding)
+#
+# Check for valid worksheet names. We check the length, if it contains any
+# invalid characters and if the name is unique in the workbook.
+#
+def check_sheetname(name, encoding)
+#
+# This is mock!  
+#
+#
+   return [name, encoding]
+
+=begin
+    my $self            = shift;
+    my $name            = $_[0] || "";
+    my $encoding        = $_[1] || 0;
+    my $limit           = $encoding ? 62 : 31;
+    my $invalid_char    = %r![\[\]:*?/\\]!
+
+    # Supply default "Sheet" name if none has been defined.
+    my $index     = @{$self->{_worksheets}};
+    my $sheetname = $self->{_sheetname};
+
+    if ($name eq "" ) {
+        $name     = $sheetname . ($index+1);
+        $encoding = 0;
+    }
+
+
+    # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
+    croak "Sheetname $name must be <= 31 chars" if length $name > $limit;
+
+    # Check that Unicode sheetname has an even number of bytes
+    croak 'Odd number of bytes in Unicode worksheet name:' . $name
+          if $encoding == 1 and length($name) % 2;
+
+
+    # Check that sheetname doesn't contain any invalid characters
+    if ($encoding != 1 and $name =~ $invalid_char) {
+        # Check ASCII names
+        croak 'Invalid character []:*?/\\ in worksheet name: ' . $name;
+    }
+    else {
+        # Extract any 8bit clean chars from the UTF16 name and validate them.
+        for my $wchar ($name =~ /../sg) {
+            my ($hi, $lo) = unpack "aa", $wchar;
+            if ($hi eq "\0" and $lo =~ $invalid_char) {
+                croak 'Invalid character []:*?/\\ in worksheet name: ' . $name;
+            }
+        }
+    }
+
+
+    # Handle utf8 strings in perl 5.8.
+    if ($] >= 5.008) {
+        require Encode;
+
+        if (Encode::is_utf8($name)) {
+            $name = Encode::encode("UTF-16BE", $name);
+            $encoding = 1;
+        }
+    }
+
+
+    # Check that the worksheet name doesn't already exist since this is a fatal
+    # error in Excel 97. The check must also exclude case insensitive matches
+    # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
+    # to take the encoding into account.
+    #
+    foreach my $worksheet (@{$self->{_worksheets}}) {
+        my $name_a  = $name;
+        my $encd_a  = $encoding;
+        my $name_b  = $worksheet->{_name};
+        my $encd_b  = $worksheet->{_encoding};
+        my $error   = 0;
+
+        if    ($encd_a == 0 and $encd_b == 0) {
+            $error  = 1 if lc($name_a) eq lc($name_b);
+        }
+        elsif ($encd_a == 0 and $encd_b == 1) {
+            $name_a = pack "n*", unpack "C*", $name_a;
+            $error  = 1 if lc($name_a) eq lc($name_b);
+        }
+        elsif ($encd_a == 1 and $encd_b == 0) {
+            $name_b = pack "n*", unpack "C*", $name_b;
+            $error  = 1 if lc($name_a) eq lc($name_b);
+        }
+        elsif ($encd_a == 1 and $encd_b == 1) {
+            # We can do a true case insensitive test with Perl 5.8 and utf8.
+            if ($] >= 5.008) {
+                $name_a = Encode::decode("UTF-16BE", $name_a);
+                $name_b = Encode::decode("UTF-16BE", $name_b);
+                $error  = 1 if lc($name_a) eq lc($name_b);
+            }
+            else {
+            # We can't easily do a case insensitive test of the UTF16 names.
+            # As a special case we check if all of the high bytes are nulls and
+            # then do an ASCII style case insensitive test.
+
+                # Strip out the high bytes (funkily).
+                my $hi_a = grep {ord} $name_a =~ /(.)./sg;
+                my $hi_b = grep {ord} $name_b =~ /(.)./sg;
+
+                if ($hi_a or $hi_b) {
+                    $error  = 1 if    $name_a  eq    $name_b;
+                }
+                else {
+                    $error  = 1 if lc($name_a) eq lc($name_b);
+                }
+            }
+        }
+
+        # If any of the cases failed we throw the error here.
+        if ($error) {
+            croak "Worksheet name '$name', with case ignored, " .
+                  "is already in use";
+        }
+    }
+
+    return ($name,  $encoding);
+=end
+end
 
    ###############################################################################
    #
