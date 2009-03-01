@@ -1,3 +1,5 @@
+require 'digest/md5'
+
 class Workbook < BIFFWriter
    BOF = 11
    EOF = 4
@@ -6,6 +8,233 @@ class Workbook < BIFFWriter
    attr_accessor :date_system
    attr_reader :formats, :xf_index, :worksheets
 
+   ###############################################################################
+   #
+   # new()
+   #
+   # Constructor. Creates a new Workbook object from a BIFFwriter object.
+   #
+   def initialize(filename)
+      super
+      @filename              = filename
+#      @parser                = $parser 
+      @tempdir               = nil
+      @v1904                 = 0 
+      @activesheet           = 0 
+      @firstsheet            = 0 
+      @selected              = 0 
+      @xf_index              = 0 
+      @fileclosed            = 0 
+      @biffsize              = 0 
+      @sheetname             = "Sheet" 
+      @url_format            = '' 
+      @codepage              = 0x04E4 
+      @worksheets            = [] 
+      @sheetnames            = [] 
+      @formats               = [] 
+      @palette               = [] 
+
+      @using_tmpfile         = 1 
+      @filehandle            = "" 
+      @temp_file             = "" 
+      @internal_fh           = 0 
+      @fh_out                = "" 
+
+      @str_total             = 0 
+      @str_unique            = 0 
+      @str_table             = {} 
+      @str_array             = [] 
+      @str_block_sizes       = [] 
+      @extsst_offsets        = [] 
+      @extsst_buckets        = 0 
+      @extsst_bucket_size    = 0 
+
+      @ext_ref_count         = 0 
+      @ext_refs              = {} 
+
+      @mso_clusters          = [] 
+      @mso_size              = 0 
+
+      @hideobj               = 0 
+      @compatibility         = 0 
+
+      @add_doc_properties    = 0 
+#      @localtime             = [localtime()] 
+
+      # Add the in-built style formats and the default cell format.
+      add_format(:type => 1)                        #  0 Normal
+      add_format(:type => 1)                        #  1 RowLevel 1
+      add_format(:type => 1)                        #  2 RowLevel 2
+      add_format(:type => 1)                        #  3 RowLevel 3
+      add_format(:type => 1)                        #  4 RowLevel 4
+      add_format(:type => 1)                        #  5 RowLevel 5
+      add_format(:type => 1)                        #  6 RowLevel 6
+      add_format(:type => 1)                        #  7 RowLevel 7
+      add_format(:type => 1)                        #  8 ColLevel 1
+      add_format(:type => 1)                        #  9 ColLevel 2
+      add_format(:type => 1)                        # 10 ColLevel 3
+      add_format(:type => 1)                        # 11 ColLevel 4
+      add_format(:type => 1)                        # 12 ColLevel 5
+      add_format(:type => 1)                        # 13 ColLevel 6
+      add_format(:type => 1)                        # 14 ColLevel 7
+      add_format()                                  # 15 Cell XF
+      add_format(:type => 1, :num_format => 0x2B)   # 16 Comma
+      add_format(:type => 1, :num_format => 0x29)   # 17 Comma[0]
+      add_format(:type => 1, :num_format => 0x2C)   # 18 Currency
+      add_format(:type => 1, :num_format => 0x2A)   # 19 Currency[0]
+      add_format(:type => 1, :num_format => 0x09)   # 20 Percent
+
+      # Add the default format for hyperlinks
+      @url_format = add_format(:color => 'blue', :underline => 1) 
+
+      # Convert the filename to a filehandle to pass to the OLE writer when the
+      # file is closed. If the filename is a reference it is assumed that it is
+      # a valid filehandle.
+      #
+      if filename.kind_of?(String) && filename != ''
+         @fh_out      = open(filename, "wb")
+         @internal_fh = 1
+      else
+         print "Workbook#new - filename required."
+         exit
+      end
+
+      # Set colour palette.
+      set_palette_xl97
+
+      _initialize
+      get_checksum_method
+   end
+
+
+   ###############################################################################
+   #
+   # _initialize()
+   #
+   # Open a tmp file to store the majority of the Worksheet data. If this fails,
+   # for example due to write permissions, store the data in memory. This can be
+   # slow for large files.
+   #
+   # TODO: Move this and other methods shared with Worksheet up into BIFFWriter.
+   #
+   def _initialize
+      basename = 'spreadsheetwriteexcelworkbook'
+
+      begin
+         if !@tempdir.nil
+            if @tempdir == ''
+               fh = Tempfile.new(basename)
+            else
+               fh = Tempfile.new(basename, @tempdir)
+            end
+         end
+      # failed. store temporary data in memory.
+      rescue
+         @using_tmpfile = 0
+      # if the temp file creation was successful
+      else
+         @filehandle = fh
+      end
+   end
+
+   ###############################################################################
+   #
+   # _get_checksum_method.
+   #
+   # Check for modules available to calculate image checksum. Excel uses MD4 but
+   # MD5 will also work.
+   #
+   # ------- cxn03651 add -------
+   # md5 can use in ruby. so, @checksum_method is always 3.
+   
+   def get_checksum_method
+      @checksum_method = 3
+   end
+
+   ###############################################################################
+   #
+   # add_format(%properties)
+   #
+   # Add a new format to the Excel workbook. This adds an XF record and
+   # a FONT record. Also, pass any properties to the Format::new().
+   #
+   def add_format(*args)
+       format = Format.new(@xf_index, args)
+       @xf_index += 1
+       @formats.push format # Store format reference
+       return format
+   end
+
+   ###############################################################################
+   #
+   # set_palette_xl97()
+   #
+   # Sets the colour palette to the Excel 97+ default.
+   #
+   def set_palette_xl97
+      @palette = [
+         [0x00, 0x00, 0x00, 0x00],   # 8
+         [0xff, 0xff, 0xff, 0x00],   # 9
+         [0xff, 0x00, 0x00, 0x00],   # 10
+         [0x00, 0xff, 0x00, 0x00],   # 11
+         [0x00, 0x00, 0xff, 0x00],   # 12
+         [0xff, 0xff, 0x00, 0x00],   # 13
+         [0xff, 0x00, 0xff, 0x00],   # 14
+         [0x00, 0xff, 0xff, 0x00],   # 15
+         [0x80, 0x00, 0x00, 0x00],   # 16
+         [0x00, 0x80, 0x00, 0x00],   # 17
+         [0x00, 0x00, 0x80, 0x00],   # 18
+         [0x80, 0x80, 0x00, 0x00],   # 19
+         [0x80, 0x00, 0x80, 0x00],   # 20
+         [0x00, 0x80, 0x80, 0x00],   # 21
+         [0xc0, 0xc0, 0xc0, 0x00],   # 22
+         [0x80, 0x80, 0x80, 0x00],   # 23
+         [0x99, 0x99, 0xff, 0x00],   # 24
+         [0x99, 0x33, 0x66, 0x00],   # 25
+         [0xff, 0xff, 0xcc, 0x00],   # 26
+         [0xcc, 0xff, 0xff, 0x00],   # 27
+         [0x66, 0x00, 0x66, 0x00],   # 28
+         [0xff, 0x80, 0x80, 0x00],   # 29
+         [0x00, 0x66, 0xcc, 0x00],   # 30
+         [0xcc, 0xcc, 0xff, 0x00],   # 31
+         [0x00, 0x00, 0x80, 0x00],   # 32
+         [0xff, 0x00, 0xff, 0x00],   # 33
+         [0xff, 0xff, 0x00, 0x00],   # 34
+         [0x00, 0xff, 0xff, 0x00],   # 35
+         [0x80, 0x00, 0x80, 0x00],   # 36
+         [0x80, 0x00, 0x00, 0x00],   # 37
+         [0x00, 0x80, 0x80, 0x00],   # 38
+         [0x00, 0x00, 0xff, 0x00],   # 39
+         [0x00, 0xcc, 0xff, 0x00],   # 40
+         [0xcc, 0xff, 0xff, 0x00],   # 41
+         [0xcc, 0xff, 0xcc, 0x00],   # 42
+         [0xff, 0xff, 0x99, 0x00],   # 43
+         [0x99, 0xcc, 0xff, 0x00],   # 44
+         [0xff, 0x99, 0xcc, 0x00],   # 45
+         [0xcc, 0x99, 0xff, 0x00],   # 46
+         [0xff, 0xcc, 0x99, 0x00],   # 47
+         [0x33, 0x66, 0xff, 0x00],   # 48
+         [0x33, 0xcc, 0xcc, 0x00],   # 49
+         [0x99, 0xcc, 0x00, 0x00],   # 50
+         [0xff, 0xcc, 0x00, 0x00],   # 51
+         [0xff, 0x99, 0x00, 0x00],   # 52
+         [0xff, 0x66, 0x00, 0x00],   # 53
+         [0x66, 0x66, 0x99, 0x00],   # 54
+         [0x96, 0x96, 0x96, 0x00],   # 55
+         [0x00, 0x33, 0x66, 0x00],   # 56
+         [0x33, 0x99, 0x66, 0x00],   # 57
+         [0x00, 0x33, 0x00, 0x00],   # 58
+         [0x33, 0x33, 0x00, 0x00],   # 59
+         [0x99, 0x33, 0x00, 0x00],   # 60
+         [0x99, 0x33, 0x66, 0x00],   # 61
+         [0x33, 0x33, 0x99, 0x00],   # 62
+         [0x33, 0x33, 0x33, 0x00]    # 63
+     ]
+     return 0
+   end
+
+
+=begin
    def initialize(file)
       super
 
@@ -26,21 +255,6 @@ class Workbook < BIFFWriter
 
    def close
       store_workbook
-   end
-
-   def add_format(*args)
-      if args[0].kind_of?(Hash)
-         f = Format.new(args[0], @xf_index)
-      elsif args[0].nil?
-         f = Format.new
-      else
-         raise TypeError unless args[0].kind_of?(Format)
-         f = args[0]
-         f.xf_index = @xf_index
-      end
-      @xf_index += 1
-      @formats.push(f)
-      return f
    end
 
    def add_worksheet(name=nil)
@@ -264,6 +478,8 @@ class Workbook < BIFFWriter
 
       append(header, data)
    end
+
+=end
 end
 
 =begin
