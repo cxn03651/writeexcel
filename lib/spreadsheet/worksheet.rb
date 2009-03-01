@@ -18,23 +18,22 @@ class Worksheet < BIFFWriter
    #
    # Constructor. Creates a new Worksheet object from a BIFFwriter object
    #
-   def initialize(name, index=0, active_sheet=0, first_sheet=0, url_format=nil,
-         parser=0, tempdir=0, str_total=0, str_unique=0, str_table={},
-         v1904=0, compatibility=0)
-      super(name,index)
+   def initialize(*args)
+      super
 
-      @name                = name
-      @index               = index
-      @active_sheet        = active_sheet
-      @first_sheet         = first_sheet
-      @url_format          = url_format
-      @parser              = parser
-      @tempdir             = tempdir
-      @str_total           = str_total
-      @str_unique          = str_unique
-      @str_table           = str_table
-      @v1904               = v1904
-      @compatibility       = compatibility
+      @name                = args[0]
+      @index               = args[1]
+      @encoding            = args[2]
+      @active_sheet        = args[3]
+      @first_sheet         = args[4]
+      @url_format          = args[5]
+      @parser              = args[6]
+      @tempdir             = args[7]
+      @str_total           = args[8]
+      @str_unique          = args[9]
+      @str_table           = args[10]
+      @v1904               = args[11]
+      @compatibility       = args[12]
 
       @type                = 0x0000
       @ext_sheets          = []
