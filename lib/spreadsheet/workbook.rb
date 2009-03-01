@@ -17,7 +17,7 @@ class Workbook < BIFFWriter
    def initialize(filename)
       super
       @filename              = filename
-#      @parser                = $parser 
+      @parser                = nil,    # dummy.  
       @tempdir               = nil
       @v1904                 = 0 
       @activesheet           = 0 
@@ -218,6 +218,60 @@ class Workbook < BIFFWriter
    
        @fileclosed = 1
        return store_workbook
+   end
+
+   ###############################################################################
+   #
+   # sheets(slice,...)
+   #
+   # An accessor for the _worksheets[] array
+   #
+   # Returns: an optionally sliced list of the worksheet objects in a workbook.
+   #
+   def sheets(*args)
+       if args.size > 0
+#           # Return a slice of the array
+#           return @{$self->{_worksheets}}[@_];
+       else
+           # Return the entire list
+           return @worksheets
+       end
+   end
+
+   ###############################################################################
+   #
+   # add_worksheet($name, $encoding)
+   #
+   # Add a new worksheet to the Excel workbook.
+   #
+   # Returns: reference to a worksheet object
+   #
+   def add_worksheet(name, encoding)
+      name, encoding = check_sheetname(name, encoding)
+
+      index = @worksheets.size
+
+      init_data = [
+         name,
+         index,
+         encoding,
+         @activesheet,
+         @firstsheet,
+         @url_format,
+         @parser,
+         @tempdir,
+         @str_total,
+         @str_unique,
+         @str_table,
+         @v1904,
+         @compatibility
+       ]
+
+       worksheet = Worksheet.new(init_data)
+       @worksheets[index] = worksheet     # Store ref for iterator
+       @sheetnames[index] = name          # Store EXTERNSHEET names
+#       @parser->set_ext_sheets($name, $index) # Store names in Formula.pm
+       return worksheet
    end
 
    ###############################################################################

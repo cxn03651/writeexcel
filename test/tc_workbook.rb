@@ -28,11 +28,18 @@ class TC_Workbook < Test::Unit::TestCase
       assert_kind_of(Workbook, @wb)
    end
 
-=begin
    def test_add_worksheet
-      assert_nothing_raised{ ws = @wb.add_worksheet }
+      sheetnames = ['sheet1', 'sheet2']
+      (0 .. sheetnames.size-1).each do |i|
+         sheets = @wb.sheets
+         assert_equal(i, sheets.size)
+         @wb.add_worksheet(sheetnames[i])
+         sheets = @wb.sheets
+         assert_equal(i+1, sheets.size)
+      end
    end
 
+=begin
    def test_calc_sheet_offsets
       ws = @wb.add_worksheet
       assert_nothing_raised{ @wb.calc_sheet_offsets }

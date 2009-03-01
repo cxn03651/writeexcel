@@ -24,7 +24,8 @@ require "FileUtils"
 
 class TC_Worksheet < Test::Unit::TestCase
    def setup
-      @ws      = Worksheet.new("test",0)
+      @sheetname = 'test'
+      @ws      = Worksheet.new(@sheetname,0)
       @perldir = "perl_output/"
       @format  = Format.new(:color=>"green")
    end
@@ -107,10 +108,12 @@ class TC_Worksheet < Test::Unit::TestCase
       assert_equal_filesize(pf, file, "Invalid size for store_filtermode_off")
       assert_equal(p_od, r_od,"Octal dumps are not identical")
       File.delete(file)
-
-
-
    end
+
+   def test_new
+      assert_equal(@sheetname, @ws.get_name)
+   end
+
 
    def assert_equal_filesize(target, test, msg = "Bad file size")
       assert_equal(File.size(target),File.size(test),msg)
