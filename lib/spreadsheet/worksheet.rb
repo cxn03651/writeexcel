@@ -9,8 +9,8 @@ class Worksheet < BIFFWriter
    StrMax = 0
    Buffer = 4096
 
-   attr_reader :name, :encoding, :xf_index
-   attr_accessor :index, :colinfo, :selection, :offset
+   attr_reader :name, :encoding, :xf_index, :index, :offset, :type
+   attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
 
    ###############################################################################
    #

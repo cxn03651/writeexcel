@@ -59,7 +59,7 @@ class Workbook < BIFFWriter
       @compatibility         = 0 
 
       @add_doc_properties    = 0 
-#      @localtime             = [localtime()] 
+      @localtime             = Time.now
 
       # Add the in-built style formats and the default cell format.
       add_format(:type => 1)                        #  0 Normal
@@ -573,6 +573,202 @@ class Workbook < BIFFWriter
       @tempdir = dir
    end
 
+   ###############################################################################
+   #
+   # set_codepage()
+   #
+   # See also the _store_codepage method. This is used to store the code page, i.e.
+   # the character set used in the workbook.
+   #
+   def set_codepage(type = 1)
+      if type == 2
+         @codepage = 0x8000
+      else
+         @codepage = 0x04E4
+      end
+   end
+
+   ###############################################################################
+   #
+   # set_properties()
+   #
+   # Set the document properties such as Title, Author etc. These are written to
+   # property sets in the OLE container.
+   #
+   def set_properties(*args)
+      # Ignore if no args were passed.
+      return -1 unless args.size == 0
+
+      # Allow the parameters to be passed as a hash or hash ref.
+      param = args[0].kind_of?(Hash) ? args[0] : Hash[*args]
+
+      # List of valid input parameters.
+      properties = {
+                             :codepage      => [0x0001, 'VT_I2'      ],
+                             :title         => [0x0002, 'VT_LPSTR'   ],
+                             :subject       => [0x0003, 'VT_LPSTR'   ],
+                             :author        => [0x0004, 'VT_LPSTR'   ],
+                             :keywords      => [0x0005, 'VT_LPSTR'   ],
+                             :comments      => [0x0006, 'VT_LPSTR'   ],
+                             :last_author   => [0x0008, 'VT_LPSTR'   ],
+                             :created       => [0x000C, 'VT_FILETIME'],
+                             :category      => [0x0002, 'VT_LPSTR'   ],
+                             :manager       => [0x000E, 'VT_LPSTR'   ],
+                             :company       => [0x000F, 'VT_LPSTR'   ],
+                             :utf8          => 1
+                  }
+
+      # Check for valid input parameters.
+      param.each_key do |k|
+         unless properties.has_key?(k)
+            raise "Unknown parameter '#{k}' in set_properties()";
+         end
+      end
+
+      # Set the creation time unless specified by the user.
+      unless param.has_key(:created)
+         param[:created] = @localtime
+      end
+
+      #
+      # Create the SummaryInformation property set.
+      #
+
+      # Get the codepage of the strings in the property set.
+      strings = ["title", "subject", "author", "keywords",  "comments", "last_author"]
+      param[:codepage] = get_property_set_codepage(param, strings)
+
+      # Create an array of property set values.
+      property_sets = []
+      strings.unshift("codepage")
+      strings.push("created")
+      strings.each do |property|
+         if param.has_key?(property) && !param[property].nil?
+            property_sets.push(
+               [ properties[property][0],
+                 properties[property][1],
+                  param[property]  ]
+               )
+         end
+      end
+
+      # Pack the property sets.
+      @summary = create_summary_property_set(property_sets)
+
+      #
+      # Create the DocSummaryInformation property set.
+      #
+
+      # Get the codepage of the strings in the property set.
+      strings = ["category", "manager", "company"]
+      param[:codepage] = get_property_set_codepage(param, strings)
+
+      # Create an array of property set values.
+      property_sets = []
+
+      ["codepage", "category", "manager", "company"].each do |property|
+         if param.has_key?(property) && !param[property].nil?
+            property_sets.push(
+               [ properties[property][0],
+                 properties[property][1],
+                 param[property]  ]
+               )
+         end
+      end
+
+      # Pack the property sets.
+      @doc_summary = create_doc_summary_property_set(property_sets)
+
+      # Set a flag for when the files is written.
+      @add_doc_properties = 1
+   end
+
+   ###############################################################################
+   #
+   # _get_property_set_codepage()
+   #
+   # Get the character codepage used by the strings in a property set. If one of
+   # the strings used is utf8 then the codepage is marked as utf8. Otherwise
+   # Latin 1 is used (although in our case this is limited to 7bit ASCII).
+   #
+   def _get_property_set_codepage(params, strings)
+      # Allow for manually marked utf8 strings.
+      unless params[utf8].nil?
+         return 0xFDE9
+      else
+         return 0x04E4; # Default codepage, Latin 1.
+      end
+   end
+
+   ###############################################################################
+   #
+   # _store_workbook()
+   #
+   # Assemble worksheets into a workbook and send the BIFF data to an OLE
+   # storage.
+   #
+   def store_workbook
+      # Add a default worksheet if non have been added.
+      add_worksheet if @worksheets.size == 0
+
+      # Calculate size required for MSO records and update worksheets.
+      calc_mso_sizes
+
+      # Ensure that at least one worksheet has been selected.
+      if @activesheet == 0
+         @worksheets[0].selected = 1
+         @worksheets[0].hidden   = 0
+      end
+   
+      # Calculate the number of selected worksheet tabs and call the finalization
+      # methods for each worksheet
+      @worksheets.each do |sheet|
+         @selected    += 1 if sheet.selected != 0
+         sheet.active  = 1 if sheet.index == @activesheet
+      end
+   
+      # Add Workbook globals
+      store_bof(0x0005)
+      store_codepage()
+      store_window1()
+      store_hideobj()
+      store_1904()
+      store_all_fonts()
+      store_all_num_formats()
+      store_all_xfs()
+      store_all_styles()
+      store_palette()
+   
+      # Calculate the offsets required by the BOUNDSHEET records
+      calc_sheet_offsets()
+   
+      # Add BOUNDSHEET records.
+      @worksheets.each do |sheet|
+         store_boundsheet(sheet.name,
+                          sheet.offset,
+                          sheet.type,
+                          sheet.hidden,
+                          sheet.encoding)
+      end
+   
+      # NOTE: If any records are added between here and EOF the
+      # _calc_sheet_offsets() should be updated to include the new length.
+      store_country()
+      if @ext_ref_count != 0
+         store_supbook
+         store_externsheet
+         store_names
+      end
+      add_mso_drawing_group
+      store_shared_strings
+      store_extsst
+   
+      # End Workbook globals
+      store_eof
+   
+      # Store the workbook in an OLE container
+      return store_OLE_file
+   end
 
 =begin
    def initialize(file)
