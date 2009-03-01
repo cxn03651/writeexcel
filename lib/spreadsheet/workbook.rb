@@ -153,6 +153,61 @@ class Workbook < BIFFWriter
 
    ###############################################################################
    #
+   # _append(), overloaded.
+   #
+   # Store Worksheet data in memory using the base class _append() or to a
+   # temporary file, the default.
+   #
+   def append(*args)
+      data = ''
+      if @using_tmpfile != 0
+         data = args.join('')
+
+         # Add CONTINUE records if necessary
+         data = add_continue(data) if data.length > @limit
+
+#         # Protect print() from -l on the command line.
+#         local $\ = undef;
+#
+         @filehandle.write data
+         @datasize += data.length
+      else
+         data = super(args)
+      end
+
+      return data
+   end
+
+   ###############################################################################
+   #
+   # get_data().
+   #
+   # Retrieves data from memory in one chunk, or from disk in $buffer
+   # sized chunks.
+   #
+   def get_data
+      bufsize = 4096
+
+      # Return data stored in memory
+      unless @data.nil?
+         tmp   = @data
+         @data = nil
+         @filehandle.seek(0, IO::SEEK_SET) if using_tmpfile != 0
+         return tmp
+      end
+
+      # Return data stored on disk
+      if @using_tmpfile != 0
+         tmp = @filehandle.read(bufsize)
+         return tmp unless tmp.nil?
+      end
+
+       # No data to return
+       return nil
+   end
+
+   ###############################################################################
+   #
    # add_format(%properties)
    #
    # Add a new format to the Excel workbook. This adds an XF record and
