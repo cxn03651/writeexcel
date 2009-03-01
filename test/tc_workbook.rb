@@ -39,6 +39,26 @@ class TC_Workbook < Test::Unit::TestCase
       end
    end
 
+   def test_set_tempdir
+      # after shees added, call set_tempdir raise RuntimeError
+      wb1 = Workbook.new('wb1')
+      wb1.add_worksheet('name')
+      assert_raise(RuntimeError, "already sheet exists, but set_tempdir() doesn't raise"){
+         wb1.set_tempdir
+      }
+
+      # invalid dir raise RuntimeError
+      wb2 = Workbook.new('wb2')
+      while true do
+         dir = Time.now.to_s
+         break unless FileTest.directory?(dir)
+         sleep 0.1
+      end
+      assert_raise(RuntimeError, "#{dir} is not valid directory"){
+         wb2.set_tempdir(dir)
+      }
+   end
+
 =begin
    def test_calc_sheet_offsets
       ws = @wb.add_worksheet

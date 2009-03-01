@@ -420,6 +420,80 @@ class Workbook < BIFFWriter
 
    ###############################################################################
    #
+   # compatibility_mode()
+   #
+   # Set the compatibility mode.
+   #
+   # Excel doesn't require every possible Biff record to be present in a file.
+   # In particular if the indexing records INDEX, ROW and DBCELL aren't present
+   # it just ignores the fact and reads the cells anyway. This is also true of
+   # the EXTSST record. Gnumeric and OOo also take this approach. This allows
+   # WriteExcel to ignore these records in order to minimise the amount of data
+   # stored in memory. However, other third party applications that read Excel
+   # files often expect these records to be present. In "compatibility mode"
+   # WriteExcel writes these records and tries to be as close to an Excel
+   # generated file as possible.
+   #
+   # This requires additional data to be stored in memory until the file is
+   # about to be written. This incurs a memory and speed penalty and may not be
+   # suitable for very large files.
+   #
+   def compatibility_mode(mode = 1)
+      if sheets.size > 0
+         raise "compatibility_mode() must be called before add_worksheet()"
+      end
+      @compatibility = mode
+   end
+
+   ###############################################################################
+   #
+   # set_1904()
+   #
+   # Set the date system: 0 = 1900 (the default), 1 = 1904
+   #
+   def set_1904(mode = 1)
+      if sheets.size > 0
+         raise "set_1904() must be called before add_worksheet()"
+      end
+      @v1904 = mode
+   end
+
+   ###############################################################################
+   #
+   # set_custom_color()
+   #
+   # Change the RGB components of the elements in the colour palette.
+   #
+   def set_custom_color(index = nil, red = nil, green = nil, blue = nil)
+      # Match a HTML #xxyyzz style parameter
+      if !red.nil? && red =~ /^#(\w\w)(\w\w)(\w\w)/
+         red   = $1.hex
+         green = $2.hex
+         blue  = $3.hex
+      end
+
+      # Check that the colour index is the right range
+      if index < 8 || index > 64
+         raise "Color index #{index} outside range: 8 <= index <= 64";
+      end
+
+      # Check that the colour components are in the right range
+      if (red   < 0 || red   > 255) ||
+         (green < 0 || green > 255) ||
+         (blue  < 0 || blue  > 255)
+           raise "Color component outside range: 0 <= color <= 255";
+      end
+      
+      index -=8       # Adjust colour index (wingless dragonfly)
+
+      # Set the RGB value
+      @palette[index] = [red, green, blue, 0]
+
+      return index +8
+   end
+
+   ###############################################################################
+   #
    # set_palette_xl97()
    #
    # Sets the colour palette to the Excel 97+ default.
@@ -484,6 +558,19 @@ class Workbook < BIFFWriter
          [0x33, 0x33, 0x33, 0x00]    # 63
      ]
      return 0
+   end
+
+   ###############################################################################
+   #
+   # set_tempdir()
+   #
+   # Change the default temp directory used by _initialize() in Worksheet.pm.
+   #
+   def set_tempdir(dir = '')
+      raise "#{dir} is not a valid directory" if dir != '' && !FileTest.directory?(dir)
+      raise "set_tempdir must be called before add_worksheet" if sheets.size > 0
+
+      @tempdir = dir
    end
 
 
