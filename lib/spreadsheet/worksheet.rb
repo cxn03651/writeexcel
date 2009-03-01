@@ -9,7 +9,7 @@ class Worksheet < BIFFWriter
    StrMax = 0
    Buffer = 4096
 
-   attr_reader :name, :xf_index
+   attr_reader :name, :encoding, :xf_index
    attr_accessor :index, :colinfo, :selection, :offset
 
    ###############################################################################
@@ -305,16 +305,6 @@ class Worksheet < BIFFWriter
       @compatibility = compatibility
    end
 
-   ###############################################################################
-   #
-   # get_name().
-   #
-   # Retrieve the worksheet name.
-   #
-   def get_name
-      return @name
-   end
-   
    ###############################################################################
    #
    # get_data().

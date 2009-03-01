@@ -111,7 +111,7 @@ class TC_Worksheet < Test::Unit::TestCase
    end
 
    def test_new
-      assert_equal(@sheetname, @ws.get_name)
+      assert_equal(@sheetname, @ws.name)
    end
 
 
