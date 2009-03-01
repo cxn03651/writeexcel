@@ -276,6 +276,40 @@ class Workbook < BIFFWriter
 
    ###############################################################################
    #
+   # add_chart_ext($filename, $name)
+   #
+   # Add an externally created chart.
+   #
+   #
+   def add_chart_ext(filename, name, encoding = nil)
+
+#
+#   not implemented
+#
+
+#      index    = @worksheets.size
+#
+#      name, encoding = check_sheetname(name, encoding)
+#
+#
+#      init_data = [
+#                      filename,
+#                      name,
+#                      index,
+#                      encoding,
+#                      @activesheet,
+#                      @firstsheet
+#                  ]
+#
+#       worksheet = Chart.new(init_data)
+#       @worksheets[index] = worksheet     # Store ref for iterator
+#       @sheetnames[index] = name          # Store EXTERNSHEET names
+##       @parser}.set_ext_sheets(name, index) # Store names in Formula.pm
+#       return worksheet
+   end
+
+   ###############################################################################
+   #
    # _check_sheetname($name, $encoding)
    #
    # Check for valid worksheet names. We check the length, if it contains any
