@@ -67,10 +67,33 @@ class TC_BIFFWriter < Test::Unit::TestCase
       @fh.close
       rsize = File.size(@ruby_file)
       assert_equal(size,rsize,"File sizes not the same")
+      compare_file(perl_file, @ruby_file)
    end
 
    def teardown
       @biff = nil
 #      File.delete(@ruby_file) if File.exist?(@ruby_file)
    end
+
+   def compare_file(expected, target)
+      fh_e = File.open(expected, "r")
+      fh_t = File.open(target, "r")
+      while true do
+         e1 = fh_e.read(1)
+         t1 = fh_t.read(1)
+         if e1.nil?
+            assert( t1.nil?, "#{expexted} is EOF but #{target} is NOT EOF.")
+            break
+         elsif t1.nil?
+            assert( e1.nil?, '#{target} is EOF but #{expected} is NOT EOF.')
+            break
+         end
+         assert_equal(e1, t1, sprintf(" #{expected} = '%s' but #{target} = '%s'", e1, t1))
+         break
+      end
+      fh_e.close
+      fh_t.close
+   end
+
+
 end
