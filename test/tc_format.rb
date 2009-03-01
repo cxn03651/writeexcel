@@ -819,43 +819,179 @@ set_shrink()
    end
 
 =begin
+set_text_justlast()
 
+    Default state:      Justify last is off
+    Default action:     Turn justify last on
+    Valid args:         0, 1
+
+Only applies to Far Eastern versions of Excel.
 =end
    def test_set_text_justlast
+      # default state
+      assert_equal(0, @format.text_justlast) 
    end
 
 =begin
+set_pattern()
 
+    Default state:      Pattern is off
+    Default action:     Solid fill is on
+    Valid args:         0 .. 18
+
+Set the background pattern of a cell.
 =end
    def test_set_pattern
+      # default state
+      assert_equal(0, @format.pattern)
    end
 
 =begin
+set_bg_color()
 
+    Default state:      Color is off
+    Default action:     Solid fill.
+    Valid args:         See set_color()
+
+The set_bg_color() method can be used to set the background
+colour of a pattern. Patterns are defined via the set_pattern()
+method. If a pattern hasn't been defined then a solid fill
+pattern is used as the default.
+
+Here is an example of how to set up a solid fill in a cell:
+
+    format = workbook.add_format()
+    format.set_pattern() # This is optional when using a solid fill
+    format.set_bg_color('green')
+    worksheet.write('A1', 'Ray', format)
 =end
    def test_set_bg_color
    end
 
 =begin
+set_fg_color()
 
+    Default state:      Color is off
+    Default action:     Solid fill.
+    Valid args:         See set_color()
+
+The set_fg_color() method can be used to set
+ the foreground colour of a pattern.
 =end
    def test_set_fg_color
    end
 
 =begin
+set_border()
 
+    Also applies to:    set_bottom()
+                        set_top()
+                        set_left()
+                        set_right()
+
+    Default state:      Border is off
+    Default action:     Set border type 1
+    Valid args:         0-13, See below.
+
+A cell border is comprised of a border on the bottom, top,
+left and right. These can be set to the same value using
+set_border() or individually using the relevant method
+calls shown above.
+
+The following shows the border styles sorted
+by Spreadsheet::WriteExcel index number:
+
+    Index   Name            Weight   Style
+    =====   =============   ======   ===========
+    0       None            0
+    1       Continuous      1        -----------
+    2       Continuous      2        -----------
+    3       Dash            1        - - - - - -
+    4       Dot             1        . . . . . .
+    5       Continuous      3        -----------
+    6       Double          3        ===========
+    7       Continuous      0        -----------
+    8       Dash            2        - - - - - -
+    9       Dash Dot        1        - . - . - .
+    10      Dash Dot        2        - . - . - .
+    11      Dash Dot Dot    1        - . . - . .
+    12      Dash Dot Dot    2        - . . - . .
+    13      SlantDash Dot   2        / - . / - .
+
+The following shows the borders sorted by style:
+
+    Name            Weight   Style         Index
+    =============   ======   ===========   =====
+    Continuous      0        -----------   7
+    Continuous      1        -----------   1
+    Continuous      2        -----------   2
+    Continuous      3        -----------   5
+    Dash            1        - - - - - -   3
+    Dash            2        - - - - - -   8
+    Dash Dot        1        - . - . - .   9
+    Dash Dot        2        - . - . - .   10
+    Dash Dot Dot    1        - . . - . .   11
+    Dash Dot Dot    2        - . . - . .   12
+    Dot             1        . . . . . .   4
+    Double          3        ===========   6
+    None            0                      0
+    SlantDash Dot   2        / - . / - .   13
+
+The following shows the borders in the order shown in the Excel Dialog.
+
+    Index   Style             Index   Style
+    =====   =====             =====   =====
+    0       None              12      - . . - . .
+    7       -----------       13      / - . / - .
+    4       . . . . . .       10      - . - . - .
+    11      - . . - . .       8       - - - - - -
+    9       - . - . - .       2       -----------
+    3       - - - - - -       5       -----------
+    1       -----------       6       ===========
 =end
    def test_set_border
    end
 
 =begin
+set_border_color()
 
+    Also applies to:    set_bottom_color()
+                        set_top_color()
+                        set_left_color()
+                        set_right_color()
+
+    Default state:      Color is off
+    Default action:     Undefined
+    Valid args:         See set_color()
+
+Set the colour of the cell borders. A cell border is comprised of a border
+on the bottom, top, left and right. These can be set to the same colour
+using set_border_color() or individually using the relevant method
+calls shown above. 
 =end
    def test_set_border_color
    end
 
 =begin
+copy($format)
 
+This method is used to copy all of the properties
+from one Format object to another:
+
+    lorry1 = workbook.add_format()
+    lorry1.set_bold()
+    lorry1.set_italic()
+    lorry1.set_color('red')    # lorry1 is bold, italic and red
+
+    my lorry2 = workbook.add_format()
+    lorry2.copy(lorry1)
+    lorry2.set_color('yellow') # lorry2 is bold, italic and yellow
+
+The copy() method is only useful if you are using the method interface
+to Format properties. It generally isn't required if you are setting
+Format properties directly using hashes.
+
+Note: this is not a copy constructor, both objects must exist prior to copying.
 =end
    def test_copy
    end
