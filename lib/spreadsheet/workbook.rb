@@ -208,6 +208,20 @@ class Workbook < BIFFWriter
 
    ###############################################################################
    #
+   # close()
+   #
+   # Calls finalization methods and explicitly close the OLEwriter file
+   # handle.
+   #
+   def close
+       return if @fileclosed != 0   # Prevent close() from being called twice.
+   
+       @fileclosed = 1
+       return store_workbook
+   end
+
+   ###############################################################################
+   #
    # add_format(%properties)
    #
    # Add a new format to the Excel workbook. This adds an XF record and
@@ -306,10 +320,6 @@ class Workbook < BIFFWriter
       @formats    = []
 
       @url_format = add_format(:color=>"blue", :underline=>1)
-   end
-
-   def close
-      store_workbook
    end
 
    def add_worksheet(name=nil)
