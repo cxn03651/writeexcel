@@ -29,63 +29,110 @@ class BIFFWriter
   # set_byte_order
   end
 
-  def prepend(*args)
-    d = args.join
-    if d.length > @limit
-      d = add_continue d
-    end
+   ###############################################################################
+   #
+   # _set_byte_order()
+   #
+   # Determine the byte order and store it as class data to avoid
+   # recalculating it for each call to new().
+   #
+   def set_byte_order
+       if byte_order == ''
+           # Check if "pack" gives the required IEEE 64bit float
+           teststr = [1.2345].pack("d")
+           hexdata = [0x8D, 0x97, 0x6E, 0x12, 0x83, 0xC0, 0xF3, 0x3F]
+           number  = hexdata.pack("C8")
 
-    @datasize += d.length
-    @data      = d << @data
-
-    return d
+           if number == teststr
+               byte_order = 0    # Little Endian
+           elsif number == teststr.reverse
+               byte_order = 1    # Big Endian
+           else
+               # Give up. I'll fix this in a later version.
+               raise ( "Required floating point format not supported "  +
+                       "on this platform. See the portability section " +
+                       "of the documentation."
+               )
+           end
+       end
+       @byte_order = byte_order
    end
 
-  def append(*args)
-    d = args.join
-    if d.length > @limit
-      d = add_continue d
-    end
+   ###############################################################################
+   #
+   # _prepend($data)
+   #
+   # General storage function
+   #
+   def prepend(*args)
+      d = args.join
+      if d.length > @limit
+         d = add_continue d
+      end
 
-    @datasize += d.length
-    @data      = @data << d
+      @datasize += d.length
+      @data      = d << @data
 
-    return d
-  end
+      return d
+   end
 
-# _store_bof($type)
-#
-# $type = 0x0005, Workbook
-# $type = 0x0010, Worksheet
-#
-# Writes Excel BOF record to indicate the beginning of a stream or
-# sub-stream in the BIFF file.
-  def store_bof(type = 0x0005)
-    record  = 0x0809      # Record identifier
-    length  = 0x0010      # Number of bytes to follow
+   ###############################################################################
+   #
+   # _append($data)
+   #
+   # General storage function
+   #
+   def append(*args)
+      d = args.join
+      if d.length > @limit
+         d = add_continue d
+      end
 
-    build   = 0x0DBB
-    year    = 0x07CC
+      @datasize += d.length
+      @data      = @data << d
 
-    bfh     = 0x00000041
-    sfo     = 0x0000000;
+      return d
+   end
 
-    header  = [record,length].pack("vv")
-    data    = [BIFF_Version,type,build,year,bfh,sfo].pack("vvvvVV") 
+   ###############################################################################
+   #
+   # _store_bof($type)
+   #
+   # $type = 0x0005, Workbook
+   # $type = 0x0010, Worksheet
+   #
+   # Writes Excel BOF record to indicate the beginning of a stream or
+   # sub-stream in the BIFF file.
+   #
+   def store_bof(type = 0x0005)
+      record  = 0x0809      # Record identifier
+      length  = 0x0010      # Number of bytes to follow
 
-    prepend(header, data)
-  end
+      build   = 0x0DBB
+      year    = 0x07CC
 
-# _store_eof()
-# 
-# Writes Excel EOF record to indicate the end of a BIFF stream.
-  def store_eof
-    record = 0x000A
-    length = 0x0000
-    header = [record,length].pack("vv")
+      bfh     = 0x00000041
+      sfo     = 0x0000000;
+
+      header  = [record,length].pack("vv")
+      data    = [BIFF_Version,type,build,year,bfh,sfo].pack("vvvvVV") 
+
+      prepend(header, data)
+   end
+
+   ###############################################################################
+   #
+   # _store_eof()
+   #
+   # Writes Excel EOF record to indicate the end of a BIFF stream.
+   #
+   def store_eof
+      record = 0x000A
+      length = 0x0000
+      header = [record,length].pack("vv")
  
-    append(header)
-  end
+      append(header)
+   end
 
    ###############################################################################
    #
@@ -135,6 +182,31 @@ class BIFFWriter
       tmp     = tmp + header + data
 
       return tmp
+   end
+
+   ###############################################################################
+   #
+   # _add_mso_generic()
+   #    my $type        = $_[0];
+   #    my $version     = $_[1];
+   #    my $instance    = $_[2];
+   #    my $data        = $_[3];
+   #
+   # Create a mso structure that is part of an Escher drawing object. These are
+   # are used for images, comments and filters. This generic method is used by
+   # other methods to create specific mso records.
+   #
+   # Returns the packed record.
+   #
+   def add_mso_generic(type, version, instance, data, length = nil)
+       length  = length.nil? ? data.length : length
+   
+       # The header contains version and instance info packed into 2 bytes.
+       header  = version | (instance << 4)
+   
+       record  = [header, type, length].pack("vvV") + data
+   
+       return record
    end
 
 end   
