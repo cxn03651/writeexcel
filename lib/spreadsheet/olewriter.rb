@@ -15,6 +15,7 @@ class OLEWriter
 
    attr_reader :biff_size, :book_size, :big_blocks, :list_blocks
    attr_reader :root_start, :size_allowed
+   attr_accessor :biff_only, :internal_fh
 
    # Accept an IO or IO-like object or a filename (as a String)
    def initialize(arg)
@@ -25,6 +26,9 @@ class OLEWriter
       end
       @io.binmode
 
+      @filehandle    = ""
+      @fileclosed    = 0
+      @internal_fh   = 0
       @biff_only     = false
       @size_allowed  = true
       @biff_size     = 0

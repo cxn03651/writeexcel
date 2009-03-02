@@ -35,11 +35,14 @@ class Format
    attr_accessor :bold, :text_wrap, :text_justlast
    attr_accessor :fg_color, :bg_color, :color, :font, :size, :font_outline, :font_shadow
    attr_accessor :align, :border
-   attr_reader   :font, :size, :font_strikeout, :font_script, :num_format, :locked, :hidden
+   attr_accessor :font_index
+   attr_accessor :num_format
+   attr_reader   :font, :size, :font_strikeout, :font_script
+   attr_reader   :num_format_enc, :locked, :hidden
    attr_reader   :rotation, :indent, :shrink, :pattern, :bottom, :top, :left, :right
    attr_reader   :bottom_color, :top_color, :left_color, :right_color
    attr_reader   :italic, :underline, :font_strikeout
-   attr_reader   :text_h_align, :text_v_align
+   attr_reader   :text_h_align, :text_v_align, :font_only
 
    ###############################################################################
    #
