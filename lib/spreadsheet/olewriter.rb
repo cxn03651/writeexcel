@@ -40,6 +40,33 @@ class OLEWriter
    end
 
    # Imitate IO.open behavior
+
+   ###############################################################################
+   #
+   # _initialize()
+   #
+   # Create a new filehandle or use the provided filehandle.
+   #
+   def _initialize
+      olefile = @olefilename
+   
+      # If the filename is a reference it is assumed that it is a valid
+      # filehandle, if not we create a filehandle.
+      #
+   
+      # Create a new file, open for writing
+      fh = open(olefile, "wb")
+   
+      # Workbook.pm also checks this but something may have happened since
+      # then.
+      raise "Can't open olefile. It may be in use or protected.\n" unless fh
+   
+      @internal_fh = 1
+   
+      # Store filehandle
+      @filehandle = fh
+   end
+
    def self.open(arg)
      if block_given?
        ole = self.new(arg)
@@ -51,7 +78,12 @@ class OLEWriter
      end
    end
 
-   # Delegate 'write' and 'print' to the internal IO object.
+   ###############################################################################
+   #
+   # write($data)
+   #
+   # Write BIFF data to OLE file.
+   #
    def write(*args, &block)
      @io.write(*args, &block)
    end
@@ -59,11 +91,15 @@ class OLEWriter
      @io.print(*args, &block)
    end
 
+   ###############################################################################
+   #
+   # set_size($biffsize)
+   #
    # Set the size of the data to be written to the OLE stream
    #
-   # @big_blocks = (109 depot block x (128 -1 marker word)
-   #               - (1 x end words)) = 13842
-   # MaxSize = @big_blocks * 512 bytes = 7087104
+   #   $big_blocks = (109 depot block x (128 -1 marker word)
+   #                 - (1 x end words)) = 13842
+   #   $maxsize    = $big_blocks * 512 bytes = 7087104
    #
    def set_size(size = BlockSize)
       if size > MaxSize
@@ -81,14 +117,26 @@ class OLEWriter
       @size_allowed = true
    end
 
+   ###############################################################################
+   #
+   # _calculate_sizes()
+   #
    # Calculate various sizes needed for the OLE stream
+   #
    def calculate_sizes
       @big_blocks  = (@book_size.to_f/BlockDiv.to_f).ceil
       @list_blocks = (@big_blocks / ListBlocks) + 1
       @root_start  = @big_blocks
    end
 
+   ###############################################################################
+   #
+   # close()
+   #
    # Write root entry, big block list and close the filehandle.
+   # This routine is used to explicitly close the open filehandle without
+   # having to wait for DESTROY.
+   #
    def close
       if @size_allowed == true
          write_padding
@@ -98,7 +146,12 @@ class OLEWriter
       @io.close
    end 
 
-   # Write the OLE header block
+   ###############################################################################
+   #
+   # write_header()
+   #
+   # Write OLE header block.
+   #
    def write_header
       return if @biff_only == true
       calculate_sizes
@@ -141,7 +194,12 @@ class OLEWriter
       }
    end
 
-   # Write a big block depot
+   ###############################################################################
+   #
+   # _write_big_block_depot()
+   #
+   # Write big block depot.
+   #
    def write_big_block_depot
       num_blocks   = @big_blocks
       num_lists    = @list_blocks
@@ -165,7 +223,12 @@ class OLEWriter
       
    end
 
-   # Write property storage
+   ###############################################################################
+   #
+   # _write_property_storage()
+   #
+   # Write property storage. TODO: add summary sheets
+   #
    def write_property_storage
    
       #########  name         type  dir start size
@@ -175,7 +238,12 @@ class OLEWriter
       write_pps("",           0x00, -1, 0x00, 0x0000)
    end
 
+   ###############################################################################
+   #
+   # _write_pps()
+   #
    # Write property sheet in property storage
+   #
    def write_pps(name, type, dir, start, size)
       length = 0
       ord_name = []
@@ -224,7 +292,12 @@ class OLEWriter
       write(unknown)
    end
 
-   # Pad the end of the file
+###############################################################################
+#
+# _write_padding()
+#
+# Pad the end of the file
+#
    def write_padding
       min_size = 512
       min_size = BlockSize if @biff_size < BlockSize
