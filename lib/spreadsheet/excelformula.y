@@ -17,20 +17,20 @@ rule
                | expr_list expr EOL   { result.push val[1], '_arg', '1' }
                | expr_list EOL
 
-  expr         : expr '+' expr        { result = [ val[0], val[2], '_ptgAdd' ] }
-               | expr '-' expr        { result = [ val[0], val[2], '_ptgSun' ] }
-               | expr '*' expr        { result = [ val[0], val[2], '_ptgMul' ] }
-               | expr '/' expr        { result = [ val[0], val[2], '_ptgDiv' ] }
-               | expr '^' expr        { result = [ val[0], val[2], '_ptgPower' ] }
-               | expr '&' expr        { result = [ val[0], val[2], '_ptgConcat' ] }
-               | expr LT  expr        { result = [ val[0], val[2], '_ptgLT' ] }
-               | expr GT  expr        { result = [ val[0], val[2], '_ptgGT' ] }
-               | expr LE  expr        { result = [ val[0], val[2], '_ptgLE' ] }
-               | expr GE  expr        { result = [ val[0], val[2], '_ptgGE' ] }
-               | expr NE  expr        { result = [ val[0], val[2], '_ptgNE' ] }
+  expr         : expr '+' expr        { result = [ val[0], val[2], 'ptgAdd' ] }
+               | expr '-' expr        { result = [ val[0], val[2], 'ptgSub' ] }
+               | expr '*' expr        { result = [ val[0], val[2], 'ptgMul' ] }
+               | expr '/' expr        { result = [ val[0], val[2], 'ptgDiv' ] }
+               | expr '^' expr        { result = [ val[0], val[2], 'ptgPower' ] }
+               | expr '&' expr        { result = [ val[0], val[2], 'ptgConcat' ] }
+               | expr LT  expr        { result = [ val[0], val[2], 'ptgLT' ] }
+               | expr GT  expr        { result = [ val[0], val[2], 'ptgGT' ] }
+               | expr LE  expr        { result = [ val[0], val[2], 'ptgLE' ] }
+               | expr GE  expr        { result = [ val[0], val[2], 'ptgGE' ] }
+               | expr NE  expr        { result = [ val[0], val[2], 'ptgNE' ] }
                | primary
 
-  primary      : '(' expr ')'         { result = [ val[1], '_ptgParen'] }
+  primary      : '(' expr ')'         { result = [ val[1], '_arg', '1', '_ptgParen'] }
                | '-' expr  = UMINUS   { result = [ -1, val[1], '_ptgMul' ] }
                | FUNC
                | NUMBER               { result = [ '_num',     val[0] ] }

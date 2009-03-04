@@ -286,77 +286,77 @@ module_eval(<<'.,.,', 'excelformula.y', 16)
 
 module_eval(<<'.,.,', 'excelformula.y', 19)
   def _reduce_5(val, _values, result)
-     result = [ val[0], val[2], '_ptgAdd' ] 
+     result = [ val[0], val[2], 'ptgAdd' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 20)
   def _reduce_6(val, _values, result)
-     result = [ val[0], val[2], '_ptgSun' ] 
+     result = [ val[0], val[2], 'ptgSub' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 21)
   def _reduce_7(val, _values, result)
-     result = [ val[0], val[2], '_ptgMul' ] 
+     result = [ val[0], val[2], 'ptgMul' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 22)
   def _reduce_8(val, _values, result)
-     result = [ val[0], val[2], '_ptgDiv' ] 
+     result = [ val[0], val[2], 'ptgDiv' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 23)
   def _reduce_9(val, _values, result)
-     result = [ val[0], val[2], '_ptgPower' ] 
+     result = [ val[0], val[2], 'ptgPower' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 24)
   def _reduce_10(val, _values, result)
-     result = [ val[0], val[2], '_ptgConcat' ] 
+     result = [ val[0], val[2], 'ptgConcat' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 25)
   def _reduce_11(val, _values, result)
-     result = [ val[0], val[2], '_ptgLT' ] 
+     result = [ val[0], val[2], 'ptgLT' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 26)
   def _reduce_12(val, _values, result)
-     result = [ val[0], val[2], '_ptgGT' ] 
+     result = [ val[0], val[2], 'ptgGT' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 27)
   def _reduce_13(val, _values, result)
-     result = [ val[0], val[2], '_ptgLE' ] 
+     result = [ val[0], val[2], 'ptgLE' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 28)
   def _reduce_14(val, _values, result)
-     result = [ val[0], val[2], '_ptgGE' ] 
+     result = [ val[0], val[2], 'ptgGE' ] 
     result
   end
 .,.,
 
 module_eval(<<'.,.,', 'excelformula.y', 29)
   def _reduce_15(val, _values, result)
-     result = [ val[0], val[2], '_ptgNE' ] 
+     result = [ val[0], val[2], 'ptgNE' ] 
     result
   end
 .,.,
@@ -365,7 +365,7 @@ module_eval(<<'.,.,', 'excelformula.y', 29)
 
 module_eval(<<'.,.,', 'excelformula.y', 32)
   def _reduce_17(val, _values, result)
-     result = [ val[1], '_ptgParen'] 
+     result = [ val[1], '_arg', '1', '_ptgParen'] 
     result
   end
 .,.,
