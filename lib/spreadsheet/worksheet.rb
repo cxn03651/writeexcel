@@ -311,16 +311,6 @@ class Worksheet < BIFFWriter
 
    ###############################################################################
    #
-   # get_name().
-   #
-   # Retrieve the worksheet name.
-   #
-   def get_name
-       return @name
-   end
-
-   ###############################################################################
-   #
    # get_data().
    #
    # Retrieves data from memory in one chunk, or from disk in $buffer
