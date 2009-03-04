@@ -49,7 +49,7 @@ class BIFFWriter
                byte_order = 1    # Big Endian
            else
                # Give up. I'll fix this in a later version.
-               raise ( "Required floating point format not supported "  +
+               raise( "Required floating point format not supported "  +
                        "on this platform. See the portability section " +
                        "of the documentation."
                )
