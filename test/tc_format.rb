@@ -25,11 +25,6 @@ class TC_Format < Test::Unit::TestCase
    end
 
    def teardown
-      begin
-         @pfh.close
-      rescue NameError
-         # no op
-      end
       File.delete(@ruby_file) if File.exist?(@ruby_file)
       @format = nil
    end

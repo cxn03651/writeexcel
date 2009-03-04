@@ -4513,11 +4513,11 @@ class Worksheet < BIFFWriter
        data        = ''
        length      = nil
    
-       data = [0x4104].pack('v')
-         [spid].pack('V') +
-         [0x01BF].pack('v') +
-         [0x00010000].pack('V') +
-         [0x03BF].pack( 'v') +
+       data = [0x4104].pack('v') +
+         [spid].pack('V')        +
+         [0x01BF].pack('v')      +
+         [0x00010000].pack('V')  +
+         [0x03BF].pack( 'v')     +
          [0x00080000].pack( 'V')
    
        return add_mso_generic(type, version, instance, data, length)

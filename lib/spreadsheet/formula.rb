@@ -139,39 +139,39 @@ class Formula < ExcelFormulaParser
       q = []
       until s.eos?
          # order is important.
-         if    s.scan /(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?/
+         if    s.scan(/(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?/)
             q.push [:NUMBER, s.matched]
-         elsif s.scan /"([^"]|"")*"/
+         elsif s.scan(/"([^"]|"")*"/)
             q.push [:STRING, s.matched]
-         elsif s.scan /\$?[A-I]?[A-Z]\$?\d+/
+         elsif s.scan(/\$?[A-I]?[A-Z]\$?\d+/)
             q.push [:REF2D,  s.matched]
-         elsif s.scan /[^!(,]+!\$?[A-I]?[A-Z]\$?\d+/
+         elsif s.scan(/[^!(,]+!\$?[A-I]?[A-Z]\$?\d+/)
             q.push [:REF3D , s.matched]
-         elsif s.scan /'[^']+'!\$?[A-I]?[A-Z]\$?\d+/
+         elsif s.scan(/'[^']+'!\$?[A-I]?[A-Z]\$?\d+/)
             q.push [:REF3D , s.matched]
-         elsif s.scan /\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/
+         elsif s.scan(/\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
             q.push [:RANGE2D , s.matched]
-         elsif s.scan /[^!(,]+!\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/
+         elsif s.scan(/[^!(,]+!\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
             q.push [:RANGE3D , s.matched]
-         elsif s.scan /<=/
+         elsif s.scan(/<=/)
             q.push [:LE , s.matched]
-         elsif s.scan />=/
+         elsif s.scan(/>=/)
             q.push [:GE , s.matched]
-         elsif s.scan /<>/
+         elsif s.scan(/<>/)
             q.push [:NE , s.matched]
-         elsif s.scan /</
+         elsif s.scan(/</)
             q.push [:LT , s.matched]
-         elsif s.scan />/
+         elsif s.scan(/>/)
             q.push [:GT , s.matched]
-         elsif s.scan /TRUE/
+         elsif s.scan(/TRUE/)
             q.push [:TRUE, s.matched]
-         elsif s.scan /FALSE/
+         elsif s.scan(/FALSE/)
             q.push [:FALSE, s.matched]
-         elsif s.scan /[A-Z0-9_.]+/
+         elsif s.scan(/[A-Z0-9_.]+/)
             q.push [:FUNC,   s.matched]
-         elsif s.scan /\s+/
+         elsif s.scan(/\s+/)
             ;
-         elsif s.scan /./
+         elsif s.scan(/./)
             q.push [s.matched, s.matched]
          end
       end

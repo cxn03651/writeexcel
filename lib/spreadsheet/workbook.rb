@@ -959,10 +959,10 @@ class Workbook < BIFFWriter
            next unless num_images + num_comments + num_charts +num_filters != 0
 
            # Include 1 parent MSODRAWING shape, per sheet, in the shape count.
-           num_shapes   += 1 + num_images
-                             + num_comments
-                             + num_charts
-                             + num_filters
+           num_shapes   += 1 + num_images   +
+                               num_comments +
+                               num_charts   +
+                               num_filters
            shapes_saved += num_shapes
            mso_size     += image_mso_size
    
