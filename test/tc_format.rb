@@ -13,9 +13,10 @@ end
 require "test/unit"
 require "biffwriter"
 require "olewriter"
-#require "workbook"
+require "workbook"
 require "worksheet"
 require "format"
+require 'formula'
 
 class TC_Format < Test::Unit::TestCase
 
