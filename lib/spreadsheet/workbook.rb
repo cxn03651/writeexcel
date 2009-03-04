@@ -1,4 +1,5 @@
 require 'digest/md5'
+require 'biffwriter'
 
 class Workbook < BIFFWriter
    BOF = 11
