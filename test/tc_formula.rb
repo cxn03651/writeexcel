@@ -16,7 +16,7 @@ require "formula"
 class TC_Formula < Test::Unit::TestCase
 
    def setup
-      @formula = Formula.new
+      @formula = Formula.new(0)
    end
 
    def test_scan
