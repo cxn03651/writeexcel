@@ -5,7 +5,6 @@ class Formula < ExcelFormulaParser
 
    attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
-
    def initialize(byte_order)
       @byte_order     = byte_order,
       @workbook       = ""
@@ -13,6 +12,126 @@ class Formula < ExcelFormulaParser
       @ext_refs       = {}
       @ext_ref_count  = 0
       initialize_hashes
+   end
+
+   ###############################################################################
+   #
+   # parse_formula()
+   #
+   # Takes a textual description of a formula and returns a RPN encoded byte
+   # string.
+   #
+   def parse_formula(formula, byte_stream = false)
+      # Build the parse tree for the formula
+      parse =parse(formula)
+   
+      tokens = reverse(parse)
+   
+      # Add a volatile token if the formula contains a volatile function.
+      # This must be the first token in the list
+      #
+      unshift tokens, '_vol' if check_volatile(tokens)
+   
+      # The return value depends on which Worksheet.pm method is the caller
+      unless byte_stream
+         # Parse formula to see if it throws any errors and then
+         # return raw tokens to Worksheet::store_formula()
+         #
+         @tokens
+      else
+         # Return byte stream to Worksheet::write_formula()
+         parse_tokens(tokens)
+      end
+   end
+
+   ###############################################################################
+   #
+   # parse_tokens()
+   #
+   # Convert each token or token pair to its Excel 'ptg' equivalent.
+   #
+   def parse_tokens(tokens)
+       parse_str   = ''
+       last_type   = ''
+       modifier    = ''
+       num_args    = 0
+       _class      = 0
+       _classary   = 1
+       args        = tokens.dup
+   
+       # A note about the class modifiers used below. In general the class,
+       # "reference" or "value", of a function is applied to all of its operands.
+       # However, in certain circumstances the operands can have mixed classes,
+       # e.g. =VLOOKUP with external references. These will eventually be dealt
+       # with by the parser. However, as a workaround the class type of a token
+       # can be changed via the repeat_formula interface. Thus, a _ref2d token can
+       # be changed by the user to _ref2dA or _ref2dR to change its token class.
+       #
+       while (args)
+           token = args.shift
+   
+           if (token == '_arg')
+               num_args = args.shift
+           elsif (token == '_class')
+               token = args.shift
+               _class = functions[token][2]
+               # If _class is undef then it means that the function isn't valid.
+               exit "Unknown function #{token}() in formula\n" if _class.nil?
+               _classary.push(_class)
+           elsif (token == '_vol')
+               parse_str = parse_str + convert_volatile()
+           elsif (token == 'ptgBool')
+               token = args.shift
+               parse_str = parse_str + convert_bool(token)
+           elsif (token == '_num')
+               token = args.shift
+               parse_str = parse_str + convert_number(token)
+           elsif (token == '_str')
+               token = args.shift
+               parse_str = parse_str + convert_string(token)
+           elsif (token =~ /^_ref2d/)
+               modifier  = token.sub(/_ref2d/, '')
+               _class      = _classary[-1]
+               _class      = 0 if modifier == 'R'
+               _class      = 1 if modifier == 'V'
+               token      = args.shift
+               parse_str = parse_str + convert_ref2d(token, _class)
+           elsif (token =~ /^_ref3d/)
+               modifier  = token.sub(/_ref3d/,'')
+               _class      = _classary[-1]
+               _class      = 0 if modifier == 'R'
+               _class      = 1 if modifier == 'V'
+               token      = args.shift
+               parse_str = parse_str + convert_ref3d(token, _class)
+           elsif (token =~ /^_range2d/)
+               modifier  = token.sub(/_range2d/,'')
+               _class      = _classary[-1]
+               _class      = 0 if modifier == 'R'
+               _class      = 1 if modifier == 'V'
+               token      = args.shift
+               parse_str = parse_str + convert_range2d(token, _class)
+           elsif (token =~ /^_range3d/)
+               modifier  = token.sub(/_range3d/,'')
+               _class      = _classary[-1]
+               _class      = 0 if modifier == 'R'
+               _class      = 1 if modifier == 'V'
+               token      = args.shift
+               parse_str = parse_str + convert_range3d(token, _class)
+           elsif (token == '_func')
+               token = args.shift
+               parse_str = parse_str + convert_function(token, num_args)
+               _classary.pop
+               num_args = 0 # Reset after use
+           elsif (exists ptg[token])
+               parse_str = parse_str + [ptg[token]].pack("C")
+           else
+               # Unrecognised token
+               return nil
+           end
+       end
+   
+   
+       return parse_str
    end
 
    def scan(formula)
@@ -89,6 +208,409 @@ class Formula < ExcelFormulaParser
    
    ###############################################################################
 
+
+   ###############################################################################
+   #
+   #  _check_volatile()
+   #
+   # Check if the formula contains a volatile function, i.e. a function that must
+   # be recalculated each time a cell is updated. These formulas require a ptgAttr
+   # with the volatile flag set as the first token in the parsed expression.
+   #
+   # Examples of volatile functions: RAND(), NOW(), TODAY()
+   #
+   def check_volatile(tokens)
+      volatile = 0
+   
+      (0..tokens.size-1).each do |i|
+         # If the next token is a function check if it is volatile.
+         if tokens[i] == '_func' and functions[tokens[i+1]][3] != 0
+            volatile = 1
+            break
+         end
+      end
+   
+      return volatile
+   end
+
+   ###############################################################################
+   #
+   # _convert_bool()
+   #
+   # Convert a boolean token to ptgBool
+   #
+   def _convert_bool(bool)
+       return [@ptg[:ptgBool], bool].pack("CC")
+   end
+
+
+   ###############################################################################
+   #
+   # _convert_number()
+   #
+   # Convert a number token to ptgInt or ptgNum
+   #
+   def convert_number(num)
+       # Integer in the range 0..2**16-1
+       if ((num =~ /^\d+$/) && (num <= 65535))
+           return [@ptg[:ptgInt], num].pack("Cv")
+       else  # A float
+           num = [num].pack("d")
+           num.reverse! if @byte_order != 0
+           return [@ptg[:ptgNum]].pack("C") + num
+       end
+   end
+
+   ###############################################################################
+   #
+   # _convert_string()
+   #
+   # Convert a string to a ptg Str.
+   #
+   def convert_string(str)
+       encoding = 0
+   
+       str.sub!(/^"/,'')   # Remove leading  "
+       str.sub!(/"$/,'')   # Remove trailing "
+       str.gsub!(/""/,'"') # Substitute Excel's escaped double quote "" for "
+   
+       length = str.length
+   
+       exit "String in formula has more than 255 chars\n" if length > 255
+   
+       return [@ptg[:ptgStr], length, encoding].pack("CCC") + str
+   end
+
+   ###############################################################################
+   #
+   # _convert_ref2d()
+   #
+   # Convert an Excel reference such as A1, $B2, C$3 or $D$4 to a ptgRefV.
+   #
+   def convert_ref2d(cell, _class)
+       # Convert the cell reference
+       row, col = cell_to_packed_rowcol(cell)
+   
+       # The ptg value depends on the class of the ptg.
+       if    (_class == 0)
+           ptgref = [@ptg[:ptgref]].pack("C")
+       elsif (_class == 1)
+           ptgref = [@ptg[:ptgrefV]].pack("C")
+       elsif (_class == 2)
+           ptgref = [@ptg[:ptgrefA]].pack("C")
+       else
+           exit "Unknown function class in formula\n"
+       end
+   
+       return ptgref + row + col
+   end
+
+   ###############################################################################
+   #
+   # _convert_ref3d
+   #
+   # Convert an Excel 3d reference such as "Sheet1!A1" or "Sheet1:Sheet2!A1" to a
+   # ptgRef3dV.
+   #
+   def convert_ref3d(token, _class)
+       # Split the ref at the ! symbol
+       ext_ref, cell = token.split('!')
+   
+       # Convert the external reference part
+       ext_ref = pack_ext_ref(ext_ref)
+   
+       # Convert the cell reference part
+       row, col = cell_to_packed_rowcol(cell)
+   
+       # The ptg value depends on the class of the ptg.
+       if    (_class == 0)
+           ptgref = [@ptg[:ptgRef3d]].pack("C")
+       elsif (_class == 1) 
+           ptgref = [@ptg[:ptgRef3dV]].pack("C")
+       elsif (_class == 2) 
+           ptgref = [@ptg[:ptgRef3dA]].pack("C")
+       else
+           exit "Unknown function class in formula\n"
+       end
+   
+       return ptgref + ext_ref + row + col
+   end
+
+   ###############################################################################
+   #
+   # _convert_range2d()
+   #
+   # Convert an Excel range such as A1:D4 or A:D to a ptgRefV.
+   #
+   def _convert_range2d(range, _class)
+       # Split the range into 2 cell refs
+       cell1, cell2 = range.split(':')
+
+       # A range such as A:D is equivalent to A1:D65536, so add rows as required
+       cell1 = cell1 + '1'     unless cell1 =~ /\d/
+       cell2 = cell2 + '65536' unless cell2 =~ /\d/
+   
+       # Convert the cell references
+       row1, col1 = cell_to_packed_rowcol(cell1)
+       row2, col2 = cell_to_packed_rowcol(cell2)
+   
+       # The ptg value depends on the class of the ptg.
+       if    (_class == 0)
+           ptgarea = [@ptg[:ptgArea]].pack("C")
+       elsif (_class == 1)
+           ptgarea = [@ptg[:ptgAreaV]].pack("C")
+       elsif (_class == 2)
+           ptgarea = [@ptg[:ptgAreaA]].pack("C")
+       else
+           exit "Unknown function class in formula\n"
+       end
+   
+       return ptgarea + row1 + row2 + col1 + col2
+   end
+
+   ###############################################################################
+   #
+   # _convert_range3d
+   #
+   # Convert an Excel 3d range such as "Sheet1!A1:D4" or "Sheet1:Sheet2!A1:D4" to
+   # a ptgArea3dV.
+   #
+   def _convert_range3d(token, _class)
+       # Split the ref at the ! symbol
+       ext_ref, range = token.split('!')
+   
+       # Convert the external reference part
+       ext_ref = pack_ext_ref(ext_ref)
+   
+       # Split the range into 2 cell refs
+       cell1, cell2 = range.split(':')
+   
+       # A range such as A:D is equivalent to A1:D65536, so add rows as required
+       cell1 = cell1 + '1'     unless cell1 =~ /\d/
+       cell2 = cell2 + '65536' unless cell2 =~ /\d/
+   
+       # Convert the cell references
+       row1, col1 = cell_to_packed_rowcol(cell1)
+       row2, col2 = cell_to_packed_rowcol(cell2)
+   
+       # The ptg value depends on the class of the ptg.
+       if    (_class == 0)
+           ptgarea = [@ptg[:ptgArea3d]].pack("C")
+       elsif (_class == 1)
+           ptgarea = [@ptg[:ptgArea3dV]].pack("C")
+       elsif (_class == 2)
+           ptgarea = [@ptg[:ptgArea3dA]].pack("C")
+       else
+           exit "Unknown function class in formula\n"
+       end
+   
+       return ptgarea + ext_ref + row1 + row2 + col1+ col2
+   end
+
+   ###############################################################################
+   #
+   # _pack_ext_ref()
+   #
+   # Convert the sheet name part of an external reference, for example "Sheet1" or
+   # "Sheet1:Sheet2", to a packed structure.
+   #
+   def _pack_ext_ref(ext_ref)
+       ext_ref.sub!(/^'/,'')   # Remove leading  ' if any.
+       ext_ref.sub!(/'$/,'')   # Remove trailing ' if any.
+   
+       # Check if there is a sheet range eg., Sheet1:Sheet2.
+       if (ext_ref =~ /:/)
+           sheet1, sheet2 = ext_ref.split(':')
+   
+           sheet1 = get_sheet_index(sheet1)
+           sheet2 = get_sheet_index(sheet2)
+   
+           # Reverse max and min sheet numbers if necessary
+           if (sheet1 > sheet2)
+               sheet1, sheet2 = [sheet2, sheet1]
+           end
+       else 
+           # Single sheet name only.
+           sheet1, sheet2 = [ext_ref, ext_ref]
+   
+           sheet1 = get_sheet_index(sheet1)
+           sheet2 = sheet1
+       end
+   
+       key = "#{sheet1}:#{sheet2}"
+   
+       unless @ext_refs[key]
+           index = @ext_refs[key]
+       else
+           index = @ext_ref_count
+           @ext_refs[key] = index
+           @ext_ref_count += 1
+       end
+   
+       return [index].pack("v")
+   end
+
+   ###############################################################################
+   #
+   # _get_sheet_index()
+   #
+   # Look up the index that corresponds to an external sheet name. The hash of
+   # sheet names is updated by the add_worksheet() method of the Workbook class.
+   #
+   def get_sheet_index(sheet_name)
+       if @ext_sheets[sheet_name].nil?
+           exit "Unknown sheet name $sheet_name in formula\n"
+       else 
+           return @ext_sheets[sheet_name]
+       end
+   end
+
+   ###############################################################################
+   #
+   # set_ext_sheets()
+   #
+   # This semi-public method is used to update the hash of sheet names. It is
+   # updated by the add_worksheet() method of the Workbook class.
+   #
+   def set_ext_sheets(worksheet, index)
+       # The _ext_sheets hash is used to translate between worksheet names
+       # and their index
+       @ext_sheets[worksheet] = index
+   
+   
+       # 2D sheet refs such as '=Sheet1:Sheet2!A1' can only be added after all
+       # worksheets have been added.
+       #return 0 if $index < $self->{_ext_ref_count}; TODO
+   
+   
+       # The _ext_refs hash is used to correlate the external references used in
+       # formulas with the index stored in the Workbook EXTERNSHEET record.
+       #$self->{_ext_refs}->{$ref} = $index;
+       #$self->{_ext_ref_count}++;
+   
+       # No errors
+       #return 1;
+   end
+
+   ###############################################################################
+   #
+   # get_ext_sheets()
+   #
+   # This semi-public method is used to update the hash of sheet names. It is
+   # updated by the add_worksheet() method of the Workbook class.
+   #
+   # TODO
+   #
+   def get_ext_sheets
+       # TODO
+       refs = @ext_refs;
+       return refs
+   
+       #my @refs = sort {$refs{$a} <=> $refs{$b}} keys %refs;
+   
+       #foreach my $ref (@refs) {
+       #    $ref = [split /:/, $ref];
+       #}
+   
+       #return @refs;
+   end
+
+   ###############################################################################
+   #
+   # get_ext_ref_count()
+   #
+   # TODO This semi-public method is used to update the hash of sheet names. It is
+   # updated by the add_worksheet() method of the Workbook class.
+   #
+   def get_ext_ref_count
+       return @ext_ref_count
+   end
+
+   ###############################################################################
+   #
+   # _convert_function()
+   #
+   # Convert a function to a ptgFunc or ptgFuncVarV depending on the number of
+   # args that it takes.
+   #
+   def convert_function(token, num_args)
+       exit "Unknown function $token() in formula\n" if @functions[token][0].nil?
+   
+       args = @functions[token][1]
+   
+       # Fixed number of args eg. TIME($i,$j,$k).
+       if (args >= 0)
+           # Check that the number of args is valid.
+           if (args != num_args)
+               exit "Incorrect number of arguments for token() in formula\n";
+           else
+               return [ptg[:ptgFuncV], @function[token][0]].pack("Cv")
+           end
+       end
+   
+       # Variable number of args eg. SUM(i,j,k, ..).
+       if (args == -1)
+           return [ptg[:ptgFuncVarV], num_args, @function[token][0]].pack("CCv")
+       end
+   end
+
+   ###############################################################################
+   #
+   # _cell_to_rowcol($cell_ref)
+   #
+   # Convert an Excel cell reference such as A1 or $B2 or C$3 or $D$4 to a zero
+   # indexed row and column number. Also returns two boolean values to indicate
+   # whether the row or column are relative references.
+   # TODO use function in Utility.pm
+   #
+   def cell_to_rowcol(cell)
+       cell =~ /(\$?)([A-I]?[A-Z])(\$?)(\d+)/
+   
+       col_rel = $1 == "" ? 1 : 0
+       col     = $2
+       row_rel = $3 == "" ? 1 : 0
+       row     = $4
+   
+       # Convert base26 column string to a number.
+       # All your Base are belong to us.
+       chars  = col.split(//)
+       expn   = 0
+       col    = 0
+   
+       while (chars)
+           char = chars.pop   # LS char first
+           col  = col + (ord(char) - ord('A') + 1) * (26**expn)
+           expn += 1
+       end
+   
+       # Convert 1-index to zero-index
+       row -= 1
+       col -= 1
+   
+       return [row, col, row_rel, col_rel]
+   end
+
+   ###############################################################################
+   #
+   # _cell_to_packed_rowcol($row, $col, $row_rel, $col_rel)
+   #
+   # pack() row and column into the required 3 byte format.
+   #
+   def cell_to_packed_rowcol(cell)
+       row, col, row_rel, col_rel = cell_to_rowcol(cell)
+   
+       exit "Column #{cell} greater than IV in formula\n" if col >= 256
+       exit "Row #{cell} greater than 65536 in formula\n" if row >= 65536
+   
+       # Set the high bits to indicate if row or col are relative.
+       col    |= col_rel << 14
+       col    |= row_rel << 15
+   
+       row     = [row].pack('v')
+       col     = [col].pack('v')
+   
+       return [row, col]
+   end
 
    ###############################################################################
    #
