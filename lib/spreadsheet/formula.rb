@@ -239,7 +239,7 @@ class Formula < ExcelFormulaParser
    #
    # Convert a boolean token to ptgBool
    #
-   def _convert_bool(bool)
+   def convert_bool(bool)
        return [@ptg[:ptgBool], bool].pack("CC")
    end
 
@@ -342,7 +342,7 @@ class Formula < ExcelFormulaParser
    #
    # Convert an Excel range such as A1:D4 or A:D to a ptgRefV.
    #
-   def _convert_range2d(range, _class)
+   def convert_range2d(range, _class)
        # Split the range into 2 cell refs
        cell1, cell2 = range.split(':')
 
@@ -375,7 +375,7 @@ class Formula < ExcelFormulaParser
    # Convert an Excel 3d range such as "Sheet1!A1:D4" or "Sheet1:Sheet2!A1:D4" to
    # a ptgArea3dV.
    #
-   def _convert_range3d(token, _class)
+   def convert_range3d(token, _class)
        # Split the ref at the ! symbol
        ext_ref, range = token.split('!')
    
@@ -414,7 +414,7 @@ class Formula < ExcelFormulaParser
    # Convert the sheet name part of an external reference, for example "Sheet1" or
    # "Sheet1:Sheet2", to a packed structure.
    #
-   def _pack_ext_ref(ext_ref)
+   def pack_ext_ref(ext_ref)
        ext_ref.sub!(/^'/,'')   # Remove leading  ' if any.
        ext_ref.sub!(/'$/,'')   # Remove trailing ' if any.
    
