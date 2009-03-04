@@ -122,7 +122,7 @@ class Workbook < BIFFWriter
       basename = 'spreadsheetwriteexcelworkbook'
 
       begin
-         if !@tempdir.nil
+         if !@tempdir.nil?
             if @tempdir == ''
                fh = Tempfile.new(basename)
             else
@@ -247,28 +247,26 @@ class Workbook < BIFFWriter
    #
    # Returns: reference to a worksheet object
    #
-   def add_worksheet(name, encoding = 0)
+   def add_worksheet(name = '', encoding = 0)
       name, encoding = check_sheetname(name, encoding)
 
       index = @worksheets.size
 
-      init_data = [
-         name,
-         index,
-         encoding,
-         @activesheet,
-         @firstsheet,
-         @url_format,
-         @parser,
-         @tempdir,
-         @str_total,
-         @str_unique,
-         @str_table,
-         @v1904,
-         @compatibility
-       ]
-
-       worksheet = Worksheet.new(init_data)
+       worksheet = Worksheet.new(
+            name,
+            index,
+            encoding,
+            @activesheet,
+            @firstsheet,
+            @url_format,
+            @parser,
+            @tempdir,
+            @str_total,
+            @str_unique,
+            @str_table,
+            @v1904,
+            @compatibility
+         )
        @worksheets[index] = worksheet     # Store ref for iterator
        @sheetnames[index] = name          # Store EXTERNSHEET names
 #       @parser->set_ext_sheets($name, $index) # Store names in Formula.pm
@@ -316,7 +314,8 @@ class Workbook < BIFFWriter
    # Check for valid worksheet names. We check the length, if it contains any
    # invalid characters and if the name is unique in the workbook.
    #
-   def check_sheetname(name, encoding)
+   def check_sheetname(name, encoding = 0)
+      name = '' if name.nil?
       limit           = encoding != 0 ? 62 : 31
       invalid_char    = %r![\[\]:*?/\\]!
 
@@ -330,7 +329,7 @@ class Workbook < BIFFWriter
       end
 
       # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
-      raise "Sheetname $name must be <= 31 chars" if name.length > limit
+      raise "Sheetname #{name} must be <= 31 chars" if name.length > limit
 
       # Check that Unicode sheetname has an even number of bytes
       if encoding == 1 and name.length % 2
@@ -396,10 +395,10 @@ class Workbook < BIFFWriter
 #            }
 #         }
 #         # If any of the cases failed we throw the error here.
-#         if ($error) {
-#            croak "Worksheet name '$name', with case ignored, " .
-#                  "is already in use";
-#         }
+         end
+         if error != 0
+            raise "Worksheet name '#{name}', with case ignored, " +
+                  "is already in use";
          end
       end
       return [name,  encoding]

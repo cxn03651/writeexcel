@@ -160,7 +160,7 @@ class Worksheet < BIFFWriter
       basename = 'spreadsheetwriteexcel'
 
       begin
-         if !@tempdir.nil
+         if !@tempdir.nil?
             if @tempdir == ''
                fh = Tempfile.new(basename)
             else
@@ -307,6 +307,16 @@ class Worksheet < BIFFWriter
    #
    def _compatibility_mode(compatibility = 1)
       @compatibility = compatibility
+   end
+
+   ###############################################################################
+   #
+   # get_name().
+   #
+   # Retrieve the worksheet name.
+   #
+   def get_name
+       return @name
    end
 
    ###############################################################################
@@ -5348,10 +5358,10 @@ class Worksheet < BIFFWriter
        end
    
        # Set some defaults if they haven't been defined by the user.
-       param[:ignore_blank]  = 1 if param[:ignore_blank].nil
-       param[:dropdown]      = 1 if param[:dropdown].nil
-       param[:show_input]    = 1 if param[:show_input].nil
-       param[:show_error]    = 1 if param[:show_error].nil
+       param[:ignore_blank]  = 1 if param[:ignore_blank].nil?
+       param[:dropdown]      = 1 if param[:dropdown].nil?
+       param[:show_input]    = 1 if param[:show_input].nil?
+       param[:show_error]    = 1 if param[:show_error].nil?
    
        # These are the cells to which the validation is applied.
        param[:cells] = [[row1, col1, row2, col2]]

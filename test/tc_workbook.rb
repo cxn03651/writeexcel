@@ -17,6 +17,7 @@ require "olewriter"
 require "workbook"
 require "worksheet"
 require "format"
+require 'formula'
 
 class TC_Workbook < Test::Unit::TestCase
 
@@ -57,6 +58,59 @@ class TC_Workbook < Test::Unit::TestCase
       assert_raise(RuntimeError, "#{dir} is not valid directory"){
          wb2.set_tempdir(dir)
       }
+   end
+
+   def test_check_sheetname
+      valids   = valid_sheetname
+      invalids = invalid_sheetname
+      worksheet1 = @wb.add_worksheet              # implicit name 'Sheet1'
+      worksheet2 = @wb.add_worksheet              # implicit name 'Sheet1'
+      worksheet3 = @wb.add_worksheet 'Sheet3'     # implicit name 'Sheet1'
+      worksheet1 = @wb.add_worksheet 'Sheetz'     # implicit name 'Sheet1'
+
+      valids.each do |test|
+         target    = test[0]
+         sheetname = test[1]
+         caption   = test[2]
+         assert_nothing_raised { @wb.check_sheetname(sheetname) }
+      end
+      invalids.each do |test|
+         target    = test[0]
+         sheetname = test[1]
+         caption   = test[2]
+         assert_raise(RuntimeError, "sheetname: #{sheetname}") { @wb.check_sheetname(sheetname) }
+      end
+   end
+
+   def valid_sheetname
+      [
+             # Tests for valid names
+             [ 'PASS', nil,        'No worksheet name'           ],
+             [ 'PASS', '',         'Blank worksheet name'        ],
+             [ 'PASS', 'Sheet10',  'Valid worksheet name'        ],
+             [ 'PASS', 'a' * 31,   'Valid 31 char name'          ]
+      ]
+   end
+
+   def invalid_sheetname
+      [
+             # Tests for invalid names
+             [ 'FAIL', 'Sheet1',   'Caught duplicate name'       ],
+             [ 'FAIL', 'Sheet2',   'Caught duplicate name'       ],
+             [ 'FAIL', 'Sheet3',   'Caught duplicate name'       ],
+             [ 'FAIL', 'sheet1',   'Caught case-insensitive name'],
+             [ 'FAIL', 'SHEET1',   'Caught case-insensitive name'],
+             [ 'FAIL', 'sheetz',   'Caught case-insensitive name'],
+             [ 'FAIL', 'SHEETZ',   'Caught case-insensitive name'],
+             [ 'FAIL', 'a' * 32,   'Caught long name'            ],
+             [ 'FAIL', '[',        'Caught invalid char'         ],
+             [ 'FAIL', ']',        'Caught invalid char'         ],
+             [ 'FAIL', ':',        'Caught invalid char'         ],
+             [ 'FAIL', '*',        'Caught invalid char'         ],
+             [ 'FAIL', '?',        'Caught invalid char'         ],
+             [ 'FAIL', '/',        'Caught invalid char'         ],
+             [ 'FAIL', '\\',       'Caught invalid char'         ]
+      ]
    end
 
 =begin

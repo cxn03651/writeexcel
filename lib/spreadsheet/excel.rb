@@ -5,6 +5,7 @@ require "olewriter"
 require "workbook"
 require "worksheet"
 require "format"
+require "formula"
 
 module Spreadsheet
    class Excel < Workbook
