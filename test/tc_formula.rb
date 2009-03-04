@@ -60,4 +60,14 @@ class TC_Formula < Test::Unit::TestCase
       assert_equal(expected02, @formula.scan(string02))
       end
 
+   def test_reverse
+      testcase = [
+         [ [0,1,2,3,4], [0,[1,[2,3,[4]]]]      ],
+         [ [0,1,2,3,4,5], [[0,1,[2,3]],[4,5]]  ]
+      ]
+      testcase.each do |t|
+         assert_equal(t[0], @formula.reverse(t[1]))
+      end
+   end
+
 end

@@ -35,6 +35,10 @@ class Formula < ExcelFormulaParser
             q.push [:LT , s.matched]
          elsif s.scan />/
             q.push [:GT , s.matched]
+         elsif s.scan /TRUE/
+            q.push [:TRUE, s.matched]
+         elsif s.scan /FALSE/
+            q.push [:FALSE, s.matched]
          elsif s.scan /[A-Z0-9_.]+/
             q.push [:FUNC,   s.matched]
          elsif s.scan /\s+/
@@ -56,6 +60,19 @@ class Formula < ExcelFormulaParser
       @q.shift
    end
 
+   def reverse(expression)
+      q = []
+      expression.each do |e|
+         if e.kind_of?(Array)
+            qq = reverse(e)
+            qq.each { |ee| q.push ee }
+         else
+            q.push e
+         end
+      end
+      q
+   end
+
 end
 
 if $0 ==__FILE__
@@ -71,7 +88,8 @@ while true
   str = gets.chop!
   break if /q/i =~ str
   begin
-    parser.parse(str)
+    e = parser.parse(str)
+    p   parser.reverse(e)
   rescue ParseError
     puts $!
   end
