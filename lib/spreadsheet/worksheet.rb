@@ -2127,7 +2127,7 @@ class Worksheet < BIFFWriter
 
    ###############################################################################
    #
-   # set_row($row, $height, $XF, $hidden, $level)
+   # set_row($row, $height, $format, $hidden, $level, collapsed)
    #          row       : Row Number
    #          height    : Format object
    #          format    : Format object
@@ -2137,7 +2137,7 @@ class Worksheet < BIFFWriter
    # This method is used to set the height and XF format for a row.
    # Writes the  BIFF record ROW.
    #
-   def set_row(row, height, xf, hidden = 0, level = 0, collapsed = 0)
+   def set_row(row, height = nil, format = nil, hidden = 0, level = 0, collapsed = 0)
       record      = 0x0208               # Record identifier
       length      = 0x0010               # Number of bytes to follow
 
@@ -2186,10 +2186,10 @@ class Worksheet < BIFFWriter
       # 0x80: The fGhostDirty flag indicates that the row has been formatted.
       #
       grbit |= level
-      grbit |= 0x0010 if collapsed
-      grbit |= 0x0020 if hidden
+      grbit |= 0x0010 if collapsed != 0
+      grbit |= 0x0020 if hidden    != 0
       grbit |= 0x0040
-      grbit |= 0x0080 if format
+      grbit |= 0x0080 unless format.nil?
       grbit |= 0x0100
    
       header = [record, length].pack("vv")
@@ -2201,7 +2201,7 @@ class Worksheet < BIFFWriter
       else
          append(header, data)
       end
-   
+
       # Store the row sizes for use when calculating image vertices.
       # Also store the column formats.
       @row_sizes[row]   = height
@@ -2247,14 +2247,14 @@ class Worksheet < BIFFWriter
    #
    # The ignore flags are use by set_row() and data_validate.
    #
-   def check_dimensions(row, col, ignore_row = nil, ignore_col = nil)
+   def check_dimensions(row, col, ignore_row = 0, ignore_col = 0)
       return -2 if row.nil?
       return -2 if row >= @xls_rowmax
 
       return -2 if col.nil?
       return -2 if col >= @xls_colmax
 
-      unless ignore_row
+      if ignore_row == 0
          if @dim_rowmin.nil? or row < @dim_rowmin
             @dim_rowmin = row
          end
@@ -2264,7 +2264,7 @@ class Worksheet < BIFFWriter
          end
       end
 
-      unless ignore_col
+      if ignore_col == 0
          if @dim_colmin.nil? or col < @dim_colmin
             @dim_colmin = col
          end

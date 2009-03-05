@@ -63,4 +63,60 @@ class TC_dimensions < Test::Unit::TestCase
       assert_equal(expected, results)
    end
 
+   def test_data_in_cell_0_255
+      @worksheet.write(0, 255, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([0, 1, 255, 256])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_data_in_cell_65535_0
+      @worksheet.write(65535, 0, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([65535, 65536, 0, 1])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_data_in_cell_65535_255
+      @worksheet.write(65535, 255, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([65535, 65536, 255, 256])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_test_row_for_row_4
+      @worksheet.set_row(4, 20)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([4, 5, 0, 0])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
 end
