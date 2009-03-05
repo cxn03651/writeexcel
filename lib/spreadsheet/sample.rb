@@ -6,6 +6,6 @@ include Spreadsheet
    format            = workbook.add_format
    dims              = ['row_min', 'row_max', 'col_min', 'col_max']
    smiley            = [0x263a].pack('n')
-   worksheet.set_row(4, 20)
+   worksheet.write_comment(5, 3, 'Test')
    data     = worksheet.store_dimensions
    

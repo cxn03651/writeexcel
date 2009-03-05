@@ -430,6 +430,48 @@ class Format
 
    ###############################################################################
    #
+   # class method    Format._get_color(colour)
+   #
+   #  used from Worksheet.rb
+   #
+   #  this is cut & copy of get_color().
+   #
+   def self._get_color(colour)
+      # Return the default color, 0x7FFF, if undef,
+      return 0x7FFF if colour.nil?
+
+      if colour.kind_of?(Numeric)
+         if colour < 0
+            return 0x7FFF
+
+         # or an index < 8 mapped into the correct range,
+         elsif colour < 8
+            return (colour + 8).to_i
+
+         # or the default color if arg is outside range,
+         elsif 63 < colour
+            return 0x7FFF
+
+         # or an integer in the valid range
+         else
+            return colour.to_i
+         end
+      elsif colour.kind_of?(String)
+         # or the color string converted to an integer,
+         if COLORS.has_key?(colour)
+            return COLORS[colour]
+
+         # or the default color if string is unrecognised,
+         else
+            return 0x7FFF
+         end
+      else
+         return 0x7FFF
+      end
+   end
+
+   ###############################################################################
+   #
    # set_type()
    #
    # Set the XF object type as 0 = cell XF or 0xFFF5 = style XF.

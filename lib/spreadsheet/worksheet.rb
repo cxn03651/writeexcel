@@ -33,11 +33,14 @@ class Worksheet < BIFFWriter
       @url_format          = args[5]
       @parser              = args[6]
       @tempdir             = args[7]
-      @str_total           = args[8]
-      @str_unique          = args[9]
-      @str_table           = args[10]
+      @str_total           = args[8]  || 0
+      @str_unique          = args[9]  || 0
+      @str_table           = args[10] || {}
       @v1904               = args[11]
       @compatibility       = args[12]
+
+      @table               = {}
+      @row_data            = {}
 
       @type                = 0x0000
       @ext_sheets          = []
@@ -547,7 +550,7 @@ class Worksheet < BIFFWriter
    # Set the colour of the worksheet colour.
    #
    def set_tab_color(colour)
-      color = Spreadsheet::WriteExcel::Format::get_color(colour)
+      color = Format._get_color(colour)
       color = 0 if color == 0x7FFF # Default color.
       @tab_color = color
    end
@@ -1361,21 +1364,20 @@ class Worksheet < BIFFWriter
          args = substitute_cellref(*args)
       end
 
-      return -1 if (args.size < 3)   # Check the number of args
+      return -1 if args.size < 3   # Check the number of args
 
 
       row = args[0]
       col = args[1]
 
       # Check for pairs of optional arguments, i.e. an odd number of args.
-      raise "Uneven number of additional arguments" unless args.size % 2 == 0
+      raise "Uneven number of additional arguments" if args.size % 2 == 0
 
       # Check that row and col are valid and store max and min values
-      return -2 if check_dimensions(row, col)
+      return -2 if check_dimensions(row, col) != 0
 
       # We have to avoid duplicate comments in cells or else Excel will complain.
-      @comments[row][col] = comment_params(*args)
-
+      @comments[row] = { col => comment_params(*args) }
    end
 
    ###############################################################################
@@ -1501,7 +1503,7 @@ class Worksheet < BIFFWriter
       str_error   = 0
 
       # Check that row and col are valid and store max and min values
-      return -2 if check_dimensions(row, col)
+      return -2 if check_dimensions(row, col) != 0
 
       # Limit the string to the max number of chars.
       if (strlen > 32767)
@@ -1514,18 +1516,18 @@ class Worksheet < BIFFWriter
       str         = str_header + str
 
       if @str_table[str].nil?
-         @str_unique = @str_unique + 1
          @str_table[str] = @str_unique
+         @str_unique += 1
       end
 
-      @str_total = @str_total + 1
+      @str_total += 1
 
       header = [record, length].pack('vv')
       data   = [row, col, xf, @str_table[str]].pack('vvvV')
 
       # Store the data or write immediately depending on the compatibility mode.
       if @compatibility != 0
-         @table[row][col] = header + data
+         @table[row] = {col, header + data}
       else
          append(header, data)
       end
@@ -1569,14 +1571,14 @@ class Worksheet < BIFFWriter
       xf      = xf_record_index(row, col, args[2])   # The cell format
 
       # Check that row and col are valid and store max and min values
-      return -2 if check_dimensions(row, col)
+      return -2 if check_dimensions(row, col) != 0
 
       header    = [record, length].pack('vv')
       data      = [row, col, xf].pack('vvv')
        
       # Store the data or write immediately depending    on the compatibility mode.
-      if compatibility != 0
-         @table[row][col] = header + data
+      if @compatibility != 0
+         @table[row] = {col, header + data}
       else
          append(header, data)
       end
@@ -1986,7 +1988,7 @@ class Worksheet < BIFFWriter
       str       = args[2]
    
       # Check that row and col are valid and store max and min values
-      return -2 if check_dimensions(row, col)
+      return -2 if check_dimensions(row, col) != 0
    
       error     = 0
       date_time = convert_date_time(str)
@@ -2152,7 +2154,7 @@ class Worksheet < BIFFWriter
       return if row.nil?
 
       # Check that row and col are valid and store max and min values
-      return -2 if check_dimensions(row, 0, 0, 1)
+      return -2 if check_dimensions(row, 0, 0, 1) != 0
    
       # Check for a format object
       if format.kind_of?(Format)
@@ -2193,7 +2195,7 @@ class Worksheet < BIFFWriter
       grbit |= 0x0100
    
       header = [record, length].pack("vv")
-      data   = [row, colMic, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
+      data   = [row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
 
       # Store the data or write immediately depending on the compatibility mode.
       if @compatibility != 0
@@ -3338,13 +3340,13 @@ class Worksheet < BIFFWriter
       #
       (0 .. @dim_rowmax-1).each do |row|
          # Skip unless there is cell data in row or the row has been modified.
-         next unless @table[row] == 0 or @row_data[row] == 0
+         next unless @table[row] or @row_data[row]
    
          # Store the rows with data.
          written_rows.push(row)
    
          # Increase the row offset by the length of a ROW record;
-         row_offset = row_offset + 20
+         row_offset += 20
    
          # The max/min cols in the ROW records are the same as in DIMENSIONS.
          col_min = @dim_colmin
@@ -3733,7 +3735,7 @@ class Worksheet < BIFFWriter
       str_error   = 0
    
       # Check that row and col are valid and store max and min values
-      return -2 if check_dimensions(row, col)
+      return -2 if check_dimensions(row, col) != 0
    
       # Limit the utf16 string to the max number of chars (not bytes).
       if strlen > 32767* 2
@@ -3766,7 +3768,7 @@ class Worksheet < BIFFWriter
    
       # Store the data or write immediately depending on the compatibility mode.
       if @compatibility != 0
-         @table[row][col] = header + data
+         @table[row] = {col, header + data}
       else
          append(header, data)
       end
@@ -5027,8 +5029,19 @@ class Worksheet < BIFFWriter
    
        # Overwrite the defaults with any user supplied values. Incorrect or
        # misspelled parameters are silently ignored.
-###       params   = (%params, @_);
-   
+
+       ###       params   = (%params, @_);  converted like this.  right?
+       ary  = Array.new(args)
+       alist = []
+       while ary.size > 0
+         alist << [ary[0], ary[1]]
+         ary.shift
+         ary.shift
+       end
+       pary = params.to_a
+       alist.each { |a| pary << a }
+       params = Hash[*pary.flatten]
+
        # Ensure that a width and height have been set.
        params[:width]  = 129 if not params[:width]
        params[:height] = 75  if not params[:height]
@@ -5058,7 +5071,7 @@ class Worksheet < BIFFWriter
    
        # Set the comment background colour.
        color = params[:color]
-       color = Spreadsheet::WriteExcel::Format::get_color(color)
+       color = Format._get_color(color)
        color = 0x50 if color == 0x7FFF  # Default color.
        params[:color] = color
    
@@ -5184,8 +5197,8 @@ class Worksheet < BIFFWriter
        end
    
        # Check that row and col are valid without storing the values.
-       return -2 if check_dimensions(row1, col1, 1, 1)
-       return -2 if check_dimensions(row2, col2, 1, 1)
+       return -2 if check_dimensions(row1, col1, 1, 1) != 0
+       return -2 if check_dimensions(row2, col2, 1, 1) != 0
    
        # Check that the last parameter is a hash list.
        unless param.kind_of?(Hash)

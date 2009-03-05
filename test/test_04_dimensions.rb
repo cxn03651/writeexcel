@@ -105,7 +105,7 @@ class TC_dimensions < Test::Unit::TestCase
       assert_equal(expected, results)
    end
 
-   def test_test_row_for_row_4
+   def test_set_row_for_row_4
       @worksheet.set_row(4, 20)
       data     = @worksheet.store_dimensions
 
@@ -114,6 +114,95 @@ class TC_dimensions < Test::Unit::TestCase
       results  = Hash[*alist.flatten]
 
       alist    = @dims.zip([4, 5, 0, 0])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_set_row_for_row_4_to_6
+      @worksheet.set_row(4, 20)
+      @worksheet.set_row(5, 20)
+      @worksheet.set_row(6, 20)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([4, 7, 0, 0])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_set_column_for_row_4
+      @worksheet.set_column(4, 4, 20)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([0, 0, 0, 0])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_data_in_cell_0_0_and_set_row_for_row_4
+      @worksheet.write(0, 0, 'Test')
+      @worksheet.set_row(4, 20)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([0, 5, 0, 1])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_data_in_cell_0_0_and_set_row_for_row_4_reverse_order
+      @worksheet.set_row(4, 20)
+      @worksheet.write(0, 0, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([0, 5, 0, 1])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_data_in_cell_5_3_and_set_row_for_row_4
+      @worksheet.write(5, 3, 'Test')
+      @worksheet.set_row(4, 20)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([4, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_comment_in_cell_5_3
+      @worksheet.write_comment(5, 3, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
       expected = Hash[*alist.flatten]
       
       assert_equal(expected, results)
