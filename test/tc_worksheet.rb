@@ -30,6 +30,11 @@ class TC_Worksheet < Test::Unit::TestCase
       @format  = Format.new(:color=>"green")
    end
 
+   def teardown
+      @ws     = nil
+      @format = nil
+   end
+
    def test_methods_exist
       assert_respond_to(@ws, :write)
       assert_respond_to(@ws, :write_blank)
@@ -41,10 +46,8 @@ class TC_Worksheet < Test::Unit::TestCase
       assert_nothing_raised{ @ws.write(0,0,nil) }
       assert_nothing_raised{ @ws.write(0,0,"Hello") }
       assert_nothing_raised{ @ws.write(0,0,888) }
-      assert_nothing_raised{ @ws.write_row(0,0,nil) }
       assert_nothing_raised{ @ws.write_row(0,0,["one","two","three"]) }
       assert_nothing_raised{ @ws.write_row(0,0,[1,2,3]) }
-      assert_nothing_raised{ @ws.write_col(0,0,nil) }
       assert_nothing_raised{ @ws.write_col(0,0,["one","two","three"]) }
       assert_nothing_raised{ @ws.write_col(0,0,[1,2,3]) }
       assert_nothing_raised{ @ws.write_blank(0,0,nil) }
@@ -168,8 +171,4 @@ class TC_Worksheet < Test::Unit::TestCase
    end
 
 =end
-   def teardown
-      @ws     = nil
-      @format = nil
-   end
 end

@@ -333,7 +333,7 @@ class Format
 #
       # Handle Unicode font names.
       if (encoding == 1)
-#         croak "Uneven number of bytes in Unicode font name" if cch % 2;
+         raise "Uneven number of bytes in Unicode font name" if cch % 2
          cch  /= 2 if encoding;
          rgch  = rgch.unpack('n*').pack('v*')
       end

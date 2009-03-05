@@ -173,7 +173,7 @@ class Workbook < BIFFWriter
          @filehandle.write data
          @datasize += data.length
       else
-         data = super(args)
+         data = super(*args)
       end
 
       return data
@@ -281,30 +281,24 @@ class Workbook < BIFFWriter
    #
    #
    def add_chart_ext(filename, name, encoding = nil)
+      index    = @worksheets.size
 
-#
-#   not implemented
-#
+      name, encoding = check_sheetname(name, encoding)
 
-#      index    = @worksheets.size
-#
-#      name, encoding = check_sheetname(name, encoding)
-#
-#
-#      init_data = [
-#                      filename,
-#                      name,
-#                      index,
-#                      encoding,
-#                      @activesheet,
-#                      @firstsheet
-#                  ]
-#
-#       worksheet = Chart.new(init_data)
-#       @worksheets[index] = worksheet     # Store ref for iterator
-#       @sheetnames[index] = name          # Store EXTERNSHEET names
-##       @parser}.set_ext_sheets(name, index) # Store names in Formula.pm
-#       return worksheet
+      init_data = [
+                      filename,
+                      name,
+                      index,
+                      encoding,
+                      @activesheet,
+                      @firstsheet
+                  ]
+
+       worksheet = Chart.new(*init_data)
+       @worksheets[index] = worksheet      # Store ref for iterator
+       @sheetnames[index] = name           # Store EXTERNSHEET names
+       @parser.set_ext_sheets(name, index) # Store names in Formula.pm
+       return worksheet
    end
 
    ###############################################################################
@@ -970,7 +964,7 @@ class Workbook < BIFFWriter
            drawings_saved += 1
    
            # For each sheet start the spids at the next 1024 interval.
-           max_spid   = 1024 * (1 + Integer(($max_spid -1)/1024.0))
+           max_spid   = 1024 * (1 + Integer((max_spid -1)/1024.0))
            start_spid = max_spid
    
            # Max spid for each sheet and eventually for the workbook.
@@ -1058,15 +1052,14 @@ class Workbook < BIFFWriter
                    # TODO should also match seen images based on checksum.
    
                    # Open the image file and import the data.
-                   $fh = open(filename, "rb")
-               #    croak "Couldn't import $filename: $!" unless defined $fh;
-                   raise if fh.nil?
+                   fh = open(filename, "rb")
+                   raise "Couldn't import #{filename}: #{$!}" unless fh
 
                    # Slurp the file into a string and do some size calcs.
       #             my $data        = do {local $/; <$fh>};
                    size        = data.length
                    checksum1   = image_checksum(data, image_id)
-                   checksum2   = $hecksum1
+                   checksum2   = checksum1
                    ref_count   = 1
 
                    # Process the image and extract dimensions.
@@ -1089,7 +1082,7 @@ class Workbook < BIFFWriter
                        checksum2  = image_checksum(data, image_id, image_id)
 
                        # Adjust size -14 (header) + 16 (extra checksum).
-                       $size += 2
+                       size += 2
                    else
                        raise "Unsupported image format for file: #{filename}\n"
                    end
@@ -1121,7 +1114,7 @@ class Workbook < BIFFWriter
                    # Add previously calculated data back onto the Worksheet array.
                    # $image_id, $type, $width, $height
                    a_ref = images_array[index]
-                   $image_ref.push(previous_images[index])
+                   image_ref.push(previous_images[index])
                end
            end
    
@@ -1190,36 +1183,36 @@ class Workbook < BIFFWriter
 
        # Check that the file is big enough to be a bitmap.
        if data.length  <= 0x36
-           raise "$filename doesn't contain enough data."
+           raise "#{filename} doesn't contain enough data."
        end
 
        # Read the bitmap width and height. Verify the sizes.
        width, height = data.unpack("x18 V2")
 
        if width > 0xFFFF
-           raise "$filename: largest image width $width supported is 65k."
+           raise "#{filename}: largest image width #{width} supported is 65k."
        end
    
        if height > 0xFFFF
-           raise "$filename: largest image height supported is 65k."
+           raise "#{filename}: largest image height supported is 65k."
        end
    
        # Read the bitmap planes and bpp data. Verify them.
        planes, bitcount = data.unpack("x26 v2")
 
        if bitcount != 24
-           raise "$filename isn't a 24bit true color bitmap."
+           raise "#{filename} isn't a 24bit true color bitmap."
        end
    
        if planes != 1
-           raise "$filename: only 1 plane supported in bitmap image."
+           raise "#{filename}: only 1 plane supported in bitmap image."
        end
 
        # Read the bitmap compression. Verify compression.
        compression = data.unpack("x30 V")
    
        if compression != 0
-           raise "$filename: compression not supported in bitmap image."
+           raise "#{filename}: compression not supported in bitmap image."
        end
    
        return [type, width, height]
@@ -1254,7 +1247,7 @@ class Workbook < BIFFWriter
        end
    
        if height.nil?
-          raisek "$filename: no size data found in image.\n"
+          raise "#{filename}: no size data found in image.\n"
        end
    
        return [type, width, height]
@@ -1340,7 +1333,7 @@ class Workbook < BIFFWriter
    
            unless @num_formats[num_format].nil?
                # FORMAT has already been used
-               format.num_format = num_formats[$num_format]
+               format.num_format = num_formats[num_format]
            else
                # Add a new FORMAT
                num_formats[num_format] = index
@@ -1988,7 +1981,7 @@ class Workbook < BIFFWriter
        end
 
        # Update the ref counts.
-       @ext_ref_count =$ext_ref_count
+       @ext_ref_count = ext_ref_count
        @ext_refs      = ext_refs
 
        # If there are no external refs then we don't write, SUPBOOK, EXTERNSHEET

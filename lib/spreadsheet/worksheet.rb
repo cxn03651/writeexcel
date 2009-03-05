@@ -305,7 +305,7 @@ class Worksheet < BIFFWriter
    # See the explanation in Workbook::compatibility_mode(). This private method
    # is mainly used for test purposes.
    #
-   def _compatibility_mode(compatibility = 1)
+   def compatibility_mode(compatibility = 1)
       @compatibility = compatibility
    end
 
@@ -420,11 +420,11 @@ class Worksheet < BIFFWriter
 
       # Check for a cell reference in A1 notation and substitute row and column
       if cell =~ /^\D/
-         data = substitute_cellref(args)
+         data = substitute_cellref(*args)
 
          # Returned values $row1 and $row2 aren't required here. Remove them.
          data.shift        # $row1
-         deta.delete_at(1) # $row2
+         data.delete_at(1) # $row2
       end
 
       return if data.size < 3  # Ensure at least $firstcol, $lastcol and $width
@@ -441,15 +441,15 @@ class Worksheet < BIFFWriter
       data[0] = ColMax - 1 if data[0] > ColMax - 1
       data[1] = ColMax - 1 if data[1] > ColMax - 1
 
-      colinfo.push(data)
+      @colinfo.push(data)
 
       # Store the col sizes for use when calculating image vertices taking
       # hidden columns into account. Also store the column formats.
       #
-      width  = data[4] ? 0 : data[2]  # Set width to zero if col is hidden
+      width  = data[4].nil? || data[4] == 0 ? 0 : data[2]  # Set width to zero if col is hidden
       width  ||= 0                    # Ensure width isn't undef.
       format = data[3]
-      firstcol, lastcol = data;
+      firstcol, lastcol = data
 
       (firstcol .. lastcol).each do |col|
          @col_sizes[col]   = width
@@ -467,7 +467,7 @@ class Worksheet < BIFFWriter
    def set_selection(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args);
+         args = substitute_cellref(*args)
       end
       @selection = args
    end
@@ -482,7 +482,7 @@ class Worksheet < BIFFWriter
    def freeze_panes(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args);
+         args = substitute_cellref(*args)
       end
       # Extra flag indicated a split and freeze.
       @frozen_no_split = 0 if args[4]
@@ -596,9 +596,9 @@ class Worksheet < BIFFWriter
          return
       end
 
-      @footer          = $string
-      @margin_footer   = $margin
-      @footer_encoding = $encoding
+      @footer          = string
+      @margin_footer   = margin
+      @footer_encoding = encoding
    end
 
    ###############################################################################
@@ -728,7 +728,7 @@ class Worksheet < BIFFWriter
    def repeat_columns(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
 
          # Returned values $row1 and $row2 aren't required here. Remove them.
          args.shift        # $row1
@@ -747,15 +747,12 @@ class Worksheet < BIFFWriter
    # _store_names() methods in Workbook.pm.
    #
    def print_area(*args)
-   
-      my $self = shift;
-   
       # Check for a cell reference in A1 notation and substitute row and column
       if args =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
-      return if args.size != 4; # Require 4 parameters
+      return if args.size != 4 # Require 4 parameters
 
       @print_rowmin, @print_colmin, @print_rowmax, @print_colmax = args
    end
@@ -766,11 +763,15 @@ class Worksheet < BIFFWriter
    #
    # Set the autofilter area in the worksheet.
    #
-   def autofilter(row1, col1, row2, col2)
-      # Check for a cell reference in A1 notation and substitute row and column
-      #       if ($_[0] =~ /^\D/) {
-      #           @_ = $self->_substitute_cellref(@_);
-      #       }
+   def autofilter(*args)
+     # Check for a cell reference in A1 notation and substitute row and column
+     if args[0] =~ /^\D/
+         args = substitute_cellref(*args)
+      end
+
+     return if args.size != 4 # Require 4 parameters
+
+     row1, col1, row2, col2 = args
 
       # Reverse max and min values if necessary.
       if row2 < row1
@@ -786,7 +787,7 @@ class Worksheet < BIFFWriter
 
       # Store the Autofilter information
       @filter_area = [row1, row2, col1, col2]
-      filter_count = 1+ col2 -col1
+      @filter_count = 1 + col2 -col1
    end
 
    ###############################################################################
@@ -796,27 +797,27 @@ class Worksheet < BIFFWriter
    # Set the column filter criteria.
    #
    def filter_column(col, expression)
-      # Check for a column reference in A1 notation and substitute.
-      #       if ($col =~ /^\D/) {
-      #           # Convert col ref to a cell ref and then to a col number.
-      #           (undef, $col) = $self->_substitute_cellref($col . '1');
-      #       }
+      raise "Must call autofilter() before filter_column()" if @filter_count == 0
+#      raise "Incorrect number of arguments to filter_column()" unless @_ == 2
 
+      # Check for a column reference in A1 notation and substitute.
+      if col =~ /^\D/
+         # Convert col ref to a cell ref and then to a col number.
+         no_use, col = substitute_cellref(col + '1')
+      end
       col_first = @filter_area[2]
       col_last  = @filter_area[3]
 
       # Reject column if it is outside filter range.
       if (col < col_first or col > col_last)
-         return
-         #    croak "Column '$col' outside autofilter() column range " .
-         #          "($col_first .. $col_last)";
+         raise "Column '#{col}' outside autofilter() column range " +
+               "(#{col_first} .. #{col_last})";
       end
 
       tokens = extract_filter_tokens(expression)
 
       unless (tokens.size == 3 or tokens.size == 7)
-         return
-         #       croak "Incorrect number of tokens in expression '$expression'"
+         raise "Incorrect number of tokens in expression '#{expression}'"
       end
 
 
@@ -882,10 +883,10 @@ class Worksheet < BIFFWriter
          if conditional =~ /^(and|&&)$/
             conditional = 0
          elsif conditional =~ /^(or|\|\|)$/
-            conditional = 1;
+            conditional = 1
          else
-            #              croak "Token '$conditional' is not a valid conditional " .
-            #                    "in filter expression '$expression'";
+            raise "Token '#{conditional}' is not a valid conditional " +
+                  "in filter expression '#{expression}'"
          end
          expression_1 = parse_filter_tokens(expression, tokens[0..2])
          expression_2 = parse_filter_tokens(expression, tokens[4..6])
@@ -926,15 +927,13 @@ class Worksheet < BIFFWriter
       if tokens[0] =~ /^top|bottom$/i
          value = tokens[1]
          if (value =~ /\D/ or value < 1 or value > 500)
-            return
-            #               croak "The value '$value' in expression '$expression' " .
-            #                      "must be in the range 1 to 500";
+            raise "The value '#{value}' in expression '#{expression}' " +
+                  "must be in the range 1 to 500"
          end
          token.downcase!
          if (token != 'items' and token != '%')
-            return
-            #               croak "The type '$token' in expression '$expression' " .
-            #                      "must be either 'items' or '%'";
+            raise "The type '#{token}' in expression '#{expression}' " +
+                  "must be either 'items' or '%'"
          end
 
          if (tokens[0] =~ /^top$/i)
@@ -951,17 +950,16 @@ class Worksheet < BIFFWriter
       end
 
       if (not operator and tokens[0])
-         return
-         #           croak "Token '$tokens[1]' is not a valid operator " .
-         #                 "in filter expression '$expression'";
+         raise "Token '#{tokens[1]}' is not a valid operator " +
+               "in filter expression '#{expression}'"
       end
 
       # Special handling for Blanks/NonBlanks.
       if (token =~ /^blanks|nonblanks$/i)
          # Only allow Equals or NotEqual in this context.
          if (operator != 2 and operator != 5)
-            #             croak "The operator '$tokens[1]' in expression '$expression' " .
-            #                    "is not valid in relation to Blanks/NonBlanks'";
+            raise "The operator '#{tokens[1]}' in expression '#{expression}' " +
+                  "is not valid in relation to Blanks/NonBlanks'"
          end
 
          token.downcase!
@@ -1007,7 +1005,7 @@ class Worksheet < BIFFWriter
          @print_gridlines  = 1  # 1 = display, 0 = hide
          @screen_gridlines = 1
       elsif option == 1
-         $print_gridlines  = 0
+         @print_gridlines  = 0
          @screen_gridlines = 1
       else
          @print_gridlines  = 0
@@ -1219,7 +1217,7 @@ class Worksheet < BIFFWriter
    def write(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args_ = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       token = args[2]
@@ -1240,31 +1238,31 @@ class Worksheet < BIFFWriter
 
       # Match an array ref.
       if token.kind_of?(Array)
-         return write_row(args)
+         return write_row(*args)
          # Match integer with leading zero(s)
       elsif @leading_zeros != 0 and token =~ /^0\d+$/
-         return write_string(args)
+         return write_string(*args)
          # Match number
       elsif token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
-         return write_number(args)
+         return write_number(*args)
          # Match http, https or ftp URL
       elsif token =~ %r|^[fh]tt?ps?://|    and @writing_url == 0
-         return write_url(args)
+         return write_url(*args)
          # Match mailto:
       elsif token =~ %r|^mailto:|          and @writing_url == 0
-         return write_url(args)
+         return write_url(*args)
          # Match internal or external sheet link
       elsif token =~ %r!^(?:in|ex)ternal:! and @writing_url == 0
-         return write_url(args)
+         return write_url(*args)
          # Match formula
       elsif token =~ /^=/
-         return write_formula(args)
+         return write_formula(*args)
          # Match blank
       elsif token == ''
          args.delete_at(2)     # remove the empty string from the parameter list
-         return write_blank(args)
+         return write_blank(*args)
       else
-         return write_string(args)
+         return write_string(*args)
       end
    end
 
@@ -1282,12 +1280,12 @@ class Worksheet < BIFFWriter
    def write_row(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       # Catch non array refs passed by user.
       unless args[2].kind_of?(Array)
-         #            croak "Not an array ref in call to write_row()$!";
+         raise "Not an array ref in call to write_row() #{$!}";
       end
 
       row, col, tokens, *options = args
@@ -1323,12 +1321,12 @@ class Worksheet < BIFFWriter
    def write_col(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       # Catch non array refs passed by user.
       unless args[2].kind_of?(Array)
-         #           croak "Not an array ref in call to write_row()$!";
+         raise "Not an array ref in call to write_row()";
       end
 
       row, col, tokens, *options = args
@@ -1360,7 +1358,7 @@ class Worksheet < BIFFWriter
    def write_comment(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       return -1 if (args.size < 3)   # Check the number of args
@@ -1370,24 +1368,31 @@ class Worksheet < BIFFWriter
       col = args[1]
 
       # Check for pairs of optional arguments, i.e. an odd number of args.
-      #       croak "Uneven number of additional arguments" unless args.size % 2 == 0
+      raise "Uneven number of additional arguments" unless args.size % 2 == 0
 
       # Check that row and col are valid and store max and min values
       return -2 if check_dimensions(row, col)
 
       # We have to avoid duplicate comments in cells or else Excel will complain.
-      @comments[row][col] = comment_params(args)
+      @comments[row][col] = comment_params(*args)
 
    end
 
-   # private - adapted from .37 of Spreadsheet::WriteExcel
-   def XF(row, col, xf=nil)
+   ###############################################################################
+   #
+   # _xf_record_index()
+   #
+   # Returns an index to the XF record in the workbook.
+   #
+   # Note: this is a function, not a method.
+   #
+   def xf_record_index(row, col, xf=nil)
       if xf.kind_of?(Format)
          return xf.xf_index
       elsif @row_formats.has_key?(row) 
          return @row_formats[row].xf_index
-      elsif @column_formats.has_key?(col)
-         return @column_formats[col].xf_index
+      elsif @col_formats.has_key?(col)
+         return @col_formats[col].xf_index
       else
          return 0x0F
       end
@@ -1403,31 +1408,31 @@ class Worksheet < BIFFWriter
    # Ex: ("A4", "Hello") is converted to (3, 0, "Hello").
    #
    def substitute_cellref(cell, *args)
-      cell = cell.upcase!
+      cell.upcase!
 
       # Convert a column range: 'A:A' or 'B:G'.
       # A range such as A:A is equivalent to A1:65536, so add rows as required
       if cell =~ /\$?([A-I]?[A-Z]):\$?([A-I]?[A-Z])/
          row1, col1 =  cell_to_rowcol($1 +'1')
          row2, col2 =  cell_to_rowcol($2 +'65536')
-         return [row1, col1, row2, col2, args]
+         return [row1, col1, row2, col2, *args]
       end
 
       # Convert a cell range: 'A1:B7'
       if cell =~ /\$?([A-I]?[A-Z]\$?\d+):\$?([A-I]?[A-Z]\$?\d+)/
          row1, col1 =  cell_to_rowcol($1)
          row2, col2 =  cell_to_rowcol($2)
-         return [row1, col1, row2, col2, args]
+         return [row1, col1, row2, col2, *args]
       end
 
       # Convert a cell reference: 'A1' or 'AD2000'
-      if ($cell =~ /\$?([A-I]?[A-Z]\$?\d+)/)
+      if (cell =~ /\$?([A-I]?[A-Z]\$?\d+)/)
          row1, col1 =  cell_to_rowcol($1)
-         return [row1, col1, args]
+         return [row1, col1, *args]
 
       end
 
-      #       croak("Unknown cell reference $cell");
+      raise("Unknown cell reference #{cell}")
    end
 
    ###############################################################################
@@ -1442,23 +1447,24 @@ class Worksheet < BIFFWriter
    def cell_to_rowcol(cell)
       cell =~ /\$?([A-I]?[A-Z])\$?(\d+)/
       col     = $1
-      row     = $2
+      row     = $2.to_i
 
       # Convert base26 column string to number
       # All your Base are belong to us.
       chars = col.split(//)
-      expn  = 0;
-      col   = 0;
+      expn  = 0
+      col   = 0
 
-      while (chars)
+      while (chars.size > 0)
          char = chars.pop   # LS char first
-         col = col + (ord(char) -ord('A') +1) * (26**expn)
+         col = col + (char[0] - 65 +1) * (26**expn)
+             #####  ord(char) - ord('A')  in perl  ####
          expn = expn + 1
       end
 
       # Convert 1-index to zero-index
-      row = row - 1
-      col = col - 1
+      row -= 1
+      col -= 1
 
       return [row, col]
    end
@@ -1478,7 +1484,7 @@ class Worksheet < BIFFWriter
    def write_string(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       return -1 if (args.size < 3)                # Check the number of args
@@ -1488,9 +1494,9 @@ class Worksheet < BIFFWriter
 
       row         = args[0]                       # Zero indexed row
       col         = args[1]                       # Zero indexed column
-      strlen      = args[2].length
-      str         = args[2]
-      xf          = XF(self, row, col, args[3])   # The cell format
+      str         = args[2].to_s
+      strlen      = str.length
+      xf          = xf_record_index(row, col, args[3])   # The cell format
       encoding    = 0x0
       str_error   = 0
 
@@ -1546,11 +1552,11 @@ class Worksheet < BIFFWriter
    def write_blank(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       # Check the number of args
-      return -1 if args.size < 2;
+      return -1 if args.size < 2
 
       # Don't write a blank cell unless it has a format
       return 0 if args[2].nil?
@@ -1560,7 +1566,7 @@ class Worksheet < BIFFWriter
 
       row     = args[0]                       # Zero indexed row
       col     = args[1]                       # Zero indexed column
-      xf      = XF(self, row, col, args[2])   # The cell format
+      xf      = xf_record_index(row, col, args[2])   # The cell format
 
       # Check that row and col are valid and store max and min values
       return -2 if check_dimensions(row, col)
@@ -1575,7 +1581,7 @@ class Worksheet < BIFFWriter
          append(header, data)
       end
 
-      return 0;
+      return 0
    end
 
    ###############################################################################
@@ -1600,7 +1606,7 @@ class Worksheet < BIFFWriter
    def write_url(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       # Check the number of args
@@ -1624,7 +1630,7 @@ class Worksheet < BIFFWriter
    def write_url_range(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       # Check the number of args
@@ -1641,9 +1647,9 @@ class Worksheet < BIFFWriter
       url = args[4]
 
       # Check for internal/external sheet links or default to web link
-      return write_url_internal(args) if url =~ /^internal:/
-      return write_url_external(args) if url =~ /^external:/
-      return write_url_web(args)
+      return write_url_internal(*args) if url =~ /^internal:/
+      return write_url_external(*args) if url =~ /^external:/
+      return write_url_web(*args)
    end
 
    ###############################################################################
@@ -1699,7 +1705,7 @@ class Worksheet < BIFFWriter
       # Write the packed data
       append( header, data,unknown1,options,unknown2,url_len,url)
 
-      return error;
+      return error
    end
 
 
@@ -1718,9 +1724,6 @@ class Worksheet < BIFFWriter
    # See also write_url() above for a general description and return values.
    #
    def _write_url_internal(row1, col1, row2, col2, url, str = nil, format = nil)
-
-      my $self    = shift;
-
       record = 0x01B8                       # Record identifier
       length = 0x00000                      # Bytes to follow
 
@@ -1764,7 +1767,7 @@ class Worksheet < BIFFWriter
       # Write the packed data
       append( header, data, unknown1, options, url_len, url)
 
-      return error;
+      return error
    end
 
    ###############################################################################
@@ -1852,7 +1855,7 @@ class Worksheet < BIFFWriter
       unknown1 = ['D0C9EA79F9BACE118C8200AA004BA90B02000000'].pack("H*")
       unknown2 = ['0303000000000000C000000000000046'].pack("H*")
       unknown3 = ['FFFFADDE000000000000000000000000000000000000000'].pack("H*")
-      unknown4 = [0x03].pack("v");
+      unknown4 = [0x03].pack("v")
 
       # Pack the main data stream
       data        = [row1, row2, col1, col2].pack("vvvv") +
@@ -1877,7 +1880,7 @@ class Worksheet < BIFFWriter
       # Write the packed data
       append(header, data)
 
-      return error;
+      return error
    end
 
    ###############################################################################
@@ -1940,7 +1943,7 @@ class Worksheet < BIFFWriter
       unknown1    = ['D0C9EA79F9BACE118C8200AA004BA90B02000000'].pack("H*")
 
       # Pack the main data stream
-      my $data        = [row1, row2, col1, col2].pack("vvvv") +
+        data         = [row1, row2, col1, col2].pack("vvvv") +
         unknown1     +
         link_type    +
         dir_long_len +
@@ -1973,7 +1976,7 @@ class Worksheet < BIFFWriter
    def write_date_time(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
    
       return -1 if (args.size < 3)                 # Check the number of args
@@ -1995,7 +1998,7 @@ class Worksheet < BIFFWriter
          write_string(row, col, str, args[3])
          error = -3
       end
-      return error;
+      return error
    end
    
    ###############################################################################
@@ -2053,9 +2056,9 @@ class Worksheet < BIFFWriter
          end
    
          # Some boundary checks
-         return nil if $hour >= 24
-         return nil if $min  >= 60
-         return nil if $sec  >= 60
+         return nil if hour >= 24
+         return nil if min  >= 60
+         return nil if sec  >= 60
    
          # Excel expresses seconds as a fraction of the number in 24 hours.
          seconds = (hour *60*60 + min *60 + sec) / (24 *60 *60)
@@ -2101,9 +2104,9 @@ class Worksheet < BIFFWriter
       mdays[1]   = 29 if leap
    
       # Some boundary checks
-      return nil if year  < epoch or $year  > 9999
-      return nil if month < 1     or $month > 12
-      return nil if day   < 1     or $day   > mdays[month -1]
+      return nil if year  < epoch or year  > 9999
+      return nil if month < 1     or month > 12
+      return nil if day   < 1     or day   > mdays[month -1]
    
       # Accumulate the number of days since the epoch.
       days = day                                     # Add days for current month
@@ -2149,7 +2152,7 @@ class Worksheet < BIFFWriter
       return if row.nil?
 
       # Check that row and col are valid and store max and min values
-      return -2 if check_dimensions($row, 0, 0, 1)
+      return -2 if check_dimensions(row, 0, 0, 1)
    
       # Check for a format object
       if format.kind_of?(Format)
@@ -2244,7 +2247,7 @@ class Worksheet < BIFFWriter
    #
    # The ignore flags are use by set_row() and data_validate.
    #
-   def _check_dimensions(row, col, ignore_row, ignore_col)
+   def check_dimensions(row, col, ignore_row = nil, ignore_col = nil)
       return -2 if row.nil?
       return -2 if row >= @xls_rowmax
 
@@ -2252,7 +2255,7 @@ class Worksheet < BIFFWriter
       return -2 if col >= @xls_colmax
 
       if !ignore_row
-         if dim_rowmin.nil? or row < @dim_rowmin
+         if @dim_rowmin.nil? or row < @dim_rowmin
             @dim_rowmin = row
          end
 
@@ -2335,20 +2338,20 @@ class Worksheet < BIFFWriter
       fFrozenNoSplit = @frozen_no_split  # 0 - bit
       fSelected      = @selected         # 1
       fPaged         = @active           # 2
-      fBreakPreview  = 0;                # 3
+      fBreakPreview  = 0                # 3
 
-      grbit             = $fDspFmla
-      grbit            |= $fDspGrid       << 1
-      grbit            |= $fDspRwCol      << 2
-      grbit            |= $fFrozen        << 3
-      grbit            |= $fDspZeros      << 4
-      grbit            |= $fDefaultHdr    << 5
-      grbit            |= $fArabic        << 6
-      grbit            |= $fDspGuts       << 7
-      grbit            |= $fFrozenNoSplit << 8
-      grbit            |= $fSelected      << 9
-      grbit            |= $fPaged         << 10
-      grbit            |= $fBreakPreview  << 11
+      grbit             = fDspFmla
+      grbit            |= fDspGrid       << 1
+      grbit            |= fDspRwCol      << 2
+      grbit            |= fFrozen        << 3
+      grbit            |= fDspZeros      << 4
+      grbit            |= fDefaultHdr    << 5
+      grbit            |= fArabic        << 6
+      grbit            |= fDspGuts       << 7
+      grbit            |= fFrozenNoSplit << 8
+      grbit            |= fSelected      << 9
+      grbit            |= fPaged         << 10
+      grbit            |= fBreakPreview  << 11
 
       header = [record, length].pack("vv")
       data    =[grbit, rwTop, colLeft, rgbHdr, wScaleSLV, wScaleNormal, reserved].pack("vvvVvvV")
@@ -2471,13 +2474,13 @@ class Worksheet < BIFFWriter
       end
 
       # Set the limits for the outline levels (0 <= x <= 7).
-      level = 0 if level < 0;
-      level = 7 if level > 7;
+      level = 0 if level < 0
+      level = 7 if level > 7
 
 
       # Set the options flags. (See set_row() for more details).
       grbit |= 0x0001 if hidden != 0
-      grbit |= level << 8;
+      grbit |= level << 8
       grbit |= 0x1000 if collapsed != 0
 
       header = [record, length].pack("vv")
@@ -2607,7 +2610,7 @@ class Worksheet < BIFFWriter
    # as the worksheet index.
    #
    def store_externsheet(sheetname)
-      record    = 0x0017;         # Record identifier
+      record    = 0x0017         # Record identifier
       # length;                     # Number of bytes to follow
 
       # cch                        # Length of sheet name
@@ -2764,7 +2767,7 @@ class Worksheet < BIFFWriter
    #
    def store_header
       record      = 0x0014                       # Record identifier
-      # length;                                     # Bytes to follow
+      # length                                     # Bytes to follow
 
       str         = @header             # header string
       cch         = str.length                 # Length of header string
@@ -2947,7 +2950,7 @@ class Worksheet < BIFFWriter
    def merge_cells(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
 
       record  = 0x00E5                    # Record identifier
@@ -2969,7 +2972,7 @@ class Worksheet < BIFFWriter
       header   = [record, length].pack("vv")
       data     = [cref, rwFirst, rwLast, colFirst, colLast].pack("vvvvv")
 
-      append($header, $data)
+      append(header, data)
    end
 
    ###############################################################################
@@ -2984,22 +2987,22 @@ class Worksheet < BIFFWriter
    def merge_range(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
       raise "Incorrect number of arguments" if args.size != 6 and args.size != 7
       raise "Format argument is not a format object" unless args[5].kind_of?(Format)
 
-      rwFirst  = args[0];
-      colFirst = args[1];
-      rwLast   = args[2];
-      colLast  = args[3];
-      string   = args[4];
-      format   = args[5];
-      encoding = args[6] ? 1 : 0;
+      rwFirst  = args[0]
+      colFirst = args[1]
+      rwLast   = args[2]
+      colLast  = args[3]
+      string   = args[4]
+      format   = args[5]
+      encoding = args[6] ? 1 : 0
 
       # Temp code to prevent merged formats in non-merged cells.
       error = "Error: refer to merge_range() in the documentation. " +
-        "Can't use previously non-merged format in merged cells";
+        "Can't use previously non-merged format in merged cells"
 
       raise error if format.used_merge == -1
       format.used_merge = 0   # Until the end of this function.
@@ -3342,9 +3345,9 @@ class Worksheet < BIFFWriter
          col_max = @dim_colmax
    
          # Write a user specifed ROW record (modified by set_row()).
-         if @row_data[$row]
+         if @row_data[row]
             # Rewrite the min and max cols for user defined row record.
-            packed_row = @row_data[$row]
+            packed_row = @row_data[row]
             packed_row[6..9] = [col_min, col_max].pack('vv')
             append(packed_row)
          else
@@ -3367,7 +3370,7 @@ class Worksheet < BIFFWriter
                cell_offset = 0
    
                    
-               @table[$row].each do |col|
+               @table[row].each do |col|
                   next unless col
                   append(col)
                   ength = col.length
@@ -3454,7 +3457,7 @@ class Worksheet < BIFFWriter
    def embed_chart(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
    
       row         = args[0]
@@ -3482,7 +3485,7 @@ class Worksheet < BIFFWriter
    def insert_image(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
    
       row         = args[0]
@@ -3494,10 +3497,10 @@ class Worksheet < BIFFWriter
       scale_y     = args[6] || 1
    
       raise "Insufficient arguments in insert_image()" unless args.size >= 3
-      #       croak "Couldn't locate $image: $!"               unless -e $image;
+      raise "Couldn't locate #{image}: $!"             unless test(?e, image)
    
-      @images[row][col] = [ $row, $col, $image,
-         $x_offset, $y_offset, $scale_x, $scale_y,]
+      @images[row][col] = [ row, col, image,
+         x_offset, y_offset, scale_x, scale_y,]
    
    end
    
@@ -3707,19 +3710,19 @@ class Worksheet < BIFFWriter
    def write_utf16be_string(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
    
       return -1 if (args.size < 3)                     # Check the number of args
    
-      record      = 0x00FD;                        # Record identifier
-      length      = 0x000A;                        # Bytes to follow
+      record      = 0x00FD                        # Record identifier
+      length      = 0x000A                        # Bytes to follow
    
       row         = args[0]                         # Zero indexed row
       col         = args[1]                         # Zero indexed column
       strlen      = args[2].length
       str         = args[2]
-      xf          = XF(self, row, col, args[3]) # The cell format
+      xf          = xf_record_index(row, col, args[3]) # The cell format
       encoding    = 0x1
       str_error   = 0
    
@@ -3733,7 +3736,7 @@ class Worksheet < BIFFWriter
       end
    
       num_bytes = str.length
-      num_chars = ($num_bytes / 2).to_i
+      num_chars = (num_bytes / 2).to_i
    
       # Check for a valid 2-byte char string.
       raise "Uneven number of bytes in Unicode string" if num_bytes % 2
@@ -3757,7 +3760,7 @@ class Worksheet < BIFFWriter
    
       # Store the data or write immediately depending on the compatibility mode.
       if @compatibility != 0
-         @table[row][$col] = header + data
+         @table[row][col] = header + data
       else
          append(header, data)
       end
@@ -3779,7 +3782,7 @@ class Worksheet < BIFFWriter
    def write_utf16le_string(*args)
       # Check for a cell reference in A1 notation and substitute row and column
       if args[0] =~ /^\D/
-         args = substitute_cellref(args)
+         args = substitute_cellref(*args)
       end
    
       return -1 if (args.size < 3)                     # Check the number of args
@@ -4234,7 +4237,7 @@ class Worksheet < BIFFWriter
    
        row1, row2, col1, col2 = @filter_area
    
-       (0 .. $num_filters-1).each do |i|
+       (0 .. num_filters-1).each do |i|
            vertices = [ col1 +i,    0, row1   , 0,
                         col1 +i +1, 0, row1 +1, 0]
    
@@ -4310,7 +4313,7 @@ class Worksheet < BIFFWriter
        num_objects     = @images_array.size + @filter_count + @charts_array.size
    
        # Skip this if there aren't any comments.
-       return if $num_comments == 0
+       return if num_comments == 0
    
        (0 .. num_comments-1).each do |i|
            row         = comments[i][0]
@@ -4349,12 +4352,12 @@ class Worksheet < BIFFWriter
                   store_mso_sp(202, spid, 0x0A00)                +
                   store_mso_opt_comment(0x80, visible, color)    +
                   store_mso_client_anchor(3, vertices)           +
-                  store_mso_client_data();
+                  store_mso_client_data()
                spid = spid + 1
            end
            length      = data.length
            header      = [record, length].pack("vv")
-           append($eader, data)
+           append(eader, data)
    
            store_obj_comment(num_objects + i + 1)
            store_mso_drawing_text_box()
@@ -4401,7 +4404,7 @@ class Worksheet < BIFFWriter
        version     = 0
        data        = ''
        length      = 8
-       $data       = [num_shapes, max_spid].pack("VV")
+       data        = [num_shapes, max_spid].pack("VV")
    
        return add_mso_generic(type, version, instance, data, length)
    end
@@ -4656,7 +4659,7 @@ class Worksheet < BIFFWriter
        sub_record     = 0x0015   # ftCmo
        sub_length     = 0x0012
        sub_data       = [obj_type, obj_id, options, reserved, reserved, reserved].pack( "vvvVVV")
-       data           = [$sub_record, $sub_length].pack("vv") + sub_data
+       data           = [sub_record, sub_length].pack("vv") + sub_data
    
        # Add ftNts (note structure) subobject
        sub_record  = 0x000D   # ftNts
@@ -4667,7 +4670,7 @@ class Worksheet < BIFFWriter
        # Add ftEnd (end of object) subobject
        sub_record  = 0x0000   # ftNts
        sub_length  = 0x0000
-       data        = data + [$sub_record, $sub_length].pack("vv")
+       data        = data + [sub_record, sub_length].pack("vv")
    
        # Pack the record.
        header      = [record, length].pack("vv")
@@ -4761,7 +4764,7 @@ class Worksheet < BIFFWriter
        # Pack the record.
        header  = [record, length].pack('vv')
    
-       append($header, $data);
+       append(header, data)
    
    end
    
@@ -4793,8 +4796,8 @@ class Worksheet < BIFFWriter
        data        = [sub_record, sub_length].pack('vv') + sub_data
    
        # Add ftSbs Scroll bar subobject
-       sub_record  = 0x000C;   # ftSbs
-       sub_length  = 0x0014;
+       sub_record  = 0x000C   # ftSbs
+       sub_length  = 0x0014
        sub_data    = ['0000000000000000640001000A00000010000100'].pack('H*')
        data        = data + [sub_record, sub_length].pack('vv') + sub_data
    
@@ -4820,7 +4823,7 @@ class Worksheet < BIFFWriter
        # Pack the record.
        header  = [record, length].pack('vv')
    
-       append($header, $data);
+       append(header, data)
    end
    
    ###############################################################################
@@ -4836,7 +4839,7 @@ class Worksheet < BIFFWriter
        data        = store_mso_client_text_box()
        header  = [record, length].pack('vv')
    
-       append($header, $data);
+       append(header, data)
    end
    
    ###############################################################################
@@ -4965,7 +4968,7 @@ class Worksheet < BIFFWriter
        # The flag is also set in _store_mso_opt_comment() but with the opposite
        # value.
        unless visible.nil?
-           visible = visible != 0      ? 0x0002 : 0x0000;
+           visible = visible != 0      ? 0x0002 : 0x0000
        else
            visible = @comments_visible ? 0x0002 : 0x0000
        end
@@ -5158,7 +5161,7 @@ class Worksheet < BIFFWriter
    def data_validation(*args)
        # Check for a cell reference in A1 notation and substitute row and column
        if args[0] =~ /^\D/
-           args = substitute_cellref(args)
+           args = substitute_cellref(*args)
        end
    
        # Check for a valid number of args.
@@ -5175,8 +5178,8 @@ class Worksheet < BIFFWriter
        end
    
        # Check that row and col are valid without storing the values.
-       return -2 if check_dimensions(row1, col1, 1, 1);
-       return -2 if check_dimensions(row2, col2, 1, 1);
+       return -2 if check_dimensions(row1, col1, 1, 1)
+       return -2 if check_dimensions(row2, col2, 1, 1)
    
        # Check that the last parameter is a hash list.
        unless param.kind_of?(Hash)
@@ -5431,7 +5434,7 @@ class Worksheet < BIFFWriter
    
        # Pack the record.
        header = [record, length].pack('vv')
-       data   = [$flags, $x_coord, $y_coord, $obj_id, $dv_count].pack('vVVVV')
+       data   = [flags, x_coord, y_coord, obj_id, dv_count].pack('vVVVV')
    
        append(header, data)
    end
@@ -5506,7 +5509,7 @@ class Worksheet < BIFFWriter
        end
    
        # Pack the record.
-       data   = [flags].pack('V'), $flags    +
+       data   = [flags].pack('V')            +
                 input_title                  +
                 error_title                  +
                 input_message                +

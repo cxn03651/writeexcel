@@ -459,7 +459,7 @@ class Formula < ExcelFormulaParser
    #
    def get_sheet_index(sheet_name)
        if @ext_sheets[sheet_name].nil?
-           exit "Unknown sheet name $sheet_name in formula\n"
+           exit "Unknown sheet name #{sheet_name} in formula\n"
        else 
            return @ext_sheets[sheet_name]
        end
@@ -534,7 +534,7 @@ class Formula < ExcelFormulaParser
    # args that it takes.
    #
    def convert_function(token, num_args)
-       exit "Unknown function $token() in formula\n" if @functions[token][0].nil?
+       exit "Unknown function #{token}() in formula\n" if @functions[token][0].nil?
    
        args = @functions[token][1]
    
@@ -542,7 +542,7 @@ class Formula < ExcelFormulaParser
        if (args >= 0)
            # Check that the number of args is valid.
            if (args != num_args)
-               exit "Incorrect number of arguments for token() in formula\n";
+               exit "Incorrect number of arguments for #{token}() in formula\n";
            else
                return [ptg[:ptgFuncV], @function[token][0]].pack("Cv")
            end
