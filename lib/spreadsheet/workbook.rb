@@ -7,9 +7,9 @@ class Workbook < BIFFWriter
    EOF = 4
    SheetName = "Sheet"
 
-   attr_accessor :date_system
-   attr_reader :formats, :xf_index, :worksheets
-
+   attr_accessor :date_system, :str_unique
+   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
+   
    ###############################################################################
    #
    # new()
@@ -231,7 +231,7 @@ class Workbook < BIFFWriter
    # Returns: an optionally sliced list of the worksheet objects in a workbook.
    #
    def sheets(*args)
-       if args.size > 0
+       unless args.empty?
 #           # Return a slice of the array
 #           return @{$self->{_worksheets}}[@_];
        else
@@ -434,7 +434,7 @@ class Workbook < BIFFWriter
    # suitable for very large files.
    #
    def compatibility_mode(mode = 1)
-      if sheets.size > 0
+      unless sheets.empty?
          raise "compatibility_mode() must be called before add_worksheet()"
       end
       @compatibility = mode
@@ -447,7 +447,7 @@ class Workbook < BIFFWriter
    # Set the date system: 0 = 1900 (the default), 1 = 1904
    #
    def set_1904(mode = 1)
-      if sheets.size > 0
+      unless sheets.empty?
          raise "set_1904() must be called before add_worksheet()"
       end
       @v1904 = mode
@@ -563,7 +563,7 @@ class Workbook < BIFFWriter
    #
    def set_tempdir(dir = '')
       raise "#{dir} is not a valid directory" if dir != '' && !FileTest.directory?(dir)
-      raise "set_tempdir must be called before add_worksheet" if sheets.size > 0
+      raise "set_tempdir must be called before add_worksheet" unless sheets.empty?
 
       @tempdir = dir
    end
@@ -2368,9 +2368,6 @@ class Workbook < BIFFWriter
    #
    def calculate_extsst_size
        unique_strings  = @str_unique
-   
-       bucket_size
-       buckets
    
        if unique_strings < 1024
            bucket_size = 8

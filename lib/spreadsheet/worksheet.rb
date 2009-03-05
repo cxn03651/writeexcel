@@ -5364,7 +5364,7 @@ bp=true
        ###       params   = (%params, @_);  converted like this.  right?
        ary  = Array.new(args)
        alist = []
-       while ary.size > 0
+       while !ary.empty?
          alist << [ary[0], ary[1]]
          ary.shift
          ary.shift
