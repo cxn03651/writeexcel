@@ -309,4 +309,76 @@ class TC_dimensions < Test::Unit::TestCase
       assert_equal(expected, results)
    end
 
+   def test_write_blank
+      @worksheet.write_string(5, 3, @format)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_write_blank_no_format
+      @worksheet.write_string(5, 3)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([0, 0, 0, 0])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_write_utf16be_string
+      @worksheet.write_utf16be_string(5, 3, @smiley)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_write_utf16le_string
+      @worksheet.write_utf16le_string(5, 3, @smiley)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_repeat_formula
+      formula = @worksheet.store_formula('=A1 * 3 + 50')
+      @worksheet.repeat_formula(5, 3, formula, @format, 'A1', 'A2')
+      
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
 end

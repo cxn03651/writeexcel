@@ -1458,7 +1458,7 @@ class Worksheet < BIFFWriter
       expn  = 0
       col   = 0
 
-      while (chars.size > 0)
+      while (!chars.empty?)
          char = chars.pop   # LS char first
          col = col + (char[0] - 65 +1) * (26**expn)
              #####  ord(char) - ord('A')  in perl  ####
@@ -1778,6 +1778,143 @@ class Worksheet < BIFFWriter
        end
    
        return [num, grbit, is_string]
+   end
+
+   ###############################################################################
+   #
+   # store_formula($formula)
+   #       my $formula = $_[0];      # The formula text string
+   #
+   # Pre-parse a formula. This is used in conjunction with repeat_formula()
+   # to repetitively rewrite a formula without re-parsing it.
+   #
+   def store_formula(formula)
+       # Strip the = sign at the beginning of the formula string
+       formula.sub!(/^=/, '')
+
+       # In order to raise formula errors from the point of view of the calling
+       # program we use an eval block and re-raise the error from here.
+       #
+       tokens = @parser.parse_formula(formula)
+   
+#       if ($@) {
+#           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
+#           croak $@       # Re-raise the error
+#       }
+
+       # Return the parsed tokens in an anonymous array
+       return [*tokens]
+   end
+
+   ###############################################################################
+   #
+   # repeat_formula($row, $col, $formula, $format, ($pattern => $replacement,...))
+   #
+   # Write a formula to the specified row and column (zero indexed) by
+   # substituting $pattern $replacement pairs in the $formula created via
+   # store_formula(). This allows the user to repetitively rewrite a formula
+   # without the significant overhead of parsing.
+   #
+   # Returns  0 : normal termination
+   #         -1 : insufficient number of arguments
+   #         -2 : row or column out of range
+   #
+   def repeat_formula(*args)
+       # Check for a cell reference in A1 notation and substitute row and column
+       if args[0] =~ /^\D/
+           args = substitute_cellref(args)
+       end
+   
+       return -1 if (args.size < 2)   # Check the number of args
+   
+       record      = 0x0006   # Record identifier
+       # length                 # Bytes to follow
+   
+       row         = args.shift    # Zero indexed row
+       col         = args.shift    # Zero indexed column
+       formula_ref = args.shift    # Array ref with formula tokens
+       format      = args.shift    # XF format
+       pairs       = args          # Pattern/replacement pairs
+
+       # Enforce an even number of arguments in the pattern/replacement list
+       raise "Odd number of elements in pattern/replacement list" if pairs.size % 2 != 0
+   
+       # Check that formula is an array ref
+       raise "Not a valid formula" unless formula_ref.kind_of?(Array)
+
+       tokens  = formula_ref.dup
+   
+       # Ensure that there are tokens to substitute
+       raise "No tokens in formula" if tokens.empty?
+   
+   
+       # As a temporary and undocumented measure we allow the user to specify the
+       # result of the formula by appending a result => $value pair to the end
+       # of the arguments.
+       value = nil
+       if pairs[-2] == 'result'
+           value = pairs.pop
+                   pairs.pop
+       end
+
+       while (!pairs.empty?)
+           pattern = pairs.shift
+           replace = pairs.shift
+   
+           tokens.each do |token|
+               break if token.sub!(/pattern/, replace)   
+           end
+       end
+
+       # Change the parameters in the formula cached by the Formula.pm object
+       formula   = @parser.parse_tokens(tokens)
+   
+       raise "Unrecognised token in formula" unless formula
+
+       xf        = xf_record_index(row, col, format) # The cell format
+       chn       = 0x0000                          # Must be zero
+       is_string = 0                               # Formula evaluates to str
+       #  num                                      # Current value of formula
+       #  grbit                                    # Option flags
+   
+       # Excel normally stores the last calculated value of the formula in $num.
+       # Clearly we are not in a position to calculate this "a priori". Instead
+       # we set $num to zero and set the option flags in $grbit to ensure
+       # automatic calculation of the formula when the file is opened.
+       # As a workaround for some non-Excel apps we also allow the user to
+       # specify the result of the formula.
+       #
+       num, grbit, is_string = encode_formula_result(value)
+   
+       # Check that row and col are valid and store max and min values
+       return -2 if check_dimensions(row, col) != 0
+   
+   
+       formlen   = formula.length     # Length of the binary string
+       length    = 0x16 + formlen     # Length of the record data
+   
+       header    = [record, length].pack("vv")
+       data      = [row, col, xf].pack("vvv") +
+                   num                        +
+                   [grbit, chn, formlen].pack('vVv')
+
+       # The STRING record if the formula evaluates to a string.
+       string  = ''
+       string  = encode_formula_result(value) if is_string != 0
+   
+   
+       # Store the data or write immediately depending on the compatibility mode.
+       if @compatibility != 0
+           string = ''
+           string = get_formula_string(value) if is_string != 0
+          tmp = []
+          tmp[col] = header + data + formula + string
+          @table[row] = tmp
+       else
+           append(header, data, formula, string)
+       end
+   
+       return 0
    end
 
    ###############################################################################
@@ -3939,7 +4076,7 @@ class Worksheet < BIFFWriter
       num_chars = (num_bytes / 2).to_i
    
       # Check for a valid 2-byte char string.
-      raise "Uneven number of bytes in Unicode string" if num_bytes % 2
+      raise "Uneven number of bytes in Unicode string" if num_bytes % 2 != 0
    
       # Change from UTF16 big-endian to little endian
       str = str.unpack('n*').pack('v')
@@ -3948,12 +4085,12 @@ class Worksheet < BIFFWriter
       str_header  = [num_chars, encoding].pack("vC")
       str         = str_header + str
    
-      if @str_table[str].nil?
+      unless @str_table[str]
          @str_table[str] = @str_unique
-         @str_unique = @str_unique + 1
+         @str_unique += 1
       end
    
-      @str_total = @str_total + 1
+      @str_total += 1
    
       header = [record, length].pack("vv")
       data   = [row, col, xf, @str_table[str]].pack("vvvV")
@@ -3996,7 +4133,7 @@ class Worksheet < BIFFWriter
       col         = args[1]                         # Zero indexed column
       str         = args[2]
       format      = args[3]                         # The cell format
-   
+bp=true   
       # Change from UTF16 big-endian to little endian
       str = str.unpack('n*').pack("v*")
    

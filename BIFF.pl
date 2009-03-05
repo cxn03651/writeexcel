@@ -1,25 +1,22 @@
-use IO::File;
-use Spreadsheet::WriteExcel::BIFFwriter;
-use Spreadsheet::WriteExcel::Worksheet;
-use Spreadsheet::WriteExcel::Format;
-
-#my $ws = new Spreadsheet::WriteExcel::Worksheet('test', 0);
-#my $fh;
-
-#open ($fh, ">ws_store_filtermode_off");
-#print {$fh} $ws->_store_filtermode;
-#close $fh;
-
-#$ws->autofilter(1,1,2,2);
-#$ws->filter_column(1,'x < 2000');
-#open ($fh, ">ws_store_filtermode_on");
-#print {$fh} $ws->_store_filtermode;
-#close $fh;
+use Spreadsheet::WriteExcel;
 
 
-#	print $ws->_store_filtermode;
+my $test_file   = 'temp_test_file.xls';
+my $workbook    = Spreadsheet::WriteExcel->new($test_file);
+my $format      = $workbook->add_format();
+my $worksheet;
+my @dims        = qw(row_min row_max col_min col_max);
+my $data;
+my $caption;
+my %results;
+my %expected;
+my $error;
+my $smiley = pack "n", 0x263a;
 
+$worksheet  = $workbook->add_worksheet();
+my $formula = $worksheet->store_formula('=A1 * 3 + 50');
+$worksheet->repeat_formula(5, 3, $formula, $format, 'A1', 'A2');
 
-my $format = new Spreadsheet::WriteExcel::Format;
-
-   print $format->set_font('Times New Roman');
+$data               = $worksheet ->_store_dimensions();
+@results {@dims}    = unpack 'x4 VVvv', $data;
+@expected{@dims}    = (0, 1, 0, 1);

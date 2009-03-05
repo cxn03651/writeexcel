@@ -64,7 +64,7 @@ class Formula < ExcelFormulaParser
        # can be changed via the repeat_formula interface. Thus, a _ref2d token can
        # be changed by the user to _ref2dA or _ref2dR to change its token class.
        #
-       while (args.size > 0)
+       while (!args.empty?)
            token = args.shift
    
            if (token == '_arg')
@@ -290,11 +290,11 @@ class Formula < ExcelFormulaParser
    
        # The ptg value depends on the class of the ptg.
        if    (_class == 0)
-           ptgref = [@ptg['ptgref']].pack("C")
+           ptgref = [@ptg['ptgRef']].pack("C")
        elsif (_class == 1)
-           ptgref = [@ptg['ptgrefV']].pack("C")
+           ptgref = [@ptg['ptgRefV']].pack("C")
        elsif (_class == 2)
-           ptgref = [@ptg['ptgrefA']].pack("C")
+           ptgref = [@ptg['ptgRefA']].pack("C")
        else
            exit "Unknown function class in formula\n"
        end
@@ -566,7 +566,7 @@ class Formula < ExcelFormulaParser
        col_rel = $1 == "" ? 1 : 0
        col     = $2
        row_rel = $3 == "" ? 1 : 0
-       row     = $4
+       row     = $4.to_i
    
        # Convert base26 column string to a number.
        # All your Base are belong to us.
@@ -574,12 +574,13 @@ class Formula < ExcelFormulaParser
        expn   = 0
        col    = 0
    
-       while (chars)
+       while (!chars.empty?)
            char = chars.pop   # LS char first
-           col  = col + (ord(char) - ord('A') + 1) * (26**expn)
+           col  = col + (char[0] - 65 + 1) * (26**expn)
+               #####  ord(char) - ord('A')  in perl  ####
            expn += 1
        end
-   
+bp = true   
        # Convert 1-index to zero-index
        row -= 1
        col -= 1
