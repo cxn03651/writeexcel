@@ -8,3 +8,4 @@ require 'tc_chart'
 require "tc_excel"
 require "test_00_IEEE_double"
 require 'test_01_add_worksheet'
+require 'test_02_merge_formats'
