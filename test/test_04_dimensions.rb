@@ -381,4 +381,20 @@ class TC_dimensions < Test::Unit::TestCase
       assert_equal(expected, results)
    end
 
+   def test_merge_range
+      formula = @worksheet.store_formula('=A1 * 3 + 50')
+      @worksheet.merge_range('C6:E8', 'Test', @format)
+      
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 8, 2, 5])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
 end
