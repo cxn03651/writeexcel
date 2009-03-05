@@ -39,7 +39,7 @@ class Worksheet < BIFFWriter
       @v1904               = args[11]
       @compatibility       = args[12]
 
-      @table               = {}
+      @table               = []
       @row_data            = {}
 
       @type                = 0x0000
@@ -1473,6 +1473,55 @@ class Worksheet < BIFFWriter
 
    ###############################################################################
    #
+   # write_number($row, $col, $num, $format)
+   #
+   # Write a double to the specified row and column (zero indexed).
+   # An integer can be written as a double. Excel will display an
+   # integer. $format is optional.
+   #
+   # Returns  0 : normal termination
+   #         -1 : insufficient number of arguments
+   #         -2 : row or column out of range
+   #
+   def write_number(*args)
+      # Check for a cell reference in A1 notation and substitute row and column
+      if args[0] =~ /^\D/
+         args = substitute_cellref(*args)
+      end
+
+      return -1 if (args.size < 3)                # Check the number of args
+
+       record  = 0x0203                        # Record identifier
+       length  = 0x000E                        # Number of bytes to follow
+   
+       row     = args[0]                         # Zero indexed row
+       col     = args[1]                         # Zero indexed column
+       num     = args[2]
+       xf      = xf_record_index(row, col, args[3]) # The cell format
+   
+       # Check that row and col are valid and store max and min values
+       return -2 if check_dimensions(row, col) != 0
+   
+       header = [record, length].pack('vv')
+       data   = [row, col, xf].pack('vvv')
+       xl_double = [num].pack("d")
+   
+       xl_double.reverse! if @byte_order != 0
+   
+       # Store the data or write immediately depending on the compatibility mode.
+       if @compatibility != 0
+          tmp = []
+          tmp[col] = header + data + xl_double
+          @table[row] = tmp
+       else
+           append(header, data, xl_double)
+       end
+   
+       return 0
+   end
+
+   ###############################################################################
+   #
    # write_string ($row, $col, $string, $format)
    #
    # Write a string to the specified row and column (zero indexed).
@@ -1527,7 +1576,9 @@ class Worksheet < BIFFWriter
 
       # Store the data or write immediately depending on the compatibility mode.
       if @compatibility != 0
-         @table[row] = {col, header + data}
+         tmp = []
+         tmp[col] = header + data
+         @table[row] = tmp
       else
          append(header, data)
       end
@@ -1578,7 +1629,9 @@ class Worksheet < BIFFWriter
        
       # Store the data or write immediately depending    on the compatibility mode.
       if @compatibility != 0
-         @table[row] = {col, header + data}
+         tmp = []
+         tmp[col] = header + data
+         @table[row] = tmp
       else
          append(header, data)
       end
@@ -3768,7 +3821,9 @@ class Worksheet < BIFFWriter
    
       # Store the data or write immediately depending on the compatibility mode.
       if @compatibility != 0
-         @table[row] = {col, header + data}
+         tmp = []
+         tmp[col] = header + data
+         @table[row] = tmp
       else
          append(header, data)
       end

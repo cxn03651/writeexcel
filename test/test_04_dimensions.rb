@@ -208,4 +208,77 @@ class TC_dimensions < Test::Unit::TestCase
       assert_equal(expected, results)
    end
 
+   def test_nil_value_for_row
+      error = @worksheet.write_string(nil, 1, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([0, 0, 0, 0])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+      assert_equal(-2, error)
+   end
+
+   def test_data_in_cell_5_3_and_10_1
+      @worksheet.write( 5, 3, 'Test')
+      @worksheet.write(10, 1, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 11, 1, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_data_in_cell_5_3_and_10_5
+      @worksheet.write( 5, 3, 'Test')
+      @worksheet.write(10, 5, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 11, 3, 6])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_write_string
+      @worksheet.write_string(5, 3, 'Test')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_write_number
+      @worksheet.write_number(5, 3, 5)
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
 end
