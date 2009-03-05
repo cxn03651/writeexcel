@@ -1,11 +1,10 @@
-###########################################################################
-# test_02_merge_formats.rb
+###############################################################################
 #
-# Tests to ensure merge formats aren't used in non-merged cells and
-# vice-versa. This is temporary feature to prevent users from inadvertently
-# making this error.
+# A test for Spreadsheet::WriteExcel.
 #
-# reverse('©'), April 2005, John McNamara, jmcnamara@cpan.org
+# Check that the Excel DIMENSIONS record is written correctly.
+#
+# reverse('©'), October 2007, John McNamara, jmcnamara@cpan.org
 #
 ############################################################################
 base = File.basename(Dir.pwd)
