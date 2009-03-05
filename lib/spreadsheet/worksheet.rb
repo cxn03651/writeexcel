@@ -2254,7 +2254,7 @@ class Worksheet < BIFFWriter
       return -2 if col.nil?
       return -2 if col >= @xls_colmax
 
-      if !ignore_row
+      unless ignore_row
          if @dim_rowmin.nil? or row < @dim_rowmin
             @dim_rowmin = row
          end
@@ -2264,7 +2264,7 @@ class Worksheet < BIFFWriter
          end
       end
 
-      if !ignore_col
+      unless ignore_col
          if @dim_colmin.nil? or col < @dim_colmin
             @dim_colmin = col
          end
@@ -2294,13 +2294,19 @@ class Worksheet < BIFFWriter
       length    = 0x000E         # Number of bytes to follow
       reserved  = 0x0000         # Reserved by Excel
 
-      @dim_rowmin = 0 if @dim_rowmin.nil?
-      @dim_rowmax = 0 if @dim_rowmax.nil?
-      @dim_colmin = 0 if @dim_colmin.nil?
-      @dim_colmax = 0 if @dim_colmax.nil?
+      row_min = @dim_rowmin.nil? ? 0 : @dim_rowmin
+      row_max = @dim_rowmax.nil? ? 0 : @dim_rowmax + 1
+      col_min = @dim_colmin.nil? ? 0 : @dim_colmin
+      col_max = @dim_colmax.nil? ? 0 : @dim_colmax + 1
 
+      # Set member data to the new max/min value for use by _store_table().
+      @dim_rowmin = row_min
+      @dim_rowmax = row_max
+      @dim_colmin = col_min
+      @dim_colmax = col_max
+  
       header = [record, length].pack("vv")
-      fields = [@dim_rowmin, @dim_rowmax, @dim_colmin, @dim_colmax, reserved]
+      fields = [row_min, row_max, col_min, col_max, reserved]
       data   = fields.pack("VVvvv")
      
       return prepend(header, data)

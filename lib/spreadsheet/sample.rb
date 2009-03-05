@@ -3,11 +3,10 @@ include Spreadsheet
 
    workbook          = Excel.new('test.xls')
    worksheet         = workbook.add_worksheet
-   merged_format     = workbook.add_format(:bold => 1)
-   non_merged_format = workbook.add_format(:bold => 1)
-   worksheet.set_row(5, nil, merged_format)
-   worksheet.set_column('G:G', nil, merged_format)
-breakpoint = true
-   worksheet.write('A1',    'Test', non_merged_format)
-   worksheet.write('A3:B4', 'Test', merged_format)
+   format            = workbook.add_format
+   dims              = ['row_min', 'row_max', 'col_min', 'col_max']
+   smiley            = [0x263a].pack('n')
+   worksheet.write(0, 0, 'Test')
+breakpoint = false
+   data     = worksheet.store_dimensions
    
