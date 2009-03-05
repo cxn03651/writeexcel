@@ -1,11 +1,11 @@
 require 'excel'
 include Spreadsheet
 
-   workbook          = Excel.new('test.xls')
-   worksheet         = workbook.add_worksheet
-   format            = workbook.add_format
-   dims              = ['row_min', 'row_max', 'col_min', 'col_max']
-   smiley            = [0x263a].pack('n')
-   worksheet.write_comment(5, 3, 'Test')
-   data     = worksheet.store_dimensions
-   
+   workbook = Workbook.new('test.xls')
+   worksheet = workbook.add_worksheet
+bp = true
+   worksheet.write_formula(1,2,'1+2')
+   formula = Formula.new(0)
+   p = formula.parse('1+2')
+   p formula.reverse(p)
+      

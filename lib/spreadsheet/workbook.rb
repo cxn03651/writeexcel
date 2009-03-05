@@ -1,5 +1,6 @@
 require 'digest/md5'
 require 'biffwriter'
+require 'formula'
 
 class Workbook < BIFFWriter
    BOF = 11
@@ -18,7 +19,7 @@ class Workbook < BIFFWriter
    def initialize(filename)
       super
       @filename              = filename
-      @parser                = nil,    # dummy.  
+      @parser                = Formula.new(@byte_order)
       @tempdir               = nil
       @v1904                 = 0 
       @activesheet           = 0 

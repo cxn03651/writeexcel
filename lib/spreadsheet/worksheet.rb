@@ -1,4 +1,5 @@
 require 'format'
+require 'formula'
 
 class MaxSizeError < StandardError; end
 
@@ -1641,6 +1642,146 @@ class Worksheet < BIFFWriter
 
    ###############################################################################
    #
+   # write_formula($row, $col, $formula, $format, $value)
+   #
+   # Write a formula to the specified row and column (zero indexed).
+   # The textual representation of the formula is passed to the parser in
+   # Formula.pm which returns a packed binary string.
+   #
+   # $format is optional.
+   #
+   # $value is an optional result of the formula that can be supplied by the user.
+   #
+   # Returns  0 : normal termination
+   #         -1 : insufficient number of arguments
+   #         -2 : row or column out of range
+   #
+   def write_formula(*args)
+       # Check for a cell reference in A1 notation and substitute row and column
+       if (args[0] =~ /^\D/)
+           args = substitute_cellref(args)
+       end
+   
+       return -1 if args.size < 3   # Check the number of args
+   
+       record    = 0x0006     # Record identifier
+       # length               # Bytes to follow
+   
+       row       = args[0]      # Zero indexed row
+       col       = args[1]      # Zero indexed column
+       formula   = args[2]      # The formula text string
+       value     = args[4]      # The formula text string
+   
+   
+       xf        = xf_record_index(row, col, args[3])  # The cell format
+       chn       = 0x0000                         # Must be zero
+       is_string = 0                              # Formula evaluates to str
+       # num                                      # Current value of formula
+       # grbi                                     # Option flags
+
+       # Excel normally stores the last calculated value of the formula in $num.
+       # Clearly we are not in a position to calculate this "a priori". Instead
+       # we set $num to zero and set the option flags in $grbit to ensure
+       # automatic calculation of the formula when the file is opened.
+       # As a workaround for some non-Excel apps we also allow the user to
+       # specify the result of the formula.
+       #
+       num, grbit, is_string = encode_formula_result(value)
+
+       # Check that row and col are valid and store max and min values
+       return -2 if check_dimensions(row, col) != 0
+   
+       # Strip the = sign at the beginning of the formula string
+       formula.sub!(/^=/, '')
+   
+       tmp     = formula
+   
+       # Parse the formula using the parser in Formula.pm
+       # nakamura add:  to get byte_stream, set second arg TRUE
+       # because ruby doesn't have Perl's "wantarray"
+       formula = @parser.parse_formula(formula, true)
+   
+#       if ($@) {
+#           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
+#           croak $@       # Re-raise the error
+#       }
+
+       formlen = formula.length     # Length of the binary string
+       length  = 0x16 + formlen     # Length of the record data
+
+       header  = [record, length].pack("vv")
+       data    = [row, col, xf].pack("vvv") +
+                  num +
+                 [grbit, chn, formlen].pack('vVv')
+   
+       # The STRING record if the formula evaluates to a string.
+       string  = ''
+       string  = get_formula_string(value) if is_string != 0
+
+       # Store the data or write immediately depending on the compatibility mode.
+       if @compatibility != 0
+         tmp = []
+         tmp[col] = header + data + formula + string
+         @table[row] = tmp
+       else
+           append(header, data, formula, string)
+       end
+   
+       return 0
+   end
+
+   ###############################################################################
+   #
+   # _encode_formula_result()
+   #     my $value     = $_[0];      # Result to be encoded.
+   #
+   # Encode the user supplied result for a formula.
+   #
+   def encode_formula_result(value = nil)
+       is_string = 0;          # Formula evaluates to str.
+       # my $num;                    # Current value of formula.
+       # my $grbit;                  # Option flags.
+   
+       unless value
+           grbit  = 0x03
+           num    = [0].pack("d")
+       else
+           # The user specified the result of the formula. We turn off the recalc
+           # flag and check the result type.
+           grbit  = 0x00
+   
+           if value =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+               # Value is a number.
+               num = [value].pack("d")
+           else
+               bools = {
+                               'TRUE'    => [1,  1],
+                               'FALSE'   => [1,  0],
+                               '#NULL!'  => [2,  0],
+                               '#DIV/0!' => [2,  7],
+                               '#VALUE!' => [2, 15],
+                               '#REF!'   => [2, 23],
+                               '#NAME?'  => [2, 29],
+                               '#NUM!'   => [2, 36],
+                               '#N/A'    => [2, 42]
+                       }
+   
+               if bools[value]
+                   # Value is a boolean.
+                   num = [bools[value][0], bools[value][1], 0, 0xFFFF].pack("vvvv")
+               else
+                   # Value is a string.
+                   num = [0, 0, 0, 0xFFFF].pack("vvvv")
+                   is_string = 1
+               end
+           end
+       end
+   
+       return [num, grbit, is_string]
+   end
+
+   ###############################################################################
+   #
    # write_url($row, $col, $url, $string, $format)
    #
    # Write a hyperlink. This is comprised of two elements: the visible label and
@@ -1668,7 +1809,7 @@ class Worksheet < BIFFWriter
       return -1 if args.size < 3
 
       # Add start row and col to arg list
-      return write_url_range(args[0], args[1], args)
+      return write_url_range(args[0], args[1], *args)
    end
 
    ###############################################################################
@@ -1695,10 +1836,8 @@ class Worksheet < BIFFWriter
       # in order to protect the callers args. We don't use "local @_" in case of
       # perl50005 threads.
       #
-      #       my @args = @_;
-      #
-      #       ($args[5], $args[6]) = ($args[6], $args[5]) if ref $args[5];
-      #
+      args[5], args[6] = [ args[6], args[5] ]
+      
       url = args[4]
 
       # Check for internal/external sheet links or default to web link
@@ -1723,7 +1862,7 @@ class Worksheet < BIFFWriter
    #
    # See also write_url() above for a general description and return values.
    #
-   def _write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)
+   def write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)
       record = 0x01B8                       # Record identifier
       length = 0x00000                      # Bytes to follow
 
@@ -1778,7 +1917,7 @@ class Worksheet < BIFFWriter
    #
    # See also write_url() above for a general description and return values.
    #
-   def _write_url_internal(row1, col1, row2, col2, url, str = nil, format = nil)
+   def write_url_internal(row1, col1, row2, col2, url, str = nil, format = nil)
       record = 0x01B8                       # Record identifier
       length = 0x00000                      # Bytes to follow
 
@@ -1837,7 +1976,7 @@ class Worksheet < BIFFWriter
    #
    # See also write_url() above for a general description and return values.
    #
-   def _write_url_external(row1, col1, row2, col2, url, str = nil, format = nil)
+   def write_url_external(row1, col1, row2, col2, url, str = nil, format = nil)
       # Network drives are different. We will handle them separately
       # MS/Novell network drives and shares start with \\
       if url =~ /^external:\\\\/
@@ -1947,7 +2086,7 @@ class Worksheet < BIFFWriter
    #
    # See also write_url() above for a general description and return values.
    #
-   def _write_url_external_net(row1, col1, row2, col2, url, str, format)
+   def write_url_external_net(row1, col1, row2, col2, url, str, format)
       record      = 0x01B8                       # Record identifier
       length      = 0x00000                      # Bytes to follow
 
@@ -2703,7 +2842,7 @@ class Worksheet < BIFFWriter
    # _store_panes(y, x, colLeft, no_split, pnnAct)
    #    y           = args[0] || 0   # Vertical split position
    #    x           = $_[1] || 0;   # Horizontal split position
-   #    my $rwTop       = $_[2];        # Top row visible
+   #    rwTop       = $_[2];        # Top row visible
    #    my $colLeft     = $_[3];        # Leftmost column visible
    #    my $no_split    = $_[4];        # No used here.
    #    my $pnnAct      = $_[5];        # Active pane

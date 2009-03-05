@@ -281,4 +281,32 @@ class TC_dimensions < Test::Unit::TestCase
       assert_equal(expected, results)
    end
 
+   def test_write_url
+      @worksheet.write_url(5, 3, 'http://www.ruby.com')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
+   def test_write_formula
+      @worksheet.write_formula(5, 3, ' 1 + 2')
+      data     = @worksheet.store_dimensions
+
+      vals     = data.unpack('x4 VVvv')
+      alist    = @dims.zip(vals)
+      results  = Hash[*alist.flatten]
+
+      alist    = @dims.zip([5, 6, 3, 4])
+      expected = Hash[*alist.flatten]
+      
+      assert_equal(expected, results)
+   end
+
 end

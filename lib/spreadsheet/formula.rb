@@ -23,21 +23,19 @@ class Formula < ExcelFormulaParser
    #
    def parse_formula(formula, byte_stream = false)
       # Build the parse tree for the formula
-      parse =parse(formula)
-   
-      tokens = reverse(parse)
+      tokens = reverse(parse(formula))
    
       # Add a volatile token if the formula contains a volatile function.
       # This must be the first token in the list
       #
-      unshift tokens, '_vol' if check_volatile(tokens)
+      tokens.unshift('_vol') if check_volatile(tokens) != 0
    
       # The return value depends on which Worksheet.pm method is the caller
       unless byte_stream
          # Parse formula to see if it throws any errors and then
          # return raw tokens to Worksheet::store_formula()
          #
-         @tokens
+         tokens
       else
          # Return byte stream to Worksheet::write_formula()
          parse_tokens(tokens)
@@ -58,7 +56,6 @@ class Formula < ExcelFormulaParser
        _class      = 0
        _classary   = 1
        args        = tokens.dup
-   
        # A note about the class modifiers used below. In general the class,
        # "reference" or "value", of a function is applied to all of its operands.
        # However, in certain circumstances the operands can have mixed classes,
@@ -67,7 +64,7 @@ class Formula < ExcelFormulaParser
        # can be changed via the repeat_formula interface. Thus, a _ref2d token can
        # be changed by the user to _ref2dA or _ref2dR to change its token class.
        #
-       while (args)
+       while (args.size > 0)
            token = args.shift
    
            if (token == '_arg')
@@ -122,8 +119,8 @@ class Formula < ExcelFormulaParser
                parse_str = parse_str + convert_function(token, num_args)
                _classary.pop
                num_args = 0 # Reset after use
-           elsif (exists ptg[token])
-               parse_str = parse_str + [ptg[token]].pack("C")
+           elsif @ptg[token]
+               parse_str = parse_str + [@ptg[token]].pack("C")
            else
                # Unrecognised token
                return nil
@@ -240,7 +237,7 @@ class Formula < ExcelFormulaParser
    # Convert a boolean token to ptgBool
    #
    def convert_bool(bool)
-       return [@ptg[:ptgBool], bool].pack("CC")
+       return [@ptg['ptgBool'], bool].pack("CC")
    end
 
 
@@ -252,12 +249,12 @@ class Formula < ExcelFormulaParser
    #
    def convert_number(num)
        # Integer in the range 0..2**16-1
-       if ((num =~ /^\d+$/) && (num <= 65535))
-           return [@ptg[:ptgInt], num].pack("Cv")
+       if ((num =~ /^\d+$/) && (num.to_i <= 65535))
+           return [@ptg['ptgInt'], num.to_i].pack("Cv")
        else  # A float
            num = [num].pack("d")
            num.reverse! if @byte_order != 0
-           return [@ptg[:ptgNum]].pack("C") + num
+           return [@ptg['ptgNum']].pack("C") + num
        end
    end
 
@@ -278,7 +275,7 @@ class Formula < ExcelFormulaParser
    
        exit "String in formula has more than 255 chars\n" if length > 255
    
-       return [@ptg[:ptgStr], length, encoding].pack("CCC") + str
+       return [@ptg['ptgStr'], length, encoding].pack("CCC") + str
    end
 
    ###############################################################################
@@ -293,11 +290,11 @@ class Formula < ExcelFormulaParser
    
        # The ptg value depends on the class of the ptg.
        if    (_class == 0)
-           ptgref = [@ptg[:ptgref]].pack("C")
+           ptgref = [@ptg['ptgref']].pack("C")
        elsif (_class == 1)
-           ptgref = [@ptg[:ptgrefV]].pack("C")
+           ptgref = [@ptg['ptgrefV']].pack("C")
        elsif (_class == 2)
-           ptgref = [@ptg[:ptgrefA]].pack("C")
+           ptgref = [@ptg['ptgrefA']].pack("C")
        else
            exit "Unknown function class in formula\n"
        end
@@ -324,11 +321,11 @@ class Formula < ExcelFormulaParser
    
        # The ptg value depends on the class of the ptg.
        if    (_class == 0)
-           ptgref = [@ptg[:ptgRef3d]].pack("C")
+           ptgref = [@ptg['ptgRef3d']].pack("C")
        elsif (_class == 1) 
-           ptgref = [@ptg[:ptgRef3dV]].pack("C")
+           ptgref = [@ptg['ptgRef3dV']].pack("C")
        elsif (_class == 2) 
-           ptgref = [@ptg[:ptgRef3dA]].pack("C")
+           ptgref = [@ptg['ptgRef3dA']].pack("C")
        else
            exit "Unknown function class in formula\n"
        end
@@ -356,11 +353,11 @@ class Formula < ExcelFormulaParser
    
        # The ptg value depends on the class of the ptg.
        if    (_class == 0)
-           ptgarea = [@ptg[:ptgArea]].pack("C")
+           ptgarea = [@ptg['ptgArea']].pack("C")
        elsif (_class == 1)
-           ptgarea = [@ptg[:ptgAreaV]].pack("C")
+           ptgarea = [@ptg['ptgAreaV']].pack("C")
        elsif (_class == 2)
-           ptgarea = [@ptg[:ptgAreaA]].pack("C")
+           ptgarea = [@ptg['ptgAreaA']].pack("C")
        else
            exit "Unknown function class in formula\n"
        end
@@ -395,11 +392,11 @@ class Formula < ExcelFormulaParser
    
        # The ptg value depends on the class of the ptg.
        if    (_class == 0)
-           ptgarea = [@ptg[:ptgArea3d]].pack("C")
+           ptgarea = [@ptg['ptgArea3d']].pack("C")
        elsif (_class == 1)
-           ptgarea = [@ptg[:ptgArea3dV]].pack("C")
+           ptgarea = [@ptg['ptgArea3dV']].pack("C")
        elsif (_class == 2)
-           ptgarea = [@ptg[:ptgArea3dA]].pack("C")
+           ptgarea = [@ptg['ptgArea3dA']].pack("C")
        else
            exit "Unknown function class in formula\n"
        end
@@ -544,13 +541,13 @@ class Formula < ExcelFormulaParser
            if (args != num_args)
                exit "Incorrect number of arguments for #{token}() in formula\n";
            else
-               return [ptg[:ptgFuncV], @function[token][0]].pack("Cv")
+               return [ptg['ptgFuncV'], @function[token][0]].pack("Cv")
            end
        end
    
        # Variable number of args eg. SUM(i,j,k, ..).
        if (args == -1)
-           return [ptg[:ptgFuncVarV], num_args, @function[token][0]].pack("CCv")
+           return [ptg['ptgFuncVarV'], num_args, @function[token][0]].pack("CCv")
        end
    end
 
@@ -619,7 +616,7 @@ class Formula < ExcelFormulaParser
    def initialize_hashes
    
        # The Excel ptg indices
-       ptg = {
+       @ptg = {
            'ptgExp'            => 0x01,
            'ptgTbl'            => 0x02,
            'ptgAdd'            => 0x03,
@@ -730,7 +727,7 @@ class Formula < ExcelFormulaParser
        # class: The reference, value or array class of the function args.
        # vol:   The function is volatile.
        #
-       functions  = {
+       @functions  = {
            #                                     ptg  args  class  vol
            'COUNT'                         => [   0,   -1,    0,    0 ],
            'IF'                            => [   1,   -1,    1,    0 ],
