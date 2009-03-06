@@ -72,7 +72,7 @@ class TC_BIFFWriter < Test::Unit::TestCase
 
    def teardown
       @biff = nil
-#      File.delete(@ruby_file) if File.exist?(@ruby_file)
+      File.delete(@ruby_file) if File.exist?(@ruby_file)
    end
 
    def compare_file(expected, target)

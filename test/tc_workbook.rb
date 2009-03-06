@@ -40,23 +40,23 @@ class TC_Workbook < Test::Unit::TestCase
       end
    end
 
-   def test_set_tempdir
+   def test_set_tempdir_after_sheet_added
       # after shees added, call set_tempdir raise RuntimeError
-      wb1 = Workbook.new('wb1')
-      wb1.add_worksheet('name')
+      @wb.add_worksheet('name')
       assert_raise(RuntimeError, "already sheet exists, but set_tempdir() doesn't raise"){
-         wb1.set_tempdir
+         @wb.set_tempdir
       }
-
+   end
+   
+   def test_set_tempdir_with_invalid_dir
       # invalid dir raise RuntimeError
-      wb2 = Workbook.new('wb2')
       while true do
          dir = Time.now.to_s
          break unless FileTest.directory?(dir)
          sleep 0.1
       end
-      assert_raise(RuntimeError, "#{dir} is not valid directory"){
-         wb2.set_tempdir(dir)
+      assert_raise(RuntimeError, "set_tempdir() doesn't raise invalid dir:#{dir}."){
+         @wb.set_tempdir(dir)
       }
    end
 
@@ -113,51 +113,4 @@ class TC_Workbook < Test::Unit::TestCase
       ]
    end
 
-=begin
-   def test_calc_sheet_offsets
-      ws = @wb.add_worksheet
-      assert_nothing_raised{ @wb.calc_sheet_offsets }
-   end
-
-   def test_store_window1
-      assert_nothing_raised{ @wb.store_window1 }
-   end
-
-   def test_store_all_fonts
-      assert_nothing_raised{ @wb.store_all_fonts }
-   end
-
-   def test_store_xf
-      assert_nothing_raised{ @wb.store_xf(0xFFF5) }
-   end
-
-   def test_store_all_xfs
-      assert_nothing_raised{ @wb.store_all_xfs }
-   end
-
-   def test_store_style
-      assert_nothing_raised{ @wb.store_style }
-   end
-
-   def test_store_boundsheet
-      assert_nothing_raised{ @wb.store_boundsheet("test",0) }
-   end
-
-   def test_add_format
-      assert_nothing_raised{ @wb.add_format }
-      assert_equal(2,@wb.formats.length,"Bad number of formats")
-      assert_nothing_raised{ 
-        @wb.add_format(:bold => true, :size => 10, :color => 'black',
-                       :fg_color => 43, :align => 'top', :text_wrap => true,
-                       :border => 1)
-      }
-      assert_equal(3,@wb.formats.length,"Bad number of formats")
-   end
-
-   def teardown
-      @wb.close
-      @wb = nil
-      File.delete("test.xls") if File.exists?("test.xls")
-   end
-=end
 end

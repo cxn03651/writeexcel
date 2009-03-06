@@ -25,8 +25,6 @@ class TC_OLE < Test::Unit::TestCase
    end
 
    def test_constructor
-      assert_nothing_raised{ OLEWriter.new("foo.ole") }
-      assert_nothing_raised{ OLEWriter.new(File.open("foo.ole", "w+")) }
       assert_kind_of(OLEWriter, @ole)
    end
 
