@@ -9,6 +9,7 @@ class Workbook < BIFFWriter
 
    attr_accessor :date_system, :str_unique
    attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
+   attr_writer :mso_size
    
    ###############################################################################
    #
@@ -2534,6 +2535,7 @@ class Workbook < BIFFWriter
        version         = 0
        instance        = 0
        data            = ''
+       length          = nil  # Calculate automatically.
 
        data            = [max_spid, num_clusters,
                           shapes_saved, drawings_saved].pack("VVVV")
@@ -2669,7 +2671,7 @@ class Workbook < BIFFWriter
        data        = ''
        length      = 18
    
-       data        = ['BF0008000800810109000008C0014000'+'0008'].pack("H*") .
+       data        = ['BF0008000800810109000008C0014000'+'0008'].pack("H*")
 
        return add_mso_generic(type, version, instance, data, length)
    end
@@ -2680,7 +2682,7 @@ class Workbook < BIFFWriter
    #
    # Write the Escher SplitMenuColors record that is part of MSODRAWINGGROUP.
    #
-   def _store_mso_split_menu_colors
+   def store_mso_split_menu_colors
        type        = 0xF11E
        version     = 0
        instance    = 4

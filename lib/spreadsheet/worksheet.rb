@@ -451,10 +451,11 @@ class Worksheet < BIFFWriter
       # Store the col sizes for use when calculating image vertices taking
       # hidden columns into account. Also store the column formats.
       #
-      width  = data[4].nil? || data[4] == 0 ? 0 : data[2]  # Set width to zero if col is hidden
+      firstcol, lastcol, width, format, hidden = data
+
       width  ||= 0                    # Ensure width isn't undef.
-      format = data[3]
-      firstcol, lastcol = data
+      hidden ||= 0
+      width = 0 if hidden > 1         # Set width to zero if col is hidden
 
       (firstcol .. lastcol).each do |col|
          @col_sizes[col]   = width
@@ -3928,14 +3929,14 @@ class Worksheet < BIFFWriter
    
       # Subtract the underlying cell widths to find the end cell of the image
       while width >= size_col(col_end)
-         width = width - size_col(col_end)
-         col_end = col_end + 1
+         width   -= size_col(col_end)
+         col_end += 1
       end
    
       # Subtract the underlying cell heights to find the end cell of the image
       while height >= size_row(row_end)
-         height  = height - size_row(row_end)
-         row_end = row_end + 1
+         height  -= size_row(row_end)
+         row_end += 1
       end
    
       # Bitmap isn't allowed to start or finish in a hidden cell, i.e. a cell
@@ -3947,22 +3948,23 @@ class Worksheet < BIFFWriter
       return if size_row(row_end)   == 0
    
       # Convert the pixel values to the percentage value expected by Excel
-      x1 = x1     / size_col(col_start)   * 1024
-      y1 = y1     / size_row(row_start)   *  256
-      x2 = width  / size_col(col_end)     * 1024
-      y2 = height / size_row(row_end)     *  256
-   
+      x1 = 1024.0 * x1     / size_col(col_start)
+      y1 =  256.0 * y1     / size_row(row_start)
+      x2 = 1024.0 * width  / size_col(col_end)
+      y2 =  256.0 * height / size_row(row_end)
+      
       # Simulate ceil() without calling POSIX::ceil().
       x1 = (x1 +0.5).to_i
       y1 = (y1 +0.5).to_i
       x2 = (x2 +0.5).to_i
       y2 = (y2 +0.5).to_i
    
-      return [col_start, x1,
-         row_start, y1,
-         col_end,   x2,
-         row_end,   y2
-      ]
+      return [
+              col_start, x1,
+              row_start, y1,
+              col_end,   x2,
+              row_end,   y2
+             ]
    end
 
    ###############################################################################
@@ -4132,7 +4134,7 @@ class Worksheet < BIFFWriter
       col         = args[1]                         # Zero indexed column
       str         = args[2]
       format      = args[3]                         # The cell format
-bp=true   
+
       # Change from UTF16 big-endian to little endian
       str = str.unpack('n*').pack("v*")
    
@@ -4815,7 +4817,7 @@ bp=true
    #
    # Write the Escher Opt record that is part of MSODRAWING.
    #
-   def store_mso_opt_comment(spid, visible, colour = 0x50)
+   def store_mso_opt_comment(spid, visible = nil, colour = 0x50)
        type        = 0xF00B
        version     = 3
        instance    = 9
@@ -4828,14 +4830,14 @@ bp=true
        unless visible.nil?
           visible = visible           ? 0x0000 : 0x0002
        else
-          visible = @comments_visible ? 0x0000 : 0x0002
+          visible = @comments_visible != 0 ? 0x0000 : 0x0002
        end
    
        data = [spid].pack('V')                            +
           ['0000BF00080008005801000000008101'].pack("H*") +
           [colour].pack("C")                              +
           ['000008830150000008BF011000110001'+'02000000003F0203000300BF03'].pack("H*")  +
-          [visible].pack('c')                             +
+          [visible].pack('v')                             +
           ['0A00'].pack('H*')
    
        return add_mso_generic(type, version, instance, data, length)
@@ -4952,7 +4954,7 @@ bp=true
        data        = ''
        length      = 18
    
-       data = [flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2].pack( "v9")
+       data = [flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2].pack('v9')
    
        return add_mso_generic(type, version, instance, data, length)
    end
@@ -5335,11 +5337,7 @@ bp=true
    # This method handles the additional optional parameters to write_comment() as
    # well as calculating the comment object position and vertices.
    #
-   def comment_params(*args)
-       row    = args.shift
-       col    = args.shift
-       string = args.shift
-
+   def comment_params(row, col, string, options = {})
        params  = {
                        :author          => '',
                        :author_encoding => 0,
@@ -5359,33 +5357,22 @@ bp=true
    
        # Overwrite the defaults with any user supplied values. Incorrect or
        # misspelled parameters are silently ignored.
-
-       ###       params   = (%params, @_);  converted like this.  right?
-       ary  = Array.new(args)
-       alist = []
-       while !ary.empty?
-         alist << [ary[0], ary[1]]
-         ary.shift
-         ary.shift
-       end
-       pary = params.to_a
-       alist.each { |a| pary << a }
-       params = Hash[*pary.flatten]
+       params.update(options)
 
        # Ensure that a width and height have been set.
-       params[:width]  = 129 if not params[:width]
-       params[:height] = 75  if not params[:height]
+       params[:width]  = 129 if params[:width].nil? || params[:width] == 0
+       params[:height] = 75  if params[:height].nil? || params[:height] == 0
    
        # Check that utf16 strings have an even number of bytes.
        if params[:encoding] != 0
-           raise "Uneven number of bytes in comment string" if string.length % 2
+           raise "Uneven number of bytes in comment string" if string.length % 2 != 0
    
            # Change from UTF-16BE to UTF-16LE
            string = [string].unpack('n*').pack('v*')
        end
    
        if params[:author_encoding] != 0
-           raise "Uneven number of bytes in author string"  if params[:author] % 2
+           raise "Uneven number of bytes in author string"  if params[:author] % 2 != 0
    
            # Change from UTF-16BE to UTF-16LE
            params[:author] = [params[:author]].unpack('n*').pack('v*')
@@ -5453,7 +5440,7 @@ bp=true
               else            params[:x_offset] = 15
            end
        end
-   
+
        # Scale the size of the comment box if required. We scale the width and
        # height using the relationship d2 =(d1 -1)*s +1, where d is dimension
        # and s is scale. This gives values that match Excel's behaviour.
@@ -5481,7 +5468,7 @@ bp=true
                params[:author_encoding],
                params[:visible],
                params[:color],
-               @vertices
+               vertices
              ]
    end
 

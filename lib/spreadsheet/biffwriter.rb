@@ -204,7 +204,7 @@ class BIFFWriter
        # The header contains version and instance info packed into 2 bytes.
        header  = version | (instance << 4)
    
-       record  = [header, type, length].pack("vvV") + data
+       record  = [header, type, length].pack('vvV') + data
    
        return record
    end
