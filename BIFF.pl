@@ -14,5 +14,5 @@ my $error;
 my $smiley = pack "n", 0x263a;
 
 $worksheet  = $workbook->add_worksheet();
-my $result = $worksheet->convert_date_time('2065-04-19T00:16:48.290');
+my $result = $worksheet->convert_date_time('1900-01-01T');
 print $result;

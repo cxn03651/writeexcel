@@ -16,6 +16,7 @@ class Worksheet < BIFFWriter
    attr_reader :print_rowmin, :print_rowmax, :print_colmin, :print_colmax
    attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
    attr_accessor :object_ids
+   attr_writer :date_1904
 
    ###############################################################################
    #
@@ -2429,7 +2430,7 @@ class Worksheet < BIFFWriter
       # Set month days and check for leap year.
       mdays   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
       leap    = 0
-      leap    = 1  if year % 4 == 0 || year % 100 == 0 || year % 400 == 0
+      leap    = 1  if year % 4 == 0 && year % 100 != 0 || year % 400 == 0
       mdays[1]   = 29 if leap != 0
    
       # Some boundary checks
