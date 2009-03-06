@@ -24,7 +24,7 @@ require "workbook"
 require "excel"
 include Spreadsheet
 
-class TC_data_time < Test::Unit::TestCase
+class TC_data_seconds < Test::Unit::TestCase
 
    def setup
       @test_file = 'temp_test_file.xls'
