@@ -553,7 +553,7 @@ span.run100 {
 </style>
     </head>
   <body><h3>C0 code coverage information</h3>
-    <p>Generated on Fri Mar 06 00:10:36 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
+    <p>Generated on Fri Mar 06 14:34:36 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
       </p>
     <hr/>
     <pre><span class='marked0'>Code reported as executed by Ruby looks like this...
@@ -575,20 +575,20 @@ span.run100 {
         </td>
       <td class='lines_code'><tt>185</tt>
         </td>
-      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_total'>90.6%</tt>
+      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_total'>89.7%</tt>
               &nbsp;</td>
-            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='91'/>
-                  <td class='uncovered' width='9'/>
+            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='90'/>
+                  <td class='uncovered' width='10'/>
                   </tr>
                 </table>
               </td>
             </tr>
           </table>
         </td>
-      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_code'>90.8%</tt>
+      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_code'>89.2%</tt>
               &nbsp;</td>
-            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='91'/>
-                  <td class='uncovered' width='9'/>
+            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='89'/>
+                  <td class='uncovered' width='11'/>
                   </tr>
                 </table>
               </td>
@@ -621,9 +621,9 @@ span.run100 {
 </span><span class="marked0"><a name="line21"></a> 21    def initialize(arg)
 </span><span class="marked1"><a name="line22"></a> 22       if arg.kind_of?(String)
 </span><span class="marked0"><a name="line23"></a> 23         @io = File.open(arg, &quot;w&quot;)
-</span><span class="inferred1"><a name="line24"></a> 24       else
-</span><span class="marked0"><a name="line25"></a> 25         @io = arg
-</span><span class="inferred1"><a name="line26"></a> 26       end
+</span><span class="uncovered1"><a name="line24"></a> 24       else
+</span><span class="uncovered0"><a name="line25"></a> 25         @io = arg
+</span><span class="uncovered1"><a name="line26"></a> 26       end
 </span><span class="marked0"><a name="line27"></a> 27       @io.binmode
 </span><span class="inferred1"><a name="line28"></a> 28 
 </span><span class="marked0"><a name="line29"></a> 29       @filehandle    = &quot;&quot;

@@ -37,7 +37,7 @@ class Worksheet < BIFFWriter
       @str_total           = args[8]  || 0
       @str_unique          = args[9]  || 0
       @str_table           = args[10] || {}
-      @v1904               = args[11]
+      @date_1904           = args[11]
       @compatibility       = args[12]
 
       @table               = []
@@ -2376,12 +2376,12 @@ class Worksheet < BIFFWriter
       date, time = date_time.split(/T/)
    
       # We allow the time portion of the input DateTime to be optional.
-      if time != ''
+      unless time.nil?
          # Match hh:mm:ss.sss+ where the seconds are optional
          if time =~ /^(\d\d):(\d\d)(:(\d\d(\.\d+)?))?/
-            hour   = $1
-            min    = $2
-            sec    = $4 || 0
+            hour   = $1.to_i
+            min    = $2.to_i
+            sec    = $4.to_f || 0
          else
             return nil # Not a valid time format.
          end
@@ -2392,7 +2392,7 @@ class Worksheet < BIFFWriter
          return nil if sec  >= 60
    
          # Excel expresses seconds as a fraction of the number in 24 hours.
-         seconds = (hour *60*60 + min *60 + sec) / (24 *60 *60)
+         seconds = (hour * 60* 60 + min * 60 + sec) / (24.0 * 60 * 60)
       end
    
       # We allow the date portion of the input DateTime to be optional.
@@ -2400,18 +2400,16 @@ class Worksheet < BIFFWriter
    
       # Match date as yyyy-mm-dd.
       if date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/
-         year   = $1
-         month  = $2
-         day    = $3
+         year   = $1.to_i
+         month  = $2.to_i
+         day    = $3.to_i
       else
          return nil  # Not a valid date format.
       end
    
       # Set the epoch as 1900 or 1904. Defaults to 1900.
-      date_1904 = @v1904
-   
       # Special cases for Excel.
-      if !date_1904
+      if !@date_1904.nil? && @date_1904 == 0
          return      seconds if date == '1899-12-31' # Excel 1900 epoch
          return      seconds if date == '1900-01-00' # Excel 1900 epoch
          return 60 + seconds if date == '1900-02-29' # Excel false leapday
@@ -2423,16 +2421,16 @@ class Worksheet < BIFFWriter
       # days by normalising the year in relation to the epoch. Thus the year 2000
       # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
       #
-      epoch   = date_1904 ? 1904 : 1900
-      offset  = date_1904 ?    4 :    0
+      epoch   = !@date_1904.nil? && @date_1904 != 0 ? 1904 : 1900
+      offset  = !@date_1904.nil? && @date_1904 != 0 ?    4 :    0
       norm    = 300
       range   = year -epoch
    
       # Set month days and check for leap year.
       mdays   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
       leap    = 0
-      leap    = 1  if year % 4 == 0 and year % 100 or year % 400 == 0
-      mdays[1]   = 29 if leap
+      leap    = 1  if year % 4 == 0 || year % 100 == 0 || year % 400 == 0
+      mdays[1]   = 29 if leap != 0
    
       # Some boundary checks
       return nil if year  < epoch or year  > 9999
@@ -2440,18 +2438,18 @@ class Worksheet < BIFFWriter
       return nil if day   < 1     or day   > mdays[month -1]
    
       # Accumulate the number of days since the epoch.
-      days = day                                     # Add days for current month
+      days = day                               # Add days for current month
       (0 .. month-2).each do |m|
-         days = days + mdays[m]                      # Add days for past months
+         days += mdays[m]                      # Add days for past months
       end
-      days = days + range *365                       # Add days for past years
-      days = days + ((range)                /  4)    # Add leapdays
-      days = days - ((range + offset)       /100)    # Subtract 100 year leapdays
-      days = days + ((range + offset + norm)/400)    # Add 400 year leapdays
-      days = days - lea                              # Already counted above
+      days += range *365                       # Add days for past years
+      days += ((range)                /  4)    # Add leapdays
+      days -= ((range + offset)       /100)    # Subtract 100 year leapdays
+      days += ((range + offset + norm)/400)    # Add 400 year leapdays
+      days -= leap                             # Already counted above
    
       # Adjust for Excel erroneously treating 1900 as a leap year.
-      days = days + 1 if date_1904 == 0 and days > 59
+      days = days + 1 if @date_1904 == 0 and days > 59
    
       return days + seconds
    end

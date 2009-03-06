@@ -21,7 +21,7 @@ class Workbook < BIFFWriter
       @filename              = filename
       @parser                = Formula.new(@byte_order)
       @tempdir               = nil
-      @v1904                 = 0 
+      @date_1904             = 0 
       @activesheet           = 0 
       @firstsheet            = 0 
       @selected              = 0 
@@ -265,7 +265,7 @@ class Workbook < BIFFWriter
             @str_total,
             @str_unique,
             @str_table,
-            @v1904,
+            @date_1904,
             @compatibility
          )
        @worksheets[index] = worksheet     # Store ref for iterator
@@ -450,7 +450,7 @@ class Workbook < BIFFWriter
       unless sheets.empty?
          raise "set_1904() must be called before add_worksheet()"
       end
-      @v1904 = mode
+      @date_1904 = mode
    end
 
    ###############################################################################
@@ -1629,7 +1629,7 @@ class Workbook < BIFFWriter
        record    = 0x0022         # Record identifier
        length    = 0x0002         # Bytes to follow
    
-       f1904     = @v1904         # Flag for 1904 date system
+       f1904     = @date_1904     # Flag for 1904 date system
    
        header    = [record, length].pack("vv")
        data      = [f1904].pack("v")

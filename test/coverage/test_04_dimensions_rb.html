@@ -553,7 +553,7 @@ span.run100 {
 </style>
     </head>
   <body><h3>C0 code coverage information</h3>
-    <p>Generated on Fri Mar 06 00:11:11 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
+    <p>Generated on Fri Mar 06 14:35:11 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
       </p>
     <hr/>
     <pre><span class='marked0'>Code reported as executed by Ruby looks like this...
@@ -598,405 +598,405 @@ span.run100 {
       </tr>
     </tbody>
   </table>
-<pre><span class="inferred1"><a name="line1"></a>  1 ###############################################################################
-</span><span class="inferred0"><a name="line2"></a>  2 #
-</span><span class="inferred1"><a name="line3"></a>  3 # A test for Spreadsheet::WriteExcel.
-</span><span class="inferred0"><a name="line4"></a>  4 #
-</span><span class="inferred1"><a name="line5"></a>  5 # Check that the Excel DIMENSIONS record is written correctly.
-</span><span class="inferred0"><a name="line6"></a>  6 #
-</span><span class="inferred1"><a name="line7"></a>  7 # reverse('©'), October 2007, John McNamara, jmcnamara@cpan.org
-</span><span class="inferred0"><a name="line8"></a>  8 #
-</span><span class="inferred1"><a name="line9"></a>  9 ############################################################################
-</span><span class="marked0"><a name="line10"></a> 10 base = File.basename(Dir.pwd)
-</span><span class="marked1"><a name="line11"></a> 11 if base == &quot;test&quot; || base =~ /spreadsheet/i
-</span><span class="marked0"><a name="line12"></a> 12    Dir.chdir(&quot;..&quot;) if base == &quot;test&quot;
-</span><span class="marked1"><a name="line13"></a> 13    $LOAD_PATH.unshift(Dir.pwd + &quot;/lib/spreadsheet&quot;)
-</span><span class="marked0"><a name="line14"></a> 14    Dir.chdir(&quot;test&quot;) rescue nil
-</span><span class="inferred1"><a name="line15"></a> 15 end
-</span><span class="inferred0"><a name="line16"></a> 16 
-</span><span class="marked1"><a name="line17"></a> 17 require &quot;test/unit&quot;
-</span><span class="marked0"><a name="line18"></a> 18 require &quot;biffwriter&quot;
-</span><span class="marked1"><a name="line19"></a> 19 require &quot;olewriter&quot;
-</span><span class="marked0"><a name="line20"></a> 20 require &quot;format&quot;
-</span><span class="marked1"><a name="line21"></a> 21 require &quot;formula&quot;
-</span><span class="marked0"><a name="line22"></a> 22 require &quot;worksheet&quot;
-</span><span class="marked1"><a name="line23"></a> 23 require &quot;workbook&quot;
-</span><span class="marked0"><a name="line24"></a> 24 require &quot;excel&quot;
-</span><span class="marked1"><a name="line25"></a> 25 include Spreadsheet
-</span><span class="inferred0"><a name="line26"></a> 26 
-</span><span class="marked1"><a name="line27"></a> 27 class TC_dimensions &lt; Test::Unit::TestCase
-</span><span class="inferred0"><a name="line28"></a> 28 
-</span><span class="marked1"><a name="line29"></a> 29    def setup
-</span><span class="marked0"><a name="line30"></a> 30       @test_file           = &quot;temp_test_file.xls&quot;
-</span><span class="marked1"><a name="line31"></a> 31       @workbook            = Excel.new(@test_file)
-</span><span class="marked0"><a name="line32"></a> 32       @worksheet           = @workbook.add_worksheet
-</span><span class="marked1"><a name="line33"></a> 33       @format              = @workbook.add_format
-</span><span class="marked0"><a name="line34"></a> 34       @dims                = ['row_min', 'row_max', 'col_min', 'col_max']
-</span><span class="marked1"><a name="line35"></a> 35       @smiley              = [0x263a].pack('n')
-</span><span class="inferred0"><a name="line36"></a> 36    end
-</span><span class="inferred1"><a name="line37"></a> 37 
-</span><span class="marked0"><a name="line38"></a> 38    def test_no_worksheet_cell_data
-</span><span class="marked1"><a name="line39"></a> 39       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line40"></a> 40 
-</span><span class="marked1"><a name="line41"></a> 41       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line42"></a> 42       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line43"></a> 43       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line44"></a> 44 
-</span><span class="marked1"><a name="line45"></a> 45       alist    = @dims.zip([0, 0, 0, 0])
-</span><span class="marked0"><a name="line46"></a> 46       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line47"></a> 47 
-</span><span class="marked0"><a name="line48"></a> 48       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line49"></a> 49    end
-</span><span class="inferred0"><a name="line50"></a> 50 
-</span><span class="marked1"><a name="line51"></a> 51    def test_data_in_cell_0_0
-</span><span class="marked0"><a name="line52"></a> 52       @worksheet.write(0, 0, 'Test')
-</span><span class="marked1"><a name="line53"></a> 53       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line54"></a> 54 
-</span><span class="marked1"><a name="line55"></a> 55       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line56"></a> 56       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line57"></a> 57       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line58"></a> 58 
-</span><span class="marked1"><a name="line59"></a> 59       alist    = @dims.zip([0, 1, 0, 1])
-</span><span class="marked0"><a name="line60"></a> 60       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line61"></a> 61       
-</span><span class="marked0"><a name="line62"></a> 62       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line63"></a> 63    end
-</span><span class="inferred0"><a name="line64"></a> 64 
-</span><span class="marked1"><a name="line65"></a> 65    def test_data_in_cell_0_255
-</span><span class="marked0"><a name="line66"></a> 66       @worksheet.write(0, 255, 'Test')
-</span><span class="marked1"><a name="line67"></a> 67       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line68"></a> 68 
-</span><span class="marked1"><a name="line69"></a> 69       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line70"></a> 70       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line71"></a> 71       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line72"></a> 72 
-</span><span class="marked1"><a name="line73"></a> 73       alist    = @dims.zip([0, 1, 255, 256])
-</span><span class="marked0"><a name="line74"></a> 74       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line75"></a> 75       
-</span><span class="marked0"><a name="line76"></a> 76       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line77"></a> 77    end
-</span><span class="inferred0"><a name="line78"></a> 78 
-</span><span class="marked1"><a name="line79"></a> 79    def test_data_in_cell_65535_0
-</span><span class="marked0"><a name="line80"></a> 80       @worksheet.write(65535, 0, 'Test')
-</span><span class="marked1"><a name="line81"></a> 81       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line82"></a> 82 
-</span><span class="marked1"><a name="line83"></a> 83       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line84"></a> 84       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line85"></a> 85       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line86"></a> 86 
-</span><span class="marked1"><a name="line87"></a> 87       alist    = @dims.zip([65535, 65536, 0, 1])
-</span><span class="marked0"><a name="line88"></a> 88       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line89"></a> 89       
-</span><span class="marked0"><a name="line90"></a> 90       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line91"></a> 91    end
-</span><span class="inferred0"><a name="line92"></a> 92 
-</span><span class="marked1"><a name="line93"></a> 93    def test_data_in_cell_65535_255
-</span><span class="marked0"><a name="line94"></a> 94       @worksheet.write(65535, 255, 'Test')
-</span><span class="marked1"><a name="line95"></a> 95       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line96"></a> 96 
-</span><span class="marked1"><a name="line97"></a> 97       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line98"></a> 98       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line99"></a> 99       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line100"></a>100 
-</span><span class="marked1"><a name="line101"></a>101       alist    = @dims.zip([65535, 65536, 255, 256])
-</span><span class="marked0"><a name="line102"></a>102       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line103"></a>103       
-</span><span class="marked0"><a name="line104"></a>104       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line105"></a>105    end
-</span><span class="inferred0"><a name="line106"></a>106 
-</span><span class="marked1"><a name="line107"></a>107    def test_set_row_for_row_4
-</span><span class="marked0"><a name="line108"></a>108       @worksheet.set_row(4, 20)
-</span><span class="marked1"><a name="line109"></a>109       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line110"></a>110 
-</span><span class="marked1"><a name="line111"></a>111       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line112"></a>112       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line113"></a>113       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line114"></a>114 
-</span><span class="marked1"><a name="line115"></a>115       alist    = @dims.zip([4, 5, 0, 0])
-</span><span class="marked0"><a name="line116"></a>116       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line117"></a>117       
-</span><span class="marked0"><a name="line118"></a>118       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line119"></a>119    end
-</span><span class="inferred0"><a name="line120"></a>120 
-</span><span class="marked1"><a name="line121"></a>121    def test_set_row_for_row_4_to_6
-</span><span class="marked0"><a name="line122"></a>122       @worksheet.set_row(4, 20)
-</span><span class="marked1"><a name="line123"></a>123       @worksheet.set_row(5, 20)
-</span><span class="marked0"><a name="line124"></a>124       @worksheet.set_row(6, 20)
-</span><span class="marked1"><a name="line125"></a>125       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line126"></a>126 
-</span><span class="marked1"><a name="line127"></a>127       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line128"></a>128       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line129"></a>129       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line130"></a>130 
-</span><span class="marked1"><a name="line131"></a>131       alist    = @dims.zip([4, 7, 0, 0])
-</span><span class="marked0"><a name="line132"></a>132       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line133"></a>133       
-</span><span class="marked0"><a name="line134"></a>134       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line135"></a>135    end
-</span><span class="inferred0"><a name="line136"></a>136 
-</span><span class="marked1"><a name="line137"></a>137    def test_set_column_for_row_4
-</span><span class="marked0"><a name="line138"></a>138       @worksheet.set_column(4, 4, 20)
-</span><span class="marked1"><a name="line139"></a>139       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line140"></a>140 
-</span><span class="marked1"><a name="line141"></a>141       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line142"></a>142       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line143"></a>143       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line144"></a>144 
-</span><span class="marked1"><a name="line145"></a>145       alist    = @dims.zip([0, 0, 0, 0])
-</span><span class="marked0"><a name="line146"></a>146       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line147"></a>147       
-</span><span class="marked0"><a name="line148"></a>148       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line149"></a>149    end
-</span><span class="inferred0"><a name="line150"></a>150 
-</span><span class="marked1"><a name="line151"></a>151    def test_data_in_cell_0_0_and_set_row_for_row_4
-</span><span class="marked0"><a name="line152"></a>152       @worksheet.write(0, 0, 'Test')
-</span><span class="marked1"><a name="line153"></a>153       @worksheet.set_row(4, 20)
-</span><span class="marked0"><a name="line154"></a>154       data     = @worksheet.store_dimensions
-</span><span class="inferred1"><a name="line155"></a>155 
-</span><span class="marked0"><a name="line156"></a>156       vals     = data.unpack('x4 VVvv')
-</span><span class="marked1"><a name="line157"></a>157       alist    = @dims.zip(vals)
-</span><span class="marked0"><a name="line158"></a>158       results  = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line159"></a>159 
-</span><span class="marked0"><a name="line160"></a>160       alist    = @dims.zip([0, 5, 0, 1])
-</span><span class="marked1"><a name="line161"></a>161       expected = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line162"></a>162       
-</span><span class="marked1"><a name="line163"></a>163       assert_equal(expected, results)
-</span><span class="inferred0"><a name="line164"></a>164    end
-</span><span class="inferred1"><a name="line165"></a>165 
-</span><span class="marked0"><a name="line166"></a>166    def test_data_in_cell_0_0_and_set_row_for_row_4_reverse_order
-</span><span class="marked1"><a name="line167"></a>167       @worksheet.set_row(4, 20)
-</span><span class="marked0"><a name="line168"></a>168       @worksheet.write(0, 0, 'Test')
-</span><span class="marked1"><a name="line169"></a>169       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line170"></a>170 
-</span><span class="marked1"><a name="line171"></a>171       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line172"></a>172       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line173"></a>173       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line174"></a>174 
-</span><span class="marked1"><a name="line175"></a>175       alist    = @dims.zip([0, 5, 0, 1])
-</span><span class="marked0"><a name="line176"></a>176       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line177"></a>177       
-</span><span class="marked0"><a name="line178"></a>178       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line179"></a>179    end
-</span><span class="inferred0"><a name="line180"></a>180 
-</span><span class="marked1"><a name="line181"></a>181    def test_data_in_cell_5_3_and_set_row_for_row_4
-</span><span class="marked0"><a name="line182"></a>182       @worksheet.write(5, 3, 'Test')
-</span><span class="marked1"><a name="line183"></a>183       @worksheet.set_row(4, 20)
-</span><span class="marked0"><a name="line184"></a>184       data     = @worksheet.store_dimensions
-</span><span class="inferred1"><a name="line185"></a>185 
-</span><span class="marked0"><a name="line186"></a>186       vals     = data.unpack('x4 VVvv')
-</span><span class="marked1"><a name="line187"></a>187       alist    = @dims.zip(vals)
-</span><span class="marked0"><a name="line188"></a>188       results  = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line189"></a>189 
-</span><span class="marked0"><a name="line190"></a>190       alist    = @dims.zip([4, 6, 3, 4])
-</span><span class="marked1"><a name="line191"></a>191       expected = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line192"></a>192       
-</span><span class="marked1"><a name="line193"></a>193       assert_equal(expected, results)
-</span><span class="inferred0"><a name="line194"></a>194    end
-</span><span class="inferred1"><a name="line195"></a>195 
-</span><span class="marked0"><a name="line196"></a>196    def test_comment_in_cell_5_3
-</span><span class="marked1"><a name="line197"></a>197       @worksheet.write_comment(5, 3, 'Test')
-</span><span class="marked0"><a name="line198"></a>198       data     = @worksheet.store_dimensions
-</span><span class="inferred1"><a name="line199"></a>199 
-</span><span class="marked0"><a name="line200"></a>200       vals     = data.unpack('x4 VVvv')
-</span><span class="marked1"><a name="line201"></a>201       alist    = @dims.zip(vals)
-</span><span class="marked0"><a name="line202"></a>202       results  = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line203"></a>203 
-</span><span class="marked0"><a name="line204"></a>204       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked1"><a name="line205"></a>205       expected = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line206"></a>206       
-</span><span class="marked1"><a name="line207"></a>207       assert_equal(expected, results)
-</span><span class="inferred0"><a name="line208"></a>208    end
-</span><span class="inferred1"><a name="line209"></a>209 
-</span><span class="marked0"><a name="line210"></a>210    def test_nil_value_for_row
-</span><span class="marked1"><a name="line211"></a>211       error = @worksheet.write_string(nil, 1, 'Test')
-</span><span class="marked0"><a name="line212"></a>212       data     = @worksheet.store_dimensions
-</span><span class="inferred1"><a name="line213"></a>213 
-</span><span class="marked0"><a name="line214"></a>214       vals     = data.unpack('x4 VVvv')
-</span><span class="marked1"><a name="line215"></a>215       alist    = @dims.zip(vals)
-</span><span class="marked0"><a name="line216"></a>216       results  = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line217"></a>217 
-</span><span class="marked0"><a name="line218"></a>218       alist    = @dims.zip([0, 0, 0, 0])
-</span><span class="marked1"><a name="line219"></a>219       expected = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line220"></a>220       
-</span><span class="marked1"><a name="line221"></a>221       assert_equal(expected, results)
-</span><span class="marked0"><a name="line222"></a>222       assert_equal(-2, error)
-</span><span class="inferred1"><a name="line223"></a>223    end
-</span><span class="inferred0"><a name="line224"></a>224 
-</span><span class="marked1"><a name="line225"></a>225    def test_data_in_cell_5_3_and_10_1
-</span><span class="marked0"><a name="line226"></a>226       @worksheet.write( 5, 3, 'Test')
-</span><span class="marked1"><a name="line227"></a>227       @worksheet.write(10, 1, 'Test')
-</span><span class="marked0"><a name="line228"></a>228       data     = @worksheet.store_dimensions
-</span><span class="inferred1"><a name="line229"></a>229 
-</span><span class="marked0"><a name="line230"></a>230       vals     = data.unpack('x4 VVvv')
-</span><span class="marked1"><a name="line231"></a>231       alist    = @dims.zip(vals)
-</span><span class="marked0"><a name="line232"></a>232       results  = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line233"></a>233 
-</span><span class="marked0"><a name="line234"></a>234       alist    = @dims.zip([5, 11, 1, 4])
-</span><span class="marked1"><a name="line235"></a>235       expected = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line236"></a>236       
-</span><span class="marked1"><a name="line237"></a>237       assert_equal(expected, results)
-</span><span class="inferred0"><a name="line238"></a>238    end
-</span><span class="inferred1"><a name="line239"></a>239 
-</span><span class="marked0"><a name="line240"></a>240    def test_data_in_cell_5_3_and_10_5
-</span><span class="marked1"><a name="line241"></a>241       @worksheet.write( 5, 3, 'Test')
-</span><span class="marked0"><a name="line242"></a>242       @worksheet.write(10, 5, 'Test')
-</span><span class="marked1"><a name="line243"></a>243       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line244"></a>244 
-</span><span class="marked1"><a name="line245"></a>245       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line246"></a>246       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line247"></a>247       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line248"></a>248 
-</span><span class="marked1"><a name="line249"></a>249       alist    = @dims.zip([5, 11, 3, 6])
-</span><span class="marked0"><a name="line250"></a>250       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line251"></a>251       
-</span><span class="marked0"><a name="line252"></a>252       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line253"></a>253    end
-</span><span class="inferred0"><a name="line254"></a>254 
-</span><span class="marked1"><a name="line255"></a>255    def test_write_string
-</span><span class="marked0"><a name="line256"></a>256       @worksheet.write_string(5, 3, 'Test')
-</span><span class="marked1"><a name="line257"></a>257       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line258"></a>258 
-</span><span class="marked1"><a name="line259"></a>259       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line260"></a>260       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line261"></a>261       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line262"></a>262 
-</span><span class="marked1"><a name="line263"></a>263       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line264"></a>264       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line265"></a>265       
-</span><span class="marked0"><a name="line266"></a>266       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line267"></a>267    end
-</span><span class="inferred0"><a name="line268"></a>268 
-</span><span class="marked1"><a name="line269"></a>269    def test_write_number
-</span><span class="marked0"><a name="line270"></a>270       @worksheet.write_number(5, 3, 5)
-</span><span class="marked1"><a name="line271"></a>271       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line272"></a>272 
-</span><span class="marked1"><a name="line273"></a>273       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line274"></a>274       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line275"></a>275       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line276"></a>276 
-</span><span class="marked1"><a name="line277"></a>277       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line278"></a>278       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line279"></a>279       
-</span><span class="marked0"><a name="line280"></a>280       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line281"></a>281    end
-</span><span class="inferred0"><a name="line282"></a>282 
-</span><span class="marked1"><a name="line283"></a>283    def test_write_url
-</span><span class="marked0"><a name="line284"></a>284       @worksheet.write_url(5, 3, 'http://www.ruby.com')
-</span><span class="marked1"><a name="line285"></a>285       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line286"></a>286 
-</span><span class="marked1"><a name="line287"></a>287       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line288"></a>288       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line289"></a>289       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line290"></a>290 
-</span><span class="marked1"><a name="line291"></a>291       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line292"></a>292       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line293"></a>293       
-</span><span class="marked0"><a name="line294"></a>294       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line295"></a>295    end
-</span><span class="inferred0"><a name="line296"></a>296 
-</span><span class="marked1"><a name="line297"></a>297    def test_write_formula
-</span><span class="marked0"><a name="line298"></a>298       @worksheet.write_formula(5, 3, ' 1 + 2')
-</span><span class="marked1"><a name="line299"></a>299       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line300"></a>300 
-</span><span class="marked1"><a name="line301"></a>301       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line302"></a>302       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line303"></a>303       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line304"></a>304 
-</span><span class="marked1"><a name="line305"></a>305       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line306"></a>306       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line307"></a>307       
-</span><span class="marked0"><a name="line308"></a>308       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line309"></a>309    end
-</span><span class="inferred0"><a name="line310"></a>310 
-</span><span class="marked1"><a name="line311"></a>311    def test_write_blank
-</span><span class="marked0"><a name="line312"></a>312       @worksheet.write_string(5, 3, @format)
-</span><span class="marked1"><a name="line313"></a>313       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line314"></a>314 
-</span><span class="marked1"><a name="line315"></a>315       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line316"></a>316       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line317"></a>317       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line318"></a>318 
-</span><span class="marked1"><a name="line319"></a>319       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line320"></a>320       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line321"></a>321       
-</span><span class="marked0"><a name="line322"></a>322       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line323"></a>323    end
-</span><span class="inferred0"><a name="line324"></a>324 
-</span><span class="marked1"><a name="line325"></a>325    def test_write_blank_no_format
-</span><span class="marked0"><a name="line326"></a>326       @worksheet.write_string(5, 3)
-</span><span class="marked1"><a name="line327"></a>327       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line328"></a>328 
-</span><span class="marked1"><a name="line329"></a>329       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line330"></a>330       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line331"></a>331       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line332"></a>332 
-</span><span class="marked1"><a name="line333"></a>333       alist    = @dims.zip([0, 0, 0, 0])
-</span><span class="marked0"><a name="line334"></a>334       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line335"></a>335       
-</span><span class="marked0"><a name="line336"></a>336       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line337"></a>337    end
-</span><span class="inferred0"><a name="line338"></a>338 
-</span><span class="marked1"><a name="line339"></a>339    def test_write_utf16be_string
-</span><span class="marked0"><a name="line340"></a>340       @worksheet.write_utf16be_string(5, 3, @smiley)
-</span><span class="marked1"><a name="line341"></a>341       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line342"></a>342 
-</span><span class="marked1"><a name="line343"></a>343       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line344"></a>344       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line345"></a>345       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line346"></a>346 
-</span><span class="marked1"><a name="line347"></a>347       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line348"></a>348       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line349"></a>349       
-</span><span class="marked0"><a name="line350"></a>350       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line351"></a>351    end
-</span><span class="inferred0"><a name="line352"></a>352 
-</span><span class="marked1"><a name="line353"></a>353    def test_write_utf16le_string
-</span><span class="marked0"><a name="line354"></a>354       @worksheet.write_utf16le_string(5, 3, @smiley)
-</span><span class="marked1"><a name="line355"></a>355       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line356"></a>356 
-</span><span class="marked1"><a name="line357"></a>357       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line358"></a>358       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line359"></a>359       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line360"></a>360 
-</span><span class="marked1"><a name="line361"></a>361       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line362"></a>362       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line363"></a>363       
-</span><span class="marked0"><a name="line364"></a>364       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line365"></a>365    end
-</span><span class="inferred0"><a name="line366"></a>366 
-</span><span class="marked1"><a name="line367"></a>367    def test_repeat_formula
-</span><span class="marked0"><a name="line368"></a>368       formula = @worksheet.store_formula('=A1 * 3 + 50')
-</span><span class="marked1"><a name="line369"></a>369       @worksheet.repeat_formula(5, 3, formula, @format, 'A1', 'A2')
-</span><span class="inferred0"><a name="line370"></a>370       
-</span><span class="marked1"><a name="line371"></a>371       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line372"></a>372 
-</span><span class="marked1"><a name="line373"></a>373       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line374"></a>374       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line375"></a>375       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line376"></a>376 
-</span><span class="marked1"><a name="line377"></a>377       alist    = @dims.zip([5, 6, 3, 4])
-</span><span class="marked0"><a name="line378"></a>378       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line379"></a>379       
-</span><span class="marked0"><a name="line380"></a>380       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line381"></a>381    end
-</span><span class="inferred0"><a name="line382"></a>382 
-</span><span class="marked1"><a name="line383"></a>383    def test_merge_range
-</span><span class="marked0"><a name="line384"></a>384       formula = @worksheet.store_formula('=A1 * 3 + 50')
-</span><span class="marked1"><a name="line385"></a>385       @worksheet.merge_range('C6:E8', 'Test', @format)
-</span><span class="inferred0"><a name="line386"></a>386       
-</span><span class="marked1"><a name="line387"></a>387       data     = @worksheet.store_dimensions
-</span><span class="inferred0"><a name="line388"></a>388 
-</span><span class="marked1"><a name="line389"></a>389       vals     = data.unpack('x4 VVvv')
-</span><span class="marked0"><a name="line390"></a>390       alist    = @dims.zip(vals)
-</span><span class="marked1"><a name="line391"></a>391       results  = Hash[*alist.flatten]
-</span><span class="inferred0"><a name="line392"></a>392 
-</span><span class="marked1"><a name="line393"></a>393       alist    = @dims.zip([5, 8, 2, 5])
-</span><span class="marked0"><a name="line394"></a>394       expected = Hash[*alist.flatten]
-</span><span class="inferred1"><a name="line395"></a>395       
-</span><span class="marked0"><a name="line396"></a>396       assert_equal(expected, results)
-</span><span class="inferred1"><a name="line397"></a>397    end
-</span><span class="inferred0"><a name="line398"></a>398 
-</span><span class="inferred1"><a name="line399"></a>399 end
+<pre><span class="inferred0"><a name="line1"></a>  1 ###############################################################################
+</span><span class="inferred1"><a name="line2"></a>  2 #
+</span><span class="inferred0"><a name="line3"></a>  3 # A test for Spreadsheet::WriteExcel.
+</span><span class="inferred1"><a name="line4"></a>  4 #
+</span><span class="inferred0"><a name="line5"></a>  5 # Check that the Excel DIMENSIONS record is written correctly.
+</span><span class="inferred1"><a name="line6"></a>  6 #
+</span><span class="inferred0"><a name="line7"></a>  7 # reverse('©'), October 2007, John McNamara, jmcnamara@cpan.org
+</span><span class="inferred1"><a name="line8"></a>  8 #
+</span><span class="inferred0"><a name="line9"></a>  9 ############################################################################
+</span><span class="marked1"><a name="line10"></a> 10 base = File.basename(Dir.pwd)
+</span><span class="marked0"><a name="line11"></a> 11 if base == &quot;test&quot; || base =~ /spreadsheet/i
+</span><span class="marked1"><a name="line12"></a> 12    Dir.chdir(&quot;..&quot;) if base == &quot;test&quot;
+</span><span class="marked0"><a name="line13"></a> 13    $LOAD_PATH.unshift(Dir.pwd + &quot;/lib/spreadsheet&quot;)
+</span><span class="marked1"><a name="line14"></a> 14    Dir.chdir(&quot;test&quot;) rescue nil
+</span><span class="inferred0"><a name="line15"></a> 15 end
+</span><span class="inferred1"><a name="line16"></a> 16 
+</span><span class="marked0"><a name="line17"></a> 17 require &quot;test/unit&quot;
+</span><span class="marked1"><a name="line18"></a> 18 require &quot;biffwriter&quot;
+</span><span class="marked0"><a name="line19"></a> 19 require &quot;olewriter&quot;
+</span><span class="marked1"><a name="line20"></a> 20 require &quot;format&quot;
+</span><span class="marked0"><a name="line21"></a> 21 require &quot;formula&quot;
+</span><span class="marked1"><a name="line22"></a> 22 require &quot;worksheet&quot;
+</span><span class="marked0"><a name="line23"></a> 23 require &quot;workbook&quot;
+</span><span class="marked1"><a name="line24"></a> 24 require &quot;excel&quot;
+</span><span class="marked0"><a name="line25"></a> 25 include Spreadsheet
+</span><span class="inferred1"><a name="line26"></a> 26 
+</span><span class="marked0"><a name="line27"></a> 27 class TC_dimensions &lt; Test::Unit::TestCase
+</span><span class="inferred1"><a name="line28"></a> 28 
+</span><span class="marked0"><a name="line29"></a> 29    def setup
+</span><span class="marked1"><a name="line30"></a> 30       @test_file           = &quot;temp_test_file.xls&quot;
+</span><span class="marked0"><a name="line31"></a> 31       @workbook            = Excel.new(@test_file)
+</span><span class="marked1"><a name="line32"></a> 32       @worksheet           = @workbook.add_worksheet
+</span><span class="marked0"><a name="line33"></a> 33       @format              = @workbook.add_format
+</span><span class="marked1"><a name="line34"></a> 34       @dims                = ['row_min', 'row_max', 'col_min', 'col_max']
+</span><span class="marked0"><a name="line35"></a> 35       @smiley              = [0x263a].pack('n')
+</span><span class="inferred1"><a name="line36"></a> 36    end
+</span><span class="inferred0"><a name="line37"></a> 37 
+</span><span class="marked1"><a name="line38"></a> 38    def test_no_worksheet_cell_data
+</span><span class="marked0"><a name="line39"></a> 39       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line40"></a> 40 
+</span><span class="marked0"><a name="line41"></a> 41       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line42"></a> 42       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line43"></a> 43       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line44"></a> 44 
+</span><span class="marked0"><a name="line45"></a> 45       alist    = @dims.zip([0, 0, 0, 0])
+</span><span class="marked1"><a name="line46"></a> 46       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line47"></a> 47 
+</span><span class="marked1"><a name="line48"></a> 48       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line49"></a> 49    end
+</span><span class="inferred1"><a name="line50"></a> 50 
+</span><span class="marked0"><a name="line51"></a> 51    def test_data_in_cell_0_0
+</span><span class="marked1"><a name="line52"></a> 52       @worksheet.write(0, 0, 'Test')
+</span><span class="marked0"><a name="line53"></a> 53       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line54"></a> 54 
+</span><span class="marked0"><a name="line55"></a> 55       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line56"></a> 56       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line57"></a> 57       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line58"></a> 58 
+</span><span class="marked0"><a name="line59"></a> 59       alist    = @dims.zip([0, 1, 0, 1])
+</span><span class="marked1"><a name="line60"></a> 60       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line61"></a> 61       
+</span><span class="marked1"><a name="line62"></a> 62       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line63"></a> 63    end
+</span><span class="inferred1"><a name="line64"></a> 64 
+</span><span class="marked0"><a name="line65"></a> 65    def test_data_in_cell_0_255
+</span><span class="marked1"><a name="line66"></a> 66       @worksheet.write(0, 255, 'Test')
+</span><span class="marked0"><a name="line67"></a> 67       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line68"></a> 68 
+</span><span class="marked0"><a name="line69"></a> 69       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line70"></a> 70       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line71"></a> 71       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line72"></a> 72 
+</span><span class="marked0"><a name="line73"></a> 73       alist    = @dims.zip([0, 1, 255, 256])
+</span><span class="marked1"><a name="line74"></a> 74       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line75"></a> 75       
+</span><span class="marked1"><a name="line76"></a> 76       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line77"></a> 77    end
+</span><span class="inferred1"><a name="line78"></a> 78 
+</span><span class="marked0"><a name="line79"></a> 79    def test_data_in_cell_65535_0
+</span><span class="marked1"><a name="line80"></a> 80       @worksheet.write(65535, 0, 'Test')
+</span><span class="marked0"><a name="line81"></a> 81       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line82"></a> 82 
+</span><span class="marked0"><a name="line83"></a> 83       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line84"></a> 84       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line85"></a> 85       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line86"></a> 86 
+</span><span class="marked0"><a name="line87"></a> 87       alist    = @dims.zip([65535, 65536, 0, 1])
+</span><span class="marked1"><a name="line88"></a> 88       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line89"></a> 89       
+</span><span class="marked1"><a name="line90"></a> 90       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line91"></a> 91    end
+</span><span class="inferred1"><a name="line92"></a> 92 
+</span><span class="marked0"><a name="line93"></a> 93    def test_data_in_cell_65535_255
+</span><span class="marked1"><a name="line94"></a> 94       @worksheet.write(65535, 255, 'Test')
+</span><span class="marked0"><a name="line95"></a> 95       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line96"></a> 96 
+</span><span class="marked0"><a name="line97"></a> 97       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line98"></a> 98       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line99"></a> 99       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line100"></a>100 
+</span><span class="marked0"><a name="line101"></a>101       alist    = @dims.zip([65535, 65536, 255, 256])
+</span><span class="marked1"><a name="line102"></a>102       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line103"></a>103       
+</span><span class="marked1"><a name="line104"></a>104       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line105"></a>105    end
+</span><span class="inferred1"><a name="line106"></a>106 
+</span><span class="marked0"><a name="line107"></a>107    def test_set_row_for_row_4
+</span><span class="marked1"><a name="line108"></a>108       @worksheet.set_row(4, 20)
+</span><span class="marked0"><a name="line109"></a>109       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line110"></a>110 
+</span><span class="marked0"><a name="line111"></a>111       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line112"></a>112       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line113"></a>113       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line114"></a>114 
+</span><span class="marked0"><a name="line115"></a>115       alist    = @dims.zip([4, 5, 0, 0])
+</span><span class="marked1"><a name="line116"></a>116       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line117"></a>117       
+</span><span class="marked1"><a name="line118"></a>118       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line119"></a>119    end
+</span><span class="inferred1"><a name="line120"></a>120 
+</span><span class="marked0"><a name="line121"></a>121    def test_set_row_for_row_4_to_6
+</span><span class="marked1"><a name="line122"></a>122       @worksheet.set_row(4, 20)
+</span><span class="marked0"><a name="line123"></a>123       @worksheet.set_row(5, 20)
+</span><span class="marked1"><a name="line124"></a>124       @worksheet.set_row(6, 20)
+</span><span class="marked0"><a name="line125"></a>125       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line126"></a>126 
+</span><span class="marked0"><a name="line127"></a>127       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line128"></a>128       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line129"></a>129       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line130"></a>130 
+</span><span class="marked0"><a name="line131"></a>131       alist    = @dims.zip([4, 7, 0, 0])
+</span><span class="marked1"><a name="line132"></a>132       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line133"></a>133       
+</span><span class="marked1"><a name="line134"></a>134       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line135"></a>135    end
+</span><span class="inferred1"><a name="line136"></a>136 
+</span><span class="marked0"><a name="line137"></a>137    def test_set_column_for_row_4
+</span><span class="marked1"><a name="line138"></a>138       @worksheet.set_column(4, 4, 20)
+</span><span class="marked0"><a name="line139"></a>139       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line140"></a>140 
+</span><span class="marked0"><a name="line141"></a>141       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line142"></a>142       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line143"></a>143       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line144"></a>144 
+</span><span class="marked0"><a name="line145"></a>145       alist    = @dims.zip([0, 0, 0, 0])
+</span><span class="marked1"><a name="line146"></a>146       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line147"></a>147       
+</span><span class="marked1"><a name="line148"></a>148       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line149"></a>149    end
+</span><span class="inferred1"><a name="line150"></a>150 
+</span><span class="marked0"><a name="line151"></a>151    def test_data_in_cell_0_0_and_set_row_for_row_4
+</span><span class="marked1"><a name="line152"></a>152       @worksheet.write(0, 0, 'Test')
+</span><span class="marked0"><a name="line153"></a>153       @worksheet.set_row(4, 20)
+</span><span class="marked1"><a name="line154"></a>154       data     = @worksheet.store_dimensions
+</span><span class="inferred0"><a name="line155"></a>155 
+</span><span class="marked1"><a name="line156"></a>156       vals     = data.unpack('x4 VVvv')
+</span><span class="marked0"><a name="line157"></a>157       alist    = @dims.zip(vals)
+</span><span class="marked1"><a name="line158"></a>158       results  = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line159"></a>159 
+</span><span class="marked1"><a name="line160"></a>160       alist    = @dims.zip([0, 5, 0, 1])
+</span><span class="marked0"><a name="line161"></a>161       expected = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line162"></a>162       
+</span><span class="marked0"><a name="line163"></a>163       assert_equal(expected, results)
+</span><span class="inferred1"><a name="line164"></a>164    end
+</span><span class="inferred0"><a name="line165"></a>165 
+</span><span class="marked1"><a name="line166"></a>166    def test_data_in_cell_0_0_and_set_row_for_row_4_reverse_order
+</span><span class="marked0"><a name="line167"></a>167       @worksheet.set_row(4, 20)
+</span><span class="marked1"><a name="line168"></a>168       @worksheet.write(0, 0, 'Test')
+</span><span class="marked0"><a name="line169"></a>169       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line170"></a>170 
+</span><span class="marked0"><a name="line171"></a>171       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line172"></a>172       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line173"></a>173       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line174"></a>174 
+</span><span class="marked0"><a name="line175"></a>175       alist    = @dims.zip([0, 5, 0, 1])
+</span><span class="marked1"><a name="line176"></a>176       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line177"></a>177       
+</span><span class="marked1"><a name="line178"></a>178       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line179"></a>179    end
+</span><span class="inferred1"><a name="line180"></a>180 
+</span><span class="marked0"><a name="line181"></a>181    def test_data_in_cell_5_3_and_set_row_for_row_4
+</span><span class="marked1"><a name="line182"></a>182       @worksheet.write(5, 3, 'Test')
+</span><span class="marked0"><a name="line183"></a>183       @worksheet.set_row(4, 20)
+</span><span class="marked1"><a name="line184"></a>184       data     = @worksheet.store_dimensions
+</span><span class="inferred0"><a name="line185"></a>185 
+</span><span class="marked1"><a name="line186"></a>186       vals     = data.unpack('x4 VVvv')
+</span><span class="marked0"><a name="line187"></a>187       alist    = @dims.zip(vals)
+</span><span class="marked1"><a name="line188"></a>188       results  = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line189"></a>189 
+</span><span class="marked1"><a name="line190"></a>190       alist    = @dims.zip([4, 6, 3, 4])
+</span><span class="marked0"><a name="line191"></a>191       expected = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line192"></a>192       
+</span><span class="marked0"><a name="line193"></a>193       assert_equal(expected, results)
+</span><span class="inferred1"><a name="line194"></a>194    end
+</span><span class="inferred0"><a name="line195"></a>195 
+</span><span class="marked1"><a name="line196"></a>196    def test_comment_in_cell_5_3
+</span><span class="marked0"><a name="line197"></a>197       @worksheet.write_comment(5, 3, 'Test')
+</span><span class="marked1"><a name="line198"></a>198       data     = @worksheet.store_dimensions
+</span><span class="inferred0"><a name="line199"></a>199 
+</span><span class="marked1"><a name="line200"></a>200       vals     = data.unpack('x4 VVvv')
+</span><span class="marked0"><a name="line201"></a>201       alist    = @dims.zip(vals)
+</span><span class="marked1"><a name="line202"></a>202       results  = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line203"></a>203 
+</span><span class="marked1"><a name="line204"></a>204       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked0"><a name="line205"></a>205       expected = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line206"></a>206       
+</span><span class="marked0"><a name="line207"></a>207       assert_equal(expected, results)
+</span><span class="inferred1"><a name="line208"></a>208    end
+</span><span class="inferred0"><a name="line209"></a>209 
+</span><span class="marked1"><a name="line210"></a>210    def test_nil_value_for_row
+</span><span class="marked0"><a name="line211"></a>211       error = @worksheet.write_string(nil, 1, 'Test')
+</span><span class="marked1"><a name="line212"></a>212       data     = @worksheet.store_dimensions
+</span><span class="inferred0"><a name="line213"></a>213 
+</span><span class="marked1"><a name="line214"></a>214       vals     = data.unpack('x4 VVvv')
+</span><span class="marked0"><a name="line215"></a>215       alist    = @dims.zip(vals)
+</span><span class="marked1"><a name="line216"></a>216       results  = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line217"></a>217 
+</span><span class="marked1"><a name="line218"></a>218       alist    = @dims.zip([0, 0, 0, 0])
+</span><span class="marked0"><a name="line219"></a>219       expected = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line220"></a>220       
+</span><span class="marked0"><a name="line221"></a>221       assert_equal(expected, results)
+</span><span class="marked1"><a name="line222"></a>222       assert_equal(-2, error)
+</span><span class="inferred0"><a name="line223"></a>223    end
+</span><span class="inferred1"><a name="line224"></a>224 
+</span><span class="marked0"><a name="line225"></a>225    def test_data_in_cell_5_3_and_10_1
+</span><span class="marked1"><a name="line226"></a>226       @worksheet.write( 5, 3, 'Test')
+</span><span class="marked0"><a name="line227"></a>227       @worksheet.write(10, 1, 'Test')
+</span><span class="marked1"><a name="line228"></a>228       data     = @worksheet.store_dimensions
+</span><span class="inferred0"><a name="line229"></a>229 
+</span><span class="marked1"><a name="line230"></a>230       vals     = data.unpack('x4 VVvv')
+</span><span class="marked0"><a name="line231"></a>231       alist    = @dims.zip(vals)
+</span><span class="marked1"><a name="line232"></a>232       results  = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line233"></a>233 
+</span><span class="marked1"><a name="line234"></a>234       alist    = @dims.zip([5, 11, 1, 4])
+</span><span class="marked0"><a name="line235"></a>235       expected = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line236"></a>236       
+</span><span class="marked0"><a name="line237"></a>237       assert_equal(expected, results)
+</span><span class="inferred1"><a name="line238"></a>238    end
+</span><span class="inferred0"><a name="line239"></a>239 
+</span><span class="marked1"><a name="line240"></a>240    def test_data_in_cell_5_3_and_10_5
+</span><span class="marked0"><a name="line241"></a>241       @worksheet.write( 5, 3, 'Test')
+</span><span class="marked1"><a name="line242"></a>242       @worksheet.write(10, 5, 'Test')
+</span><span class="marked0"><a name="line243"></a>243       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line244"></a>244 
+</span><span class="marked0"><a name="line245"></a>245       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line246"></a>246       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line247"></a>247       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line248"></a>248 
+</span><span class="marked0"><a name="line249"></a>249       alist    = @dims.zip([5, 11, 3, 6])
+</span><span class="marked1"><a name="line250"></a>250       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line251"></a>251       
+</span><span class="marked1"><a name="line252"></a>252       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line253"></a>253    end
+</span><span class="inferred1"><a name="line254"></a>254 
+</span><span class="marked0"><a name="line255"></a>255    def test_write_string
+</span><span class="marked1"><a name="line256"></a>256       @worksheet.write_string(5, 3, 'Test')
+</span><span class="marked0"><a name="line257"></a>257       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line258"></a>258 
+</span><span class="marked0"><a name="line259"></a>259       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line260"></a>260       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line261"></a>261       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line262"></a>262 
+</span><span class="marked0"><a name="line263"></a>263       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line264"></a>264       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line265"></a>265       
+</span><span class="marked1"><a name="line266"></a>266       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line267"></a>267    end
+</span><span class="inferred1"><a name="line268"></a>268 
+</span><span class="marked0"><a name="line269"></a>269    def test_write_number
+</span><span class="marked1"><a name="line270"></a>270       @worksheet.write_number(5, 3, 5)
+</span><span class="marked0"><a name="line271"></a>271       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line272"></a>272 
+</span><span class="marked0"><a name="line273"></a>273       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line274"></a>274       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line275"></a>275       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line276"></a>276 
+</span><span class="marked0"><a name="line277"></a>277       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line278"></a>278       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line279"></a>279       
+</span><span class="marked1"><a name="line280"></a>280       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line281"></a>281    end
+</span><span class="inferred1"><a name="line282"></a>282 
+</span><span class="marked0"><a name="line283"></a>283    def test_write_url
+</span><span class="marked1"><a name="line284"></a>284       @worksheet.write_url(5, 3, 'http://www.ruby.com')
+</span><span class="marked0"><a name="line285"></a>285       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line286"></a>286 
+</span><span class="marked0"><a name="line287"></a>287       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line288"></a>288       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line289"></a>289       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line290"></a>290 
+</span><span class="marked0"><a name="line291"></a>291       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line292"></a>292       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line293"></a>293       
+</span><span class="marked1"><a name="line294"></a>294       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line295"></a>295    end
+</span><span class="inferred1"><a name="line296"></a>296 
+</span><span class="marked0"><a name="line297"></a>297    def test_write_formula
+</span><span class="marked1"><a name="line298"></a>298       @worksheet.write_formula(5, 3, ' 1 + 2')
+</span><span class="marked0"><a name="line299"></a>299       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line300"></a>300 
+</span><span class="marked0"><a name="line301"></a>301       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line302"></a>302       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line303"></a>303       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line304"></a>304 
+</span><span class="marked0"><a name="line305"></a>305       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line306"></a>306       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line307"></a>307       
+</span><span class="marked1"><a name="line308"></a>308       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line309"></a>309    end
+</span><span class="inferred1"><a name="line310"></a>310 
+</span><span class="marked0"><a name="line311"></a>311    def test_write_blank
+</span><span class="marked1"><a name="line312"></a>312       @worksheet.write_string(5, 3, @format)
+</span><span class="marked0"><a name="line313"></a>313       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line314"></a>314 
+</span><span class="marked0"><a name="line315"></a>315       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line316"></a>316       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line317"></a>317       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line318"></a>318 
+</span><span class="marked0"><a name="line319"></a>319       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line320"></a>320       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line321"></a>321       
+</span><span class="marked1"><a name="line322"></a>322       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line323"></a>323    end
+</span><span class="inferred1"><a name="line324"></a>324 
+</span><span class="marked0"><a name="line325"></a>325    def test_write_blank_no_format
+</span><span class="marked1"><a name="line326"></a>326       @worksheet.write_string(5, 3)
+</span><span class="marked0"><a name="line327"></a>327       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line328"></a>328 
+</span><span class="marked0"><a name="line329"></a>329       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line330"></a>330       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line331"></a>331       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line332"></a>332 
+</span><span class="marked0"><a name="line333"></a>333       alist    = @dims.zip([0, 0, 0, 0])
+</span><span class="marked1"><a name="line334"></a>334       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line335"></a>335       
+</span><span class="marked1"><a name="line336"></a>336       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line337"></a>337    end
+</span><span class="inferred1"><a name="line338"></a>338 
+</span><span class="marked0"><a name="line339"></a>339    def test_write_utf16be_string
+</span><span class="marked1"><a name="line340"></a>340       @worksheet.write_utf16be_string(5, 3, @smiley)
+</span><span class="marked0"><a name="line341"></a>341       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line342"></a>342 
+</span><span class="marked0"><a name="line343"></a>343       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line344"></a>344       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line345"></a>345       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line346"></a>346 
+</span><span class="marked0"><a name="line347"></a>347       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line348"></a>348       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line349"></a>349       
+</span><span class="marked1"><a name="line350"></a>350       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line351"></a>351    end
+</span><span class="inferred1"><a name="line352"></a>352 
+</span><span class="marked0"><a name="line353"></a>353    def test_write_utf16le_string
+</span><span class="marked1"><a name="line354"></a>354       @worksheet.write_utf16le_string(5, 3, @smiley)
+</span><span class="marked0"><a name="line355"></a>355       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line356"></a>356 
+</span><span class="marked0"><a name="line357"></a>357       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line358"></a>358       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line359"></a>359       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line360"></a>360 
+</span><span class="marked0"><a name="line361"></a>361       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line362"></a>362       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line363"></a>363       
+</span><span class="marked1"><a name="line364"></a>364       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line365"></a>365    end
+</span><span class="inferred1"><a name="line366"></a>366 
+</span><span class="marked0"><a name="line367"></a>367    def test_repeat_formula
+</span><span class="marked1"><a name="line368"></a>368       formula = @worksheet.store_formula('=A1 * 3 + 50')
+</span><span class="marked0"><a name="line369"></a>369       @worksheet.repeat_formula(5, 3, formula, @format, 'A1', 'A2')
+</span><span class="inferred1"><a name="line370"></a>370       
+</span><span class="marked0"><a name="line371"></a>371       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line372"></a>372 
+</span><span class="marked0"><a name="line373"></a>373       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line374"></a>374       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line375"></a>375       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line376"></a>376 
+</span><span class="marked0"><a name="line377"></a>377       alist    = @dims.zip([5, 6, 3, 4])
+</span><span class="marked1"><a name="line378"></a>378       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line379"></a>379       
+</span><span class="marked1"><a name="line380"></a>380       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line381"></a>381    end
+</span><span class="inferred1"><a name="line382"></a>382 
+</span><span class="marked0"><a name="line383"></a>383    def test_merge_range
+</span><span class="marked1"><a name="line384"></a>384       formula = @worksheet.store_formula('=A1 * 3 + 50')
+</span><span class="marked0"><a name="line385"></a>385       @worksheet.merge_range('C6:E8', 'Test', @format)
+</span><span class="inferred1"><a name="line386"></a>386       
+</span><span class="marked0"><a name="line387"></a>387       data     = @worksheet.store_dimensions
+</span><span class="inferred1"><a name="line388"></a>388 
+</span><span class="marked0"><a name="line389"></a>389       vals     = data.unpack('x4 VVvv')
+</span><span class="marked1"><a name="line390"></a>390       alist    = @dims.zip(vals)
+</span><span class="marked0"><a name="line391"></a>391       results  = Hash[*alist.flatten]
+</span><span class="inferred1"><a name="line392"></a>392 
+</span><span class="marked0"><a name="line393"></a>393       alist    = @dims.zip([5, 8, 2, 5])
+</span><span class="marked1"><a name="line394"></a>394       expected = Hash[*alist.flatten]
+</span><span class="inferred0"><a name="line395"></a>395       
+</span><span class="marked1"><a name="line396"></a>396       assert_equal(expected, results)
+</span><span class="inferred0"><a name="line397"></a>397    end
+</span><span class="inferred1"><a name="line398"></a>398 
+</span><span class="inferred0"><a name="line399"></a>399 end
 </span></pre><hr/>
     <p>Generated using the <a href='http://eigenclass.org/hiki.rb?rcov'>rcov code coverage analysis tool for Ruby</a>
    version 0.8.1.2.</p>

@@ -553,7 +553,7 @@ span.run100 {
 </style>
     </head>
   <body><h3>C0 code coverage information</h3>
-    <p>Generated on Fri Mar 06 00:10:44 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
+    <p>Generated on Fri Mar 06 14:34:44 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
       </p>
     <hr/>
     <pre><span class='marked0'>Code reported as executed by Ruby looks like this...
@@ -571,24 +571,24 @@ span.run100 {
     </thead>
   <tbody><tr class='light'><td><a href='SVN_work-spreadsheet-writeexcel-lib-spreadsheet-workbook_rb.html'>C:/SVN_work/spreadsheet-writeexcel/lib/spreadsheet/workbook.rb</a>
         </td>
-      <td class='lines_total'><tt>2709</tt>
+      <td class='lines_total'><tt>2706</tt>
         </td>
-      <td class='lines_code'><tt>1380</tt>
+      <td class='lines_code'><tt>1378</tt>
         </td>
-      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_total'>34.1%</tt>
+      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_total'>34.6%</tt>
               &nbsp;</td>
-            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='34'/>
-                  <td class='uncovered' width='66'/>
+            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='35'/>
+                  <td class='uncovered' width='65'/>
                   </tr>
                 </table>
               </td>
             </tr>
           </table>
         </td>
-      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_code'>20.3%</tt>
+      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_code'>20.9%</tt>
               &nbsp;</td>
-            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='20'/>
-                  <td class='uncovered' width='80'/>
+            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='21'/>
+                  <td class='uncovered' width='79'/>
                   </tr>
                 </table>
               </td>
@@ -607,9 +607,9 @@ span.run100 {
 </span><span class="marked0"><a name="line7"></a>   7    EOF = 4
 </span><span class="marked1"><a name="line8"></a>   8    SheetName = &quot;Sheet&quot;
 </span><span class="inferred0"><a name="line9"></a>   9 
-</span><span class="marked1"><a name="line10"></a>  10    attr_accessor :date_system
-</span><span class="marked0"><a name="line11"></a>  11    attr_reader :formats, :xf_index, :worksheets
-</span><span class="inferred1"><a name="line12"></a>  12 
+</span><span class="marked1"><a name="line10"></a>  10    attr_accessor :date_system, :str_unique
+</span><span class="marked0"><a name="line11"></a>  11    attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
+</span><span class="inferred1"><a name="line12"></a>  12    
 </span><span class="inferred0"><a name="line13"></a>  13    ###############################################################################
 </span><span class="inferred1"><a name="line14"></a>  14    #
 </span><span class="inferred0"><a name="line15"></a>  15    # new()
@@ -621,7 +621,7 @@ span.run100 {
 </span><span class="marked0"><a name="line21"></a>  21       @filename              = filename
 </span><span class="marked1"><a name="line22"></a>  22       @parser                = Formula.new(@byte_order)
 </span><span class="marked0"><a name="line23"></a>  23       @tempdir               = nil
-</span><span class="marked1"><a name="line24"></a>  24       @v1904                 = 0 
+</span><span class="marked1"><a name="line24"></a>  24       @date_1904             = 0 
 </span><span class="marked0"><a name="line25"></a>  25       @activesheet           = 0 
 </span><span class="marked1"><a name="line26"></a>  26       @firstsheet            = 0 
 </span><span class="marked0"><a name="line27"></a>  27       @selected              = 0 
@@ -865,7 +865,7 @@ span.run100 {
 </span><span class="inferred0"><a name="line265"></a> 265             @str_total,
 </span><span class="inferred1"><a name="line266"></a> 266             @str_unique,
 </span><span class="inferred0"><a name="line267"></a> 267             @str_table,
-</span><span class="inferred1"><a name="line268"></a> 268             @v1904,
+</span><span class="inferred1"><a name="line268"></a> 268             @date_1904,
 </span><span class="inferred0"><a name="line269"></a> 269             @compatibility
 </span><span class="inferred1"><a name="line270"></a> 270          )
 </span><span class="marked0"><a name="line271"></a> 271        @worksheets[index] = worksheet     # Store ref for iterator
@@ -1034,11 +1034,11 @@ span.run100 {
 </span><span class="inferred1"><a name="line434"></a> 434    # suitable for very large files.
 </span><span class="inferred0"><a name="line435"></a> 435    #
 </span><span class="marked1"><a name="line436"></a> 436    def compatibility_mode(mode = 1)
-</span><span class="marked0"><a name="line437"></a> 437       unless sheets.empty?
+</span><span class="uncovered0"><a name="line437"></a> 437       unless sheets.empty?
 </span><span class="uncovered1"><a name="line438"></a> 438          raise &quot;compatibility_mode() must be called before add_worksheet()&quot;
 </span><span class="uncovered0"><a name="line439"></a> 439       end
-</span><span class="marked1"><a name="line440"></a> 440       @compatibility = mode
-</span><span class="inferred0"><a name="line441"></a> 441    end
+</span><span class="uncovered1"><a name="line440"></a> 440       @compatibility = mode
+</span><span class="uncovered0"><a name="line441"></a> 441    end
 </span><span class="inferred1"><a name="line442"></a> 442 
 </span><span class="inferred0"><a name="line443"></a> 443    ###############################################################################
 </span><span class="inferred1"><a name="line444"></a> 444    #
@@ -1050,7 +1050,7 @@ span.run100 {
 </span><span class="uncovered1"><a name="line450"></a> 450       unless sheets.empty?
 </span><span class="uncovered0"><a name="line451"></a> 451          raise &quot;set_1904() must be called before add_worksheet()&quot;
 </span><span class="uncovered1"><a name="line452"></a> 452       end
-</span><span class="uncovered0"><a name="line453"></a> 453       @v1904 = mode
+</span><span class="uncovered0"><a name="line453"></a> 453       @date_1904 = mode
 </span><span class="uncovered1"><a name="line454"></a> 454    end
 </span><span class="inferred0"><a name="line455"></a> 455 
 </span><span class="inferred1"><a name="line456"></a> 456    ###############################################################################
@@ -2229,7 +2229,7 @@ span.run100 {
 </span><span class="uncovered0"><a name="line1629"></a>1629        record    = 0x0022         # Record identifier
 </span><span class="uncovered1"><a name="line1630"></a>1630        length    = 0x0002         # Bytes to follow
 </span><span class="uncovered0"><a name="line1631"></a>1631    
-</span><span class="uncovered1"><a name="line1632"></a>1632        f1904     = @v1904         # Flag for 1904 date system
+</span><span class="uncovered1"><a name="line1632"></a>1632        f1904     = @date_1904     # Flag for 1904 date system
 </span><span class="uncovered0"><a name="line1633"></a>1633    
 </span><span class="uncovered1"><a name="line1634"></a>1634        header    = [record, length].pack(&quot;vv&quot;)
 </span><span class="uncovered0"><a name="line1635"></a>1635        data      = [f1904].pack(&quot;v&quot;)
@@ -2967,346 +2967,343 @@ span.run100 {
 </span><span class="inferred0"><a name="line2367"></a>2367    # as Excel.
 </span><span class="inferred1"><a name="line2368"></a>2368    #
 </span><span class="marked0"><a name="line2369"></a>2369    def calculate_extsst_size
-</span><span class="uncovered1"><a name="line2370"></a>2370        unique_strings  = @str_unique
-</span><span class="uncovered0"><a name="line2371"></a>2371    
-</span><span class="uncovered1"><a name="line2372"></a>2372        bucket_size
-</span><span class="uncovered0"><a name="line2373"></a>2373        buckets
-</span><span class="uncovered1"><a name="line2374"></a>2374    
-</span><span class="uncovered0"><a name="line2375"></a>2375        if unique_strings &lt; 1024
-</span><span class="uncovered1"><a name="line2376"></a>2376            bucket_size = 8
-</span><span class="uncovered0"><a name="line2377"></a>2377        else
-</span><span class="uncovered1"><a name="line2378"></a>2378            bucket_size = 1 + Integer(unique_strings / 128.0)
-</span><span class="uncovered0"><a name="line2379"></a>2379        end
-</span><span class="uncovered1"><a name="line2380"></a>2380    
-</span><span class="uncovered0"><a name="line2381"></a>2381        buckets = Integer((unique_strings + bucket_size -1)  / Float(bucket_size))
-</span><span class="uncovered1"><a name="line2382"></a>2382 
-</span><span class="uncovered0"><a name="line2383"></a>2383        @extsst_buckets        = buckets 
-</span><span class="uncovered1"><a name="line2384"></a>2384        @extsst_bucket_size    = bucket_size
-</span><span class="uncovered0"><a name="line2385"></a>2385 
-</span><span class="uncovered1"><a name="line2386"></a>2386        return 6 + 8 * buckets
-</span><span class="uncovered0"><a name="line2387"></a>2387    end
-</span><span class="inferred1"><a name="line2388"></a>2388 
-</span><span class="inferred0"><a name="line2389"></a>2389    ###############################################################################
-</span><span class="inferred1"><a name="line2390"></a>2390    #
-</span><span class="inferred0"><a name="line2391"></a>2391    # _store_extsst
-</span><span class="inferred1"><a name="line2392"></a>2392    #
-</span><span class="inferred0"><a name="line2393"></a>2393    # Write EXTSST table using the offsets calculated in _store_shared_strings().
-</span><span class="inferred1"><a name="line2394"></a>2394    #
-</span><span class="marked0"><a name="line2395"></a>2395    def store_extsst
-</span><span class="uncovered1"><a name="line2396"></a>2396        offsets     = @extsst_offsets
-</span><span class="uncovered0"><a name="line2397"></a>2397        bucket_size = @extsst_bucket_size
+</span><span class="marked1"><a name="line2370"></a>2370        unique_strings  = @str_unique
+</span><span class="inferred0"><a name="line2371"></a>2371    
+</span><span class="marked1"><a name="line2372"></a>2372        if unique_strings &lt; 1024
+</span><span class="marked0"><a name="line2373"></a>2373            bucket_size = 8
+</span><span class="inferred1"><a name="line2374"></a>2374        else
+</span><span class="marked0"><a name="line2375"></a>2375            bucket_size = 1 + Integer(unique_strings / 128.0)
+</span><span class="inferred1"><a name="line2376"></a>2376        end
+</span><span class="inferred0"><a name="line2377"></a>2377    
+</span><span class="marked1"><a name="line2378"></a>2378        buckets = Integer((unique_strings + bucket_size -1)  / Float(bucket_size))
+</span><span class="inferred0"><a name="line2379"></a>2379 
+</span><span class="marked1"><a name="line2380"></a>2380        @extsst_buckets        = buckets 
+</span><span class="marked0"><a name="line2381"></a>2381        @extsst_bucket_size    = bucket_size
+</span><span class="inferred1"><a name="line2382"></a>2382 
+</span><span class="marked0"><a name="line2383"></a>2383        return 6 + 8 * buckets
+</span><span class="inferred1"><a name="line2384"></a>2384    end
+</span><span class="inferred0"><a name="line2385"></a>2385 
+</span><span class="inferred1"><a name="line2386"></a>2386    ###############################################################################
+</span><span class="inferred0"><a name="line2387"></a>2387    #
+</span><span class="inferred1"><a name="line2388"></a>2388    # _store_extsst
+</span><span class="inferred0"><a name="line2389"></a>2389    #
+</span><span class="inferred1"><a name="line2390"></a>2390    # Write EXTSST table using the offsets calculated in _store_shared_strings().
+</span><span class="inferred0"><a name="line2391"></a>2391    #
+</span><span class="marked1"><a name="line2392"></a>2392    def store_extsst
+</span><span class="uncovered0"><a name="line2393"></a>2393        offsets     = @extsst_offsets
+</span><span class="uncovered1"><a name="line2394"></a>2394        bucket_size = @extsst_bucket_size
+</span><span class="uncovered0"><a name="line2395"></a>2395    
+</span><span class="uncovered1"><a name="line2396"></a>2396        record      = 0x00FF                 # Record identifier
+</span><span class="uncovered0"><a name="line2397"></a>2397        length      = 2 + 8 * offsets.size   # Bytes to follow
 </span><span class="uncovered1"><a name="line2398"></a>2398    
-</span><span class="uncovered0"><a name="line2399"></a>2399        record      = 0x00FF                 # Record identifier
-</span><span class="uncovered1"><a name="line2400"></a>2400        length      = 2 + 8 * offsets.size   # Bytes to follow
-</span><span class="uncovered0"><a name="line2401"></a>2401    
-</span><span class="uncovered1"><a name="line2402"></a>2402        header      = [record, length].pack('vv')
-</span><span class="uncovered0"><a name="line2403"></a>2403        data        = [bucket_size].pack('v')
-</span><span class="uncovered1"><a name="line2404"></a>2404 
-</span><span class="uncovered0"><a name="line2405"></a>2405        offsets.each do |offset|
-</span><span class="uncovered1"><a name="line2406"></a>2406           data = data + [offset[0], offset[1], 0].pack('Vvv')
-</span><span class="uncovered0"><a name="line2407"></a>2407        end
-</span><span class="uncovered1"><a name="line2408"></a>2408    
-</span><span class="uncovered0"><a name="line2409"></a>2409        append(header, data)
-</span><span class="uncovered1"><a name="line2410"></a>2410    
-</span><span class="uncovered0"><a name="line2411"></a>2411    end
-</span><span class="inferred1"><a name="line2412"></a>2412 
-</span><span class="inferred0"><a name="line2413"></a>2413    #
-</span><span class="inferred1"><a name="line2414"></a>2414    # Methods related to comments and MSO objects.
+</span><span class="uncovered0"><a name="line2399"></a>2399        header      = [record, length].pack('vv')
+</span><span class="uncovered1"><a name="line2400"></a>2400        data        = [bucket_size].pack('v')
+</span><span class="uncovered0"><a name="line2401"></a>2401 
+</span><span class="uncovered1"><a name="line2402"></a>2402        offsets.each do |offset|
+</span><span class="uncovered0"><a name="line2403"></a>2403           data = data + [offset[0], offset[1], 0].pack('Vvv')
+</span><span class="uncovered1"><a name="line2404"></a>2404        end
+</span><span class="uncovered0"><a name="line2405"></a>2405    
+</span><span class="uncovered1"><a name="line2406"></a>2406        append(header, data)
+</span><span class="uncovered0"><a name="line2407"></a>2407    
+</span><span class="uncovered1"><a name="line2408"></a>2408    end
+</span><span class="inferred0"><a name="line2409"></a>2409 
+</span><span class="inferred1"><a name="line2410"></a>2410    #
+</span><span class="inferred0"><a name="line2411"></a>2411    # Methods related to comments and MSO objects.
+</span><span class="inferred1"><a name="line2412"></a>2412    #
+</span><span class="inferred0"><a name="line2413"></a>2413    
+</span><span class="inferred1"><a name="line2414"></a>2414    ###############################################################################
 </span><span class="inferred0"><a name="line2415"></a>2415    #
-</span><span class="inferred1"><a name="line2416"></a>2416    
-</span><span class="inferred0"><a name="line2417"></a>2417    ###############################################################################
-</span><span class="inferred1"><a name="line2418"></a>2418    #
-</span><span class="inferred0"><a name="line2419"></a>2419    # _add_mso_drawing_group()
+</span><span class="inferred1"><a name="line2416"></a>2416    # _add_mso_drawing_group()
+</span><span class="inferred0"><a name="line2417"></a>2417    #
+</span><span class="inferred1"><a name="line2418"></a>2418    # Write the MSODRAWINGGROUP record that keeps track of the Escher drawing
+</span><span class="inferred0"><a name="line2419"></a>2419    # objects in the file such as images, comments and filters.
 </span><span class="inferred1"><a name="line2420"></a>2420    #
-</span><span class="inferred0"><a name="line2421"></a>2421    # Write the MSODRAWINGGROUP record that keeps track of the Escher drawing
-</span><span class="inferred1"><a name="line2422"></a>2422    # objects in the file such as images, comments and filters.
-</span><span class="inferred0"><a name="line2423"></a>2423    #
-</span><span class="marked1"><a name="line2424"></a>2424    def add_mso_drawing_group
-</span><span class="uncovered0"><a name="line2425"></a>2425        return unless @mso_size != 0
+</span><span class="marked0"><a name="line2421"></a>2421    def add_mso_drawing_group
+</span><span class="uncovered1"><a name="line2422"></a>2422        return unless @mso_size != 0
+</span><span class="uncovered0"><a name="line2423"></a>2423    
+</span><span class="uncovered1"><a name="line2424"></a>2424        record  = 0x00EB               # Record identifier
+</span><span class="uncovered0"><a name="line2425"></a>2425        length  = 0x0000               # Number of bytes to follow
 </span><span class="uncovered1"><a name="line2426"></a>2426    
-</span><span class="uncovered0"><a name="line2427"></a>2427        record  = 0x00EB               # Record identifier
-</span><span class="uncovered1"><a name="line2428"></a>2428        length  = 0x0000               # Number of bytes to follow
-</span><span class="uncovered0"><a name="line2429"></a>2429    
-</span><span class="uncovered1"><a name="line2430"></a>2430        data    = store_mso_dgg_container
-</span><span class="uncovered0"><a name="line2431"></a>2431        data    = data + store_mso_dgg(@mso_clusters)
-</span><span class="uncovered1"><a name="line2432"></a>2432        data    = data + store_mso_bstore_container
-</span><span class="uncovered0"><a name="line2433"></a>2433        @images_data.each do |image|
-</span><span class="uncovered1"><a name="line2434"></a>2434           data = data + store_mso_images(image)
-</span><span class="uncovered0"><a name="line2435"></a>2435        end
-</span><span class="uncovered1"><a name="line2436"></a>2436        data    = data + store_mso_opt
-</span><span class="uncovered0"><a name="line2437"></a>2437        data    = data + store_mso_split_menu_colors
+</span><span class="uncovered0"><a name="line2427"></a>2427        data    = store_mso_dgg_container
+</span><span class="uncovered1"><a name="line2428"></a>2428        data    = data + store_mso_dgg(@mso_clusters)
+</span><span class="uncovered0"><a name="line2429"></a>2429        data    = data + store_mso_bstore_container
+</span><span class="uncovered1"><a name="line2430"></a>2430        @images_data.each do |image|
+</span><span class="uncovered0"><a name="line2431"></a>2431           data = data + store_mso_images(image)
+</span><span class="uncovered1"><a name="line2432"></a>2432        end
+</span><span class="uncovered0"><a name="line2433"></a>2433        data    = data + store_mso_opt
+</span><span class="uncovered1"><a name="line2434"></a>2434        data    = data + store_mso_split_menu_colors
+</span><span class="uncovered0"><a name="line2435"></a>2435    
+</span><span class="uncovered1"><a name="line2436"></a>2436        length  = data.length
+</span><span class="uncovered0"><a name="line2437"></a>2437        header  = [record, length].pack(&quot;vv&quot;)
 </span><span class="uncovered1"><a name="line2438"></a>2438    
-</span><span class="uncovered0"><a name="line2439"></a>2439        length  = data.length
-</span><span class="uncovered1"><a name="line2440"></a>2440        header  = [record, length].pack(&quot;vv&quot;)
-</span><span class="uncovered0"><a name="line2441"></a>2441    
-</span><span class="uncovered1"><a name="line2442"></a>2442        add_mso_drawing_group_continue(header . data)
-</span><span class="uncovered0"><a name="line2443"></a>2443    
-</span><span class="uncovered1"><a name="line2444"></a>2444        return header + data # For testing only.
-</span><span class="uncovered0"><a name="line2445"></a>2445    end
-</span><span class="inferred1"><a name="line2446"></a>2446 
-</span><span class="inferred0"><a name="line2447"></a>2447    ###############################################################################
-</span><span class="inferred1"><a name="line2448"></a>2448    #
-</span><span class="inferred0"><a name="line2449"></a>2449    # _add_mso_drawing_group_continue()
-</span><span class="inferred1"><a name="line2450"></a>2450    #
-</span><span class="inferred0"><a name="line2451"></a>2451    # See first the Spreadsheet::WriteExcel::BIFFwriter::_add_continue() method.
+</span><span class="uncovered0"><a name="line2439"></a>2439        add_mso_drawing_group_continue(header . data)
+</span><span class="uncovered1"><a name="line2440"></a>2440    
+</span><span class="uncovered0"><a name="line2441"></a>2441        return header + data # For testing only.
+</span><span class="uncovered1"><a name="line2442"></a>2442    end
+</span><span class="inferred0"><a name="line2443"></a>2443 
+</span><span class="inferred1"><a name="line2444"></a>2444    ###############################################################################
+</span><span class="inferred0"><a name="line2445"></a>2445    #
+</span><span class="inferred1"><a name="line2446"></a>2446    # _add_mso_drawing_group_continue()
+</span><span class="inferred0"><a name="line2447"></a>2447    #
+</span><span class="inferred1"><a name="line2448"></a>2448    # See first the Spreadsheet::WriteExcel::BIFFwriter::_add_continue() method.
+</span><span class="inferred0"><a name="line2449"></a>2449    #
+</span><span class="inferred1"><a name="line2450"></a>2450    # Add specialised CONTINUE headers to large MSODRAWINGGROUP data block.
+</span><span class="inferred0"><a name="line2451"></a>2451    # We use the Excel 97 max block size of 8228 - 4 bytes for the header = 8224.
 </span><span class="inferred1"><a name="line2452"></a>2452    #
-</span><span class="inferred0"><a name="line2453"></a>2453    # Add specialised CONTINUE headers to large MSODRAWINGGROUP data block.
-</span><span class="inferred1"><a name="line2454"></a>2454    # We use the Excel 97 max block size of 8228 - 4 bytes for the header = 8224.
-</span><span class="inferred0"><a name="line2455"></a>2455    #
-</span><span class="inferred1"><a name="line2456"></a>2456    # The structure depends on the size of the data block:
-</span><span class="inferred0"><a name="line2457"></a>2457    #
-</span><span class="inferred1"><a name="line2458"></a>2458    #     Case 1:  &lt;=   8224 bytes      1 MSODRAWINGGROUP
-</span><span class="inferred0"><a name="line2459"></a>2459    #     Case 2:  &lt;= 2*8224 bytes      1 MSODRAWINGGROUP + 1 CONTINUE
-</span><span class="inferred1"><a name="line2460"></a>2460    #     Case 3:  &gt;  2*8224 bytes      2 MSODRAWINGGROUP + n CONTINUE
-</span><span class="inferred0"><a name="line2461"></a>2461    #
-</span><span class="marked1"><a name="line2462"></a>2462    def add_mso_drawing_group_continue(data)
-</span><span class="uncovered0"><a name="line2463"></a>2463        limit       = 8228 -4
-</span><span class="uncovered1"><a name="line2464"></a>2464        mso_group   = 0x00EB # Record identifier
-</span><span class="uncovered0"><a name="line2465"></a>2465        continue    = 0x003C # Record identifier
-</span><span class="uncovered1"><a name="line2466"></a>2466        block_count = 1
+</span><span class="inferred0"><a name="line2453"></a>2453    # The structure depends on the size of the data block:
+</span><span class="inferred1"><a name="line2454"></a>2454    #
+</span><span class="inferred0"><a name="line2455"></a>2455    #     Case 1:  &lt;=   8224 bytes      1 MSODRAWINGGROUP
+</span><span class="inferred1"><a name="line2456"></a>2456    #     Case 2:  &lt;= 2*8224 bytes      1 MSODRAWINGGROUP + 1 CONTINUE
+</span><span class="inferred0"><a name="line2457"></a>2457    #     Case 3:  &gt;  2*8224 bytes      2 MSODRAWINGGROUP + n CONTINUE
+</span><span class="inferred1"><a name="line2458"></a>2458    #
+</span><span class="marked0"><a name="line2459"></a>2459    def add_mso_drawing_group_continue(data)
+</span><span class="uncovered1"><a name="line2460"></a>2460        limit       = 8228 -4
+</span><span class="uncovered0"><a name="line2461"></a>2461        mso_group   = 0x00EB # Record identifier
+</span><span class="uncovered1"><a name="line2462"></a>2462        continue    = 0x003C # Record identifier
+</span><span class="uncovered0"><a name="line2463"></a>2463        block_count = 1
+</span><span class="uncovered1"><a name="line2464"></a>2464    
+</span><span class="uncovered0"><a name="line2465"></a>2465        # Ignore the base class _add_continue() method.
+</span><span class="uncovered1"><a name="line2466"></a>2466        @ignore_continue = 1
 </span><span class="uncovered0"><a name="line2467"></a>2467    
-</span><span class="uncovered1"><a name="line2468"></a>2468        # Ignore the base class _add_continue() method.
-</span><span class="uncovered0"><a name="line2469"></a>2469        @ignore_continue = 1
-</span><span class="uncovered1"><a name="line2470"></a>2470    
-</span><span class="uncovered0"><a name="line2471"></a>2471        # Case 1 above. Just return the data as it is.
-</span><span class="uncovered1"><a name="line2472"></a>2472        if data.length &lt;= limit
-</span><span class="uncovered0"><a name="line2473"></a>2473            append(data)
-</span><span class="uncovered1"><a name="line2474"></a>2474            return
-</span><span class="uncovered0"><a name="line2475"></a>2475        end
-</span><span class="uncovered1"><a name="line2476"></a>2476    
-</span><span class="uncovered0"><a name="line2477"></a>2477        # Change length field of the first MSODRAWINGGROUP block. Case 2 and 3.
-</span><span class="uncovered1"><a name="line2478"></a>2478        tmp = data.dup
-</span><span class="uncovered0"><a name="line2479"></a>2479        tmp[0, limit + 4] = &quot;&quot;
-</span><span class="uncovered1"><a name="line2480"></a>2480        tmp[2, 2] = [limit].pack('v')
-</span><span class="uncovered0"><a name="line2481"></a>2481        append(tmp)
-</span><span class="uncovered1"><a name="line2482"></a>2482 
-</span><span class="uncovered0"><a name="line2483"></a>2483        # Add MSODRAWINGGROUP and CONTINUE blocks for Case 3 above.
-</span><span class="uncovered1"><a name="line2484"></a>2484        while data.length &gt; limit
-</span><span class="uncovered0"><a name="line2485"></a>2485            if block_count == 1
-</span><span class="uncovered1"><a name="line2486"></a>2486                # Add extra MSODRAWINGGROUP block header.
-</span><span class="uncovered0"><a name="line2487"></a>2487                header = [mso_group, limit].pack(&quot;vv&quot;)
-</span><span class="uncovered1"><a name="line2488"></a>2488                block_count += 1
-</span><span class="uncovered0"><a name="line2489"></a>2489            else
-</span><span class="uncovered1"><a name="line2490"></a>2490                # Add normal CONTINUE header.
-</span><span class="uncovered0"><a name="line2491"></a>2491                header = [continue, limit].pack(&quot;vv&quot;)
-</span><span class="uncovered1"><a name="line2492"></a>2492            end
-</span><span class="uncovered0"><a name="line2493"></a>2493    
-</span><span class="uncovered1"><a name="line2494"></a>2494            tmp = data.dup
-</span><span class="uncovered0"><a name="line2495"></a>2495            tmp[0, limit] = ''
-</span><span class="uncovered1"><a name="line2496"></a>2496            append(header, tmp)
-</span><span class="uncovered0"><a name="line2497"></a>2497        end
-</span><span class="uncovered1"><a name="line2498"></a>2498 
-</span><span class="uncovered0"><a name="line2499"></a>2499        # Last CONTINUE block for remaining data. Case 2 and 3 above.
-</span><span class="uncovered1"><a name="line2500"></a>2500        header = [continue, data.length].pack(&quot;vv&quot;)
-</span><span class="uncovered0"><a name="line2501"></a>2501        append(header, data)
-</span><span class="uncovered1"><a name="line2502"></a>2502 
-</span><span class="uncovered0"><a name="line2503"></a>2503        # Turn the base class _add_continue() method back on.
-</span><span class="uncovered1"><a name="line2504"></a>2504        @ignore_continue = 0
-</span><span class="uncovered0"><a name="line2505"></a>2505    end
-</span><span class="inferred1"><a name="line2506"></a>2506 
-</span><span class="inferred0"><a name="line2507"></a>2507    ###############################################################################
-</span><span class="inferred1"><a name="line2508"></a>2508    #
-</span><span class="inferred0"><a name="line2509"></a>2509    # _store_mso_dgg_container()
-</span><span class="inferred1"><a name="line2510"></a>2510    #
-</span><span class="inferred0"><a name="line2511"></a>2511    # Write the Escher DggContainer record that is part of MSODRAWINGGROUP.
-</span><span class="inferred1"><a name="line2512"></a>2512    #
-</span><span class="marked0"><a name="line2513"></a>2513    def store_mso_dgg_container
-</span><span class="uncovered1"><a name="line2514"></a>2514        type        = 0xF000
-</span><span class="uncovered0"><a name="line2515"></a>2515        version     = 15
-</span><span class="uncovered1"><a name="line2516"></a>2516        instance    = 0
-</span><span class="uncovered0"><a name="line2517"></a>2517        data        = ''
-</span><span class="uncovered1"><a name="line2518"></a>2518        length      = @mso_size -12 # -4 (biff header) -8 (for this).
-</span><span class="uncovered0"><a name="line2519"></a>2519 
-</span><span class="uncovered1"><a name="line2520"></a>2520        return add_mso_generic(type, version, instance, data, length)
-</span><span class="uncovered0"><a name="line2521"></a>2521    end
-</span><span class="inferred1"><a name="line2522"></a>2522    
-</span><span class="inferred0"><a name="line2523"></a>2523    
-</span><span class="inferred1"><a name="line2524"></a>2524    ###############################################################################
-</span><span class="inferred0"><a name="line2525"></a>2525    #
-</span><span class="inferred1"><a name="line2526"></a>2526    # _store_mso_dgg()
-</span><span class="inferred0"><a name="line2527"></a>2527    #    my $max_spid        = $_[0];
-</span><span class="inferred1"><a name="line2528"></a>2528    #    my $num_clusters    = $_[1];
-</span><span class="inferred0"><a name="line2529"></a>2529    #    my $shapes_saved    = $_[2];
-</span><span class="inferred1"><a name="line2530"></a>2530    #    my $drawings_saved  = $_[3];
-</span><span class="inferred0"><a name="line2531"></a>2531    #    my $clusters        = $_[4];
-</span><span class="inferred1"><a name="line2532"></a>2532    #
-</span><span class="inferred0"><a name="line2533"></a>2533    # Write the Escher Dgg record that is part of MSODRAWINGGROUP.
-</span><span class="inferred1"><a name="line2534"></a>2534    #
-</span><span class="marked0"><a name="line2535"></a>2535    def store_mso_dgg(max_spid, num_clusters, shapes_saved, drawings_saved, clusters)
-</span><span class="uncovered1"><a name="line2536"></a>2536        type            = 0xF006
-</span><span class="uncovered0"><a name="line2537"></a>2537        version         = 0
-</span><span class="uncovered1"><a name="line2538"></a>2538        instance        = 0
-</span><span class="uncovered0"><a name="line2539"></a>2539        data            = ''
+</span><span class="uncovered1"><a name="line2468"></a>2468        # Case 1 above. Just return the data as it is.
+</span><span class="uncovered0"><a name="line2469"></a>2469        if data.length &lt;= limit
+</span><span class="uncovered1"><a name="line2470"></a>2470            append(data)
+</span><span class="uncovered0"><a name="line2471"></a>2471            return
+</span><span class="uncovered1"><a name="line2472"></a>2472        end
+</span><span class="uncovered0"><a name="line2473"></a>2473    
+</span><span class="uncovered1"><a name="line2474"></a>2474        # Change length field of the first MSODRAWINGGROUP block. Case 2 and 3.
+</span><span class="uncovered0"><a name="line2475"></a>2475        tmp = data.dup
+</span><span class="uncovered1"><a name="line2476"></a>2476        tmp[0, limit + 4] = &quot;&quot;
+</span><span class="uncovered0"><a name="line2477"></a>2477        tmp[2, 2] = [limit].pack('v')
+</span><span class="uncovered1"><a name="line2478"></a>2478        append(tmp)
+</span><span class="uncovered0"><a name="line2479"></a>2479 
+</span><span class="uncovered1"><a name="line2480"></a>2480        # Add MSODRAWINGGROUP and CONTINUE blocks for Case 3 above.
+</span><span class="uncovered0"><a name="line2481"></a>2481        while data.length &gt; limit
+</span><span class="uncovered1"><a name="line2482"></a>2482            if block_count == 1
+</span><span class="uncovered0"><a name="line2483"></a>2483                # Add extra MSODRAWINGGROUP block header.
+</span><span class="uncovered1"><a name="line2484"></a>2484                header = [mso_group, limit].pack(&quot;vv&quot;)
+</span><span class="uncovered0"><a name="line2485"></a>2485                block_count += 1
+</span><span class="uncovered1"><a name="line2486"></a>2486            else
+</span><span class="uncovered0"><a name="line2487"></a>2487                # Add normal CONTINUE header.
+</span><span class="uncovered1"><a name="line2488"></a>2488                header = [continue, limit].pack(&quot;vv&quot;)
+</span><span class="uncovered0"><a name="line2489"></a>2489            end
+</span><span class="uncovered1"><a name="line2490"></a>2490    
+</span><span class="uncovered0"><a name="line2491"></a>2491            tmp = data.dup
+</span><span class="uncovered1"><a name="line2492"></a>2492            tmp[0, limit] = ''
+</span><span class="uncovered0"><a name="line2493"></a>2493            append(header, tmp)
+</span><span class="uncovered1"><a name="line2494"></a>2494        end
+</span><span class="uncovered0"><a name="line2495"></a>2495 
+</span><span class="uncovered1"><a name="line2496"></a>2496        # Last CONTINUE block for remaining data. Case 2 and 3 above.
+</span><span class="uncovered0"><a name="line2497"></a>2497        header = [continue, data.length].pack(&quot;vv&quot;)
+</span><span class="uncovered1"><a name="line2498"></a>2498        append(header, data)
+</span><span class="uncovered0"><a name="line2499"></a>2499 
+</span><span class="uncovered1"><a name="line2500"></a>2500        # Turn the base class _add_continue() method back on.
+</span><span class="uncovered0"><a name="line2501"></a>2501        @ignore_continue = 0
+</span><span class="uncovered1"><a name="line2502"></a>2502    end
+</span><span class="inferred0"><a name="line2503"></a>2503 
+</span><span class="inferred1"><a name="line2504"></a>2504    ###############################################################################
+</span><span class="inferred0"><a name="line2505"></a>2505    #
+</span><span class="inferred1"><a name="line2506"></a>2506    # _store_mso_dgg_container()
+</span><span class="inferred0"><a name="line2507"></a>2507    #
+</span><span class="inferred1"><a name="line2508"></a>2508    # Write the Escher DggContainer record that is part of MSODRAWINGGROUP.
+</span><span class="inferred0"><a name="line2509"></a>2509    #
+</span><span class="marked1"><a name="line2510"></a>2510    def store_mso_dgg_container
+</span><span class="uncovered0"><a name="line2511"></a>2511        type        = 0xF000
+</span><span class="uncovered1"><a name="line2512"></a>2512        version     = 15
+</span><span class="uncovered0"><a name="line2513"></a>2513        instance    = 0
+</span><span class="uncovered1"><a name="line2514"></a>2514        data        = ''
+</span><span class="uncovered0"><a name="line2515"></a>2515        length      = @mso_size -12 # -4 (biff header) -8 (for this).
+</span><span class="uncovered1"><a name="line2516"></a>2516 
+</span><span class="uncovered0"><a name="line2517"></a>2517        return add_mso_generic(type, version, instance, data, length)
+</span><span class="uncovered1"><a name="line2518"></a>2518    end
+</span><span class="inferred0"><a name="line2519"></a>2519    
+</span><span class="inferred1"><a name="line2520"></a>2520    
+</span><span class="inferred0"><a name="line2521"></a>2521    ###############################################################################
+</span><span class="inferred1"><a name="line2522"></a>2522    #
+</span><span class="inferred0"><a name="line2523"></a>2523    # _store_mso_dgg()
+</span><span class="inferred1"><a name="line2524"></a>2524    #    my $max_spid        = $_[0];
+</span><span class="inferred0"><a name="line2525"></a>2525    #    my $num_clusters    = $_[1];
+</span><span class="inferred1"><a name="line2526"></a>2526    #    my $shapes_saved    = $_[2];
+</span><span class="inferred0"><a name="line2527"></a>2527    #    my $drawings_saved  = $_[3];
+</span><span class="inferred1"><a name="line2528"></a>2528    #    my $clusters        = $_[4];
+</span><span class="inferred0"><a name="line2529"></a>2529    #
+</span><span class="inferred1"><a name="line2530"></a>2530    # Write the Escher Dgg record that is part of MSODRAWINGGROUP.
+</span><span class="inferred0"><a name="line2531"></a>2531    #
+</span><span class="marked1"><a name="line2532"></a>2532    def store_mso_dgg(max_spid, num_clusters, shapes_saved, drawings_saved, clusters)
+</span><span class="uncovered0"><a name="line2533"></a>2533        type            = 0xF006
+</span><span class="uncovered1"><a name="line2534"></a>2534        version         = 0
+</span><span class="uncovered0"><a name="line2535"></a>2535        instance        = 0
+</span><span class="uncovered1"><a name="line2536"></a>2536        data            = ''
+</span><span class="uncovered0"><a name="line2537"></a>2537 
+</span><span class="uncovered1"><a name="line2538"></a>2538        data            = [max_spid, num_clusters,
+</span><span class="uncovered0"><a name="line2539"></a>2539                           shapes_saved, drawings_saved].pack(&quot;VVVV&quot;)
 </span><span class="uncovered1"><a name="line2540"></a>2540 
-</span><span class="uncovered0"><a name="line2541"></a>2541        data            = [max_spid, num_clusters,
-</span><span class="uncovered1"><a name="line2542"></a>2542                           shapes_saved, drawings_saved].pack(&quot;VVVV&quot;)
-</span><span class="uncovered0"><a name="line2543"></a>2543 
-</span><span class="uncovered1"><a name="line2544"></a>2544        clusters.each do |aref|
-</span><span class="uncovered0"><a name="line2545"></a>2545            drawing_id      = aref[0]
-</span><span class="uncovered1"><a name="line2546"></a>2546            shape_ids_used  = aref[1]
-</span><span class="uncovered0"><a name="line2547"></a>2547    
-</span><span class="uncovered1"><a name="line2548"></a>2548            data            = data + [drawing_id, shape_ids_used].pack(&quot;VV&quot;)  
-</span><span class="uncovered0"><a name="line2549"></a>2549        end
-</span><span class="uncovered1"><a name="line2550"></a>2550 
-</span><span class="uncovered0"><a name="line2551"></a>2551        return add_mso_generic(type, version, instance, data, length)
-</span><span class="uncovered1"><a name="line2552"></a>2552    end
-</span><span class="inferred0"><a name="line2553"></a>2553 
-</span><span class="inferred1"><a name="line2554"></a>2554    ###############################################################################
-</span><span class="inferred0"><a name="line2555"></a>2555    #
-</span><span class="inferred1"><a name="line2556"></a>2556    # _store_mso_bstore_container()
-</span><span class="inferred0"><a name="line2557"></a>2557    #
-</span><span class="inferred1"><a name="line2558"></a>2558    # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
-</span><span class="inferred0"><a name="line2559"></a>2559    #
-</span><span class="marked1"><a name="line2560"></a>2560    def store_mso_bstore_container
-</span><span class="uncovered0"><a name="line2561"></a>2561        return '' if @images_size == 0
-</span><span class="uncovered1"><a name="line2562"></a>2562    
-</span><span class="uncovered0"><a name="line2563"></a>2563        type        = 0xF001
-</span><span class="uncovered1"><a name="line2564"></a>2564        version     = 15
-</span><span class="uncovered0"><a name="line2565"></a>2565        instance    = @images_data.size          # Number of images.
-</span><span class="uncovered1"><a name="line2566"></a>2566        data        = ''
-</span><span class="uncovered0"><a name="line2567"></a>2567        length      = @images_size +8 *instance
-</span><span class="uncovered1"><a name="line2568"></a>2568    
-</span><span class="uncovered0"><a name="line2569"></a>2569        return add_mso_generic(type, version, instance, data, length)
-</span><span class="uncovered1"><a name="line2570"></a>2570    end
-</span><span class="inferred0"><a name="line2571"></a>2571 
-</span><span class="inferred1"><a name="line2572"></a>2572    ###############################################################################
-</span><span class="inferred0"><a name="line2573"></a>2573    #
-</span><span class="inferred1"><a name="line2574"></a>2574    # _store_mso_images()
-</span><span class="inferred0"><a name="line2575"></a>2575    #    ref_count   = $_[0]
-</span><span class="inferred1"><a name="line2576"></a>2576    #    image_type  = $_[1]
-</span><span class="inferred0"><a name="line2577"></a>2577    #    image       = $_[2]
-</span><span class="inferred1"><a name="line2578"></a>2578    #    size        = $_[3]
-</span><span class="inferred0"><a name="line2579"></a>2579    #    checksum1   = $_[4]
-</span><span class="inferred1"><a name="line2580"></a>2580    #    checksum2   = $_[5]
-</span><span class="inferred0"><a name="line2581"></a>2581    #
-</span><span class="inferred1"><a name="line2582"></a>2582    # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
-</span><span class="inferred0"><a name="line2583"></a>2583    #
-</span><span class="marked1"><a name="line2584"></a>2584    def store_mso_images(ref_count, image_type, image, size, checksum1, checksum2)
-</span><span class="uncovered0"><a name="line2585"></a>2585        blip_store_entry =  store_mso_blip_store_entry(
-</span><span class="uncovered1"><a name="line2586"></a>2586                               ref_count,
-</span><span class="uncovered0"><a name="line2587"></a>2587                               image_type,
-</span><span class="uncovered1"><a name="line2588"></a>2588                               size,
-</span><span class="uncovered0"><a name="line2589"></a>2589                               checksum1)
-</span><span class="uncovered1"><a name="line2590"></a>2590    
-</span><span class="uncovered0"><a name="line2591"></a>2591        blip             =  store_mso_blip(
-</span><span class="uncovered1"><a name="line2592"></a>2592                               image_type,
-</span><span class="uncovered0"><a name="line2593"></a>2593                               image,
-</span><span class="uncovered1"><a name="line2594"></a>2594                               size,
-</span><span class="uncovered0"><a name="line2595"></a>2595                               checksum1,
-</span><span class="uncovered1"><a name="line2596"></a>2596                               checksum2)
-</span><span class="uncovered0"><a name="line2597"></a>2597    
-</span><span class="uncovered1"><a name="line2598"></a>2598        return blip_store_entry + blip
-</span><span class="uncovered0"><a name="line2599"></a>2599    end
-</span><span class="inferred1"><a name="line2600"></a>2600 
-</span><span class="inferred0"><a name="line2601"></a>2601    ###############################################################################
-</span><span class="inferred1"><a name="line2602"></a>2602    #
-</span><span class="inferred0"><a name="line2603"></a>2603    # _store_mso_blip_store_entry()
-</span><span class="inferred1"><a name="line2604"></a>2604    #    ref_count   = $_[0]
-</span><span class="inferred0"><a name="line2605"></a>2605    #    image_type  = $_[1]
-</span><span class="inferred1"><a name="line2606"></a>2606    #    size        = $_[2]
-</span><span class="inferred0"><a name="line2607"></a>2607    #    checksum1   = $_[3]
-</span><span class="inferred1"><a name="line2608"></a>2608    #
-</span><span class="inferred0"><a name="line2609"></a>2609    # Write the Escher BlipStoreEntry record that is part of MSODRAWINGGROUP.
-</span><span class="inferred1"><a name="line2610"></a>2610    #
-</span><span class="marked0"><a name="line2611"></a>2611    def store_mso_blip_store_entry(ref_count, image_type, size, checksum1)
-</span><span class="uncovered1"><a name="line2612"></a>2612        type        = 0xF007
-</span><span class="uncovered0"><a name="line2613"></a>2613        version     = 2
-</span><span class="uncovered1"><a name="line2614"></a>2614        instance    = image_type
-</span><span class="uncovered0"><a name="line2615"></a>2615        length      = size +61
-</span><span class="uncovered1"><a name="line2616"></a>2616        data        = [image_type].pack('C')  +    # Win32
-</span><span class="uncovered0"><a name="line2617"></a>2617                      [image_type].pack('C')  +    # Mac
-</span><span class="uncovered1"><a name="line2618"></a>2618                      [checksum1].pack('H*')  +    # Uid checksum
-</span><span class="uncovered0"><a name="line2619"></a>2619                      [0xFF].pack('v')        +    # Tag
-</span><span class="uncovered1"><a name="line2620"></a>2620                      [size +25].pack('V')    +    # Next Blip size
-</span><span class="uncovered0"><a name="line2621"></a>2621                      [ref_count].pack('V')   +    # Image ref count
-</span><span class="uncovered1"><a name="line2622"></a>2622                      [0x00000000].pack('V')  +    # File offset
-</span><span class="uncovered0"><a name="line2623"></a>2623                      [0x00].pack('C')        +    # Usage
-</span><span class="uncovered1"><a name="line2624"></a>2624                      [0x00].pack('C')        +    # Name length
-</span><span class="uncovered0"><a name="line2625"></a>2625                      [0x00].pack('C')        +    # Unused
-</span><span class="uncovered1"><a name="line2626"></a>2626                      [0x00].pack('C')             # Unused
-</span><span class="uncovered0"><a name="line2627"></a>2627 
-</span><span class="uncovered1"><a name="line2628"></a>2628        return add_mso_generic(type, version, instance, data, length)
-</span><span class="uncovered0"><a name="line2629"></a>2629    end
-</span><span class="inferred1"><a name="line2630"></a>2630 
-</span><span class="inferred0"><a name="line2631"></a>2631    ###############################################################################
-</span><span class="inferred1"><a name="line2632"></a>2632    #
-</span><span class="inferred0"><a name="line2633"></a>2633    # _store_mso_blip()
-</span><span class="inferred1"><a name="line2634"></a>2634    #    image_type  = $_[0]
-</span><span class="inferred0"><a name="line2635"></a>2635    #    image_data  = $_[1]
-</span><span class="inferred1"><a name="line2636"></a>2636    #    size        = $_[2]
-</span><span class="inferred0"><a name="line2637"></a>2637    #    checksum1   = $_[3]
-</span><span class="inferred1"><a name="line2638"></a>2638    #    checksum2   = $_[4]
-</span><span class="inferred0"><a name="line2639"></a>2639    #
-</span><span class="inferred1"><a name="line2640"></a>2640    # Write the Escher Blip record that is part of MSODRAWINGGROUP.
-</span><span class="inferred0"><a name="line2641"></a>2641    #
-</span><span class="marked1"><a name="line2642"></a>2642    def store_mso_blip(image_type, image_data, size, checksum1, checksum2)
-</span><span class="uncovered0"><a name="line2643"></a>2643        instance = 0x046A if image_type == 5 # JPG
-</span><span class="uncovered1"><a name="line2644"></a>2644        instance = 0x06E0 if image_type == 6 # PNG
-</span><span class="uncovered0"><a name="line2645"></a>2645        instance = 0x07A9 if image_type == 7 # BMP
-</span><span class="uncovered1"><a name="line2646"></a>2646    
-</span><span class="uncovered0"><a name="line2647"></a>2647        # BMPs contain an extra checksum for the stripped data.
-</span><span class="uncovered1"><a name="line2648"></a>2648        if image_type == 7
-</span><span class="uncovered0"><a name="line2649"></a>2649            checksum1 = checksum2 + checksum1
-</span><span class="uncovered1"><a name="line2650"></a>2650        end
-</span><span class="uncovered0"><a name="line2651"></a>2651    
-</span><span class="uncovered1"><a name="line2652"></a>2652        type        = 0xF018 + image_type
-</span><span class="uncovered0"><a name="line2653"></a>2653        version     = 0x0000
-</span><span class="uncovered1"><a name="line2654"></a>2654        length      = size +17
-</span><span class="uncovered0"><a name="line2655"></a>2655        data        = [checksum1].pack('H*')  +     # Uid checksum
-</span><span class="uncovered1"><a name="line2656"></a>2656                      [0xFF].pack('C')        +     # Tag
-</span><span class="uncovered0"><a name="line2657"></a>2657                      image_data                   # Image
-</span><span class="uncovered1"><a name="line2658"></a>2658    
-</span><span class="uncovered0"><a name="line2659"></a>2659        return add_mso_generic(type, version, instance, data, length)
-</span><span class="uncovered1"><a name="line2660"></a>2660    end
-</span><span class="inferred0"><a name="line2661"></a>2661 
-</span><span class="inferred1"><a name="line2662"></a>2662    ###############################################################################
-</span><span class="inferred0"><a name="line2663"></a>2663    #
-</span><span class="inferred1"><a name="line2664"></a>2664    # _store_mso_opt()
-</span><span class="inferred0"><a name="line2665"></a>2665    #
-</span><span class="inferred1"><a name="line2666"></a>2666    # Write the Escher Opt record that is part of MSODRAWINGGROUP.
-</span><span class="inferred0"><a name="line2667"></a>2667    #
-</span><span class="marked1"><a name="line2668"></a>2668    def store_mso_opt
-</span><span class="uncovered0"><a name="line2669"></a>2669        type        = 0xF00B
-</span><span class="uncovered1"><a name="line2670"></a>2670        version     = 3
-</span><span class="uncovered0"><a name="line2671"></a>2671        instance    = 3
-</span><span class="uncovered1"><a name="line2672"></a>2672        data        = ''
-</span><span class="uncovered0"><a name="line2673"></a>2673        length      = 18
-</span><span class="uncovered1"><a name="line2674"></a>2674    
-</span><span class="uncovered0"><a name="line2675"></a>2675        data        = ['BF0008000800810109000008C0014000'+'0008'].pack(&quot;H*&quot;) .
-</span><span class="uncovered1"><a name="line2676"></a>2676 
-</span><span class="uncovered0"><a name="line2677"></a>2677        return add_mso_generic(type, version, instance, data, length)
-</span><span class="uncovered1"><a name="line2678"></a>2678    end
-</span><span class="inferred0"><a name="line2679"></a>2679 
-</span><span class="inferred1"><a name="line2680"></a>2680    ###############################################################################
-</span><span class="inferred0"><a name="line2681"></a>2681    #
-</span><span class="inferred1"><a name="line2682"></a>2682    # _store_mso_split_menu_colors()
-</span><span class="inferred0"><a name="line2683"></a>2683    #
-</span><span class="inferred1"><a name="line2684"></a>2684    # Write the Escher SplitMenuColors record that is part of MSODRAWINGGROUP.
-</span><span class="inferred0"><a name="line2685"></a>2685    #
-</span><span class="marked1"><a name="line2686"></a>2686    def _store_mso_split_menu_colors
-</span><span class="uncovered0"><a name="line2687"></a>2687        type        = 0xF11E
-</span><span class="uncovered1"><a name="line2688"></a>2688        version     = 0
-</span><span class="uncovered0"><a name="line2689"></a>2689        instance    = 4
-</span><span class="uncovered1"><a name="line2690"></a>2690        data        = ''
-</span><span class="uncovered0"><a name="line2691"></a>2691        length      = 16
-</span><span class="uncovered1"><a name="line2692"></a>2692    
-</span><span class="uncovered0"><a name="line2693"></a>2693        data        = ['0D0000080C00000817000008F7000010'].pack(&quot;H*&quot;)
-</span><span class="uncovered1"><a name="line2694"></a>2694    
-</span><span class="uncovered0"><a name="line2695"></a>2695        return add_mso_generic(type, version, instance, data, length)
-</span><span class="uncovered1"><a name="line2696"></a>2696    end
-</span><span class="uncovered0"><a name="line2697"></a>2697 
-</span><span class="uncovered1"><a name="line2698"></a>2698 end
-</span><span class="inferred0"><a name="line2699"></a>2699 
-</span><span class="inferred1"><a name="line2700"></a>2700 =begin
-</span><span class="inferred0"><a name="line2701"></a>2701 = Notes on the difference between Workbook.pm and workbook.rb
-</span><span class="inferred1"><a name="line2702"></a>2702 ---deprecated methods
-</span><span class="inferred0"><a name="line2703"></a>2703    I generally elminated any deprecated methods.  That means no 'write'
-</span><span class="inferred1"><a name="line2704"></a>2704    methods.
-</span><span class="inferred0"><a name="line2705"></a>2705 ---date_system
-</span><span class="inferred1"><a name="line2706"></a>2706    This is the 1904 attribute.  However, since a number can't be a method,
-</span><span class="inferred0"><a name="line2707"></a>2707    this doesn't work very well for attribute_accessor.  Besides, date_system
-</span><span class="inferred1"><a name="line2708"></a>2708    is more descriptive.
-</span><span class="inferred0"><a name="line2709"></a>2709 =end
+</span><span class="uncovered0"><a name="line2541"></a>2541        clusters.each do |aref|
+</span><span class="uncovered1"><a name="line2542"></a>2542            drawing_id      = aref[0]
+</span><span class="uncovered0"><a name="line2543"></a>2543            shape_ids_used  = aref[1]
+</span><span class="uncovered1"><a name="line2544"></a>2544    
+</span><span class="uncovered0"><a name="line2545"></a>2545            data            = data + [drawing_id, shape_ids_used].pack(&quot;VV&quot;)  
+</span><span class="uncovered1"><a name="line2546"></a>2546        end
+</span><span class="uncovered0"><a name="line2547"></a>2547 
+</span><span class="uncovered1"><a name="line2548"></a>2548        return add_mso_generic(type, version, instance, data, length)
+</span><span class="uncovered0"><a name="line2549"></a>2549    end
+</span><span class="inferred1"><a name="line2550"></a>2550 
+</span><span class="inferred0"><a name="line2551"></a>2551    ###############################################################################
+</span><span class="inferred1"><a name="line2552"></a>2552    #
+</span><span class="inferred0"><a name="line2553"></a>2553    # _store_mso_bstore_container()
+</span><span class="inferred1"><a name="line2554"></a>2554    #
+</span><span class="inferred0"><a name="line2555"></a>2555    # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
+</span><span class="inferred1"><a name="line2556"></a>2556    #
+</span><span class="marked0"><a name="line2557"></a>2557    def store_mso_bstore_container
+</span><span class="uncovered1"><a name="line2558"></a>2558        return '' if @images_size == 0
+</span><span class="uncovered0"><a name="line2559"></a>2559    
+</span><span class="uncovered1"><a name="line2560"></a>2560        type        = 0xF001
+</span><span class="uncovered0"><a name="line2561"></a>2561        version     = 15
+</span><span class="uncovered1"><a name="line2562"></a>2562        instance    = @images_data.size          # Number of images.
+</span><span class="uncovered0"><a name="line2563"></a>2563        data        = ''
+</span><span class="uncovered1"><a name="line2564"></a>2564        length      = @images_size +8 *instance
+</span><span class="uncovered0"><a name="line2565"></a>2565    
+</span><span class="uncovered1"><a name="line2566"></a>2566        return add_mso_generic(type, version, instance, data, length)
+</span><span class="uncovered0"><a name="line2567"></a>2567    end
+</span><span class="inferred1"><a name="line2568"></a>2568 
+</span><span class="inferred0"><a name="line2569"></a>2569    ###############################################################################
+</span><span class="inferred1"><a name="line2570"></a>2570    #
+</span><span class="inferred0"><a name="line2571"></a>2571    # _store_mso_images()
+</span><span class="inferred1"><a name="line2572"></a>2572    #    ref_count   = $_[0]
+</span><span class="inferred0"><a name="line2573"></a>2573    #    image_type  = $_[1]
+</span><span class="inferred1"><a name="line2574"></a>2574    #    image       = $_[2]
+</span><span class="inferred0"><a name="line2575"></a>2575    #    size        = $_[3]
+</span><span class="inferred1"><a name="line2576"></a>2576    #    checksum1   = $_[4]
+</span><span class="inferred0"><a name="line2577"></a>2577    #    checksum2   = $_[5]
+</span><span class="inferred1"><a name="line2578"></a>2578    #
+</span><span class="inferred0"><a name="line2579"></a>2579    # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
+</span><span class="inferred1"><a name="line2580"></a>2580    #
+</span><span class="marked0"><a name="line2581"></a>2581    def store_mso_images(ref_count, image_type, image, size, checksum1, checksum2)
+</span><span class="uncovered1"><a name="line2582"></a>2582        blip_store_entry =  store_mso_blip_store_entry(
+</span><span class="uncovered0"><a name="line2583"></a>2583                               ref_count,
+</span><span class="uncovered1"><a name="line2584"></a>2584                               image_type,
+</span><span class="uncovered0"><a name="line2585"></a>2585                               size,
+</span><span class="uncovered1"><a name="line2586"></a>2586                               checksum1)
+</span><span class="uncovered0"><a name="line2587"></a>2587    
+</span><span class="uncovered1"><a name="line2588"></a>2588        blip             =  store_mso_blip(
+</span><span class="uncovered0"><a name="line2589"></a>2589                               image_type,
+</span><span class="uncovered1"><a name="line2590"></a>2590                               image,
+</span><span class="uncovered0"><a name="line2591"></a>2591                               size,
+</span><span class="uncovered1"><a name="line2592"></a>2592                               checksum1,
+</span><span class="uncovered0"><a name="line2593"></a>2593                               checksum2)
+</span><span class="uncovered1"><a name="line2594"></a>2594    
+</span><span class="uncovered0"><a name="line2595"></a>2595        return blip_store_entry + blip
+</span><span class="uncovered1"><a name="line2596"></a>2596    end
+</span><span class="inferred0"><a name="line2597"></a>2597 
+</span><span class="inferred1"><a name="line2598"></a>2598    ###############################################################################
+</span><span class="inferred0"><a name="line2599"></a>2599    #
+</span><span class="inferred1"><a name="line2600"></a>2600    # _store_mso_blip_store_entry()
+</span><span class="inferred0"><a name="line2601"></a>2601    #    ref_count   = $_[0]
+</span><span class="inferred1"><a name="line2602"></a>2602    #    image_type  = $_[1]
+</span><span class="inferred0"><a name="line2603"></a>2603    #    size        = $_[2]
+</span><span class="inferred1"><a name="line2604"></a>2604    #    checksum1   = $_[3]
+</span><span class="inferred0"><a name="line2605"></a>2605    #
+</span><span class="inferred1"><a name="line2606"></a>2606    # Write the Escher BlipStoreEntry record that is part of MSODRAWINGGROUP.
+</span><span class="inferred0"><a name="line2607"></a>2607    #
+</span><span class="marked1"><a name="line2608"></a>2608    def store_mso_blip_store_entry(ref_count, image_type, size, checksum1)
+</span><span class="uncovered0"><a name="line2609"></a>2609        type        = 0xF007
+</span><span class="uncovered1"><a name="line2610"></a>2610        version     = 2
+</span><span class="uncovered0"><a name="line2611"></a>2611        instance    = image_type
+</span><span class="uncovered1"><a name="line2612"></a>2612        length      = size +61
+</span><span class="uncovered0"><a name="line2613"></a>2613        data        = [image_type].pack('C')  +    # Win32
+</span><span class="uncovered1"><a name="line2614"></a>2614                      [image_type].pack('C')  +    # Mac
+</span><span class="uncovered0"><a name="line2615"></a>2615                      [checksum1].pack('H*')  +    # Uid checksum
+</span><span class="uncovered1"><a name="line2616"></a>2616                      [0xFF].pack('v')        +    # Tag
+</span><span class="uncovered0"><a name="line2617"></a>2617                      [size +25].pack('V')    +    # Next Blip size
+</span><span class="uncovered1"><a name="line2618"></a>2618                      [ref_count].pack('V')   +    # Image ref count
+</span><span class="uncovered0"><a name="line2619"></a>2619                      [0x00000000].pack('V')  +    # File offset
+</span><span class="uncovered1"><a name="line2620"></a>2620                      [0x00].pack('C')        +    # Usage
+</span><span class="uncovered0"><a name="line2621"></a>2621                      [0x00].pack('C')        +    # Name length
+</span><span class="uncovered1"><a name="line2622"></a>2622                      [0x00].pack('C')        +    # Unused
+</span><span class="uncovered0"><a name="line2623"></a>2623                      [0x00].pack('C')             # Unused
+</span><span class="uncovered1"><a name="line2624"></a>2624 
+</span><span class="uncovered0"><a name="line2625"></a>2625        return add_mso_generic(type, version, instance, data, length)
+</span><span class="uncovered1"><a name="line2626"></a>2626    end
+</span><span class="inferred0"><a name="line2627"></a>2627 
+</span><span class="inferred1"><a name="line2628"></a>2628    ###############################################################################
+</span><span class="inferred0"><a name="line2629"></a>2629    #
+</span><span class="inferred1"><a name="line2630"></a>2630    # _store_mso_blip()
+</span><span class="inferred0"><a name="line2631"></a>2631    #    image_type  = $_[0]
+</span><span class="inferred1"><a name="line2632"></a>2632    #    image_data  = $_[1]
+</span><span class="inferred0"><a name="line2633"></a>2633    #    size        = $_[2]
+</span><span class="inferred1"><a name="line2634"></a>2634    #    checksum1   = $_[3]
+</span><span class="inferred0"><a name="line2635"></a>2635    #    checksum2   = $_[4]
+</span><span class="inferred1"><a name="line2636"></a>2636    #
+</span><span class="inferred0"><a name="line2637"></a>2637    # Write the Escher Blip record that is part of MSODRAWINGGROUP.
+</span><span class="inferred1"><a name="line2638"></a>2638    #
+</span><span class="marked0"><a name="line2639"></a>2639    def store_mso_blip(image_type, image_data, size, checksum1, checksum2)
+</span><span class="uncovered1"><a name="line2640"></a>2640        instance = 0x046A if image_type == 5 # JPG
+</span><span class="uncovered0"><a name="line2641"></a>2641        instance = 0x06E0 if image_type == 6 # PNG
+</span><span class="uncovered1"><a name="line2642"></a>2642        instance = 0x07A9 if image_type == 7 # BMP
+</span><span class="uncovered0"><a name="line2643"></a>2643    
+</span><span class="uncovered1"><a name="line2644"></a>2644        # BMPs contain an extra checksum for the stripped data.
+</span><span class="uncovered0"><a name="line2645"></a>2645        if image_type == 7
+</span><span class="uncovered1"><a name="line2646"></a>2646            checksum1 = checksum2 + checksum1
+</span><span class="uncovered0"><a name="line2647"></a>2647        end
+</span><span class="uncovered1"><a name="line2648"></a>2648    
+</span><span class="uncovered0"><a name="line2649"></a>2649        type        = 0xF018 + image_type
+</span><span class="uncovered1"><a name="line2650"></a>2650        version     = 0x0000
+</span><span class="uncovered0"><a name="line2651"></a>2651        length      = size +17
+</span><span class="uncovered1"><a name="line2652"></a>2652        data        = [checksum1].pack('H*')  +     # Uid checksum
+</span><span class="uncovered0"><a name="line2653"></a>2653                      [0xFF].pack('C')        +     # Tag
+</span><span class="uncovered1"><a name="line2654"></a>2654                      image_data                   # Image
+</span><span class="uncovered0"><a name="line2655"></a>2655    
+</span><span class="uncovered1"><a name="line2656"></a>2656        return add_mso_generic(type, version, instance, data, length)
+</span><span class="uncovered0"><a name="line2657"></a>2657    end
+</span><span class="inferred1"><a name="line2658"></a>2658 
+</span><span class="inferred0"><a name="line2659"></a>2659    ###############################################################################
+</span><span class="inferred1"><a name="line2660"></a>2660    #
+</span><span class="inferred0"><a name="line2661"></a>2661    # _store_mso_opt()
+</span><span class="inferred1"><a name="line2662"></a>2662    #
+</span><span class="inferred0"><a name="line2663"></a>2663    # Write the Escher Opt record that is part of MSODRAWINGGROUP.
+</span><span class="inferred1"><a name="line2664"></a>2664    #
+</span><span class="marked0"><a name="line2665"></a>2665    def store_mso_opt
+</span><span class="uncovered1"><a name="line2666"></a>2666        type        = 0xF00B
+</span><span class="uncovered0"><a name="line2667"></a>2667        version     = 3
+</span><span class="uncovered1"><a name="line2668"></a>2668        instance    = 3
+</span><span class="uncovered0"><a name="line2669"></a>2669        data        = ''
+</span><span class="uncovered1"><a name="line2670"></a>2670        length      = 18
+</span><span class="uncovered0"><a name="line2671"></a>2671    
+</span><span class="uncovered1"><a name="line2672"></a>2672        data        = ['BF0008000800810109000008C0014000'+'0008'].pack(&quot;H*&quot;) .
+</span><span class="uncovered0"><a name="line2673"></a>2673 
+</span><span class="uncovered1"><a name="line2674"></a>2674        return add_mso_generic(type, version, instance, data, length)
+</span><span class="uncovered0"><a name="line2675"></a>2675    end
+</span><span class="inferred1"><a name="line2676"></a>2676 
+</span><span class="inferred0"><a name="line2677"></a>2677    ###############################################################################
+</span><span class="inferred1"><a name="line2678"></a>2678    #
+</span><span class="inferred0"><a name="line2679"></a>2679    # _store_mso_split_menu_colors()
+</span><span class="inferred1"><a name="line2680"></a>2680    #
+</span><span class="inferred0"><a name="line2681"></a>2681    # Write the Escher SplitMenuColors record that is part of MSODRAWINGGROUP.
+</span><span class="inferred1"><a name="line2682"></a>2682    #
+</span><span class="marked0"><a name="line2683"></a>2683    def _store_mso_split_menu_colors
+</span><span class="uncovered1"><a name="line2684"></a>2684        type        = 0xF11E
+</span><span class="uncovered0"><a name="line2685"></a>2685        version     = 0
+</span><span class="uncovered1"><a name="line2686"></a>2686        instance    = 4
+</span><span class="uncovered0"><a name="line2687"></a>2687        data        = ''
+</span><span class="uncovered1"><a name="line2688"></a>2688        length      = 16
+</span><span class="uncovered0"><a name="line2689"></a>2689    
+</span><span class="uncovered1"><a name="line2690"></a>2690        data        = ['0D0000080C00000817000008F7000010'].pack(&quot;H*&quot;)
+</span><span class="uncovered0"><a name="line2691"></a>2691    
+</span><span class="uncovered1"><a name="line2692"></a>2692        return add_mso_generic(type, version, instance, data, length)
+</span><span class="uncovered0"><a name="line2693"></a>2693    end
+</span><span class="uncovered1"><a name="line2694"></a>2694 
+</span><span class="uncovered0"><a name="line2695"></a>2695 end
+</span><span class="inferred1"><a name="line2696"></a>2696 
+</span><span class="inferred0"><a name="line2697"></a>2697 =begin
+</span><span class="inferred1"><a name="line2698"></a>2698 = Notes on the difference between Workbook.pm and workbook.rb
+</span><span class="inferred0"><a name="line2699"></a>2699 ---deprecated methods
+</span><span class="inferred1"><a name="line2700"></a>2700    I generally elminated any deprecated methods.  That means no 'write'
+</span><span class="inferred0"><a name="line2701"></a>2701    methods.
+</span><span class="inferred1"><a name="line2702"></a>2702 ---date_system
+</span><span class="inferred0"><a name="line2703"></a>2703    This is the 1904 attribute.  However, since a number can't be a method,
+</span><span class="inferred1"><a name="line2704"></a>2704    this doesn't work very well for attribute_accessor.  Besides, date_system
+</span><span class="inferred0"><a name="line2705"></a>2705    is more descriptive.
+</span><span class="inferred1"><a name="line2706"></a>2706 =end
 </span></pre><hr/>
     <p>Generated using the <a href='http://eigenclass.org/hiki.rb?rcov'>rcov code coverage analysis tool for Ruby</a>
    version 0.8.1.2.</p>

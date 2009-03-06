@@ -14,9 +14,5 @@ my $error;
 my $smiley = pack "n", 0x263a;
 
 $worksheet  = $workbook->add_worksheet();
-my $formula = $worksheet->store_formula('=A1 * 3 + 50');
-$worksheet->repeat_formula(5, 3, $formula, $format, 'A1', 'A2');
-
-$data               = $worksheet ->_store_dimensions();
-@results {@dims}    = unpack 'x4 VVvv', $data;
-@expected{@dims}    = (0, 1, 0, 1);
+my $result = $worksheet->convert_date_time('2065-04-19T00:16:48.290');
+print $result;

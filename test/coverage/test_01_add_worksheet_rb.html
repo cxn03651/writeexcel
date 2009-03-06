@@ -553,7 +553,7 @@ span.run100 {
 </style>
     </head>
   <body><h3>C0 code coverage information</h3>
-    <p>Generated on Fri Mar 06 00:11:11 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
+    <p>Generated on Fri Mar 06 14:35:10 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
       </p>
     <hr/>
     <pre><span class='marked0'>Code reported as executed by Ruby looks like this...
@@ -598,34 +598,34 @@ span.run100 {
       </tr>
     </tbody>
   </table>
-<pre><span class="inferred1"><a name="line1"></a> 1 #########################################
-</span><span class="inferred0"><a name="line2"></a> 2 # test_01_add_worksheet.rb
-</span><span class="inferred1"><a name="line3"></a> 3 #
-</span><span class="inferred0"><a name="line4"></a> 4 # Tests for valid worksheet name handling.
-</span><span class="inferred1"><a name="line5"></a> 5 #########################################
-</span><span class="marked0"><a name="line6"></a> 6 base = File.basename(Dir.pwd)
-</span><span class="marked1"><a name="line7"></a> 7 if base == &quot;test&quot; || base =~ /spreadsheet/i
-</span><span class="marked0"><a name="line8"></a> 8    Dir.chdir(&quot;..&quot;) if base == &quot;test&quot;
-</span><span class="marked1"><a name="line9"></a> 9    $LOAD_PATH.unshift(Dir.pwd + &quot;/lib/spreadsheet&quot;)
-</span><span class="marked0"><a name="line10"></a>10    Dir.chdir(&quot;test&quot;) rescue nil
-</span><span class="inferred1"><a name="line11"></a>11 end
-</span><span class="inferred0"><a name="line12"></a>12 
-</span><span class="marked1"><a name="line13"></a>13 require &quot;test/unit&quot;
-</span><span class="marked0"><a name="line14"></a>14 require &quot;biffwriter&quot;
-</span><span class="marked1"><a name="line15"></a>15 require &quot;olewriter&quot;
-</span><span class="marked0"><a name="line16"></a>16 require &quot;format&quot;
-</span><span class="marked1"><a name="line17"></a>17 require &quot;formula&quot;
-</span><span class="marked0"><a name="line18"></a>18 require &quot;worksheet&quot;
-</span><span class="marked1"><a name="line19"></a>19 require &quot;workbook&quot;
-</span><span class="marked0"><a name="line20"></a>20 require &quot;excel&quot;
-</span><span class="inferred1"><a name="line21"></a>21 
-</span><span class="marked0"><a name="line22"></a>22 class TC_add_worksheet &lt; Test::Unit::TestCase
-</span><span class="inferred1"><a name="line23"></a>23 
-</span><span class="marked0"><a name="line24"></a>24    def test_true
-</span><span class="marked1"><a name="line25"></a>25       assert(true)
-</span><span class="marked0"><a name="line26"></a>26    end
-</span><span class="inferred1"><a name="line27"></a>27 
-</span><span class="inferred0"><a name="line28"></a>28 end
+<pre><span class="inferred0"><a name="line1"></a> 1 #########################################
+</span><span class="inferred1"><a name="line2"></a> 2 # test_01_add_worksheet.rb
+</span><span class="inferred0"><a name="line3"></a> 3 #
+</span><span class="inferred1"><a name="line4"></a> 4 # Tests for valid worksheet name handling.
+</span><span class="inferred0"><a name="line5"></a> 5 #########################################
+</span><span class="marked1"><a name="line6"></a> 6 base = File.basename(Dir.pwd)
+</span><span class="marked0"><a name="line7"></a> 7 if base == &quot;test&quot; || base =~ /spreadsheet/i
+</span><span class="marked1"><a name="line8"></a> 8    Dir.chdir(&quot;..&quot;) if base == &quot;test&quot;
+</span><span class="marked0"><a name="line9"></a> 9    $LOAD_PATH.unshift(Dir.pwd + &quot;/lib/spreadsheet&quot;)
+</span><span class="marked1"><a name="line10"></a>10    Dir.chdir(&quot;test&quot;) rescue nil
+</span><span class="inferred0"><a name="line11"></a>11 end
+</span><span class="inferred1"><a name="line12"></a>12 
+</span><span class="marked0"><a name="line13"></a>13 require &quot;test/unit&quot;
+</span><span class="marked1"><a name="line14"></a>14 require &quot;biffwriter&quot;
+</span><span class="marked0"><a name="line15"></a>15 require &quot;olewriter&quot;
+</span><span class="marked1"><a name="line16"></a>16 require &quot;format&quot;
+</span><span class="marked0"><a name="line17"></a>17 require &quot;formula&quot;
+</span><span class="marked1"><a name="line18"></a>18 require &quot;worksheet&quot;
+</span><span class="marked0"><a name="line19"></a>19 require &quot;workbook&quot;
+</span><span class="marked1"><a name="line20"></a>20 require &quot;excel&quot;
+</span><span class="inferred0"><a name="line21"></a>21 
+</span><span class="marked1"><a name="line22"></a>22 class TC_add_worksheet &lt; Test::Unit::TestCase
+</span><span class="inferred0"><a name="line23"></a>23 
+</span><span class="marked1"><a name="line24"></a>24    def test_true
+</span><span class="marked0"><a name="line25"></a>25       assert(true)
+</span><span class="marked1"><a name="line26"></a>26    end
+</span><span class="inferred0"><a name="line27"></a>27 
+</span><span class="inferred1"><a name="line28"></a>28 end
 </span></pre><hr/>
     <p>Generated using the <a href='http://eigenclass.org/hiki.rb?rcov'>rcov code coverage analysis tool for Ruby</a>
    version 0.8.1.2.</p>

@@ -27,9 +27,22 @@ include Spreadsheet
 
 class TC_merge_formats < Test::Unit::TestCase
 
-   def test_some
-      setup_test
+   def setup
+      @test_file           = "temp_test_file.xls"
+      @workbook            = Excel.new(@test_file)
+      @worksheet           = @workbook.add_worksheet
+      @merged_format       = @workbook.add_format(:bold => 1)
+      @non_merged_format   = @workbook.add_format(:bold => 1)
 
+      @worksheet.set_row(    5,    nil, @merged_format)
+      @worksheet.set_column('G:G', nil, @merged_format)
+   end
+
+#   def teardown
+#      File.delete(@test_file) if File.exist?(@test_file)
+#   end
+
+   def test_some
       # Test 1   Normal usage.
       assert_nothing_raised { @worksheet.write('A1',    'Test', @non_merged_format) }
       assert_nothing_raised { @worksheet.write('A3:B4', 'Test', @merged_format) }
@@ -60,15 +73,5 @@ class TC_merge_formats < Test::Unit::TestCase
       }
    end
 
-   def setup_test
-      @test_file           = "temp_test_file.xls"
-      @workbook            = Excel.new(@test_file)
-      @worksheet           = @workbook.add_worksheet
-      @merged_format       = @workbook.add_format(:bold => 1)
-      @non_merged_format   = @workbook.add_format(:bold => 1)
-
-      @worksheet.set_row(    5,    nil, @merged_format)
-      @worksheet.set_column('G:G', nil, @merged_format)
-   end
 
 end

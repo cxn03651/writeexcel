@@ -1,0 +1,1096 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'><head><title>test_11_date_time.rb - C0 code coverage information</title>
+    <style type='text/css'>body { background-color: rgb(240, 240, 245); }</style>
+    <style type='text/css'>span.cross-ref-title {
+ font-size: 140%;
+}
+span.cross-ref a {
+ text-decoration: none;
+}
+span.cross-ref {
+ background-color:#f3f7fa;
+ border: 1px dashed #333;
+ margin: 1em;
+ padding: 0.5em;
+ overflow: hidden;
+}
+a.crossref-toggle {
+ text-decoration: none;
+}
+span.marked0 {
+ background-color: rgb(185, 210, 200);
+ display: block;
+}
+span.marked1 {
+ background-color: rgb(190, 215, 205);
+ display: block;
+}
+span.inferred0 {
+ background-color: rgb(175, 200, 200);
+ display: block;
+}
+span.inferred1 {
+ background-color: rgb(180, 205, 205);
+ display: block;
+}
+span.uncovered0 {
+ background-color: rgb(225, 110, 110);
+ display: block;
+}
+span.uncovered1 {
+ background-color: rgb(235, 120, 120);
+ display: block;
+}
+span.overview {
+ border-bottom: 8px solid black;
+}
+div.overview {
+ border-bottom: 8px solid black;
+}
+body {
+ font-family: verdana, arial, helvetica;
+}
+div.footer {
+ font-size: 68%;
+ margin-top: 1.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+ margin-bottom: 0.5em;
+}
+h5 {
+ margin-top: 0.5em;
+}
+.hidden {
+ display: none;
+}
+div.separator {
+ height: 10px;
+}
+/* Commented out for better readability, esp. on IE */
+/*
+table tr td, table tr th {
+ font-size: 68%;
+}
+td.value table tr td {
+ font-size: 11px;
+}
+*/
+table.percent_graph {
+ height: 12px;
+ border: #808080 1px solid;
+ empty-cells: show;
+}
+table.percent_graph td.covered {
+ height: 10px;
+ background: #00f000;
+}
+table.percent_graph td.uncovered {
+ height: 10px;
+ background: #e00000;
+}
+table.percent_graph td.NA {
+ height: 10px;
+ background: #eaeaea;
+}
+table.report {
+ border-collapse: collapse;
+ width: 100%;
+}
+table.report td.heading {
+ background: #dcecff;
+ border: #d0d0d0 1px solid;
+ font-weight: bold;
+ text-align: center;
+}
+table.report td.heading:hover {
+ background: #c0ffc0;
+}
+table.report td.text {
+ border: #d0d0d0 1px solid;
+}
+table.report td.value,
+table.report td.lines_total,
+table.report td.lines_code {
+ text-align: right;
+ border: #d0d0d0 1px solid;
+}
+table.report tr.light {
+ background-color: rgb(240, 240, 245);
+}
+table.report tr.dark {
+ background-color: rgb(230, 230, 235);
+}
+</style>
+    <script type='text/javascript'>
+// <![CDATA[
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make cross-references hidden by default
+  document.writeln( "<style type=\"text/css\">span.cross-ref { display: none }</style>" )
+  // ]]>
+</script>
+    <style type='text/css'>span.run0 {
+  background-color: rgb(178, 204, 255);
+  display: block;
+}
+span.run1 {
+  background-color: rgb(178, 206, 255);
+  display: block;
+}
+span.run2 {
+  background-color: rgb(178, 209, 255);
+  display: block;
+}
+span.run3 {
+  background-color: rgb(178, 211, 255);
+  display: block;
+}
+span.run4 {
+  background-color: rgb(178, 214, 255);
+  display: block;
+}
+span.run5 {
+  background-color: rgb(178, 218, 255);
+  display: block;
+}
+span.run6 {
+  background-color: rgb(178, 220, 255);
+  display: block;
+}
+span.run7 {
+  background-color: rgb(178, 223, 255);
+  display: block;
+}
+span.run8 {
+  background-color: rgb(178, 225, 255);
+  display: block;
+}
+span.run9 {
+  background-color: rgb(178, 228, 255);
+  display: block;
+}
+span.run10 {
+  background-color: rgb(178, 232, 255);
+  display: block;
+}
+span.run11 {
+  background-color: rgb(178, 234, 255);
+  display: block;
+}
+span.run12 {
+  background-color: rgb(178, 237, 255);
+  display: block;
+}
+span.run13 {
+  background-color: rgb(178, 239, 255);
+  display: block;
+}
+span.run14 {
+  background-color: rgb(178, 242, 255);
+  display: block;
+}
+span.run15 {
+  background-color: rgb(178, 246, 255);
+  display: block;
+}
+span.run16 {
+  background-color: rgb(178, 248, 255);
+  display: block;
+}
+span.run17 {
+  background-color: rgb(178, 251, 255);
+  display: block;
+}
+span.run18 {
+  background-color: rgb(178, 253, 255);
+  display: block;
+}
+span.run19 {
+  background-color: rgb(178, 255, 253);
+  display: block;
+}
+span.run20 {
+  background-color: rgb(178, 255, 249);
+  display: block;
+}
+span.run21 {
+  background-color: rgb(178, 255, 247);
+  display: block;
+}
+span.run22 {
+  background-color: rgb(178, 255, 244);
+  display: block;
+}
+span.run23 {
+  background-color: rgb(178, 255, 242);
+  display: block;
+}
+span.run24 {
+  background-color: rgb(178, 255, 239);
+  display: block;
+}
+span.run25 {
+  background-color: rgb(178, 255, 235);
+  display: block;
+}
+span.run26 {
+  background-color: rgb(178, 255, 233);
+  display: block;
+}
+span.run27 {
+  background-color: rgb(178, 255, 230);
+  display: block;
+}
+span.run28 {
+  background-color: rgb(178, 255, 228);
+  display: block;
+}
+span.run29 {
+  background-color: rgb(178, 255, 225);
+  display: block;
+}
+span.run30 {
+  background-color: rgb(178, 255, 221);
+  display: block;
+}
+span.run31 {
+  background-color: rgb(178, 255, 219);
+  display: block;
+}
+span.run32 {
+  background-color: rgb(178, 255, 216);
+  display: block;
+}
+span.run33 {
+  background-color: rgb(178, 255, 214);
+  display: block;
+}
+span.run34 {
+  background-color: rgb(178, 255, 211);
+  display: block;
+}
+span.run35 {
+  background-color: rgb(178, 255, 207);
+  display: block;
+}
+span.run36 {
+  background-color: rgb(178, 255, 205);
+  display: block;
+}
+span.run37 {
+  background-color: rgb(178, 255, 202);
+  display: block;
+}
+span.run38 {
+  background-color: rgb(178, 255, 200);
+  display: block;
+}
+span.run39 {
+  background-color: rgb(178, 255, 197);
+  display: block;
+}
+span.run40 {
+  background-color: rgb(178, 255, 193);
+  display: block;
+}
+span.run41 {
+  background-color: rgb(178, 255, 191);
+  display: block;
+}
+span.run42 {
+  background-color: rgb(178, 255, 188);
+  display: block;
+}
+span.run43 {
+  background-color: rgb(178, 255, 186);
+  display: block;
+}
+span.run44 {
+  background-color: rgb(178, 255, 183);
+  display: block;
+}
+span.run45 {
+  background-color: rgb(178, 255, 179);
+  display: block;
+}
+span.run46 {
+  background-color: rgb(179, 255, 178);
+  display: block;
+}
+span.run47 {
+  background-color: rgb(182, 255, 178);
+  display: block;
+}
+span.run48 {
+  background-color: rgb(184, 255, 178);
+  display: block;
+}
+span.run49 {
+  background-color: rgb(187, 255, 178);
+  display: block;
+}
+span.run50 {
+  background-color: rgb(191, 255, 178);
+  display: block;
+}
+span.run51 {
+  background-color: rgb(193, 255, 178);
+  display: block;
+}
+span.run52 {
+  background-color: rgb(196, 255, 178);
+  display: block;
+}
+span.run53 {
+  background-color: rgb(198, 255, 178);
+  display: block;
+}
+span.run54 {
+  background-color: rgb(201, 255, 178);
+  display: block;
+}
+span.run55 {
+  background-color: rgb(205, 255, 178);
+  display: block;
+}
+span.run56 {
+  background-color: rgb(207, 255, 178);
+  display: block;
+}
+span.run57 {
+  background-color: rgb(210, 255, 178);
+  display: block;
+}
+span.run58 {
+  background-color: rgb(212, 255, 178);
+  display: block;
+}
+span.run59 {
+  background-color: rgb(215, 255, 178);
+  display: block;
+}
+span.run60 {
+  background-color: rgb(219, 255, 178);
+  display: block;
+}
+span.run61 {
+  background-color: rgb(221, 255, 178);
+  display: block;
+}
+span.run62 {
+  background-color: rgb(224, 255, 178);
+  display: block;
+}
+span.run63 {
+  background-color: rgb(226, 255, 178);
+  display: block;
+}
+span.run64 {
+  background-color: rgb(229, 255, 178);
+  display: block;
+}
+span.run65 {
+  background-color: rgb(233, 255, 178);
+  display: block;
+}
+span.run66 {
+  background-color: rgb(235, 255, 178);
+  display: block;
+}
+span.run67 {
+  background-color: rgb(238, 255, 178);
+  display: block;
+}
+span.run68 {
+  background-color: rgb(240, 255, 178);
+  display: block;
+}
+span.run69 {
+  background-color: rgb(243, 255, 178);
+  display: block;
+}
+span.run70 {
+  background-color: rgb(247, 255, 178);
+  display: block;
+}
+span.run71 {
+  background-color: rgb(249, 255, 178);
+  display: block;
+}
+span.run72 {
+  background-color: rgb(252, 255, 178);
+  display: block;
+}
+span.run73 {
+  background-color: rgb(255, 255, 178);
+  display: block;
+}
+span.run74 {
+  background-color: rgb(255, 252, 178);
+  display: block;
+}
+span.run75 {
+  background-color: rgb(255, 248, 178);
+  display: block;
+}
+span.run76 {
+  background-color: rgb(255, 246, 178);
+  display: block;
+}
+span.run77 {
+  background-color: rgb(255, 243, 178);
+  display: block;
+}
+span.run78 {
+  background-color: rgb(255, 240, 178);
+  display: block;
+}
+span.run79 {
+  background-color: rgb(255, 238, 178);
+  display: block;
+}
+span.run80 {
+  background-color: rgb(255, 234, 178);
+  display: block;
+}
+span.run81 {
+  background-color: rgb(255, 232, 178);
+  display: block;
+}
+span.run82 {
+  background-color: rgb(255, 229, 178);
+  display: block;
+}
+span.run83 {
+  background-color: rgb(255, 226, 178);
+  display: block;
+}
+span.run84 {
+  background-color: rgb(255, 224, 178);
+  display: block;
+}
+span.run85 {
+  background-color: rgb(255, 220, 178);
+  display: block;
+}
+span.run86 {
+  background-color: rgb(255, 218, 178);
+  display: block;
+}
+span.run87 {
+  background-color: rgb(255, 215, 178);
+  display: block;
+}
+span.run88 {
+  background-color: rgb(255, 212, 178);
+  display: block;
+}
+span.run89 {
+  background-color: rgb(255, 210, 178);
+  display: block;
+}
+span.run90 {
+  background-color: rgb(255, 206, 178);
+  display: block;
+}
+span.run91 {
+  background-color: rgb(255, 204, 178);
+  display: block;
+}
+span.run92 {
+  background-color: rgb(255, 201, 178);
+  display: block;
+}
+span.run93 {
+  background-color: rgb(255, 198, 178);
+  display: block;
+}
+span.run94 {
+  background-color: rgb(255, 196, 178);
+  display: block;
+}
+span.run95 {
+  background-color: rgb(255, 192, 178);
+  display: block;
+}
+span.run96 {
+  background-color: rgb(255, 189, 178);
+  display: block;
+}
+span.run97 {
+  background-color: rgb(255, 187, 178);
+  display: block;
+}
+span.run98 {
+  background-color: rgb(255, 184, 178);
+  display: block;
+}
+span.run99 {
+  background-color: rgb(255, 182, 178);
+  display: block;
+}
+span.run100 {
+  background-color: rgb(255, 178, 178);
+  display: block;
+}
+</style>
+    </head>
+  <body><h3>C0 code coverage information</h3>
+    <p>Generated on Fri Mar 06 14:35:11 +0900 2009 with <a href='http://eigenclass.org/hiki/rcov'>rcov 0.8.1.2</a>
+      </p>
+    <hr/>
+    <pre><span class='marked0'>Code reported as executed by Ruby looks like this...
+</span><span class='marked1'>and this: this line is also marked as covered.
+</span><span class='inferred0'>Lines considered as run by rcov, but not reported by Ruby, look like this,
+</span><span class='inferred1'>and this: these lines were inferred by rcov (using simple heuristics).
+</span><span class='uncovered0'>Finally, here&apos;s a line marked as not executed.
+</span></pre>                       
+<table class='report'><thead><tr><td class='heading'>Name</td>
+      <td class='heading'>Total lines</td>
+      <td class='heading'>Lines of code</td>
+      <td class='heading'>Total coverage</td>
+      <td class='heading'>Code coverage</td>
+      </tr>
+    </thead>
+  <tbody><tr class='light'><td><a href='test_11_date_time_rb.html'>test_11_date_time.rb</a>
+        </td>
+      <td class='lines_total'><tt>486</tt>
+        </td>
+      <td class='lines_code'><tt>459</tt>
+        </td>
+      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_total'>100.0%</tt>
+              &nbsp;</td>
+            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='100'/>
+                  <td class='uncovered' width='0'/>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      <td><table cellspacing='0' cellpadding='0' align='right'><tr><td><tt class='coverage_code'>100.0%</tt>
+              &nbsp;</td>
+            <td><table cellspacing='0' class='percent_graph' cellpadding='0' width='100'><tr><td class='covered' width='100'/>
+                  <td class='uncovered' width='0'/>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+<pre><span class="inferred0"><a name="line1"></a>  1 ###############################################################################
+</span><span class="inferred1"><a name="line2"></a>  2 #
+</span><span class="inferred0"><a name="line3"></a>  3 # A test for Spreadsheet::WriteExcel.
+</span><span class="inferred1"><a name="line4"></a>  4 #
+</span><span class="inferred0"><a name="line5"></a>  5 # Tests date and time handling.
+</span><span class="inferred1"><a name="line6"></a>  6 #
+</span><span class="inferred0"><a name="line7"></a>  7 # reverse('©'), May 2004, John McNamara, jmcnamara@cpan.org
+</span><span class="inferred1"><a name="line8"></a>  8 #
+</span><span class="inferred0"><a name="line9"></a>  9 ############################################################################
+</span><span class="marked1"><a name="line10"></a> 10 base = File.basename(Dir.pwd)
+</span><span class="marked0"><a name="line11"></a> 11 if base == &quot;test&quot; || base =~ /spreadsheet/i
+</span><span class="marked1"><a name="line12"></a> 12    Dir.chdir(&quot;..&quot;) if base == &quot;test&quot;
+</span><span class="marked0"><a name="line13"></a> 13    $LOAD_PATH.unshift(Dir.pwd + &quot;/lib/spreadsheet&quot;)
+</span><span class="marked1"><a name="line14"></a> 14    Dir.chdir(&quot;test&quot;) rescue nil
+</span><span class="inferred0"><a name="line15"></a> 15 end
+</span><span class="inferred1"><a name="line16"></a> 16 
+</span><span class="marked0"><a name="line17"></a> 17 require &quot;test/unit&quot;
+</span><span class="marked1"><a name="line18"></a> 18 require &quot;biffwriter&quot;
+</span><span class="marked0"><a name="line19"></a> 19 require &quot;olewriter&quot;
+</span><span class="marked1"><a name="line20"></a> 20 require &quot;format&quot;
+</span><span class="marked0"><a name="line21"></a> 21 require &quot;formula&quot;
+</span><span class="marked1"><a name="line22"></a> 22 require &quot;worksheet&quot;
+</span><span class="marked0"><a name="line23"></a> 23 require &quot;workbook&quot;
+</span><span class="marked1"><a name="line24"></a> 24 require &quot;excel&quot;
+</span><span class="marked0"><a name="line25"></a> 25 include Spreadsheet
+</span><span class="inferred1"><a name="line26"></a> 26 
+</span><span class="marked0"><a name="line27"></a> 27 class TC_data_time &lt; Test::Unit::TestCase
+</span><span class="inferred1"><a name="line28"></a> 28 
+</span><span class="marked0"><a name="line29"></a> 29    def setup
+</span><span class="marked1"><a name="line30"></a> 30       @test_file = 'temp_test_file.xls'
+</span><span class="marked0"><a name="line31"></a> 31       @workbook  = Excel.new(@test_file)
+</span><span class="marked1"><a name="line32"></a> 32       @worksheet = @workbook.add_worksheet
+</span><span class="marked0"><a name="line33"></a> 33       @fit_delta = 0.5/(24*60*60*1000)
+</span><span class="inferred1"><a name="line34"></a> 34    end
+</span><span class="inferred0"><a name="line35"></a> 35 
+</span><span class="marked1"><a name="line36"></a> 36    def fit_cmp(a, b)
+</span><span class="marked0"><a name="line37"></a> 37       return (a-b).abs &lt; @fit_delta
+</span><span class="marked1"><a name="line38"></a> 38    end
+</span><span class="inferred0"><a name="line39"></a> 39 
+</span><span class="marked1"><a name="line40"></a> 40    def test_float_comparison_function
+</span><span class="inferred0"><a name="line41"></a> 41       # pass: diff &lt; @fit_delta
+</span><span class="marked1"><a name="line42"></a> 42       date_time = '1899-12-31T00:00:00.0004'
+</span><span class="marked0"><a name="line43"></a> 43       number = 0
+</span><span class="marked1"><a name="line44"></a> 44       result = @worksheet.convert_date_time(date_time)
+</span><span class="marked0"><a name="line45"></a> 45       result = -1 if result.nil?
+</span><span class="marked1"><a name="line46"></a> 46       assert(fit_cmp(number, result), 
+</span><span class="inferred0"><a name="line47"></a> 47                &quot;Testing convert_date_time: #{date_time} =&gt; #{result} &lt;&gt; #{number}&quot;)
+</span><span class="inferred1"><a name="line48"></a> 48       
+</span><span class="inferred0"><a name="line49"></a> 49       # fail: diff &gt; @fit_delta
+</span><span class="marked1"><a name="line50"></a> 50       date_time = '1989-12-31%00:00:00.0005'
+</span><span class="marked0"><a name="line51"></a> 51       number = 0
+</span><span class="marked1"><a name="line52"></a> 52       result = @worksheet.convert_date_time(date_time)
+</span><span class="marked0"><a name="line53"></a> 53       result = -1 if result.nil?
+</span><span class="marked1"><a name="line54"></a> 54       assert(!fit_cmp(number, result),
+</span><span class="inferred0"><a name="line55"></a> 55                &quot;Testing convert_date_time: #{date_time} =&gt; #{result} &lt;&gt; #{number}&quot;)
+</span><span class="inferred1"><a name="line56"></a> 56    end
+</span><span class="inferred0"><a name="line57"></a> 57    
+</span><span class="marked1"><a name="line58"></a> 58    def test_the_time_data_generated_in_excel
+</span><span class="marked0"><a name="line59"></a> 59       lines = data_generated_excel.split(/\n/)
+</span><span class="marked1"><a name="line60"></a> 60       while !lines.empty?
+</span><span class="marked0"><a name="line61"></a> 61          line = lines.shift
+</span><span class="marked1"><a name="line62"></a> 62          braak if line =~ /^\s*# stop/  # For debugging
+</span><span class="marked0"><a name="line63"></a> 63          next  unless line =~ /\S/      # Ignore blank lines
+</span><span class="marked1"><a name="line64"></a> 64          next  if line =~ /^\s*#/       # Ignore comments
+</span><span class="inferred0"><a name="line65"></a> 65    
+</span><span class="marked1"><a name="line66"></a> 66          if line =~ /&quot;DateTime&quot;&gt;([^&lt;]+)/
+</span><span class="marked0"><a name="line67"></a> 67             date_time = $1
+</span><span class="marked1"><a name="line68"></a> 68             line      = lines.shift
+</span><span class="inferred0"><a name="line69"></a> 69    
+</span><span class="marked1"><a name="line70"></a> 70             if line =~ /&quot;Number&quot;&gt;([^&lt;]+)/
+</span><span class="marked0"><a name="line71"></a> 71                number = $1.to_f
+</span><span class="marked1"><a name="line72"></a> 72                result = @worksheet.convert_date_time(date_time)
+</span><span class="marked0"><a name="line73"></a> 73                result = -1 if result.nil?
+</span><span class="marked1"><a name="line74"></a> 74                assert(fit_cmp(number, result),
+</span><span class="inferred0"><a name="line75"></a> 75                       &quot;date_time: #{date_time}\n&quot;                    +
+</span><span class="inferred1"><a name="line76"></a> 76                       &quot;difference between #{number} and #{result}\n&quot; +
+</span><span class="marked0"><a name="line77"></a> 77                       &quot;= #{(number - result).abs.to_s}\n&quot;            +
+</span><span class="inferred1"><a name="line78"></a> 78                       &quot;&gt; #{@fit_delta.to_s}&quot;)
+</span><span class="inferred0"><a name="line79"></a> 79             end
+</span><span class="inferred1"><a name="line80"></a> 80          end
+</span><span class="inferred0"><a name="line81"></a> 81       end
+</span><span class="inferred1"><a name="line82"></a> 82    end
+</span><span class="inferred0"><a name="line83"></a> 83 
+</span><span class="marked1"><a name="line84"></a> 84    def data_generated_excel
+</span><span class="inferred0"><a name="line85"></a> 85 
+</span><span class="marked1"><a name="line86"></a> 86       return &lt;&lt;-__DATA_END__
+</span><span class="inferred0"><a name="line87"></a> 87       
+</span><span class="inferred1"><a name="line88"></a> 88       # Test data taken from Excel in XML format.
+</span><span class="inferred0"><a name="line89"></a> 89       &lt;Row&gt;
+</span><span class="inferred1"><a name="line90"></a> 90        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;1899-12-31T00:00:00.000&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line91"></a> 91        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;0&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line92"></a> 92       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line93"></a> 93       &lt;Row&gt;
+</span><span class="inferred1"><a name="line94"></a> 94        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;1982-08-25T00:15:20.213&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line95"></a> 95        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;30188.010650613425&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line96"></a> 96       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line97"></a> 97       &lt;Row&gt;
+</span><span class="inferred1"><a name="line98"></a> 98        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2065-04-19T00:16:48.290&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line99"></a> 99        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;60376.011670023145&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line100"></a>100       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line101"></a>101       &lt;Row&gt;
+</span><span class="inferred1"><a name="line102"></a>102        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2147-12-15T00:55:25.446&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line103"></a>103        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;90565.038488958337&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line104"></a>104       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line105"></a>105       &lt;Row&gt;
+</span><span class="inferred1"><a name="line106"></a>106        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2230-08-10T01:02:46.891&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line107"></a>107        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;120753.04359827546&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line108"></a>108       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line109"></a>109       &lt;Row&gt;
+</span><span class="inferred1"><a name="line110"></a>110        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2313-04-06T01:04:15.597&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line111"></a>111        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;150942.04462496529&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line112"></a>112       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line113"></a>113       &lt;Row&gt;
+</span><span class="inferred1"><a name="line114"></a>114        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2395-11-30T01:09:40.889&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line115"></a>115        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;181130.04838991899&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line116"></a>116       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line117"></a>117       &lt;Row&gt;
+</span><span class="inferred1"><a name="line118"></a>118        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2478-07-25T01:11:32.560&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line119"></a>119        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;211318.04968240741&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line120"></a>120       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line121"></a>121       &lt;Row&gt;
+</span><span class="inferred1"><a name="line122"></a>122        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2561-03-21T01:30:19.169&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line123"></a>123        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;241507.06272186342&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line124"></a>124       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line125"></a>125       &lt;Row&gt;
+</span><span class="inferred1"><a name="line126"></a>126        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2643-11-15T01:48:25.580&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line127"></a>127        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;271695.07529606484&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line128"></a>128       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line129"></a>129       &lt;Row&gt;
+</span><span class="inferred1"><a name="line130"></a>130        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2726-07-12T02:03:31.919&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line131"></a>131        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;301884.08578609955&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line132"></a>132       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line133"></a>133       &lt;Row&gt;
+</span><span class="inferred1"><a name="line134"></a>134        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2809-03-06T02:11:11.986&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line135"></a>135        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;332072.09111094906&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line136"></a>136       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line137"></a>137       &lt;Row&gt;
+</span><span class="inferred1"><a name="line138"></a>138        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2891-10-31T02:24:37.095&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line139"></a>139        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;362261.10042934027&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line140"></a>140       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line141"></a>141       &lt;Row&gt;
+</span><span class="inferred1"><a name="line142"></a>142        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;2974-06-26T02:35:07.220&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line143"></a>143        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;392449.10772245371&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line144"></a>144       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line145"></a>145       &lt;Row&gt;
+</span><span class="inferred1"><a name="line146"></a>146        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3057-02-19T02:45:12.109&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line147"></a>147        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;422637.1147234838&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line148"></a>148       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line149"></a>149       &lt;Row&gt;
+</span><span class="inferred1"><a name="line150"></a>150        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3139-10-17T03:06:39.990&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line151"></a>151        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;452826.12962951389&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line152"></a>152       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line153"></a>153       &lt;Row&gt;
+</span><span class="inferred1"><a name="line154"></a>154        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3222-06-11T03:08:08.251&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line155"></a>155        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;483014.13065105322&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line156"></a>156       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line157"></a>157       &lt;Row&gt;
+</span><span class="inferred1"><a name="line158"></a>158        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3305-02-05T03:19:12.576&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line159"></a>159        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;513203.13834&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line160"></a>160       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line161"></a>161       &lt;Row&gt;
+</span><span class="inferred1"><a name="line162"></a>162        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3387-10-01T03:29:42.574&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line163"></a>163        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;543391.14563164348&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line164"></a>164       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line165"></a>165       &lt;Row&gt;
+</span><span class="inferred1"><a name="line166"></a>166        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3470-05-27T03:37:30.813&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line167"></a>167        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;573579.15105107636&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line168"></a>168       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line169"></a>169       &lt;Row&gt;
+</span><span class="inferred1"><a name="line170"></a>170        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3553-01-21T04:14:38.231&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line171"></a>171        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;603768.17683137732&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line172"></a>172       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line173"></a>173       &lt;Row&gt;
+</span><span class="inferred1"><a name="line174"></a>174        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3635-09-16T04:16:28.559&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line175"></a>175        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;633956.17810832174&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line176"></a>176       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line177"></a>177       &lt;Row&gt;
+</span><span class="inferred1"><a name="line178"></a>178        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3718-05-13T04:17:58.222&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line179"></a>179        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;664145.17914608796&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line180"></a>180       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line181"></a>181       &lt;Row&gt;
+</span><span class="inferred1"><a name="line182"></a>182        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3801-01-06T04:21:41.794&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line183"></a>183        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;694333.18173372687&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line184"></a>184       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line185"></a>185       &lt;Row&gt;
+</span><span class="inferred1"><a name="line186"></a>186        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3883-09-02T04:56:35.792&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line187"></a>187        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;724522.20596981479&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line188"></a>188       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line189"></a>189       &lt;Row&gt;
+</span><span class="inferred1"><a name="line190"></a>190        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;3966-04-28T05:25:14.885&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line191"></a>191        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;754710.2258667245&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line192"></a>192       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line193"></a>193       &lt;Row&gt;
+</span><span class="inferred1"><a name="line194"></a>194        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4048-12-21T05:26:05.724&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line195"></a>195        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;784898.22645513888&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line196"></a>196       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line197"></a>197       &lt;Row&gt;
+</span><span class="inferred1"><a name="line198"></a>198        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4131-08-18T05:46:44.068&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line199"></a>199        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;815087.24078782403&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line200"></a>200       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line201"></a>201       &lt;Row&gt;
+</span><span class="inferred1"><a name="line202"></a>202        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4214-04-13T05:48:01.141&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line203"></a>203        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;845275.24167987274&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line204"></a>204       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line205"></a>205       &lt;Row&gt;
+</span><span class="inferred1"><a name="line206"></a>206        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4296-12-07T05:53:52.315&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line207"></a>207        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;875464.24574438657&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line208"></a>208       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line209"></a>209       &lt;Row&gt;
+</span><span class="inferred1"><a name="line210"></a>210        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4379-08-03T06:14:48.580&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line211"></a>211        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;905652.26028449077&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line212"></a>212       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line213"></a>213       &lt;Row&gt;
+</span><span class="inferred1"><a name="line214"></a>214        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4462-03-28T06:46:15.738&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line215"></a>215        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;935840.28212659725&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line216"></a>216       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line217"></a>217       &lt;Row&gt;
+</span><span class="inferred1"><a name="line218"></a>218        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4544-11-22T07:31:20.407&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line219"></a>219        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;966029.31343063654&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line220"></a>220       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line221"></a>221       &lt;Row&gt;
+</span><span class="inferred1"><a name="line222"></a>222        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4627-07-19T07:58:33.754&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line223"></a>223        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;996217.33233511576&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line224"></a>224       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line225"></a>225       &lt;Row&gt;
+</span><span class="inferred1"><a name="line226"></a>226        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4710-03-15T08:07:43.130&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line227"></a>227        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1026406.3386936343&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line228"></a>228       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line229"></a>229       &lt;Row&gt;
+</span><span class="inferred1"><a name="line230"></a>230        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4792-11-07T08:29:11.091&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line231"></a>231        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1056594.3536005903&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line232"></a>232       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line233"></a>233       &lt;Row&gt;
+</span><span class="inferred1"><a name="line234"></a>234        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4875-07-04T09:08:15.328&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line235"></a>235        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1086783.3807329629&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line236"></a>236       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line237"></a>237       &lt;Row&gt;
+</span><span class="inferred1"><a name="line238"></a>238        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;4958-02-27T09:30:41.781&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line239"></a>239        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1116971.3963169097&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line240"></a>240       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line241"></a>241       &lt;Row&gt;
+</span><span class="inferred1"><a name="line242"></a>242        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5040-10-23T09:34:04.462&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line243"></a>243        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1147159.3986627546&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line244"></a>244       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line245"></a>245       &lt;Row&gt;
+</span><span class="inferred1"><a name="line246"></a>246        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5123-06-20T09:37:23.945&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line247"></a>247        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1177348.4009715857&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line248"></a>248       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line249"></a>249       &lt;Row&gt;
+</span><span class="inferred1"><a name="line250"></a>250        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5206-02-12T09:37:56.655&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line251"></a>251        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1207536.4013501736&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line252"></a>252       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line253"></a>253       &lt;Row&gt;
+</span><span class="inferred1"><a name="line254"></a>254        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5288-10-08T09:45:12.230&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line255"></a>255        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1237725.406391551&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line256"></a>256       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line257"></a>257       &lt;Row&gt;
+</span><span class="inferred1"><a name="line258"></a>258        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5371-06-04T09:54:14.782&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line259"></a>259        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1267913.412671088&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line260"></a>260       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line261"></a>261       &lt;Row&gt;
+</span><span class="inferred1"><a name="line262"></a>262        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5454-01-28T09:54:22.108&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line263"></a>263        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1298101.4127558796&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line264"></a>264       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line265"></a>265       &lt;Row&gt;
+</span><span class="inferred1"><a name="line266"></a>266        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5536-09-24T10:01:36.151&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line267"></a>267        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1328290.4177795255&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line268"></a>268       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line269"></a>269       &lt;Row&gt;
+</span><span class="inferred1"><a name="line270"></a>270        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5619-05-20T12:09:48.602&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line271"></a>271        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1358478.5068125231&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line272"></a>272       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line273"></a>273       &lt;Row&gt;
+</span><span class="inferred1"><a name="line274"></a>274        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5702-01-14T12:34:08.549&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line275"></a>275        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1388667.5237100578&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line276"></a>276       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line277"></a>277       &lt;Row&gt;
+</span><span class="inferred1"><a name="line278"></a>278        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5784-09-08T12:56:06.495&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line279"></a>279        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1418855.5389640625&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line280"></a>280       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line281"></a>281       &lt;Row&gt;
+</span><span class="inferred1"><a name="line282"></a>282        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5867-05-06T12:58:58.217&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line283"></a>283        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1449044.5409515856&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line284"></a>284       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line285"></a>285       &lt;Row&gt;
+</span><span class="inferred1"><a name="line286"></a>286        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;5949-12-30T12:59:54.263&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line287"></a>287        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1479232.5416002662&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line288"></a>288       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line289"></a>289       &lt;Row&gt;
+</span><span class="inferred1"><a name="line290"></a>290        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6032-08-24T13:34:41.331&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line291"></a>291        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1509420.5657561459&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line292"></a>292       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line293"></a>293       &lt;Row&gt;
+</span><span class="inferred1"><a name="line294"></a>294        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6115-04-21T13:58:28.601&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line295"></a>295        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1539609.5822754744&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line296"></a>296       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line297"></a>297       &lt;Row&gt;
+</span><span class="inferred1"><a name="line298"></a>298        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6197-12-14T14:02:16.899&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line299"></a>299        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1569797.5849178126&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line300"></a>300       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line301"></a>301       &lt;Row&gt;
+</span><span class="inferred1"><a name="line302"></a>302        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6280-08-10T14:36:17.444&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line303"></a>303        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1599986.6085352316&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line304"></a>304       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line305"></a>305       &lt;Row&gt;
+</span><span class="inferred1"><a name="line306"></a>306        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6363-04-06T14:37:57.451&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line307"></a>307        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1630174.60969272&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line308"></a>308       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line309"></a>309       &lt;Row&gt;
+</span><span class="inferred1"><a name="line310"></a>310        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6445-11-30T14:57:42.757&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line311"></a>311        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1660363.6234115392&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line312"></a>312       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line313"></a>313       &lt;Row&gt;
+</span><span class="inferred1"><a name="line314"></a>314        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6528-07-26T15:10:48.307&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line315"></a>315        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1690551.6325035533&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line316"></a>316       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line317"></a>317       &lt;Row&gt;
+</span><span class="inferred1"><a name="line318"></a>318        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6611-03-22T15:14:39.890&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line319"></a>319        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1720739.635183912&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line320"></a>320       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line321"></a>321       &lt;Row&gt;
+</span><span class="inferred1"><a name="line322"></a>322        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6693-11-15T15:19:47.988&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line323"></a>323        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1750928.6387498612&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line324"></a>324       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line325"></a>325       &lt;Row&gt;
+</span><span class="inferred1"><a name="line326"></a>326        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6776-07-11T16:04:24.344&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line327"></a>327        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1781116.6697262037&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line328"></a>328       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line329"></a>329       &lt;Row&gt;
+</span><span class="inferred1"><a name="line330"></a>330        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6859-03-07T16:22:23.952&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line331"></a>331        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1811305.6822216667&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line332"></a>332       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line333"></a>333       &lt;Row&gt;
+</span><span class="inferred1"><a name="line334"></a>334        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;6941-10-31T16:29:55.999&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line335"></a>335        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1841493.6874536921&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line336"></a>336       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line337"></a>337       &lt;Row&gt;
+</span><span class="inferred1"><a name="line338"></a>338        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7024-06-26T16:58:20.259&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line339"></a>339        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1871681.7071789235&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line340"></a>340       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line341"></a>341       &lt;Row&gt;
+</span><span class="inferred1"><a name="line342"></a>342        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7107-02-21T17:04:02.415&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line343"></a>343        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1901870.7111390624&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line344"></a>344       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line345"></a>345       &lt;Row&gt;
+</span><span class="inferred1"><a name="line346"></a>346        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7189-10-16T17:18:29.630&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line347"></a>347        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1932058.7211762732&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line348"></a>348       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line349"></a>349       &lt;Row&gt;
+</span><span class="inferred1"><a name="line350"></a>350        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7272-06-11T17:47:21.323&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line351"></a>351        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1962247.7412190163&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line352"></a>352       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line353"></a>353       &lt;Row&gt;
+</span><span class="inferred1"><a name="line354"></a>354        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7355-02-05T17:53:29.866&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line355"></a>355        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;1992435.7454845603&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line356"></a>356       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line357"></a>357       &lt;Row&gt;
+</span><span class="inferred1"><a name="line358"></a>358        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7437-10-02T17:53:41.076&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line359"></a>359        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2022624.7456143056&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line360"></a>360       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line361"></a>361       &lt;Row&gt;
+</span><span class="inferred1"><a name="line362"></a>362        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7520-05-28T17:55:06.044&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line363"></a>363        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2052812.7465977315&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line364"></a>364       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line365"></a>365       &lt;Row&gt;
+</span><span class="inferred1"><a name="line366"></a>366        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7603-01-21T18:14:49.151&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line367"></a>367        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2083000.7602910995&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line368"></a>368       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line369"></a>369       &lt;Row&gt;
+</span><span class="inferred1"><a name="line370"></a>370        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7685-09-16T18:17:45.738&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line371"></a>371        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2113189.7623349307&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line372"></a>372       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line373"></a>373       &lt;Row&gt;
+</span><span class="inferred1"><a name="line374"></a>374        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7768-05-12T18:29:59.700&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line375"></a>375        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2143377.7708298611&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line376"></a>376       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line377"></a>377       &lt;Row&gt;
+</span><span class="inferred1"><a name="line378"></a>378        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7851-01-07T18:33:21.233&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line379"></a>379        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2173566.773162419&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line380"></a>380       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line381"></a>381       &lt;Row&gt;
+</span><span class="inferred1"><a name="line382"></a>382        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;7933-09-02T19:14:24.673&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line383"></a>383        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2203754.8016744559&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line384"></a>384       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line385"></a>385       &lt;Row&gt;
+</span><span class="inferred1"><a name="line386"></a>386        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8016-04-27T19:17:12.816&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line387"></a>387        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2233942.8036205554&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line388"></a>388       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line389"></a>389       &lt;Row&gt;
+</span><span class="inferred1"><a name="line390"></a>390        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8098-12-22T19:23:36.418&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line391"></a>391        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2264131.8080603937&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line392"></a>392       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line393"></a>393       &lt;Row&gt;
+</span><span class="inferred1"><a name="line394"></a>394        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8181-08-17T19:46:25.908&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line395"></a>395        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2294319.8239109721&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line396"></a>396       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line397"></a>397       &lt;Row&gt;
+</span><span class="inferred1"><a name="line398"></a>398        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8264-04-13T20:07:47.314&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line399"></a>399        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2324508.8387420601&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line400"></a>400       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line401"></a>401       &lt;Row&gt;
+</span><span class="inferred1"><a name="line402"></a>402        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8346-12-08T20:31:37.603&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line403"></a>403        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2354696.855296331&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line404"></a>404       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line405"></a>405       &lt;Row&gt;
+</span><span class="inferred1"><a name="line406"></a>406        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8429-08-03T20:39:57.770&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line407"></a>407        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2384885.8610853008&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line408"></a>408       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line409"></a>409       &lt;Row&gt;
+</span><span class="inferred1"><a name="line410"></a>410        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8512-03-29T20:50:17.067&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line411"></a>411        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2415073.8682530904&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line412"></a>412       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line413"></a>413       &lt;Row&gt;
+</span><span class="inferred1"><a name="line414"></a>414        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8594-11-22T21:02:57.827&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line415"></a>415        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2445261.8770581828&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line416"></a>416       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line417"></a>417       &lt;Row&gt;
+</span><span class="inferred1"><a name="line418"></a>418        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8677-07-19T21:23:05.519&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line419"></a>419        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2475450.8910360998&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line420"></a>420       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line421"></a>421       &lt;Row&gt;
+</span><span class="inferred1"><a name="line422"></a>422        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8760-03-14T21:34:49.572&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line423"></a>423        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2505638.8991848612&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line424"></a>424       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line425"></a>425       &lt;Row&gt;
+</span><span class="inferred1"><a name="line426"></a>426        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8842-11-08T21:39:05.944&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line427"></a>427        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2535827.9021521294&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line428"></a>428       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line429"></a>429       &lt;Row&gt;
+</span><span class="inferred1"><a name="line430"></a>430        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;8925-07-04T21:39:18.426&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line431"></a>431        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2566015.9022965971&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line432"></a>432       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line433"></a>433       &lt;Row&gt;
+</span><span class="inferred1"><a name="line434"></a>434        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9008-02-28T21:46:07.769&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line435"></a>435        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2596203.9070343636&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line436"></a>436       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line437"></a>437       &lt;Row&gt;
+</span><span class="inferred1"><a name="line438"></a>438        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9090-10-24T21:57:55.662&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line439"></a>439        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2626392.9152275696&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line440"></a>440       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line441"></a>441       &lt;Row&gt;
+</span><span class="inferred1"><a name="line442"></a>442        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9173-06-19T22:19:11.732&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line443"></a>443        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2656580.9299968979&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line444"></a>444       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line445"></a>445       &lt;Row&gt;
+</span><span class="inferred1"><a name="line446"></a>446        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9256-02-13T22:23:51.376&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line447"></a>447        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2686769.9332335186&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line448"></a>448       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line449"></a>449       &lt;Row&gt;
+</span><span class="inferred1"><a name="line450"></a>450        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9338-10-09T22:27:58.771&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line451"></a>451        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2716957.9360968866&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line452"></a>452       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line453"></a>453       &lt;Row&gt;
+</span><span class="inferred1"><a name="line454"></a>454        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9421-06-05T22:43:30.392&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line455"></a>455        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2747146.9468795368&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line456"></a>456       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line457"></a>457       &lt;Row&gt;
+</span><span class="inferred1"><a name="line458"></a>458        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9504-01-30T22:48:25.834&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line459"></a>459        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2777334.9502990046&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line460"></a>460       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line461"></a>461       &lt;Row&gt;
+</span><span class="inferred1"><a name="line462"></a>462        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9586-09-24T22:53:51.727&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line463"></a>463        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2807522.9540709145&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line464"></a>464       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line465"></a>465       &lt;Row&gt;
+</span><span class="inferred1"><a name="line466"></a>466        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9669-05-20T23:12:56.536&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line467"></a>467        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2837711.9673210187&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line468"></a>468       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line469"></a>469       &lt;Row&gt;
+</span><span class="inferred1"><a name="line470"></a>470        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9752-01-14T23:15:54.109&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line471"></a>471        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2867899.9693762613&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line472"></a>472       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line473"></a>473       &lt;Row&gt;
+</span><span class="inferred1"><a name="line474"></a>474        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9834-09-10T23:17:12.632&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line475"></a>475        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2898088.9702850925&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line476"></a>476       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line477"></a>477       &lt;Row&gt;
+</span><span class="inferred1"><a name="line478"></a>478        &lt;Cell ss:StyleID=&quot;s21&quot;&gt;&lt;Data ss:Type=&quot;DateTime&quot;&gt;9999-12-31T23:59:59.000&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred0"><a name="line479"></a>479        &lt;Cell ss:StyleID=&quot;s22&quot; ss:Formula=&quot;=RC[-1]&quot;&gt;&lt;Data ss:Type=&quot;Number&quot;&gt;2958465.999988426&lt;/Data&gt;&lt;/Cell&gt;
+</span><span class="inferred1"><a name="line480"></a>480       &lt;/Row&gt;
+</span><span class="inferred0"><a name="line481"></a>481 
+</span><span class="inferred1"><a name="line482"></a>482       __DATA_END__
+</span><span class="inferred0"><a name="line483"></a>483 
+</span><span class="marked1"><a name="line484"></a>484    end
+</span><span class="inferred0"><a name="line485"></a>485 
+</span><span class="inferred1"><a name="line486"></a>486 end
+</span></pre><hr/>
+    <p>Generated using the <a href='http://eigenclass.org/hiki.rb?rcov'>rcov code coverage analysis tool for Ruby</a>
+   version 0.8.1.2.</p>
+<p><a href='http://validator.w3.org/check/referer'><img src='http://www.w3.org/Icons/valid-xhtml10' height='31' alt='Valid XHTML 1.0!' width='88'/>
+        </a>
+      <a href='http://jigsaw.w3.org/css-validator/check/referer'><img src='http://jigsaw.w3.org/css-validator/images/vcss' alt='Valid CSS!' style='border:0;width:88px;height:31px'/>
+        </a>
+      </p>
+    </body>
+  </html>
