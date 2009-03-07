@@ -5,9 +5,9 @@
 #########################################
 base = File.basename(Dir.pwd)
 if base == "test" || base =~ /spreadsheet/i
-   Dir.chdir("..") if base == "test"
-   $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-   Dir.chdir("test") rescue nil
+  Dir.chdir("..") if base == "test"
+  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
+  Dir.chdir("test") rescue nil
 end
 
 require "test/unit"
@@ -20,7 +20,7 @@ require "excel"
 require "ftools"
 
 class TC_Excel < Test::Unit::TestCase
-   def test_version
-      assert_equal("0.3.5.1", Spreadsheet::Excel::VERSION)
-   end
+  def test_version
+    assert_equal("0.3.5.1", Spreadsheet::Excel::VERSION)
+  end
 end

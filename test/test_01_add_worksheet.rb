@@ -5,9 +5,9 @@
 #########################################
 base = File.basename(Dir.pwd)
 if base == "test" || base =~ /spreadsheet/i
-   Dir.chdir("..") if base == "test"
-   $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-   Dir.chdir("test") rescue nil
+  Dir.chdir("..") if base == "test"
+  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
+  Dir.chdir("test") rescue nil
 end
 
 require "test/unit"
@@ -21,8 +21,8 @@ require "excel"
 
 class TC_add_worksheet < Test::Unit::TestCase
 
-   def test_true
-      assert(true)
-   end
+  def test_true
+    assert(true)
+  end
 
 end

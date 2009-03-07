@@ -8,7 +8,7 @@ require "format"
 require "formula"
 
 module Spreadsheet
-   class Excel < Workbook
-      VERSION = "0.3.5.1"
-   end
+  class Excel < Workbook
+    VERSION = "0.3.5.1"
+  end
 end

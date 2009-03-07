@@ -5,9 +5,9 @@
 #####################################################
 base = File.basename(Dir.pwd)
 if base == "test" || base =~ /spreadsheet/i
-   Dir.chdir("..") if base == "test"
-   $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-   Dir.chdir("test") rescue nil
+  Dir.chdir("..") if base == "test"
+  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
+  Dir.chdir("test") rescue nil
 end
 
 require "test/unit"
@@ -20,8 +20,8 @@ require 'formula'
 
 class TC_Chart < Test::Unit::TestCase
 
-   def test_
-      assert(true)
-   end
+  def test_
+    assert(true)
+  end
 
 end
