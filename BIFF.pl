@@ -4,21 +4,31 @@ use Spreadsheet::WriteExcel;
 my $test_file   = 'temp_test_file.xls';
 my $workbook    = Spreadsheet::WriteExcel->new($test_file);
 
-my $worksheet1 = $workbook->add_worksheet();
-my $count1     = 1;
+my $worksheet  = $workbook->add_worksheet();
+my @data = $worksheet->_comment_params(2, 0, 'Test');
 
-   $worksheet1->write_comment($_ -1, 0, 'aaa') for 1 .. $count1;
+my $row        = $data[0];
+my $col        = $data[1];
+my $author     = $data[4];
+my $encoding   = $data[5];
+my $visible    = $data[6];
+my $obj_id     = 1;
 
-   $workbook->_calc_mso_sizes();
-
-   $target     = join " ",  qw(
-                            EB 00 5A 00 0F 00 00 F0 52 00 00 00 00 00 06 F0
-                            18 00 00 00 02 04 00 00 02 00 00 00 02 00 00 00
-                            01 00 00 00 01 00 00 00 02 00 00 00 33 00 0B F0
-                            12 00 00 00 BF 00 08 00 08 00 81 01 09 00 00 08
-                            C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
-                            00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
-              );
-
-my $result     = $workbook->_add_mso_drawing_group();
+my $result     = unpack_record($worksheet->_store_note($row,
+                                                    $col,
+                                                    $obj_id,
+                                                    $author,
+                                                    $encoding,
+                                                    $visible,
+                                                    ));
    print $result;
+
+
+###############################################################################
+#
+# Unpack the binary data into a format suitable for printing in tests.
+#
+sub unpack_record {
+    return join ' ', map {sprintf "%02X", $_} unpack "C*", $_[0];
+}
+

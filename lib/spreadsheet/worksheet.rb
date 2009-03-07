@@ -5313,9 +5313,9 @@ class Worksheet < BIFFWriter
     # The flag is also set in _store_mso_opt_comment() but with the opposite
     # value.
     unless visible.nil?
-      visible = visible != 0      ? 0x0002 : 0x0000
+      visible = visible != 0           ? 0x0002 : 0x0000
     else
-      visible = @comments_visible ? 0x0002 : 0x0000
+      visible = @comments_visible != 0 ? 0x0002 : 0x0000
     end
 
     # Get the number of chars in the author string (not bytes).
@@ -5332,7 +5332,7 @@ class Worksheet < BIFFWriter
     length  = data.length + author.length
     header  = [record, length].pack("vv")
 
-    append(header, data)
+    append(header, data, author)
   end
 
   ###############################################################################

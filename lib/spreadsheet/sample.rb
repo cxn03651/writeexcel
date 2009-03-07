@@ -8,19 +8,15 @@ end
 bp=1
     workbook  = Workbook.new('test.xls')
     worksheet = workbook.add_worksheet
-    count = 1
-    for i in 1 .. count
-      worksheet.write_comment(i -1, 0, 'aaa')
-    end
-    workbook.calc_mso_sizes
-    target  = %w(
-        EB 00 5A 00 0F 00 00 F0 52 00 00 00 00 00 06 F0
-        18 00 00 00 02 04 00 00 02 00 00 00 02 00 00 00
-        01 00 00 00 01 00 00 00 02 00 00 00 33 00 0B F0
-        12 00 00 00 BF 00 08 00 08 00 81 01 09 00 00 08
-        C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
-        00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
-    ).join(' ')
-    result = unpack_record(workbook.add_mso_drawing_group)
+    data      = worksheet.comment_params(2,0,'Test')
+    row       = data[0]
+    col       = data[1]
+    author    = data[4]
+    encoding  = data[5]
+    visible   = data[6]
+    obj_id    = 1
+    
+    result = unpack_record(
+        worksheet.store_note(row,col,obj_id,author,encoding,visible))
 p result
 
