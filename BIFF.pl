@@ -3,18 +3,22 @@ use Spreadsheet::WriteExcel;
 
 my $test_file   = 'temp_test_file.xls';
 my $workbook    = Spreadsheet::WriteExcel->new($test_file);
-my $format      = $workbook->add_format();
 
-my $worksheet  = $workbook->add_worksheet();
-my $range   = 'A6';
-   $worksheet->set_row(5,6);
-   $worksheet->set_row(6,6);
-   $worksheet->set_row(7,6);
-   $worksheet->set_row(8,6);
+my $worksheet1 = $workbook->add_worksheet();
+my $count1     = 1;
 
-my @data    = $worksheet->_substitute_cellref($range);
-   @data    = $worksheet->_comment_params(@data, 'Test');
- 	  @data    = @{$data[-1]};
+   $worksheet1->write_comment($_ -1, 0, 'aaa') for 1 .. $count1;
 
-my $result  = $worksheet->_store_mso_client_anchor(3, @data);
+   $workbook->_calc_mso_sizes();
+
+   $target     = join " ",  qw(
+                            EB 00 5A 00 0F 00 00 F0 52 00 00 00 00 00 06 F0
+                            18 00 00 00 02 04 00 00 02 00 00 00 02 00 00 00
+                            01 00 00 00 01 00 00 00 02 00 00 00 33 00 0B F0
+                            12 00 00 00 BF 00 08 00 08 00 81 01 09 00 00 08
+                            C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
+                            00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
+              );
+
+my $result     = $workbook->_add_mso_drawing_group();
    print $result;
