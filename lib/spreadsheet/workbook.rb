@@ -11,7 +11,7 @@ class Workbook < BIFFWriter
   attr_accessor :date_system, :str_unique
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
   attr_writer :mso_size
-attr_reader :mso_size, :mso_clusters
+#attr_reader :mso_size, :mso_clusters
   ###############################################################################
   #
   # new()
@@ -229,12 +229,14 @@ attr_reader :mso_size, :mso_clusters
   # Returns: an optionally sliced list of the worksheet objects in a workbook.
   #
   def sheets(*args)
-    unless args.empty?
-      #           # Return a slice of the array
-      #           return @{$self->{_worksheets}}[@_];
+    if args.empty?
+      @worksheets
     else
-      # Return the entire list
-      return @worksheets
+      ary = []
+      args.each do |i|
+        ary << @worksheets[i]
+      end
+      ary
     end
   end
 
