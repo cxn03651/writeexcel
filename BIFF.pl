@@ -5,24 +5,39 @@ my $test_file   = 'temp_test_file.xls';
 my $workbook    = Spreadsheet::WriteExcel->new($test_file);
 
 my $worksheet  = $workbook->add_worksheet();
-my @data = $worksheet->_comment_params(2, 0, 'Test');
 
-my $row        = $data[0];
-my $col        = $data[1];
-my $author     = $data[4];
-my $encoding   = $data[5];
-my $visible    = $data[6];
-my $obj_id     = 1;
+my @tests = (
+    {
+        'column'        => 0,
+        'expression'    => 'x =  Blanks',
+        'data'          => [qw(
+                                9E 00 18 00 00 00 84 32 0C 02 00 00 00 00 00 00
+                                00 00 00 00 00 00 00 00 00 00 00 00
 
-my $result     = unpack_record($worksheet->_store_note($row,
-                                                    $col,
-                                                    $obj_id,
-                                                    $author,
-                                                    $encoding,
-                                                    $visible,
-                                                    ));
-   print $result;
+                           )],
+    },
+);
+for my $test (@tests) {
 
+    my $column     = $test->{column};
+    my $expression = $test->{expression};
+    my @tokens     = $worksheet->_extract_filter_tokens($expression);
+       @tokens     = $worksheet->_parse_filter_expression($expression, @tokens);
+
+    my $result = $worksheet->_store_autofilter($column , @tokens);
+
+    my $target     = join " ",  @{$test->{data}};
+
+    my $caption    = " \tfilter_column($column, '$expression')";
+
+    $result     = unpack_record($result);
+    is($result, $target, $caption);
+}
+
+
+#
+# Helper functions.
+#
 
 ###############################################################################
 #
@@ -31,4 +46,5 @@ my $result     = unpack_record($worksheet->_store_note($row,
 sub unpack_record {
     return join ' ', map {sprintf "%02X", $_} unpack "C*", $_[0];
 }
+
 

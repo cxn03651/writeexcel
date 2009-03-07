@@ -868,6 +868,8 @@ class Worksheet < BIFFWriter
       token.sub!(/^"/, '')
       token.sub!(/"$/, '')
       token.gsub!(/""/, '"')
+      token    # gsub! returns nil unless match,
+               # if this is none, store nil to tokens array.
     end
 
     return tokens
@@ -4180,11 +4182,18 @@ class Worksheet < BIFFWriter
   ###############################################################################
   #
   # _store_autofilter()
+  #    my $index           = $_[0];
+  #    my $operator_1      = $_[1];
+  #    my $token_1         = $_[2];
+  #    my $join            = $_[3]; # And/Or
+  #    my $operator_2      = $_[4];
+  #    my $token_2         = $_[5];
   #
   # Function to write worksheet AUTOFILTER records. These contain 2 Biff Doper
   # structures to represent the 2 possible filter conditions.
   #
-  def store_autofilter(index, operator, token_1, join, operator_2, token_2)
+  def store_autofilter(index, operator_1, token_1,
+                           join = nil, operator_2 = nil, token_2 = nil)
     record          = 0x009E
     length          = 0x0000
 
@@ -4193,7 +4202,7 @@ class Worksheet < BIFFWriter
     top10_percent   = 0
     top10_value     = 101
 
-    grbit       = join
+    grbit       = join || 0
     optimised_1 = 0
     optimised_2 = 0
     doper_1     = ''
@@ -4202,12 +4211,12 @@ class Worksheet < BIFFWriter
     string_2    = ''
 
     # Excel used an optimisation in the case of a simple equality.
-    optimised_1 = 1 if                         operator_1 == 2
-    optimised_2 = 1 if defined operator_2 and operator_2 == 2
+    optimised_1 = 1 if                      operator_1 == 2
+    optimised_2 = 1 if !operator_2.nil? and operator_2 == 2
 
     # Convert non-simple equalities back to type 2. See  _parse_filter_tokens().
-    operator_1 = 2 if                        operator_1 == 22
-    operator_2 = 2 if defined operator_2 and operator_2 == 22
+    operator_1 = 2 if                      operator_1 == 22
+    operator_2 = 2 if !operator_2.nil? and operator_2 == 22
 
     # Handle a "Top" style expression.
     if operator_1 >= 30
@@ -4244,7 +4253,12 @@ class Worksheet < BIFFWriter
     grbit     |= top10_value      << 7
 
     doper_1, string_1 = pack_doper(operator_1, token_1)
-    doper_2, string_2   = pack_doper(operator_2, token_2)
+    doper_2, string_2 = pack_doper(operator_2, token_2)
+
+    doper_1  = '' if doper_1.nil?
+    doper_2  = '' if doper_2.nil?
+    string_1 = '' if string_1.nil?
+    string_2 = '' if string_2.nil?
 
     data = [index].pack('v')
     data = data + [grbit].pack('v')
@@ -4269,7 +4283,7 @@ class Worksheet < BIFFWriter
 
     # Return default doper for non-defined filters.
     if operator.nil?
-      return @pack_unused_doper, string
+      return pack_unused_doper, string
     end
 
     if token =~ /^blanks|nonblanks$/i
@@ -4299,7 +4313,7 @@ class Worksheet < BIFFWriter
       doper  = pack_number_doper(operator, token)
     end
 
-    return doper, string
+    return [doper, string]
   end
 
   ###############################################################################
