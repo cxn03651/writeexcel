@@ -1,7 +1,8 @@
 ##########################################################################
 # test_23_note.rb
 #
-# Tests for the internal methods used to write the MSODRAWINGGROUP record.
+# Tests for some of the internal method used to write the NOTE record that
+# is used in cell comments.
 #
 # reverse('©'), September 2005, John McNamara, jmcnamara@cpan.org
 #
@@ -24,7 +25,7 @@ require "excel"
 include Spreadsheet
 
 
-class TC_mso_drawing_group < Test::Unit::TestCase
+class TC_note < Test::Unit::TestCase
 
   def setup
     @test_file  = 'temp_test_file.xls'
