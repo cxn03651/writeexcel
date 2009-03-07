@@ -11,7 +11,7 @@ class Workbook < BIFFWriter
   attr_accessor :date_system, :str_unique
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
   attr_writer :mso_size
-
+attr_reader :mso_size, :mso_clusters
   ###############################################################################
   #
   # new()
@@ -934,7 +934,7 @@ class Workbook < BIFFWriter
     process_images
 
     # Add Bstore container size if there are images.
-    mso_size += 8 unless @images_data.nil?
+    mso_size += 8 unless @images_data.empty?
 
     # Iterate through the worksheets, calculate the MSODRAWINGGROUP parameters
     # and space required to store the record and the MSODRAWING parameters
@@ -949,13 +949,11 @@ class Workbook < BIFFWriter
       num_charts     = sheet.prepare_charts
       num_filters    = sheet.filter_count
 
-      next unless num_images + num_comments + num_charts +num_filters != 0
+      next unless num_images + num_comments + num_charts + num_filters != 0
 
       # Include 1 parent MSODRAWING shape, per sheet, in the shape count.
-      num_shapes   += 1 + num_images   +
-      num_comments +
-      num_charts   +
-      num_filters
+      num_shapes    = 1 + num_images   +  num_comments +
+                          num_charts   +  num_filters
       shapes_saved += num_shapes
       mso_size     += image_mso_size
 
