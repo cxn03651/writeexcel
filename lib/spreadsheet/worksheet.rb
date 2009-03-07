@@ -417,7 +417,8 @@ class Worksheet < BIFFWriter
 
   ###############################################################################
   #
-  # set_column($firstcol, $lastcol, $width, $format, $hidden, $level)
+  # set_column($first_col, $last_col, $width, $format, $hidden, $level, $collapsed)
+  # set_column($A1_notation,          $width, $format, $hidden, $level, $collapsed)
   #
   # Set the width of a single column or a range of columns.
   # See also: _store_colinfo
@@ -1356,7 +1357,8 @@ class Worksheet < BIFFWriter
 
   ###############################################################################
   #
-  # write_comment($row, $col, $comment)
+  # write_comment($row,   $col,   $comment[, optionhash(es)])
+  # write_comment($A1_notation,   $comment[, optionhash(es)])
   #
   # Write a comment to the specified row and column (zero indexed).
   #
@@ -1371,7 +1373,6 @@ class Worksheet < BIFFWriter
     end
 
     return -1 if args.size < 3   # Check the number of args
-
 
     row = args[0]
     col = args[1]
