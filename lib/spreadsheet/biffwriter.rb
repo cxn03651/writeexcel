@@ -71,7 +71,7 @@ class BIFFWriter
     end
 
     @datasize += d.length
-    @data      = d << @data
+    @data      = d + @data
 
     return d
   end
@@ -89,7 +89,7 @@ class BIFFWriter
     end
 
     @datasize += d.length
-    @data      = @data << d
+    @data      = @data + d
 
     return d
   end

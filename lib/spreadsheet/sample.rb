@@ -292,5 +292,6 @@ bp=1
   
       result     = unpack_record(result)
       p result
+      p target
     end
 

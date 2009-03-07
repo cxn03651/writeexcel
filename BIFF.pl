@@ -16,6 +16,15 @@ my @tests = (
 
                            )],
     },
+    {
+        'column'        => 1,
+        'expression'    => 'x =  Nonblanks',
+        'data'          => [qw(
+                                9E 00 18 00 01 00 84 32 0E 05 00 00 00 00 00 00
+                                00 00 00 00 00 00 00 00 00 00 00 00
+
+                           )],
+    },
 );
 for my $test (@tests) {
 
@@ -31,7 +40,8 @@ for my $test (@tests) {
     my $caption    = " \tfilter_column($column, '$expression')";
 
     $result     = unpack_record($result);
-    is($result, $target, $caption);
+
+		print "result = $result\ntarget = $target\n";
 }
 
 
