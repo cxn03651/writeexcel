@@ -15,7 +15,7 @@ class Worksheet < BIFFWriter
   attr_reader :title_rowmin, :title_rowmax, :title_colmin, :title_colmax
   attr_reader :print_rowmin, :print_rowmax, :print_colmin, :print_colmax
   attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
-  attr_accessor :object_ids
+  attr_accessor :object_ids, :num_images, :image_mso_size
   attr_writer :date_1904
 
   ###############################################################################
@@ -147,6 +147,9 @@ class Worksheet < BIFFWriter
     @comments_author     = ''
     @comments_author_enc = 0
     @comments_visible    = 0
+
+    @num_images          = 0
+    @image_mso_size      = 0
 
     @filter_area         = []
     @filter_count        = 0
@@ -4443,6 +4446,7 @@ class Worksheet < BIFFWriter
 
     @charts       = {}
     @charts_array = @charts
+    count
   end
 
   ###############################################################################

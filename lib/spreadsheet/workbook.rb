@@ -1,4 +1,5 @@
 require 'digest/md5'
+require 'Tempfile'
 require 'biffwriter'
 require 'formula'
 
@@ -123,20 +124,16 @@ class Workbook < BIFFWriter
   def _initialize
     basename = 'spreadsheetwriteexcelworkbook'
 
-    begin
-      if !@tempdir.nil?
-        if @tempdir == ''
-          fh = Tempfile.new(basename)
-        else
-          fh = Tempfile.new(basename, @tempdir)
-        end
-      end
-      # failed. store temporary data in memory.
-    rescue
-      @using_tmpfile = 0
-      # if the temp file creation was successful
+    if @tempdir.nil? || @tempdir == ''
+      fh = Tempfile.new(basename)
     else
+      fh = Tempfile.new(basename, @tempdir)
+    end
+
+    if fh
       @filehandle = fh
+    else
+      @using_tmpfile = 0
     end
   end
 
@@ -946,11 +943,11 @@ class Workbook < BIFFWriter
     @worksheets.each do |sheet|
       next unless sheet.kind_of?(Worksheet)
 
-      num_images     = @num_images || 0
-      image_mso_size = @image_mso_size || 0
-      num_comments   = prepare_comments
-      num_charts     = prepare_charts
-      num_filters    = @filter_count
+      num_images     = sheet.num_images || 0
+      image_mso_size = sheet.image_mso_size || 0
+      num_comments   = sheet.prepare_comments
+      num_charts     = sheet.prepare_charts
+      num_filters    = sheet.filter_count
 
       next unless num_images + num_comments + num_charts +num_filters != 0
 
@@ -2426,7 +2423,7 @@ class Workbook < BIFFWriter
     length  = 0x0000               # Number of bytes to follow
 
     data    = store_mso_dgg_container
-    data    = data + store_mso_dgg(@mso_clusters)
+    data    = data + store_mso_dgg(*@mso_clusters)
     data    = data + store_mso_bstore_container
     @images_data.each do |image|
       data = data + store_mso_images(image)
@@ -2437,7 +2434,7 @@ class Workbook < BIFFWriter
     length  = data.length
     header  = [record, length].pack("vv")
 
-    add_mso_drawing_group_continue(header . data)
+    add_mso_drawing_group_continue(header + data)
 
     return header + data # For testing only.
   end
