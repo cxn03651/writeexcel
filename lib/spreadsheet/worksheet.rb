@@ -1473,8 +1473,7 @@ class Worksheet < BIFFWriter
 
     while (!chars.empty?)
       char = chars.pop   # LS char first
-      col = col + (char[0] - 65 +1) * (26**expn)
-      #####  ord(char) - ord('A')  in perl  ####
+      col = col + (char[0] - "A"[0] +1) * (26**expn)
       expn = expn + 1
     end
 
