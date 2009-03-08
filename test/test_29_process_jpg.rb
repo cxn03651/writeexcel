@@ -1,7 +1,7 @@
 ##########################################################################
-# test_28_autofilter.rb
+# test_29_process_jpg.rb
 #
-# Tests for the token parsing methods used to parse autofilter expressions.
+# Tests for the JPEG width and height processing.
 #
 # reverse('©'), September 2005, John McNamara, jmcnamara@cpan.org
 #
