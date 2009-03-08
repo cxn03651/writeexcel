@@ -4372,7 +4372,7 @@ class Worksheet < BIFFWriter
   #
   def pack_number_doper(operator, number)
     number = [number].pack('d')
-    number.reverse! if @byte_order != 0
+    number.reverse! if @byte_order != '' && @byte_order != 0
 
     doper  = [0x04, operator].pack('CC') + number
     return doper
