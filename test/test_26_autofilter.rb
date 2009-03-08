@@ -88,7 +88,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'column'        => 3,
             'expression'    => 'x >= 1.001',
             'data'          => [%w(
-                                    9E 00 18 00 03 00 80 32 04 06 6A BC 74 93 18 04
+                                      9E 00 18 00 03 00 80 32 04 06 6A BC 74 93 18 04
                                     F0 3F 00 00 00 00 00 00 00 00 00 00
     
                                )]

@@ -8,19 +8,10 @@ my $worksheet  = $workbook->add_worksheet();
 
 my @tests = (
     {
-        'column'        => 0,
-        'expression'    => 'x =  Blanks',
+        'column'        => 22,
+        'expression'    => 'top 10 items',
         'data'          => [qw(
-                                9E 00 18 00 00 00 84 32 0C 02 00 00 00 00 00 00
-                                00 00 00 00 00 00 00 00 00 00 00 00
-
-                           )],
-    },
-    {
-        'column'        => 1,
-        'expression'    => 'x =  Nonblanks',
-        'data'          => [qw(
-                                9E 00 18 00 01 00 84 32 0E 05 00 00 00 00 00 00
+                                9E 00 18 00 16 00 30 05 04 06 00 00 00 00 00 00
                                 00 00 00 00 00 00 00 00 00 00 00 00
 
                            )],

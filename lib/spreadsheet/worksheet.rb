@@ -938,7 +938,7 @@ class Worksheet < BIFFWriter
     # Special handling of "Top" filter expressions.
     if tokens[0] =~ /^top|bottom$/i
       value = tokens[1]
-      if (value =~ /\D/ or value < 1 or value > 500)
+      if (value =~ /\D/ or value.to_i < 1 or value.to_i > 500)
         raise "The value '#{value}' in expression '#{expression}' " +
         "must be in the range 1 to 500"
       end
@@ -4241,7 +4241,7 @@ class Worksheet < BIFFWriter
         operator_1 = 3
       end
 
-      top10_value     = token_1
+      top10_value     = token_1.to_i
       token_1         = 0
     end
 
@@ -4286,12 +4286,12 @@ class Worksheet < BIFFWriter
       return pack_unused_doper, string
     end
 
-    if token =~ /^blanks|nonblanks$/i
+    if token.to_s =~ /^blanks|nonblanks$/i
       doper  = pack_blanks_doper(operator, token)
     elsif operator == 2 or
-      !(token  =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
+      !(token.to_s  =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
       # Excel treats all tokens as strings if the operator is equality, =.
-      string = token
+      string = token.to_s
 
       encoding = 0
       length   = string.length
