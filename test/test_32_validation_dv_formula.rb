@@ -1,5 +1,5 @@
 ##########################################################################
-# test_30_validation_dval.rb
+# test_32_validation_dv_formula.rb
 #
 # Tests for the Excel DVAL structure used in data validation.
 #
