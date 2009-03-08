@@ -5936,6 +5936,7 @@ class Worksheet < BIFFWriter
     end
 
     # Strip the = sign at the beginning of the formula string
+    formula = formula.to_s unless formula.kind_of?(String)
     formula.sub!(/^=/, '')
 
     # Parse the formula using the parser in Formula.pm
@@ -5962,7 +5963,7 @@ class Worksheet < BIFFWriter
     # Parse the tokens into a formula string.
     formula = parser.parse_tokens(tokens)
 
-    return [formula.length, unused].pack('vv')
+    return [formula.length, unused].pack('vv') + formula
   end
 
 end

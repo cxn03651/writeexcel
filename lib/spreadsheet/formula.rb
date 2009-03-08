@@ -6,7 +6,7 @@ class Formula < ExcelFormulaParser
   attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
   def initialize(byte_order)
-    @byte_order     = byte_order,
+    @byte_order     = byte_order
     @workbook       = ""
     @ext_sheets     = {}
     @ext_refs       = {}
@@ -54,7 +54,7 @@ class Formula < ExcelFormulaParser
     modifier    = ''
     num_args    = 0
     _class      = 0
-    _classary   = 1
+    _classary   = [1]
     args        = tokens.dup
     # A note about the class modifiers used below. In general the class,
     # "reference" or "value", of a function is applied to all of its operands.
@@ -140,16 +140,16 @@ class Formula < ExcelFormulaParser
         q.push [:NUMBER, s.matched]
       elsif s.scan(/"([^"]|"")*"/)
         q.push [:STRING, s.matched]
+      elsif s.scan(/\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
+        q.push [:RANGE2D , s.matched]
+      elsif s.scan(/[^!(,]+!\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
+        q.push [:RANGE3D , s.matched]
       elsif s.scan(/\$?[A-I]?[A-Z]\$?\d+/)
         q.push [:REF2D,  s.matched]
       elsif s.scan(/[^!(,]+!\$?[A-I]?[A-Z]\$?\d+/)
         q.push [:REF3D , s.matched]
       elsif s.scan(/'[^']+'!\$?[A-I]?[A-Z]\$?\d+/)
         q.push [:REF3D , s.matched]
-      elsif s.scan(/\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
-        q.push [:RANGE2D , s.matched]
-      elsif s.scan(/[^!(,]+!\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
-        q.push [:RANGE3D , s.matched]
       elsif s.scan(/<=/)
         q.push [:LE , s.matched]
       elsif s.scan(/>=/)
@@ -253,7 +253,7 @@ class Formula < ExcelFormulaParser
       return [@ptg['ptgInt'], num.to_i].pack("Cv")
     else  # A float
       num = [num].pack("d")
-      num.reverse! if @byte_order != 0
+      num.reverse! if @byte_order != 0 && @byte_order != ''
       return [@ptg['ptgNum']].pack("C") + num
     end
   end
@@ -580,7 +580,6 @@ class Formula < ExcelFormulaParser
       #####  ord(char) - ord('A')  in perl  ####
       expn += 1
     end
-    bp = true
     # Convert 1-index to zero-index
     row -= 1
     col -= 1
