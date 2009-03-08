@@ -902,7 +902,7 @@ class Worksheet < BIFFWriter
       end
       expression_1 = parse_filter_tokens(expression, tokens[0..2])
       expression_2 = parse_filter_tokens(expression, tokens[4..6])
-      return [expression_1, conditional, expression_2]
+      return [expression_1, conditional, expression_2].flatten
     else
       return parse_filter_tokens(expression, tokens)
     end
