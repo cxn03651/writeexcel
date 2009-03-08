@@ -852,7 +852,7 @@ class Worksheet < BIFFWriter
   #           'x = "foo "" bar"'
   #
   def extract_filter_tokens(expression = nil)
-    return unless expression
+    return [] unless expression
 
     #  @tokens = ($expression  =~ /"(?:[^"]|"")*"|\S+/g); #"
 
@@ -868,8 +868,13 @@ class Worksheet < BIFFWriter
       token.sub!(/^"/, '')
       token.sub!(/"$/, '')
       token.gsub!(/""/, '"')
-      token    # gsub! returns nil unless match,
-               # if this is none, store nil to tokens array.
+
+      # if token is number, convert to numeric.
+      if token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+        token.to_f
+      else
+        token
+      end
     end
 
     return tokens

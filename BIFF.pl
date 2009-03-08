@@ -7,32 +7,20 @@ my $workbook    = Spreadsheet::WriteExcel->new($test_file);
 my $worksheet  = $workbook->add_worksheet();
 
 my @tests = (
-    {
-        'column'        => 22,
-        'expression'    => 'top 10 items',
-        'data'          => [qw(
-                                9E 00 18 00 16 00 30 05 04 06 00 00 00 00 00 00
-                                00 00 00 00 00 00 00 00 00 00 00 00
-
-                           )],
-    },
+    [
+        undef,
+        [],
+    ],
 );
-for my $test (@tests) {
+for my $aref (@tests) {
+    my $expression  = $aref->[0];
+    my $expected    = $aref->[1];
+    my @results     = $worksheet->_extract_filter_tokens($expression);
 
-    my $column     = $test->{column};
-    my $expression = $test->{expression};
-    my @tokens     = $worksheet->_extract_filter_tokens($expression);
-       @tokens     = $worksheet->_parse_filter_expression($expression, @tokens);
+    my $testname    = $expression || 'none';
 
-    my $result = $worksheet->_store_autofilter($column , @tokens);
 
-    my $target     = join " ",  @{$test->{data}};
-
-    my $caption    = " \tfilter_column($column, '$expression')";
-
-    $result     = unpack_record($result);
-
-		print "result = $result\ntarget = $target\n";
+		print "result = $result\nexpected = $expected\n";
 }
 
 
