@@ -5901,7 +5901,7 @@ class Worksheet < BIFFWriter
 
     # Excel limits DV captions to 32 chars and messages to 255.
     if string.length > max_length
-      string = string[0 .. max_length]
+      string = string[0 .. max_length-1]
     end
 
     str_length = string.length
