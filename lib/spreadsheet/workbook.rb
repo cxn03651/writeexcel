@@ -1232,17 +1232,21 @@ class Workbook < BIFFWriter
     # Search through the image data to find the 0xFFC0 marker. The height and
     # width are contained in the data for that sub element.
     while offset < data_length
-      marker  = [data[offset,   2]].unpack("n")
-      length  = [data[offset+2, 2]].unpack("n")
-
+      marker  = data[offset,   2].unpack("n")
+      marker = marker[0]
+      length  = data[offset+2, 2].unpack("n")
+      length = length[0]
+      
       if marker == 0xFFC0
-        height = [data[offset+5, 2]].unpack("n")
-        width  = [data[offset+7, 2]].unpack("n")
+        height = data[offset+5, 2].unpack("n")
+        height = height[0]
+        width  = data[offset+7, 2].unpack("n")
+        width  = width[0]
         break
       end
 
       offset = offset + length + 2
-      breakt if marker == 0xFFDA
+      break if marker == 0xFFDA
     end
 
     if height.nil?
