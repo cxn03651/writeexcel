@@ -871,7 +871,7 @@ class Worksheet < BIFFWriter
 
       # if token is number, convert to numeric.
       if token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
-        token.to_f
+        token.to_f == token.to_i ? token.to_i : token.to_f
       else
         token
       end

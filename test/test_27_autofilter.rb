@@ -26,7 +26,7 @@ include Spreadsheet
 
 class TC_27_autofilter < Test::Unit::TestCase
 
-  def test_26_autofilter
+  def test_27_autofilter
     @tests.each do |test|
       expression = test[0]
       expected   = test[1]
