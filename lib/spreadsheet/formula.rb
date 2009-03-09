@@ -198,6 +198,29 @@ class Formula < ExcelFormulaParser
     q
   end
 
+  ###############################################################################
+  #
+  # get_ext_sheets()
+  #
+  # This semi-public method is used to update the hash of sheet names. It is
+  # updated by the add_worksheet() method of the Workbook class.
+  #
+  # TODO
+  #
+  def get_ext_sheets
+    # TODO
+    refs = @ext_refs
+    return refs
+
+    #my @refs = sort {$refs{$a} <=> $refs{$b}} keys %refs;
+
+    #foreach my $ref (@refs) {
+    #    $ref = [split /:/, $ref];
+    #}
+
+    #return @refs;
+  end
+
 
   ###############################################################################
 
@@ -460,56 +483,6 @@ class Formula < ExcelFormulaParser
     else
       return @ext_sheets[sheet_name]
     end
-  end
-
-  ###############################################################################
-  #
-  # set_ext_sheets()
-  #
-  # This semi-public method is used to update the hash of sheet names. It is
-  # updated by the add_worksheet() method of the Workbook class.
-  #
-  def set_ext_sheets(worksheet, index)
-    # The _ext_sheets hash is used to translate between worksheet names
-    # and their index
-    @ext_sheets[worksheet] = index
-
-
-    # 2D sheet refs such as '=Sheet1:Sheet2!A1' can only be added after all
-    # worksheets have been added.
-    #return 0 if $index < $self->{_ext_ref_count}; TODO
-
-
-    # The _ext_refs hash is used to correlate the external references used in
-    # formulas with the index stored in the Workbook EXTERNSHEET record.
-    #$self->{_ext_refs}->{$ref} = $index;
-    #$self->{_ext_ref_count}++;
-
-    # No errors
-    #return 1;
-  end
-
-  ###############################################################################
-  #
-  # get_ext_sheets()
-  #
-  # This semi-public method is used to update the hash of sheet names. It is
-  # updated by the add_worksheet() method of the Workbook class.
-  #
-  # TODO
-  #
-  def get_ext_sheets
-    # TODO
-    refs = @ext_refs;
-    return refs
-
-    #my @refs = sort {$refs{$a} <=> $refs{$b}} keys %refs;
-
-    #foreach my $ref (@refs) {
-    #    $ref = [split /:/, $ref];
-    #}
-
-    #return @refs;
   end
 
   ###############################################################################

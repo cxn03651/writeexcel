@@ -1,6 +1,7 @@
 require 'digest/md5'
 require 'Tempfile'
 require 'biffwriter'
+require 'olewriter'
 require 'formula'
 
 class Workbook < BIFFWriter
@@ -8,10 +9,10 @@ class Workbook < BIFFWriter
   EOF = 4
   SheetName = "Sheet"
 
-  attr_accessor :date_system, :str_unique
+  attr_accessor :date_system, :str_unique, :biff_only
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
   attr_writer :mso_size
-#attr_reader :mso_size, :mso_clusters
+
   ###############################################################################
   #
   # new()
@@ -37,6 +38,7 @@ class Workbook < BIFFWriter
     @sheetnames            = []
     @formats               = []
     @palette               = []
+    @biff_only             = 0
 
     @using_tmpfile         = 1
     @filehandle            = ""
@@ -192,7 +194,7 @@ class Workbook < BIFFWriter
     unless @data.nil?
       tmp   = @data
       @data = nil
-      @filehandle.seek(0, IO::SEEK_SET) if using_tmpfile != 0
+      @filehandle.seek(0, IO::SEEK_SET) if @using_tmpfile != 0
       return tmp
     end
 
@@ -254,19 +256,19 @@ class Workbook < BIFFWriter
     index = @worksheets.size
 
     worksheet = Worksheet.new(
-    name,
-    index,
-    encoding,
-    @activesheet,
-    @firstsheet,
-    @url_format,
-    @parser,
-    @tempdir,
-    @str_total,
-    @str_unique,
-    @str_table,
-    @date_1904,
-    @compatibility
+      name,
+      index,
+      encoding,
+      @activesheet,
+      @firstsheet,
+      @url_format,
+      @parser,
+      @tempdir,
+      @str_total,
+      @str_unique,
+      @str_table,
+      @date_1904,
+      @compatibility
     )
     @worksheets[index] = worksheet     # Store ref for iterator
     @sheetnames[index] = name          # Store EXTERNSHEET names
@@ -735,7 +737,7 @@ class Workbook < BIFFWriter
     store_palette()
 
     # Calculate the offsets required by the BOUNDSHEET records
-    calc_sheet_offsets()
+    calc_sheet_offsets
 
     # Add BOUNDSHEET records.
     @worksheets.each do |sheet|
@@ -773,11 +775,11 @@ class Workbook < BIFFWriter
   # OLE::Storage_Lite if the workbook data is > ~ 7MB.
   #
   def store_OLE_file
-    maxsize = 7087104
+    maxsize = 7_087_104
 
     if @add_doc_properties == 0 && @biffsize <= maxsize
       # Write the OLE file using OLEwriter if data <= 7MB
-      ole  = OLEwriter.new(@fh_out)
+      ole  = OLEWriter.new(@fh_out)
 
       # Write the BIFF data without the OLE container for testing.
       ole.biff_only = @biff_only
@@ -800,73 +802,54 @@ class Workbook < BIFFWriter
 
       return ole.close
 =begin
-      else
-         # Write the OLE file using OLE::Storage_Lite if data > 7MB
-         eval { require OLE::Storage_Lite };
+    else
+      # Write the OLE file using ruby-ole if data > 7MB
    
-         if (not $@) {
+      # Create the Workbook stream.
+      stream   = 'Workbook'.unpack('C*').pack('v*')
+      workbook = OLE::Storage_Lite::PPS::File->newFile($stream);
    
-            # Protect print() from -l on the command line.
-            local $\ = undef;
+      while (my $tmp = $self->get_data()) {
+         $workbook->append($tmp);
+      }
    
-            my @streams;
-   
-            # Create the Workbook stream.
-            my $stream   = pack 'v*', unpack 'C*', 'Workbook';
-            my $workbook = OLE::Storage_Lite::PPS::File->newFile($stream);
-   
-            while (my $tmp = $self->get_data()) {
-               $workbook->append($tmp);
-            }
-   
-            foreach my $worksheet (@{$self->{_worksheets}}) {
-               while (my $tmp = $worksheet->get_data()) {
-                    $workbook->append($tmp);
-               }
-            }
-   
-            push @streams, $workbook;
-   
-   
-            # Create the properties streams, if any.
-            if ($self->{_add_doc_properties}) {
-               my $stream;
-               my $summary;
-   
-               $stream  = pack 'v*', unpack 'C*', "\5SummaryInformation";
-               $summary = $self->{summary};
-               $summary = OLE::Storage_Lite::PPS::File->new($stream, $summary);
-               push @streams, $summary;
-   
-               $stream  = pack 'v*', unpack 'C*', "\5DocumentSummaryInformation";
-               $summary = $self->{doc_summary};
-               $summary = OLE::Storage_Lite::PPS::File->new($stream, $summary);
-               push @streams, $summary;
-            }
-   
-            # Create the OLE root document and add the substreams.
-            my @localtime = @{ $self->{_localtime} };
-            splice(@localtime, 6);
-   
-            my $ole_root = OLE::Storage_Lite::PPS::Root->new(\@localtime,
-                                                                \@localtime,
-                                                                \@streams);
-            $ole_root->save($self->{_filename});
-   
-   
-            # Close the filehandle if it was created internally.
-            return CORE::close($self->{_fh_out}) if $self->{_internal_fh};
+      foreach my $worksheet (@{$self->{_worksheets}}) {
+        while (my $tmp = $worksheet->get_data()) {
+              $workbook->append($tmp);
          }
-         else {
-            # File in greater than limit, set $! to "File too large"
-            $! = 27; # Perl error code "File too large"
+      }
    
-            croak "Maximum Spreadsheet::WriteExcel filesize, $maxsize bytes, ".
-                  "exceeded. To create files bigger than this limit please "  .
-                  "install OLE::Storage_Lite\n";
+      push @streams, $workbook;
    
-            # return 0;
-         }
+   
+      # Create the properties streams, if any.
+      if ($self->{_add_doc_properties}) {
+        my $stream;
+        my $summary;
+   
+        $stream  = pack 'v*', unpack 'C*', "\5SummaryInformation";
+        $summary = $self->{summary};
+        $summary = OLE::Storage_Lite::PPS::File->new($stream, $summary);
+        push @streams, $summary;
+   
+        $stream  = pack 'v*', unpack 'C*', "\5DocumentSummaryInformation";
+        $summary = $self->{doc_summary};
+        $summary = OLE::Storage_Lite::PPS::File->new($stream, $summary);
+        push @streams, $summary;
+      }
+   
+      # Create the OLE root document and add the substreams.
+      my @localtime = @{ $self->{_localtime} };
+      splice(@localtime, 6);
+   
+      my $ole_root = OLE::Storage_Lite::PPS::Root->new(\@localtime,
+                                                          \@localtime,
+                                                          \@streams);
+      $ole_root->save($self->{_filename});
+   
+   
+      # Close the filehandle if it was created internally.
+      return CORE::close($self->{_fh_out}) if $self->{_internal_fh};
 =end
     end
   end
@@ -908,7 +891,7 @@ class Workbook < BIFFWriter
 
     @worksheets.each do |sheet|
       sheet.offset = offset
-      sheet.close(@sheetnames)
+      sheet.close(*@sheetnames)
       offset += sheet.datasize
     end
 
@@ -1019,10 +1002,10 @@ class Workbook < BIFFWriter
 
     @worksheets.each do |sheet|
       next unless sheet.kind_of?(Worksheet)
-      next unless sheet.prepare_images
+      next if sheet.prepare_images == 0
 
-      num_images      = 0;
-      image_mso_size  = 0;
+      num_images      = 0
+      image_mso_size  = 0
 
       sheet.images_array.each do |image|
         filename = image[2]
@@ -1272,7 +1255,7 @@ class Workbook < BIFFWriter
     end
 
     # Add the font for comments. This isn't connected to any XF format.
-    tmp    = Format.new(nil, font => 'Tahoma', size => 8)
+    tmp    = Format.new(nil, :font => 'Tahoma', :size => 8)
     font   = tmp.get_font
     append(font)
 
@@ -1334,7 +1317,7 @@ class Workbook < BIFFWriter
         next if num_format =~ /^\d+$/   # built-in
       end
 
-      unless @num_formats[num_format].nil?
+      if num_formats[num_format]
         # FORMAT has already been used
         format.num_format = num_formats[num_format]
       else
@@ -1382,7 +1365,7 @@ class Workbook < BIFFWriter
       #[0x01,  1], # RowLevel_n
     ]
 
-    @built_ins.each do |aref|
+    built_ins.each do |aref|
       type     = aref[0]
       xf_index = aref[1]
 
@@ -1591,9 +1574,9 @@ class Workbook < BIFFWriter
   # Writes Excel FORMAT record for non "built-in" numerical formats.
   #
   def store_num_format(format, ifmt, encoding)
+    format = format.to_s unless format.kind_of?(String)
     record    = 0x041E         # Record identifier
-    length                     # Number of bytes to follow
-
+    # length                   # Number of bytes to follow
 
     # Char length of format string
     cch = format.length
@@ -1616,7 +1599,7 @@ class Workbook < BIFFWriter
     length    = 0x05 + format.length
 
     header    = [record, length].pack("vv")
-    data      = [ifmt, cch, encodinf].pack("vvC")
+    data      = [ifmt, cch, encoding].pack("vvC")
 
     append(header, data, format)
   end
@@ -1842,21 +1825,17 @@ class Workbook < BIFFWriter
   #
   # Stores the PALETTE biff record.
   #
-  def store_palette(*args)
-    aref            = @palette
-
-    record          = 0x0092             # Record identifier
-    length          = 2 + 4 * aref.size  # Number of bytes to follow
-    ccv             =         aref.size  # Number of RGB values to follow
-    data                                 # The RGB data
+  def store_palette
+    record          = 0x0092                 # Record identifier
+    length          = 2 + 4 * @palette.size  # Number of bytes to follow
+    ccv             =         @palette.size  # Number of RGB values to follow
+    data            = ''                     # The RGB data
 
     # Pack the RGB data
-    tmp = []
-    aref.each do |a|
-      tmp << a
+    @palette.each do |p|
+      data = data + p.pack('CCCC')
     end
-    data = data + tmp.pack('CCCC')
-
+    
     header = [record, length, ccv].pack("vvv")
 
     append(header, data)
@@ -2024,10 +2003,9 @@ class Workbook < BIFFWriter
     @str_table.each_key do |key|
       strings[@str_table[key]] = key
     end
-
     # The SST data could be very large, free some memory (maybe).
     @str_table = nil
-    @str_array = @strings
+    @str_array = strings
 
     # Iterate through the strings to calculate the CONTINUE block sizes.
     #
@@ -2047,7 +2025,7 @@ class Workbook < BIFFWriter
     block_sizes    = []
     continue       = 0
 
-    @strings.each do |string|
+    strings.each do |string|
 
       string_length = string.length
       encoding      = [string].unpack("xx C")
@@ -2154,8 +2132,10 @@ class Workbook < BIFFWriter
     # they must be written before the SST records
     #
     length  = 12
-    length    +=     block_sizes.shift if    block_sizes != 0 # SST
-    length    += 4 + block_sizes.shift while block_sizes != 0 # CONTINUEs
+    length +=     block_sizes.shift unless block_sizes.empty? # SST
+    while !block_sizes.empty? do
+      length += 4 + block_sizes.shift                         # CONTINUEs
+    end
 
     return length
   end
@@ -2174,7 +2154,7 @@ class Workbook < BIFFWriter
   # occurs wherever the start of the bucket string is written out via append().
   #
   def store_shared_strings
-    strings = str_array
+    strings = @str_array
 
     record              = 0x00FC   # Record identifier
     length              = 0x0008   # Number of bytes to follow
@@ -2188,7 +2168,7 @@ class Workbook < BIFFWriter
 
     # The SST and CONTINUE block sizes have been pre-calculated by
     # _calculate_shared_string_sizes()
-    block_sizes    = str_block_sizes
+    block_sizes    = @str_block_sizes
 
     # The SST record is required even if it contains no strings. Thus we will
     # always have a length
@@ -2210,7 +2190,8 @@ class Workbook < BIFFWriter
     append(header, data)
 
     # Iterate through the strings and write them out
-    @strings.each do |string|
+    return if strings.empty?
+    strings.each do |string|
 
       string_length = string.length
       encoding      = [string].unpack("xx C")

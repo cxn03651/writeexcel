@@ -38,7 +38,7 @@ class Worksheet < BIFFWriter
     @str_total           = args[8]  || 0
     @str_unique          = args[9]  || 0
     @str_table           = args[10] || {}
-    @date_1904           = args[11]
+    @date_1904           = args[11] || 0
     @compatibility       = args[12]
 
     @table               = []
@@ -191,7 +191,7 @@ class Worksheet < BIFFWriter
   # Add data to the beginning of the workbook (note the reverse order)
   # and to the end of the workbook.
   #
-  def close(sheetnames)
+  def close(*sheetnames)
     num_sheets = sheetnames.size
 
     ################################################
@@ -211,7 +211,7 @@ class Worksheet < BIFFWriter
     store_filtermode
 
     # Prepend the COLINFO records if they exist
-    if @colinfo
+    unless @colinfo.empty?
       while (@colinfo)
         arrayref = @colinfo.pop
         store_colinfo(arrayref)
@@ -292,8 +292,8 @@ class Worksheet < BIFFWriter
     store_window2
     store_page_view
     store_zoom
-    store_panes(@panes) if !@panes.nil? && @panes != 0
-    store_selection(@selection)
+    store_panes(*@panes) if !@panes.nil? && @panes != 0
+    store_selection(*@selection)
     store_validation_count
     store_validations
     store_tab_color
@@ -2421,7 +2421,7 @@ class Worksheet < BIFFWriter
 
     # Set the epoch as 1900 or 1904. Defaults to 1900.
     # Special cases for Excel.
-    if !@date_1904.nil? && @date_1904 == 0
+    if @date_1904 == 0
       return      seconds if date == '1899-12-31' # Excel 1900 epoch
       return      seconds if date == '1900-01-00' # Excel 1900 epoch
       return 60 + seconds if date == '1900-02-29' # Excel false leapday
@@ -2433,8 +2433,8 @@ class Worksheet < BIFFWriter
     # days by normalising the year in relation to the epoch. Thus the year 2000
     # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
     #
-    epoch   = !@date_1904.nil? && @date_1904 != 0 ? 1904 : 1900
-    offset  = !@date_1904.nil? && @date_1904 != 0 ?    4 :    0
+    epoch   = @date_1904 != 0 ? 1904 : 1900
+    offset  = @date_1904 != 0 ?    4 :    0
     norm    = 300
     range   = year -epoch
 
@@ -2659,7 +2659,7 @@ class Worksheet < BIFFWriter
   #
   # Write BIFF record Window2.
   #
-  def _store_window2
+  def store_window2
     record         = 0x023E     # Record identifier
     length         = 0x0012     # Number of bytes to follow
 
@@ -2773,8 +2773,8 @@ class Worksheet < BIFFWriter
 
     colwidth = 0x0008      # Default column width
 
-    header   = pack("vv", record, length)
-    data     = pack("v",  colwidth)
+    header   = [record, length].pack("vv")
+    data     = [colwidth].pack("v")
 
     prepend(header, data)
   end
@@ -3000,22 +3000,19 @@ class Worksheet < BIFFWriter
   # Frozen panes are specified in terms of a integer number of rows and columns.
   # Thawed panes are specified in terms of Excel's units for rows and columns.
   #
-  def store_panes(y, x, colLeft, no_split, pnnAct)
+  def store_panes(y=0, x=0, rwtop=nil,  colleft=nil, no_split=nil, pnnAct=nil)
     record      = 0x0041       # Record identifier
     length      = 0x000A       # Number of bytes to follow
-
-    y = 0 if y.nil?
-    x = 0 if x.nil?
 
     # Code specific to frozen or thawed panes.
     if @frozen != 0
       # Set default values for $rwTop and $colLeft
-      rwTop   = y unless defined? rwTop
-      colLeft = x unless defined? colLeft
+      rwtop   = y if rwtop.nil?
+      colleft = x if colleft.nil?
     else
       # Set default values for $rwTop and $colLeft
-      rwTop   = 0  unless defined? rwTop
-      colLeft = 0  unless defined? colLeft
+      rwtop   = 0  if rwtop.nil?
+      colleft = 0  if colleft.nil?
 
       # Convert Excel's row and column units to the internal units.
       # The default row height is 12.75
@@ -3030,7 +3027,7 @@ class Worksheet < BIFFWriter
     # Determine which pane should be active. There is also the undocumented
     # option to override this should it be necessary: may be removed later.
     #
-    unless defined? pnnAct
+    if pnnAct.nil?
       pnnAct = 0 if (x != 0 && y != 0) # Bottom right
       pnnAct = 1 if (x != 0 && y == 0) # Top right
       pnnAct = 2 if (x == 0 && y != 0) # Bottom left
@@ -3040,7 +3037,7 @@ class Worksheet < BIFFWriter
     @active_pane = pnnAct # Used in _store_selection
 
     header = [record, length].pack('vv')
-    data   = [x, y, rwTop, colLeft, pnnAct].pack('vvvvv')
+    data   = [x, y, rwtop, colleft, pnnAct].pack('vvvvv')
 
     append(header, data)
   end
@@ -3155,7 +3152,7 @@ class Worksheet < BIFFWriter
     cch           /= 2 if encoding != 0
 
     # Change the UTF-16 name from BE to LE
-    str            = [str].unpack('v*').pack('n*')
+    str            = str.unpack('v*').pack('n*')
 
     length         = 3 + str.length
 
@@ -3434,7 +3431,7 @@ class Worksheet < BIFFWriter
     record      = 0x0082                        # Record identifier
     length      = 0x0002                        # Bytes to follow
 
-    fGridSet    = !@print_gridlines          # Boolean flag
+    fGridSet    = @print_gridlines == 0 ? 1 : 0 # Boolean flag
 
     header      = [record, length].pack("vv")
     data        = [fGridSet].pack("v")
@@ -3716,13 +3713,14 @@ class Worksheet < BIFFWriter
         written_rows.each do |row|
           cell_offset = 0
 
-
-          @table[row].each do |col|
-            next unless col
-            append(col)
-            ength = col.length
-            row_offset  = row_offset  + length
-            cell_offset = cell_offset + length
+          if @table[row]
+            @table[row].each do |col|
+              next unless col
+              append(col)
+              length = col.length
+              row_offset  += length
+              cell_offset += length
+            end
           end
           cell_offsets.push(cell_offset)
         end
@@ -4557,6 +4555,108 @@ class Worksheet < BIFFWriter
     end
 
     @object_ids[0] = spid
+  end
+
+  ###############################################################################
+  #
+  # _store_charts()
+  #
+  # Store the collections of records that make up charts.
+  #
+  def store_charts
+      record          = 0x00EC           # Record identifier
+      length          = 0x0000           # Bytes to follow
+  
+      ids             = @object_ids.dup
+      spid            = ids.shift
+  
+      charts          = @charts_array
+      num_charts      = charts.size
+  
+      num_filters     = @filter_count
+      num_comments    = @comments_array
+  
+      # Number of objects written so far.
+      num_objects     = @images_array.size
+  
+      # Skip this if there aren't any charts.
+      return if num_charts == 0
+  
+      (0 .. num_charts-1 ).each do |i|
+          row         =   charts[i][0]
+          col         =   charts[i][1]
+          name        =   charts[i][2]
+          x_offset    =   charts[i][3]
+          y_offset    =   charts[i][4]
+          scale_x     =   charts[i][5]
+          scale_y     =   charts[i][6]
+          width       =   526
+          height      =   319
+  
+          width  *= scale_x if scale_x.kind_of?(Numeric) && scale_x != 0
+          height *= scale_y if scale_y.kind_of?(Numeric) && scale_y != 0
+  
+          # Calculate the positions of chart object.
+          vertices = position_object( col,
+                                      row,
+                                      x_offset,
+                                      y_offset,
+                                      width,
+                                      height
+                                    )
+
+          if (i == 0 and num_objects != 0)
+              # Write the parent MSODRAWIING record.
+              dg_length    = 192 + 120*(num_charts -1)
+              spgr_length  = 168 + 120*(num_charts -1)
+  
+              dg_length   +=  96 *num_filters
+              spgr_length +=  96 *num_filters
+  
+              dg_length   += 128 *num_comments
+              spgr_length += 128 *num_comments
+  
+  
+              data        = store_mso_dg_container(dg_length)     +
+                            store_mso_dg(ids)                     +
+                            store_mso_spgr_container(spgr_length) +
+                            store_mso_sp_container(40)            +
+                            store_mso_spgr()                      +
+                            store_mso_sp(0x0, spid, 0x0005)
+              spid += 1
+              data = data + store_mso_sp_container(112)           +
+                            store_mso_sp(201, spid, 0x0A00)
+              spid += 1
+              data = data + store_mso_opt_chart()                 +
+                            store_mso_client_anchor(0, vertices)  +
+                            store_mso_client_data()
+          else
+              # Write the child MSODRAWIING record.
+              data        = store_mso_sp_container(112)           +
+                            store_mso_sp(201, spid, 0x0A00)
+              spid += 1
+              data = data + store_mso_opt_chart()                 +
+                            store_mso_client_anchor(0, vertices)  +
+                            store_mso_client_data()
+          end
+          length      = data.length
+          header      = [record, length].pack("vv")
+          append(header, data)
+  
+          store_obj_chart(num_objects+i+1)
+          store_chart_binary(name)
+      end
+
+
+      # Simulate the EXTERNSHEET link between the chart and data using a formula
+      # such as '=Sheet1!A1'.
+      # TODO. Won't work for external data refs. Also should use a more direct
+      #       method.
+      #
+      formula = "='#{@name}'!A1"
+      store_formula(formula)
+  
+      @object_ids[0] = spid
   end
 
   ###############################################################################
@@ -5738,7 +5838,7 @@ class Worksheet < BIFFWriter
   # handling of the object id at a later stage.
   #
   def store_validation_count
-    dv_count = @validations
+    dv_count = @validations.size
     obj_id   = -1
 
     return unless dv_count

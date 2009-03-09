@@ -52,7 +52,7 @@ class Format
   #
   # Constructor
   #
-  def initialize(xf_index=0, properties = [])
+  def initialize(xf_index=0, properties = {})
     @type           = 0
     @font_index     = 0
     @font           = 'Arial'
