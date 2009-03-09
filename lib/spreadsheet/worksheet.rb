@@ -1519,7 +1519,7 @@ class Worksheet < BIFFWriter
     data   = [row, col, xf].pack('vvv')
     xl_double = [num].pack("d")
 
-    xl_double.reverse! if @byte_order != 0
+    xl_double.reverse! if @byte_order != 0 && @byte_order != ''
 
     # Store the data or write immediately depending on the compatibility mode.
     if @compatibility != 0
@@ -3087,7 +3087,7 @@ class Worksheet < BIFFWriter
     numHdr = [numHdr].pack('d')
     numFtr = [numFtr].pack('d')
 
-    if @byte_order != 0
+    if @byte_order != 0 && @byte_order != ''
       numHdr = numHdr.reverse
       numFtr = numFtr.reverse
     end
@@ -3216,7 +3216,7 @@ class Worksheet < BIFFWriter
     header  = [record, length].pack('vv')
     data    = [margin].pack('d')
 
-    data = data.reverse if @byte_order != 0
+    data = data.reverse if @byte_order != 0 && @byte_order != ''
 
     prepend(header, data)
   end
@@ -3237,7 +3237,7 @@ class Worksheet < BIFFWriter
     header  = [record, length].pack('vv')
     data    = [margin].pack('d')
 
-    data = data.reverse if @byte_order != 0
+    data = data.reverse if @byte_order != 0 && @byte_order != ''
 
     prepend(header, data)
   end
@@ -3258,7 +3258,7 @@ class Worksheet < BIFFWriter
     header  = [record, length].pack('vv')
     data    = [margin].pack('d')
 
-    data = data.reverse if @byte_order != 0
+    data = data.reverse if @byte_order != 0 && @byte_order != ''
 
     prepend(header, data)
   end
@@ -3279,7 +3279,7 @@ class Worksheet < BIFFWriter
     header  = [record, length].pack('vv')
     data    = [margin].pack('d')
 
-    data = data.reverse if @byte_order != 0
+    data = data.reverse if @byte_order != 0 && @byte_order != ''
 
     prepend(header, data)
   end

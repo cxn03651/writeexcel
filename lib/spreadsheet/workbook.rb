@@ -11,6 +11,7 @@ class Workbook < BIFFWriter
 
   attr_accessor :date_system, :str_unique, :biff_only
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
+  attr_reader :data
   attr_writer :mso_size
 
   ###############################################################################
@@ -726,15 +727,15 @@ class Workbook < BIFFWriter
 
     # Add Workbook globals
     store_bof(0x0005)
-    store_codepage()
-    store_window1()
-    store_hideobj()
-    store_1904()
-    store_all_fonts()
-    store_all_num_formats()
-    store_all_xfs()
-    store_all_styles()
-    store_palette()
+    store_codepage
+    store_window1
+    store_hideobj
+    store_1904
+    store_all_fonts
+    store_all_num_formats
+    store_all_xfs
+    store_all_styles
+    store_palette
 
     # Calculate the offsets required by the BOUNDSHEET records
     calc_sheet_offsets
@@ -750,7 +751,7 @@ class Workbook < BIFFWriter
 
     # NOTE: If any records are added between here and EOF the
     # _calc_sheet_offsets() should be updated to include the new length.
-    store_country()
+    store_country
     if @ext_ref_count != 0
       store_supbook
       store_externsheet
@@ -1501,9 +1502,12 @@ class Workbook < BIFFWriter
     itabCur   = @activesheet           # Active worksheet
 
     header    = [record, length].pack("vv")
-    data      = [xWn, yWn, dxWn, dyWn,
-      grbit, itabCur, itabFirst,
-    ctabsel, wTabRatio].pack("vvvvvvvvv")
+    data      = [
+                  xWn, yWn, dxWn, dyWn,
+                  grbit,
+                  itabCur, itabFirst,
+                  ctabsel, wTabRatio
+                ].pack("vvvvvvvvv")
 
     append(header, data)
   end
