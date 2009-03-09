@@ -48,7 +48,7 @@ class Worksheet < BIFFWriter
     @ext_sheets          = []
     @using_tmpfile       = 0    # _initialize not coverted yet.
     @filehandle          = ""
-    @fileclosed          = 0
+    @fileclosed          = false
     @offset              = 0
     @xls_rowmax          = RowMax
     @xls_colmax          = ColMax
@@ -4403,12 +4403,12 @@ class Worksheet < BIFFWriter
       cols = @images[row].keys.sort
       cols.each do |col|
         images.push(@images[row][col])
-        count = count + 1
+        count += 1
       end
     end
 
     @images       = {}
-    @images_array = @images
+    @images_array = images
 
     return count
   end
@@ -4430,12 +4430,12 @@ class Worksheet < BIFFWriter
       cols = @comments[row].keys.sort
       cols.each do |col|
         comments.push(@comments[row][col])
-        count = count + 1
+        count += 1
       end
     end
 
     @comments       = {}
-    @comments_array = @comments
+    @comments_array = comments
 
     return count
   end
@@ -4457,12 +4457,12 @@ class Worksheet < BIFFWriter
       cols = @charts[row].keys.sort
       cols.each do |col|
         charts.push(@charts[row][col])
-        count = count + 1
+        count += 1
       end
     end
 
     @charts       = {}
-    @charts_array = @charts
+    @charts_array = charts
     count
   end
 

@@ -27,7 +27,7 @@ class OLEWriter
     @io.binmode
 
     @filehandle    = ""
-    @fileclosed    = 0
+    @fileclosed    = false
     @internal_fh   = 0
     @biff_only     = false
     @size_allowed  = true

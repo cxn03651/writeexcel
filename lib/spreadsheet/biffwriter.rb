@@ -108,11 +108,14 @@ class BIFFWriter
     record  = 0x0809      # Record identifier
     length  = 0x0010      # Number of bytes to follow
 
+    # According to the SDK $build and $year should be set to zero.
+    # However, this throws a warning in Excel 5. So, use these
+    # magic numbers.
     build   = 0x0DBB
     year    = 0x07CC
 
     bfh     = 0x00000041
-    sfo     = 0x0000000;
+    sfo     = 0x00000006
 
     header  = [record,length].pack("vv")
     data    = [BIFF_Version,type,build,year,bfh,sfo].pack("vvvvVV")

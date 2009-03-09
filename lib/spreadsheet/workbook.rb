@@ -29,7 +29,7 @@ class Workbook < BIFFWriter
     @firstsheet            = 0
     @selected              = 0
     @xf_index              = 0
-    @fileclosed            = 0
+    @fileclosed            = false
     @biffsize              = 0
     @sheetname             = "Sheet"
     @url_format            = ''
@@ -216,9 +216,9 @@ class Workbook < BIFFWriter
   # handle.
   #
   def close
-    return if @fileclosed != 0   # Prevent close() from being called twice.
+    return if @fileclosed   # Prevent close() from being called twice.
 
-    @fileclosed = 1
+    @fileclosed = true
     return store_workbook
   end
 
@@ -706,7 +706,7 @@ class Workbook < BIFFWriter
   #
   def store_workbook
     # Add a default worksheet if non have been added.
-    add_worksheet if @worksheets.size == 0
+    add_worksheet if @worksheets.empty?
 
     # Calculate size required for MSO records and update worksheets.
     calc_mso_sizes
@@ -926,15 +926,13 @@ class Workbook < BIFFWriter
     # required by each worksheet.
     #
     @worksheets.each do |sheet|
-      next unless sheet.kind_of?(Worksheet)
-
-      num_images     = sheet.num_images || 0
-      image_mso_size = sheet.image_mso_size || 0
+      num_images     = sheet.num_images
+      image_mso_size = sheet.image_mso_size
       num_comments   = sheet.prepare_comments
       num_charts     = sheet.prepare_charts
       num_filters    = sheet.filter_count
 
-      next unless num_images + num_comments + num_charts + num_filters != 0
+      next if num_images + num_comments + num_charts + num_filters == 0
 
       # Include 1 parent MSODRAWING shape, per sheet, in the shape count.
       num_shapes    = 1 + num_images   +  num_comments +
@@ -1001,7 +999,6 @@ class Workbook < BIFFWriter
     images_size     = 0;
 
     @worksheets.each do |sheet|
-      next unless sheet.kind_of?(Worksheet)
       next if sheet.prepare_images == 0
 
       num_images      = 0

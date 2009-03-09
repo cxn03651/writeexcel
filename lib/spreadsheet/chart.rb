@@ -34,7 +34,7 @@ class Chart
     @ext_sheets        = []
     @using_tmpfile     = 1
     @filehandle        = ""
-    @fileclosed        = 0
+    @fileclosed        = false
     @offset            = 0
     @xls_rowmax        = 0
     @xls_colmax        = 0

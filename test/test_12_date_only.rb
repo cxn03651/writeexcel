@@ -38,8 +38,8 @@ class TC_data_only < Test::Unit::TestCase
       line = lines.shift.sub(/^\s*/,'')
       braak if line =~ /^\s*# stop/  # For debugging
 
-      @worksheet.date_1904 = 0 if line =~ /Excel 1900/
-      @worksheet.date_1904 = 1 if line =~ /Excel 1904/
+      @worksheet.date_1904 = false if line =~ /Excel 1900/
+      @worksheet.date_1904 = true  if line =~ /Excel 1904/
 
       next  unless line =~ /\S/      # Ignore blank lines
       next  if line =~ /^\s*#/       # Ignore comments
