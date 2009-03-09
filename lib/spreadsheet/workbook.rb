@@ -24,7 +24,7 @@ class Workbook < BIFFWriter
     @filename              = filename
     @parser                = Formula.new(@byte_order)
     @tempdir               = nil
-    @date_1904             = 0
+    @date_1904             = false
     @activesheet           = 0
     @firstsheet            = 0
     @selected              = 0
@@ -446,9 +446,9 @@ class Workbook < BIFFWriter
   #
   # set_1904()
   #
-  # Set the date system: 0 = 1900 (the default), 1 = 1904
+  # Set the date system: false = 1900 (the default), true = 1904
   #
-  def set_1904(mode = 1)
+  def set_1904(mode = true)
     unless sheets.empty?
       raise "set_1904() must be called before add_worksheet()"
     end
@@ -1614,7 +1614,7 @@ class Workbook < BIFFWriter
     record    = 0x0022         # Record identifier
     length    = 0x0002         # Bytes to follow
 
-    f1904     = @date_1904     # Flag for 1904 date system
+    f1904     = @date_1904 ? 1 : 0     # Flag for 1904 date system
 
     header    = [record, length].pack("vv")
     data      = [f1904].pack("v")

@@ -38,7 +38,7 @@ class Worksheet < BIFFWriter
     @str_total           = args[8]  || 0
     @str_unique          = args[9]  || 0
     @str_table           = args[10] || {}
-    @date_1904           = args[11] || 0
+    @date_1904           = args[11]
     @compatibility       = args[12]
 
     @table               = []
@@ -2421,7 +2421,7 @@ class Worksheet < BIFFWriter
 
     # Set the epoch as 1900 or 1904. Defaults to 1900.
     # Special cases for Excel.
-    if @date_1904 == 0
+    unless @date_1904
       return      seconds if date == '1899-12-31' # Excel 1900 epoch
       return      seconds if date == '1900-01-00' # Excel 1900 epoch
       return 60 + seconds if date == '1900-02-29' # Excel false leapday
@@ -2433,8 +2433,8 @@ class Worksheet < BIFFWriter
     # days by normalising the year in relation to the epoch. Thus the year 2000
     # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
     #
-    epoch   = @date_1904 != 0 ? 1904 : 1900
-    offset  = @date_1904 != 0 ?    4 :    0
+    epoch   = @date_1904 ? 1904 : 1900
+    offset  = @date_1904 ?    4 :    0
     norm    = 300
     range   = year -epoch
 
@@ -2461,7 +2461,7 @@ class Worksheet < BIFFWriter
     days -= leap                             # Already counted above
 
     # Adjust for Excel erroneously treating 1900 as a leap year.
-    days = days + 1 if @date_1904 == 0 and days > 59
+    days = days + 1 if !@date_1904 and days > 59
 
     return days + seconds
   end
