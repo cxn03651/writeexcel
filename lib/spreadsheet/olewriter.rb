@@ -139,9 +139,9 @@ class OLEWriter
   #
   def close
     if @size_allowed == true
-      write_padding
-      write_property_storage
-      write_big_block_depot
+      write_padding          if @biff_only == 0
+      write_property_storage if @biff_only == 0
+      write_big_block_depot  if @biff_only == 0
     end
     @io.close
   end

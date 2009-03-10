@@ -1479,12 +1479,12 @@ attr_reader :compatibility
   
       @filehandle.print(data)
       @datasize += data.length
-print "worksheet tempfile append\n";
-print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
+#print "worksheet tempfile append\n";
+#print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     else
       data = super(*args)
-print "worksheet memory   append\n";
-print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
+#print "worksheet memory   append\n";
+#print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     end
   
     return data

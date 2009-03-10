@@ -174,7 +174,8 @@ class Workbook < BIFFWriter
       #
       @filehandle.write data
       @datasize += data.length
-#print "datasize = #{@datasize}\n\n"
+#print "apend\n"
+#print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     else
       data = super(*args)
     end
@@ -780,7 +781,7 @@ class Workbook < BIFFWriter
   #
   def store_OLE_file
     maxsize = 7_087_104
-
+bp=7897897
     if @add_doc_properties == 0 && @biffsize <= maxsize
       # Write the OLE file using OLEwriter if data <= 7MB
       ole  = OLEWriter.new(@fh_out)
@@ -867,7 +868,7 @@ class Workbook < BIFFWriter
   def calc_sheet_offsets
     _bof     = 12
     _eof     = 4
-bp=10101
+
     offset  = @datasize
 
     # Add the length of the COUNTRY record
@@ -1536,7 +1537,7 @@ bp=10101
     grbit     = type | hidden
 
     # Character length is num of chars not num of bytes
-    cch /= 2 if encoding
+    cch /= 2 if encoding != 0
 
     # Change the UTF-16 name from BE to LE
     sheetname = [sheetname].unpack('v*').pack('n*') if encoding != 0
