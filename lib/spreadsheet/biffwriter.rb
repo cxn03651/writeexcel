@@ -73,6 +73,8 @@ class BIFFWriter
     @datasize += d.length
     @data      = d + @data
 
+print "prepend\n"
+print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     return d
   end
 
@@ -90,7 +92,6 @@ class BIFFWriter
 
     @datasize += d.length
     @data      = @data + d
-
     return d
   end
 

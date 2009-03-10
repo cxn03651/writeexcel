@@ -174,6 +174,7 @@ class Workbook < BIFFWriter
       #
       @filehandle.write data
       @datasize += data.length
+#print "datasize = #{@datasize}\n\n"
     else
       data = super(*args)
     end
@@ -410,7 +411,7 @@ class Workbook < BIFFWriter
   # a FONT record. Also, pass any properties to the Format::new().
   #
   def add_format(*args)
-    format = Format.new(@xf_index, args)
+    format = Format.new(@xf_index, *args)
     @xf_index += 1
     @formats.push format # Store format reference
     return format
@@ -742,11 +743,13 @@ class Workbook < BIFFWriter
 
     # Add BOUNDSHEET records.
     @worksheets.each do |sheet|
-      store_boundsheet(sheet.name,
-      sheet.offset,
-      sheet.type,
-      sheet.hidden,
-      sheet.encoding)
+      store_boundsheet(
+          sheet.name,
+          sheet.offset,
+          sheet.type,
+          sheet.hidden,
+          sheet.encoding
+        )
     end
 
     # NOTE: If any records are added between here and EOF the
@@ -864,6 +867,7 @@ class Workbook < BIFFWriter
   def calc_sheet_offsets
     _bof     = 12
     _eof     = 4
+bp=10101
     offset  = @datasize
 
     # Add the length of the COUNTRY record
@@ -889,7 +893,6 @@ class Workbook < BIFFWriter
     end
 
     offset += _eof
-
     @worksheets.each do |sheet|
       sheet.offset = offset
       sheet.close(*@sheetnames)
@@ -1264,6 +1267,7 @@ class Workbook < BIFFWriter
     index = 6                    # The first user defined FONT
 
     key = format.get_font_key    # The default font for cell formats.
+#print "key = #{key}\n\n"
     fonts[key] = 0               # Index of the default font
 
     # Fonts that are marked as '_font_only' are always stored. These are used
@@ -1271,7 +1275,7 @@ class Workbook < BIFFWriter
 
     @formats.each do |format|
       key = format.get_font_key
-
+#print "key = #{key}\n\n"
       if format.font_only == 0 and !fonts[key].nil?
         # FONT has already been used
         format.font_index = fonts[key]
@@ -1311,8 +1315,8 @@ class Workbook < BIFFWriter
       # Also check for a string of zeros, which is a valid format string
       # but would evaluate to zero.
       #
-      unless num_format =~ /^0+\d/
-        next if num_format =~ /^\d+$/   # built-in
+      unless num_format.to_s =~ /^0+\d/
+        next if num_format.to_s =~ /^\d+$/   # built-in
       end
 
       if num_formats[num_format]
@@ -1578,7 +1582,6 @@ class Workbook < BIFFWriter
     format = format.to_s unless format.kind_of?(String)
     record    = 0x041E         # Record identifier
     # length                   # Number of bytes to follow
-
     # Char length of format string
     cch = format.length
 

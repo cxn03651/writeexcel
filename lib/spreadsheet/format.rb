@@ -52,7 +52,9 @@ class Format
   #
   # Constructor
   #
-  def initialize(xf_index=0, properties = {})
+  def initialize(xf_index = 0, *args)
+    @xf_index       = xf_index
+  
     @type           = 0
     @font_index     = 0
     @font           = 'Arial'
@@ -110,13 +112,7 @@ class Format
     # Temp code to prevent merged formats in non-merged cells.
     @used_merge     = 0
 
-    ## convenience methods
-    @border = 0
-    @align = 'left'
-
-    set_format_properties(properties)
-
-    @xf_index = xf_index
+    set_format_properties(*args) unless args.empty?
   end
 
   ###############################################################################
@@ -129,9 +125,9 @@ class Format
 
   ###############################################################################
   #
-  # get_font()
+  # get_xf($style)
   #
-  # Generate an Excel BIFF FONT record.
+  # Generate an Excel BIFF XF record.
   #
   def get_xf
 
@@ -161,21 +157,21 @@ class Format
     atr_num  = (@num_format   != 0) ? 1 : 0
     atr_fnt  = (@font_index   != 0) ? 1 : 0
     atr_alc  = (@text_h_align != 0 ||
-    @text_v_align != 2 ||
-    @shrink       != 0 ||
-    @merge_range  != 0 ||
-    @text_wrap    != 0 ||
-    @indent       != 0) ? 1 : 0
+                @text_v_align != 2 ||
+                @shrink       != 0 ||
+                @merge_range  != 0 ||
+                @text_wrap    != 0 ||
+                @indent       != 0) ? 1 : 0
     atr_bdr  = (@bottom       != 0 ||
-    @top          != 0 ||
-    @left         != 0 ||
-    @right        != 0 ||
-    @diag_type    != 0) ? 1 : 0
+                @top          != 0 ||
+                @left         != 0 ||
+                @right        != 0 ||
+                @diag_type    != 0) ? 1 : 0
     atr_pat  = (@fg_color     != 0x40 ||
-    @bg_color     != 0x41 ||
-    @pattern      != 0x00) ? 1 : 0
+                @bg_color     != 0x41 ||
+                @pattern      != 0x00) ? 1 : 0
     atr_prot = (@hidden       != 0 ||
-    @locked       != 1) ? 1 : 0
+                @locked       != 1) ? 1 : 0
 
     # Set attribute changed flags for the style formats.
     if @xf_index != 0 and @type == 0xFFF5
@@ -351,8 +347,8 @@ class Format
 
     header = [record, length].pack("vv")
     data   = [dyHeight, grbit, icv, bls,
-      sss, uls, bFamily,
-    bCharSet, reserved, cch, encoding].pack('vvvvvCCCCCC')
+              sss, uls, bFamily,
+              bCharSet, reserved, cch, encoding].pack('vvvvvCCCCCC')
 
     return header + data + rgch
   end
@@ -401,16 +397,16 @@ class Format
     if colour.kind_of?(Numeric)
       if colour < 0
         return 0x7FFF
-
-        # or an index < 8 mapped into the correct range,
+        
+      # or an index < 8 mapped into the correct range,
       elsif colour < 8
         return (colour + 8).to_i
 
-        # or the default color if arg is outside range,
-      elsif 63 < colour
+      # or the default color if arg is outside range,
+      elsif colour > 63
         return 0x7FFF
 
-        # or an integer in the valid range
+      # or an integer in the valid range
       else
         return colour.to_i
       end
@@ -419,7 +415,7 @@ class Format
       if COLORS.has_key?(colour)
         return COLORS[colour]
 
-        # or the default color if string is unrecognised,
+      # or the default color if string is unrecognised,
       else
         return 0x7FFF
       end

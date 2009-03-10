@@ -17,7 +17,7 @@ class Worksheet < BIFFWriter
   attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
   attr_accessor :object_ids, :num_images, :image_mso_size
   attr_writer :date_1904
-
+attr_reader :compatibility
   ###############################################################################
   #
   # new()
@@ -198,84 +198,110 @@ class Worksheet < BIFFWriter
     #
 
     # Prepend the sheet dimensions
+#print "store_dimensions\n"
     store_dimensions
 
     # Prepend the autofilter filters.
+#print "store_autofilters\n"
     store_autofilters
 
     # Prepend the sheet autofilter info.
+#print "store_autofilterinfo\n"
     store_autofilterinfo
 
     # Prepend the sheet filtermode record.
+#print "store_filtermode\n"
     store_filtermode
 
     # Prepend the COLINFO records if they exist
     unless @colinfo.empty?
       while (@colinfo)
         arrayref = @colinfo.pop
+#print "store_colinfo(arrayref)\n"
         store_colinfo(arrayref)
       end
     end
 
     # Prepend the DEFCOLWIDTH record
+#print "store_defcol\n"
     store_defcol
 
     # Prepend the sheet password
+#print "store_password\n"
     store_password
 
     # Prepend the sheet protection
+#print "store_protect\n"
     store_protect
+#print "store_obj_protect\n"
     store_obj_protect
 
     # Prepend the page setup
+#print "store_setup\n"
     store_setup
 
     # Prepend the bottom margin
+#print "store_margin_bottom\n"
     store_margin_bottom
 
     # Prepend the top margin
+#print "store_margin_top\n"
     store_margin_top
 
     # Prepend the right margin
+#print "store_margin_right\n"
     store_margin_right
 
     # Prepend the left margin
+#print "store_margin_left\n"
     store_margin_left
 
     # Prepend the page vertical centering
+#print "store_vcenter\n"
     store_vcenter
 
     # Prepend the page horizontal centering
+#print "store_hcenter\n"
     store_hcenter
 
     # Prepend the page footer
+#print "store_footer\n"
     store_footer
 
     # Prepend the page header
+#print "store_header\n"
     store_header
 
     # Prepend the vertical page breaks
+#print "store_vbreak\n"
     store_vbreak
 
     # Prepend the horizontal page breaks
+#print "store_hbreak\n"
     store_hbreak
 
     # Prepend WSBOOL
+#print "store_wsbool\n"
     store_wsbool
 
     # Prepend the default row height.
+#print "store_defrow\n"
     store_defrow
 
     # Prepend GUTS
+#print "store_guts\n"
     store_guts
 
     # Prepend GRIDSET
+#print "store_gridset\n"
     store_gridset
 
     # Prepend PRINTGRIDLINES
+#print "store_print_gridlines\n"
     store_print_gridlines
 
     # Prepend PRINTHEADERS
+#print "store_print_headers\n"
     store_print_headers
 
     #
@@ -283,23 +309,39 @@ class Worksheet < BIFFWriter
     ################################################
 
     # Append
+#print "store_table\n"
     store_table
+#print "store_images\n"
     store_images
+#print "store_charts\n"
     store_charts
+#print "store_filters\n"
     store_filters
+#print "store_comments\n"
     store_comments
+#print "store_window2\n"
     store_window2
+#print "store_page_view\n"
     store_page_view
+#print "store_zoom\n"
     store_zoom
-    store_panes(*@panes) if !@panes.nil? && @panes != 0
+#print "store_panes(*@panes)\n"
+    store_panes(*@panes) if !@panes.nil? && !@panes.empty?
+#print "store_selection(*@selection)\n"
     store_selection(*@selection)
+#print "store_validation_count\n"
     store_validation_count
+#print "store_validations\n"
     store_validations
+#print "store_tab_color\n"
     store_tab_color
+#print "store_eof\n"
     store_eof
 
     # Prepend the BOF and INDEX records
+#print "store_index\n"
     store_index
+#print "store_bof(0x0010)\n"
     store_bof(0x0010)
   end
 
@@ -1412,6 +1454,40 @@ class Worksheet < BIFFWriter
     else
       return 0x0F
     end
+  end
+
+  ###############################################################################
+  ###############################################################################
+  #
+  # Internal methods
+  #
+
+
+  ###############################################################################
+  #
+  # _append(), overloaded.
+  #
+  # Store Worksheet data in memory using the base class _append() or to a
+  # temporary file, the default.
+  #
+  def append(*args)
+    if @using_tmpfile != 0
+      data = args.join('')
+
+      # Add CONTINUE records if necessary
+      data = add_continue(data) if data.length > @limit
+  
+      @filehandle.print(data)
+      @datasize += data.length
+print "worksheet tempfile append\n";
+print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
+    else
+      data = super(*args)
+print "worksheet memory   append\n";
+print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
+    end
+  
+    return data
   end
 
   ###############################################################################
@@ -5841,7 +5917,7 @@ class Worksheet < BIFFWriter
     dv_count = @validations.size
     obj_id   = -1
 
-    return unless dv_count
+    return if dv_count == 0
 
     store_dval(obj_id , dv_count)
   end
