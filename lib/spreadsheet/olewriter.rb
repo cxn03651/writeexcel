@@ -84,11 +84,11 @@ class OLEWriter
   #
   # Write BIFF data to OLE file.
   #
-  def write(*args, &block)
-    @io.write(*args, &block)
+  def write(data)
+    @io.write(data)
   end
-  def print(*args, &block)
-    @io.print(*args, &block)
+  def print(data)
+    @io.print(data)
   end
 
   ###############################################################################
