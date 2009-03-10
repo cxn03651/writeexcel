@@ -537,7 +537,7 @@ attr_reader :compatibility
       args = substitute_cellref(*args)
     end
     # Extra flag indicated a split and freeze.
-    @frozen_no_split = 0 if args[4]
+    @frozen_no_split = 0 if !args[4].nil? && args[4] != 0
 
     @frozen = 1
     @panes  = args
