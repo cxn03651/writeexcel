@@ -219,7 +219,7 @@ class Workbook < BIFFWriter
   # handle.
   #
   def close
-    return if @fileclosed   # Prevent close() from being called twice.
+    return if @fileclosed  # Prevent close() from being called twice.
 
     @fileclosed = true
     return store_workbook
@@ -1407,7 +1407,7 @@ bp=7897897
       end
 
       # Write a Name record if the print area has been defined
-      if worksheet.print_rowmin
+      if !worksheet.print_rowmin.nil? && worksheet.print.rowmin != 0
         store_name_short(
         worksheet.index,
         0x06, # NAME type = Print_Area
@@ -1929,7 +1929,7 @@ bp=7897897
 
       # Add area NAME records
       #
-      if worksheet.print_rowmin
+      if !worksheet.print_rowmin.nil? && worksheet.print_rowmin != 0
         if ext_ref[key].nil?
           ext_refs[key] = ext_ref_count
           ext_ref_count += 1
@@ -2033,7 +2033,7 @@ bp=7897897
     strings.each do |string|
 
       string_length = string.length
-      encoding      = [string].unpack("xx C")
+      encoding      = string.unpack("xx C")
       split_string  = 0
 
       # Block length is the total length of the strings that will be
