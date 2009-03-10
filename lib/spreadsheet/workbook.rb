@@ -2199,7 +2199,7 @@ bp=7897897
     strings.each do |string|
 
       string_length = string.length
-      encoding      = [string].unpack("xx C")
+      encoding      = string.unpack("xx C")
       split_string  = 0
       bucket_string = 0 # Used to track EXTSST bucket offsets.
 
