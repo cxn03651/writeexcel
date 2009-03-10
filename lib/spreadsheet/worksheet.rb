@@ -2635,7 +2635,7 @@ attr_reader :compatibility
   # Write a default row record, in compatibility mode, for rows that don't have
   # user specified values..
   #
-  def _write_row_default(row, colMic, colMac)
+  def write_row_default(row, colMic, colMac)
 
     record      = 0x0208               # Record identifier
     length      = 0x0010               # Number of bytes to follow
