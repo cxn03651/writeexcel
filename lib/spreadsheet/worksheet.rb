@@ -46,7 +46,7 @@ class Worksheet < BIFFWriter
 
     @type                = 0x0000
     @ext_sheets          = []
-    @using_tmpfile       = 0    # _initialize not coverted yet.
+    @using_tmpfile       = 1
     @filehandle          = ""
     @fileclosed          = false
     @offset              = 0
@@ -168,22 +168,18 @@ class Worksheet < BIFFWriter
   end
 
   def _initialize
-    basename = 'spreadsheetwriteexcel'
+    basename = 'spreadsheetwriteexcelworksheet'
 
-    begin
-      if !@tempdir.nil?
-        if @tempdir == ''
-          fh = Tempfile.new(basename)
-        else
-          fh = Tempfile.new(basename, @tempdir)
-        end
-      end
-      # failed. store temporary data in memory.
-    rescue
-      @using_tmpfile = 0
-      # if the temp file creation was successful
+    if @tmpdir.nil? || @tempdir == ''
+      fh = Tempfile.new(basename)
     else
+      fh = Tempfile.new(basename, @tempdir)
+    end
+      # failed. store temporary data in memory.
+    if fh
       @filehandle = fh
+    else
+      @using_tmpfile = 0
     end
   end
 
@@ -328,20 +324,21 @@ class Worksheet < BIFFWriter
   # sized chunks.
   #
   def get_data
-    buffer = 4096
+    buflen = 4096
 
     # Return data stored in memory
     unless @data.nil?
       tmp   = @data
       @data = nil
       fh         = @filehandle
-      seek(fh, 0, 0) if @using_tmpfile != 0
-      return @data
+      fh.seek(0, 0) if @using_tmpfile != 0
+      return tmp
     end
 
     # Return data stored on disk
     if @using_tmpfile != 0
-      return tmp if read(@filehandle, tmp, buffer)
+      tmp = @filehandle.read(buflen)
+      return tmp
     end
 
     # No data to return
