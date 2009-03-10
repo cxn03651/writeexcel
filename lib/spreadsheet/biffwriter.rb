@@ -21,7 +21,7 @@ class BIFFWriter
   ######################################################################
 
   def initialize(*args)
-    @byte_order      = ''
+    @byte_order      = 0
     @data            = ''
     @datasize        = 0
     @limit           = 8224

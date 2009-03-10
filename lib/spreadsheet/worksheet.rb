@@ -142,8 +142,11 @@ class Worksheet < BIFFWriter
 
     @object_ids          = []
     @images              = {}
+    @images_array        = []
     @charts              = {}
+    @charts_array        = []
     @comments            = {}
+    @comments_array      = []
     @comments_author     = ''
     @comments_author_enc = 0
     @comments_visible    = 0

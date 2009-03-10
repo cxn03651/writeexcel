@@ -29,7 +29,7 @@ class OLEWriter
     @filehandle    = ""
     @fileclosed    = false
     @internal_fh   = 0
-    @biff_only     = false
+    @biff_only     = 0
     @size_allowed  = true
     @biff_size     = 0
     @book_size     = 0
@@ -153,7 +153,7 @@ class OLEWriter
   # Write OLE header block.
   #
   def write_header
-    return if @biff_only == true
+    return if @biff_only == 1
     calculate_sizes
     root_start = @root_start
     num_lists  = @list_blocks
