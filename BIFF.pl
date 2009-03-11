@@ -1,4 +1,5 @@
 use Spreadsheet::WriteExcel;
+use Test::More tests => 7;
 
 
 my $test_file   = "temp_test_file.xls";
@@ -44,6 +45,23 @@ push @tests,    [
                     }
                 ];
 
+# Test 3.
+#
+$row  = 3;
+$col1 = 0;
+$col2 = 1;
+$worksheet = $workbook->add_worksheet();
+$worksheet->write($row, $col1, 'Test');
+$worksheet->write($row, $col2, 'Test');
+push @tests,    [
+                    " \twrite():   row = $row, col1 = $col1, col2 = $col2",
+                    {
+                        col_min => 0,
+                        col_max => 2,
+                    }
+                ];
+
+
 $workbook->{_biff_only} = 1;
 
 $workbook->close();
@@ -72,7 +90,7 @@ while (read XLSFILE, $header, 4) {
 
 for my $i (0 .. @tests -1) {
 
-#    is_deeply($rows[$i], $tests[$i]->[1], $tests[$i]->[0]);
+    is_deeply($rows[$i], $tests[$i]->[1], $tests[$i]->[0]);
 }
 
 

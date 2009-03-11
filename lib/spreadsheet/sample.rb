@@ -44,6 +44,24 @@ bp=1
                  ]
               )
 
+    # for test case 3
+    row  = 3
+    col1 = 0
+    col2 = 1
+    worksheet = workbook.add_worksheet
+    worksheet.write(row, col1, 'Test')
+    worksheet.write(row, col2, 'Test')
+    tests.push(
+                [
+                    " \twrite():   row = $row, col1 = $col1, col2 = $col2",
+                    {
+                        :col_min => 0,
+                        :col_max => 2,
+                    }
+                ]
+            )
+
+
     workbook.biff_only  = 1
     workbook.close
 

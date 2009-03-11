@@ -69,18 +69,88 @@ class TC_rows < Test::Unit::TestCase
               )
 
 
+    # for test case 3
     row  = 3
     col1 = 0
     col2 = 1
     worksheet = workbook.add_worksheet
-    worksheet.write($row, $col1, 'Test')
-    worksheet.write($row, $col2, 'Test')
+    worksheet.write(row, col1, 'Test')
+    worksheet.write(row, col2, 'Test')
     @tests.push(
                 [
-                    " \twrite():   row = $row, col1 = $col1, col2 = $col2",
+                    " \twrite():   row = #{row}, col1 = #{col1}, col2 = #{col2}",
                     {
                         :col_min => 0,
                         :col_max => 2,
+                    }
+                ]
+            )
+
+    # for test case 4
+    row  = 4
+    col1 = 1
+    col2 = 1
+    worksheet = workbook.add_worksheet
+    worksheet.write(row, col1, 'Test')
+    worksheet.write(row, col2, 'Test')
+    @tests.push(
+                [
+                    " \twrite():   row = #{row}, col1 = #{col1}, col2 = #{col2}",
+                    {
+                        :col_min => 1,
+                        :col_max => 2,
+                    }
+                ]
+            )
+
+    # for test case 5
+    row  = 5
+    col1 = 1
+    col2 = 255
+    worksheet = workbook.add_worksheet
+    worksheet.write(row, col1, 'Test')
+    worksheet.write(row, col2, 'Test')
+    @tests.push(
+                [
+                    " \twrite():   row = #{row}, col1 = #{col1}, col2 = #{col2}",
+                    {
+                        :col_min => 1,
+                        :col_max => 256,
+                    }
+                ]
+            )
+
+    # for test case 6
+    row  = 6
+    col1 = 255
+    col2 = 255
+    worksheet = workbook.add_worksheet
+    worksheet.write(row, col1, 'Test')
+    worksheet.write(row, col2, 'Test')
+    @tests.push(
+                [
+                    " \twrite():   row = #{row}, col1 = #{col1}, col2 = #{col2}",
+                    {
+                        :col_min => 255,
+                        :col_max => 256,
+                    }
+                ]
+            )
+
+    # for test case 7
+    row  = 7
+    col1 = 2
+    col2 = 9
+    worksheet = workbook.add_worksheet
+    worksheet.set_row(row, 15)
+    worksheet.write(row, col1, 'Test')
+    worksheet.write(row, col2, 'Test')
+    @tests.push(
+                [
+                    " \tset_row + write():   row = #{row}, col1 = #{col1}, col2 = #{col2}",
+                    {
+                        :col_min => 2,
+                        :col_max => 10,
                     }
                 ]
             )
