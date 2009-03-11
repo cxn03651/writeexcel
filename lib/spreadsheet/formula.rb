@@ -71,7 +71,7 @@ class Formula < ExcelFormulaParser
         num_args = args.shift
       elsif (token == '_class')
         token = args.shift
-        _class = functions[token][2]
+        _class = @functions[token][2]
         # If _class is undef then it means that the function isn't valid.
         exit "Unknown function #{token}() in formula\n" if _class.nil?
         _classary.push(_class)
@@ -116,7 +116,7 @@ class Formula < ExcelFormulaParser
         parse_str = parse_str + convert_range3d(token, _class)
       elsif (token == '_func')
         token = args.shift
-        parse_str = parse_str + convert_function(token, num_args)
+        parse_str = parse_str + convert_function(token, num_args.to_i)
         _classary.pop
         num_args = 0 # Reset after use
       elsif @ptg[token]
@@ -244,7 +244,7 @@ class Formula < ExcelFormulaParser
 
     (0..tokens.size-1).each do |i|
       # If the next token is a function check if it is volatile.
-      if tokens[i] == '_func' and functions[tokens[i+1]][3] != 0
+      if tokens[i] == '_func' and @functions[tokens[i+1]][3] != 0
         volatile = 1
         break
       end
@@ -512,15 +512,15 @@ class Formula < ExcelFormulaParser
     if (args >= 0)
       # Check that the number of args is valid.
       if (args != num_args)
-        exit "Incorrect number of arguments for #{token}() in formula\n";
+        raise "Incorrect number of arguments for #{token}() in formula\n";
       else
-        return [ptg['ptgFuncV'], @function[token][0]].pack("Cv")
+        return [@ptg['ptgFuncV'], @functions[token][0]].pack("Cv")
       end
     end
 
     # Variable number of args eg. SUM(i,j,k, ..).
     if (args == -1)
-      return [ptg['ptgFuncVarV'], num_args, @function[token][0]].pack("CCv")
+      return [@ptg['ptgFuncVarV'], num_args, @function[token][0]].pack("CCv")
     end
   end
 

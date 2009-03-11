@@ -233,7 +233,7 @@ class OLEWriter
 
     #########  name         type  dir start size
     write_pps('Root Entry', 0x05,  1,   -2, 0x00)
-    write_pps('Book',       0x02, -1, 0x00, @book_size)
+    write_pps('Workbook',   0x02, -1, 0x00, @book_size)
     write_pps("",           0x00, -1, 0x00, 0x0000)
     write_pps("",           0x00, -1, 0x00, 0x0000)
   end

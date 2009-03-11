@@ -3,6 +3,7 @@ require 'Tempfile'
 require 'biffwriter'
 require 'olewriter'
 require 'formula'
+require 'properties'
 
 class Workbook < BIFFWriter
   BOF = 11
