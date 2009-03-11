@@ -5246,7 +5246,7 @@ attr_reader :compatibility
     sub_record  = 0x000D   # ftNts
     sub_length  = 0x0016
     sub_data    = [reserved,reserved,reserved,reserved,reserved,reserved].pack( "VVVVVv")
-    data        = [sub_record, sub_length].pack("vv") + sub_data
+    data        = data + [sub_record, sub_length].pack("vv") + sub_data
 
     # Add ftEnd (end of object) subobject
     sub_record  = 0x0000   # ftNts
