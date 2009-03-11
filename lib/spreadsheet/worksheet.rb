@@ -4132,7 +4132,7 @@ attr_reader :compatibility
       if @row_sizes[row] == 0
         return 0
       else
-        return (4/3 * @row_sizes[row]).to_i
+        return (4/3.0 * @row_sizes[row]).to_i
       end
     else
       return 17
@@ -5693,14 +5693,14 @@ attr_reader :compatibility
     if params[:y_scale] != 0
       params[:height] = ((params[:height] -1) * params[:y_scale]) +1
     end
-
+bpp=234
     # Calculate the positions of comment object.
     vertices = position_object( params[:start_col],
-    params[:start_row],
-    params[:x_offset],
-    params[:y_offset],
-    params[:width],
-    params[:height]
+      params[:start_row],
+      params[:x_offset],
+      params[:y_offset],
+      params[:width],
+      params[:height]
     )
 
     return [row, col, string,

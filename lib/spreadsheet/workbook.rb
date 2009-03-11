@@ -2153,7 +2153,7 @@ bp=7897897
   #
   def store_shared_strings
     strings = @str_array
-bpp=374847
+
     record              = 0x00FC   # Record identifier
     length              = 0x0008   # Number of bytes to follow
     total               = 0x0000
