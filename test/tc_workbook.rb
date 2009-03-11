@@ -64,9 +64,9 @@ class TC_Workbook < Test::Unit::TestCase
     valids   = valid_sheetname
     invalids = invalid_sheetname
     worksheet1 = @wb.add_worksheet              # implicit name 'Sheet1'
-    worksheet2 = @wb.add_worksheet              # implicit name 'Sheet1'
-    worksheet3 = @wb.add_worksheet 'Sheet3'     # implicit name 'Sheet1'
-    worksheet1 = @wb.add_worksheet 'Sheetz'     # implicit name 'Sheet1'
+    worksheet2 = @wb.add_worksheet              # implicit name 'Sheet2'
+    worksheet3 = @wb.add_worksheet 'Sheet3'     # implicit name 'Sheet3'
+    worksheet1 = @wb.add_worksheet 'Sheetz'     # implicit name 'Sheetz'
 
     valids.each do |test|
       target    = test[0]

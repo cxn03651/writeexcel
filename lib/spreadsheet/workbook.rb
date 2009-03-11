@@ -10,6 +10,8 @@ class Workbook < BIFFWriter
   SheetName = "Sheet"
 
   attr_accessor :date_system, :str_unique, :biff_only
+  attr_reader :encoding, :url_format, :parser, :tempdir, :date_1904, :compatibility
+  attr_accessor :activesheet, :firstsheet, :str_total, :str_unique, :str_table
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
   attr_reader :data
   attr_writer :mso_size
@@ -26,6 +28,8 @@ class Workbook < BIFFWriter
     @parser                = Formula.new(@byte_order)
     @tempdir               = nil
     @date_1904             = false
+    @sheet                 = 
+
     @activesheet           = 0
     @firstsheet            = 0
     @selected              = 0
@@ -174,7 +178,7 @@ class Workbook < BIFFWriter
       #
       @filehandle.write data
       @datasize += data.length
-#print "apend\n"
+#print "append\n"
 #print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     else
       data = super(*args)
@@ -259,19 +263,10 @@ class Workbook < BIFFWriter
     index = @worksheets.size
 
     worksheet = Worksheet.new(
+      self,
       name,
       index,
-      encoding,
-      @activesheet,
-      @firstsheet,
-      @url_format,
-      @parser,
-      @tempdir,
-      @str_total,
-      @str_unique,
-      @str_table,
-      @date_1904,
-      @compatibility
+      encoding
     )
     @worksheets[index] = worksheet     # Store ref for iterator
     @sheetnames[index] = name          # Store EXTERNSHEET names
@@ -398,7 +393,7 @@ class Workbook < BIFFWriter
       end
       if error != 0
         raise "Worksheet name '#{name}', with case ignored, " +
-        "is already in use";
+        "is already in use"
       end
     end
     return [name,  encoding]
@@ -1879,7 +1874,6 @@ bp=7897897
 
     header          = [record, length].pack("vv")
     data            = [country_default, country_win_ini].pack("vv")
-
     append(header, data)
   end
 
@@ -2002,8 +1996,7 @@ bp=7897897
   # downside of this is that the same algorithm repeated in _store_shared_strings.
   #
   def calculate_shared_string_sizes
-    strings = []
-    #strings = self->{_str_unique} -1 # Pre-extend array
+    strings = Array.new(@str_unique)
 
     @str_table.each_key do |key|
       strings[@str_table[key]] = key
@@ -2129,7 +2122,7 @@ bp=7897897
     # Store the max size for the last block unless it is empty
     block_sizes.push(written +continue) if written +continue != 0
 
-    @str_block_sizes = block_sizes
+    @str_block_sizes = block_sizes.dup
 
     # Calculate the total length of the SST and associated CONTINUEs (if any).
     # The SST record will have a length even if it contains no strings.
@@ -2160,7 +2153,7 @@ bp=7897897
   #
   def store_shared_strings
     strings = @str_array
-
+bpp=374847
     record              = 0x00FC   # Record identifier
     length              = 0x0008   # Number of bytes to follow
     total               = 0x0000

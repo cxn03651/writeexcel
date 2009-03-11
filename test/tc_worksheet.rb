@@ -24,8 +24,9 @@ require "FileUtils"
 
 class TC_Worksheet < Test::Unit::TestCase
   def setup
+    workbook = Workbook.new('temp_test_file.xls')
     @sheetname = 'test'
-    @ws      = Worksheet.new(@sheetname,0)
+    @ws      = workbook.add_worksheet(@sheetname,0)
     @perldir = "perl_output/"
     @format  = Format.new(:color=>"green")
   end

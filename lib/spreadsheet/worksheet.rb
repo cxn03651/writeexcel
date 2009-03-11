@@ -1,5 +1,6 @@
 require 'format'
 require 'formula'
+require 'workbook'
 
 class MaxSizeError < StandardError; end
 
@@ -18,28 +19,27 @@ class Worksheet < BIFFWriter
   attr_accessor :object_ids, :num_images, :image_mso_size
   attr_writer :date_1904
 attr_reader :compatibility
+
   ###############################################################################
   #
   # new()
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
-  def initialize(*args)
+  def initialize(workbook, name, index, encoding)
     super
 
-    @name                = args[0]
-    @index               = args[1]
-    @encoding            = args[2]
-    @active_sheet        = args[3]
-    @first_sheet         = args[4]
-    @url_format          = args[5]
-    @parser              = args[6]
-    @tempdir             = args[7]
-    @str_total           = args[8]  || 0
-    @str_unique          = args[9]  || 0
-    @str_table           = args[10] || {}
-    @date_1904           = args[11]
-    @compatibility       = args[12]
+    @workbook            = workbook
+    @name                = name
+    @index               = index
+    @encoding            = encoding
+
+    @url_format          = @workbook.url_format
+    @parser              = @workbook.parser
+    @tempdir             = @workbook.tempdir
+    @date_1904           = @workbook.date_1904
+    @compatibility       = @workbook.compatibility
+    @str_table           = @workbook.str_table
 
     @table               = []
     @row_data            = {}
@@ -181,6 +181,48 @@ attr_reader :compatibility
     else
       @using_tmpfile = 0
     end
+  end
+
+
+
+  def activesheet
+    @workbook.activesheet
+  end
+
+  def activesheet=(val)
+    @workbook.activesheet = val
+  end
+
+  def firstsheet
+    @workbook.firstsheet
+  end
+
+  def firstsheet=(val)
+    @workbook.firstsheet = val
+  end
+
+  def str_total
+    @workbook.str_total
+  end
+
+  def str_total=(val)
+    @workbook.str_total = val
+  end
+
+  def str_unique
+    @workbook.str_unique
+  end
+
+  def str_unique=(val)
+    @workbook.str_unique = val
+  end
+
+  def add_str_total(val)
+    @workbook.str_total += val
+  end
+
+  def add_str_unique(val)
+    @workbook.str_unique += val
   end
 
   ###############################################################################
@@ -1654,11 +1696,11 @@ attr_reader :compatibility
     str         = str_header + str
 
     if @str_table[str].nil?
-      @str_table[str] = @str_unique
-      @str_unique += 1
+      @str_table[str] = str_unique
+      add_str_unique(1)
     end
 
-    @str_total += 1
+    add_str_total(1)
 
     header = [record, length].pack('vv')
     data   = [row, col, xf, @str_table[str]].pack('vvvV')
@@ -4171,12 +4213,12 @@ attr_reader :compatibility
     str         = str_header + str
 
     unless @str_table[str]
-      @str_table[str] = @str_unique
-      @str_unique += 1
+      @str_table[str] = str_unique
+      add_str_unique(1)
     end
 
-    @str_total += 1
-
+    add_str_total(1)
+    
     header = [record, length].pack("vv")
     data   = [row, col, xf, @str_table[str]].pack("vvvV")
 
