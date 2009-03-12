@@ -130,16 +130,13 @@ class Workbook < BIFFWriter
   # TODO: Move this and other methods shared with Worksheet up into BIFFWriter.
   #
   def _initialize
-    basename = 'spreadsheetwriteexcelworkbook'
+    basename = 'spreadsheetwriteexcel' + $$.to_s + self.object_id.to_s
 
-    if @tempdir.nil? || @tempdir == ''
-      fh = Tempfile.new(basename)
-    else
-      fh = Tempfile.new(basename, @tempdir)
-    end
-
+    fh = open(basename, "w+b")
+      # failed. store temporary data in memory.
     if fh
       @filehandle = fh
+      @tempfile = basename
     else
       @using_tmpfile = 0
     end
@@ -196,7 +193,7 @@ class Workbook < BIFFWriter
   # sized chunks.
   #
   def get_data
-    bufsize = 4096
+    buflen = 4096
 
     # Return data stored in memory
     unless @data.nil?
@@ -208,8 +205,12 @@ class Workbook < BIFFWriter
 
     # Return data stored on disk
     if @using_tmpfile != 0
-      tmp = @filehandle.read(bufsize)
-      return tmp unless tmp.nil?
+      tmp = @filehandle.read(buflen)
+      if tmp.nil?
+        @filehandle.close
+        File.delete(@tempfile)
+      end
+      return tmp
     end
 
     # No data to return
