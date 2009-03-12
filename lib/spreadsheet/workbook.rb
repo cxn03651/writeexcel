@@ -1,5 +1,5 @@
 require 'digest/md5'
-require 'Tempfile'
+require 'tempfile'
 require 'biffwriter'
 require 'olewriter'
 require 'formula'
