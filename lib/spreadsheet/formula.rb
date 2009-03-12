@@ -520,7 +520,7 @@ class Formula < ExcelFormulaParser
 
     # Variable number of args eg. SUM(i,j,k, ..).
     if (args == -1)
-      return [@ptg['ptgFuncVarV'], num_args, @function[token][0]].pack("CCv")
+      return [@ptg['ptgFuncVarV'], num_args, @functions[token][0]].pack("CCv")
     end
   end
 
