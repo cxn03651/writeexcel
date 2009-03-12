@@ -257,10 +257,10 @@ attr_reader :compatibility
 
     # Prepend the COLINFO records if they exist
     unless @colinfo.empty?
-      while (@colinfo)
+      while (!@colinfo.empty?)
         arrayref = @colinfo.pop
 #print "store_colinfo(arrayref)\n"
-        store_colinfo(arrayref)
+        store_colinfo(*arrayref)
       end
     end
 
@@ -2098,12 +2098,14 @@ attr_reader :compatibility
 
     # Check the number of args
     return -1 if args.size < 5
-
+bpp=123
     # Reverse the order of $string and $format if necessary. We work on a copy
     # in order to protect the callers args. We don't use "local @_" in case of
     # perl50005 threads.
     #
-    args[5], args[6] = [ args[6], args[5] ]
+#    args2 = args.dup
+
+#    args2[5], args2[6] = [ args2[6], args2[5] ] if 
 
     url = args[4]
 
@@ -2950,7 +2952,7 @@ attr_reader :compatibility
 
     header = [record, length].pack("vv")
     data   = [firstcol, lastcol, coldx,
-    ixfe, grbit, reserved].pack("vvvvvC")
+              ixfe, grbit, reserved].pack("vvvvvC")
 
     prepend(header, data)
   end
@@ -5693,7 +5695,7 @@ attr_reader :compatibility
     if params[:y_scale] != 0
       params[:height] = ((params[:height] -1) * params[:y_scale]) +1
     end
-bpp=234
+
     # Calculate the positions of comment object.
     vertices = position_object( params[:start_col],
       params[:start_row],
