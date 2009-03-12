@@ -1344,7 +1344,7 @@ attr_reader :compatibility
     elsif @leading_zeros != 0 and token =~ /^0\d+$/
       return write_string(*args)
       # Match number
-    elsif token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+    elsif token.to_s =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
       return write_number(*args)
       # Match http, https or ftp URL
     elsif token =~ %r|^[fh]tt?ps?://|    and @writing_url == 0
