@@ -759,6 +759,7 @@ class Workbook < BIFFWriter
     end
     add_mso_drawing_group
     store_shared_strings
+bp=7897897
     store_extsst
 
     # End Workbook globals
@@ -777,7 +778,7 @@ class Workbook < BIFFWriter
   #
   def store_OLE_file
     maxsize = 7_087_104
-bp=7897897
+
     if @add_doc_properties == 0 && @biffsize <= maxsize
       # Write the OLE file using OLEwriter if data <= 7MB
       ole  = OLEWriter.new(@fh_out)
@@ -798,6 +799,8 @@ bp=7897897
       @worksheets.each do |worksheet|
         while tmp = worksheet.get_data
           ole.write(tmp)
+#print "worksheet tmpfile\n"
+#print tmp.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
         end
       end
 
@@ -1264,7 +1267,6 @@ bp=7897897
     index = 6                    # The first user defined FONT
 
     key = format.get_font_key    # The default font for cell formats.
-#print "key = #{key}\n\n"
     fonts[key] = 0               # Index of the default font
 
     # Fonts that are marked as '_font_only' are always stored. These are used
@@ -1272,7 +1274,6 @@ bp=7897897
 
     @formats.each do |format|
       key = format.get_font_key
-#print "key = #{key}\n\n"
       if format.font_only == 0 and !fonts[key].nil?
         # FONT has already been used
         format.font_index = fonts[key]

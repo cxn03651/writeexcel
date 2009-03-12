@@ -325,7 +325,7 @@ class Format
     #         }
     #      }
     #
-    cch = rgch.length;
+    cch = rgch.length
     #
     # Handle Unicode font names.
     if (encoding == 1)
@@ -334,11 +334,11 @@ class Format
       rgch  = rgch.unpack('n*').pack('v*')
     end
 
-    record     = 0x31;
-    length     = 0x10 + rgch.length;
-    reserved   = 0x00;
+    record     = 0x31
+    length     = 0x10 + rgch.length
+    reserved   = 0x00
 
-    grbit      = 0x00;
+    grbit      = 0x00
     grbit     |= 0x02 if @italic != 0
     grbit     |= 0x08 if @font_strikeout != 0
     grbit     |= 0x10 if @font_outline != 0

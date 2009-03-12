@@ -85,11 +85,13 @@ class OLEWriter
   # Write BIFF data to OLE file.
   #
   def write(data)
+#print "ole write\n"
+#print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     @io.write(data)
   end
-  def print(data)
-    @io.print(data)
-  end
+#  def print(data)
+#    @io.print(data)
+#  end
 
   ###############################################################################
   #
@@ -139,8 +141,11 @@ class OLEWriter
   #
   def close
     if @size_allowed == true
+#print "write_padding"
       write_padding          if @biff_only == 0
+#print "write_property_storage"
       write_property_storage if @biff_only == 0
+#print "write_big_block_depot"
       write_big_block_depot  if @biff_only == 0
     end
     @io.close

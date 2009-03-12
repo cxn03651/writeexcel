@@ -168,16 +168,13 @@ attr_reader :compatibility
   end
 
   def _initialize
-    basename = 'spreadsheetwriteexcelworksheet'
+    basename = 'spreadsheetwriteexcelworksheet' + $$.to_s + self.object_id.to_s
 
-    if @tmpdir.nil? || @tempdir == ''
-      fh = Tempfile.new(basename)
-    else
-      fh = Tempfile.new(basename, @tempdir)
-    end
+    fh = open(basename, "w+b")
       # failed. store temporary data in memory.
     if fh
       @filehandle = fh
+      @tempfile = basename
     else
       @using_tmpfile = 0
     end
@@ -414,14 +411,17 @@ attr_reader :compatibility
     unless @data.nil?
       tmp   = @data
       @data = nil
-      fh         = @filehandle
-      fh.seek(0, 0) if @using_tmpfile != 0
+      @filehandle.seek(0, IO::SEEK_SET) if @using_tmpfile != 0
       return tmp
     end
 
     # Return data stored on disk
     if @using_tmpfile != 0
       tmp = @filehandle.read(buflen)
+      if tmp.nil?
+        @filehandle.close
+        File.delete(@tempfile)
+      end
       return tmp
     end
 
@@ -2098,7 +2098,7 @@ attr_reader :compatibility
 
     # Check the number of args
     return -1 if args.size < 5
-bpp=123
+
     # Reverse the order of $string and $format if necessary. We work on a copy
     # in order to protect the callers args. We don't use "local @_" in case of
     # perl50005 threads.
