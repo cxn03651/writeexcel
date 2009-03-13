@@ -25,8 +25,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_a_simple
-    xlsfile   = 'a_simple.xls'
-    workbook  = Excel.new(xlsfile);
+    workbook  = Excel.new(@filename);
     worksheet = workbook.add_worksheet
     
     # The general syntax is write(row, column, token). Note that row and
@@ -55,10 +54,50 @@ class TC_example_match < Test::Unit::TestCase
     # File save
     workbook.close
     
-    compare_file("perl_output/#{xlsfile}", xlsfile)
+    # do assertion
+    compare_file("perl_output/a_simple.xls", @filename)
   end
 
+  def test_regions
+    workbook = Excel.new(@filename)
 
+    # Add some worksheets
+    north = workbook.add_worksheet("North")
+    south = workbook.add_worksheet("South")
+    east  = workbook.add_worksheet("East")
+    west  = workbook.add_worksheet("West")
+    
+    # Add a Format
+    format = workbook.add_format()
+    format.set_bold()
+    format.set_color('blue')
+    
+    # Add a caption to each worksheet
+    workbook.sheets.each do |worksheet|
+        worksheet.write(0, 0, "Sales", format)
+    end
+    
+    # Write some data
+    north.write(0, 1, 200000)
+    south.write(0, 1, 100000)
+    east.write(0, 1, 150000)
+    west.write(0, 1, 100000)
+    
+    # Set the active worksheet
+    bp=1
+    south.activate()
+    
+    # Set the width of the first column
+    south.set_column(0, 0, 20)
+    
+    # Set the active cell
+    south.set_selection(0, 1)
+    
+    workbook.close
+
+    # do assertion
+    compare_file("perl_output/regions.xls", @filename)
+  end
 
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")

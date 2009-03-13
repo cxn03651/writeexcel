@@ -186,7 +186,7 @@ attr_reader :compatibility
     @workbook.activesheet
   end
 
-  def activesheet=(val)
+  def set_activesheet(val)
     @workbook.activesheet = val
   end
 
@@ -194,7 +194,7 @@ attr_reader :compatibility
     @workbook.firstsheet
   end
 
-  def firstsheet=(val)
+  def set_firstsheet(val)
     @workbook.firstsheet = val
   end
 
@@ -202,7 +202,7 @@ attr_reader :compatibility
     @workbook.str_total
   end
 
-  def str_total=(val)
+  def set_str_total(val)
     @workbook.str_total = val
   end
 
@@ -210,7 +210,7 @@ attr_reader :compatibility
     @workbook.str_unique
   end
 
-  def str_unique=(val)
+  def set_str_unique(val)
     @workbook.str_unique = val
   end
 
@@ -453,7 +453,7 @@ attr_reader :compatibility
   def activate
     @hidden      = 0  # Active worksheet can't be hidden.
     @selected    = 1
-    @activesheet = @index
+    set_activesheet(@index)
   end
 
 
@@ -468,8 +468,8 @@ attr_reader :compatibility
 
     # A hidden worksheet shouldn't be active or selected.
     @selected       = 0
-    @activesheet = 0
-    @firstsheet  = 0
+    set_activesheet(0)
+    set_firstsheet(0)
   end
 
 
@@ -483,7 +483,7 @@ attr_reader :compatibility
   #
   def set_first_sheet
     @hidden      = 0  # Active worksheet can't be hidden.
-    @firstsheet  = @index
+    set_firstsheet(@index)
   end
 
 
