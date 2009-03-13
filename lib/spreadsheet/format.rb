@@ -966,7 +966,7 @@ class Format
     #
     if rotation == 270
       rotation = 255
-    elsif rotation >= -90 || rotation <= 90
+    elsif rotation >= -90 && rotation <= 90
       rotation = -rotation + 90 if rotation < 0
     else
       rotation = 0
