@@ -4287,9 +4287,9 @@ attr_reader :compatibility
 
     col1 = @filter_area[2]
     col2 = @filter_area[3]
+bpp=1
 
-    i = col1
-    while i <= col2
+    col1.upto(col2) do |i|
       # Reverse order since records are being pre-pended.
       col = col2 -i
 
@@ -4297,7 +4297,7 @@ attr_reader :compatibility
       next unless @filter_cols[col]
 
       # Retrieve the filter tokens and write the autofilter records.
-      store_autofilter(col, @filter_cols[col])
+      store_autofilter(col, *@filter_cols[col])
     end
   end
 
@@ -4315,7 +4315,7 @@ attr_reader :compatibility
   # structures to represent the 2 possible filter conditions.
   #
   def store_autofilter(index, operator_1, token_1,
-                           join = nil, operator_2 = nil, token_2 = nil)
+                                 join = nil, operator_2 = nil, token_2 = nil)
     record          = 0x009E
     length          = 0x0000
 
@@ -4596,7 +4596,7 @@ attr_reader :compatibility
     record          = 0x00EC           # Record identifier
     length          = 0x0000           # Bytes to follow
 
-    ids             = @object_ids
+    ids             = @object_ids.dup
     spid            = ids.shift
 
     images          = @images_array
@@ -4643,29 +4643,29 @@ attr_reader :compatibility
         spgr_length = spgr_length + 128 * num_comments
 
         data = store_mso_dg_container(dg_length) +
-        store_mso_dg(ids)                     +
-        store_mso_spgr_container(spgr_length) +
-        store_mso_sp_container(40)            +
-        store_mso_spgr()                      +
-        store_mso_sp(0x0, spid, 0x0005)
+          store_mso_dg(*ids)                     +
+          store_mso_spgr_container(spgr_length)  +
+          store_mso_sp_container(40)             +
+          store_mso_spgr()                       +
+          store_mso_sp(0x0, spid, 0x0005)
         spid = spid + 1
         data = data                              +
-        store_mso_sp_container(76)            +
-        store_mso_sp(75, spid, 0x0A00)
+          store_mso_sp_container(76)             +
+          store_mso_sp(75, spid, 0x0A00)
         spid = spid + 1
         data = data                              +
-        store_mso_opt_image(image_id)         +
-        store_mso_client_anchor(2, vertices)  +
-        store_mso_client_data()
+          store_mso_opt_image(image_id)          +
+          store_mso_client_anchor(2, *vertices)   +
+          store_mso_client_data()
       else
         # Write the child MSODRAWIING record.
         data = store_mso_sp_container(76)        +
-        store_mso_sp(75, spid, 0x0A00)
-        spid = spid + 1
+          store_mso_sp(75, spid, 0x0A00)
+          spid = spid + 1
         data = data                              +
-        store_mso_opt_image(image_id)         +
-        store_mso_client_anchor(2, vertices)  +
-        store_mso_client_data()
+          store_mso_opt_image(image_id)          +
+          store_mso_client_anchor(2, *vertices)   +
+          store_mso_client_data
       end
       length      = data.length
       header      = [record, length].pack("vv")
@@ -4738,7 +4738,7 @@ attr_reader :compatibility
   
   
               data        = store_mso_dg_container(dg_length)     +
-                            store_mso_dg(ids)                     +
+                            store_mso_dg(*ids)                     +
                             store_mso_spgr_container(spgr_length) +
                             store_mso_sp_container(40)            +
                             store_mso_spgr()                      +
@@ -4748,7 +4748,7 @@ attr_reader :compatibility
                             store_mso_sp(201, spid, 0x0A00)
               spid += 1
               data = data + store_mso_opt_chart()                 +
-                            store_mso_client_anchor(0, vertices)  +
+                            store_mso_client_anchor(0, *vertices)  +
                             store_mso_client_data()
           else
               # Write the child MSODRAWIING record.
@@ -4756,7 +4756,7 @@ attr_reader :compatibility
                             store_mso_sp(201, spid, 0x0A00)
               spid += 1
               data = data + store_mso_opt_chart()                 +
-                            store_mso_client_anchor(0, vertices)  +
+                            store_mso_client_anchor(0, *vertices)  +
                             store_mso_client_data()
           end
           length      = data.length
@@ -4804,7 +4804,7 @@ attr_reader :compatibility
     record          = 0x00EC           # Record identifier
     length          = 0x0000           # Bytes to follow
 
-    ids             = @object_ids
+    ids             = @object_ids.dup
     spid            = ids.shift
 
     filter_area     = @filter_area
@@ -4832,27 +4832,27 @@ attr_reader :compatibility
         dg_length   = dg_length   + 128 *num_comments
         spgr_length = spgr_length + 128 *num_comments
 
-        data = store_mso_dg_container(dg_length)           +
-        store_mso_dg(ids)                               +
-        store_mso_spgr_container(spgr_length)           +
-        store_mso_sp_container(40)                      +
-        store_mso_spgr()                                +
-        store_mso_sp(0x0, spid, 0x0005)
+        data = store_mso_dg_container(dg_length)          +
+          store_mso_dg(*ids)                              +
+          store_mso_spgr_container(spgr_length)           +
+          store_mso_sp_container(40)                      +
+          store_mso_spgr()                                +
+          store_mso_sp(0x0, spid, 0x0005)
         spid = spid + 1
-        data = data + store_mso_sp_container(88)           +
-        store_mso_sp(201, spid, 0x0A00)                 +
-        store_mso_opt_filter()                          +
-        store_mso_client_anchor(1, vertices)            +
-        store_mso_client_data()
+        data = data + store_mso_sp_container(88)          +
+          store_mso_sp(201, spid, 0x0A00)                 +
+          store_mso_opt_filter()                          +
+          store_mso_client_anchor(1, *vertices)            +
+          store_mso_client_data()
         spid = spid + 1
 
       else
         # Write the child MSODRAWIING record.
-        data = store_mso_sp_container(88)                  +
-        store_mso_sp(201, spid, 0x0A00)                 +
-        store_mso_opt_filter()                          +
-        store_mso_client_anchor(1, vertices)            +
-        store_mso_client_data()
+        data = store_mso_sp_container(88)                 +
+          store_mso_sp(201, spid, 0x0A00)                 +
+          store_mso_opt_filter()                          +
+          store_mso_client_anchor(1, *vertices)            +
+          store_mso_client_data()
         spid = spid + 1
       end
       length      = data.length
@@ -4886,7 +4886,7 @@ attr_reader :compatibility
     record          = 0x00EC           # Record identifier
     length          = 0x0000           # Bytes to follow
 
-    ids             = @object_ids
+    ids             = @object_ids.dup
     spid            = ids.shift
 
     comments        = @comments_array
@@ -4915,27 +4915,27 @@ attr_reader :compatibility
         dg_length   = 200 + 128*(num_comments -1)
         spgr_length = 176 + 128*(num_comments -1)
 
-        data = store_mso_dg_container(dg_length)          +
-        store_mso_dg(ids)                              +
-        store_mso_spgr_container(spgr_length)          +
-        store_mso_sp_container(40)                     +
-        store_mso_spgr()                               +
-        store_mso_sp(0x0, spid, 0x0005)
+        data = store_mso_dg_container(dg_length)         +
+          store_mso_dg(*ids)                             +
+          store_mso_spgr_container(spgr_length)          +
+          store_mso_sp_container(40)                     +
+          store_mso_spgr()                               +
+          store_mso_sp(0x0, spid, 0x0005)
         spid = spid + 1
-        data = data + store_mso_sp_container(120)         +
-        store_mso_sp(202, spid, 0x0A00)                +
-        store_mso_opt_comment(0x80, visible, color)    +
-        store_mso_client_anchor(3, vertices)           +
-        store_mso_client_data()
+        data = data + store_mso_sp_container(120)        +
+          store_mso_sp(202, spid, 0x0A00)                +
+          store_mso_opt_comment(0x80, visible, color)    +
+          store_mso_client_anchor(3, *vertices)           +
+          store_mso_client_data()
         spid = spid + 1
 
       else
         # Write the child MSODRAWIING record.
-        data = store_mso_sp_container(120)                +
-        store_mso_sp(202, spid, 0x0A00)                +
-        store_mso_opt_comment(0x80, visible, color)    +
-        store_mso_client_anchor(3, vertices)           +
-        store_mso_client_data()
+        data = store_mso_sp_container(120)               +
+          store_mso_sp(202, spid, 0x0A00)                +
+          store_mso_opt_comment(0x80, visible, color)    +
+          store_mso_client_anchor(3, *vertices)           +
+          store_mso_client_data()
         spid = spid + 1
       end
       length      = data.length

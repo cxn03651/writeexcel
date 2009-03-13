@@ -1393,27 +1393,27 @@ bp=7897897
       # Write a Name record if Autofilter has been defined
       if worksheet.filter_count != 0
         store_name_short(
-        worksheet.index,
-        0x0D, # NAME type = Filter Database
-        ref,
-        worksheet.filter_area[0],
-        worksheet.filter_area[1],
-        worksheet.filter_area[2],
-        worksheet.filter_area[3],
-        1     # Hidden
+          worksheet.index,
+          0x0D, # NAME type = Filter Database
+          ref,
+          worksheet.filter_area[0],
+          worksheet.filter_area[1],
+          worksheet.filter_area[2],
+          worksheet.filter_area[3],
+          1     # Hidden
         )
       end
 
       # Write a Name record if the print area has been defined
       if !worksheet.print_rowmin.nil? && worksheet.print.rowmin != 0
         store_name_short(
-        worksheet.index,
-        0x06, # NAME type = Print_Area
-        ref,
-        worksheet.print_rowmin,
-        worksheet.print_rowmax,
-        worksheet.print_colmin,
-        worksheet.print_colmax
+          worksheet.index,
+          0x06, # NAME type = Print_Area
+          ref,
+          worksheet.print_rowmin,
+          worksheet.print_rowmax,
+          worksheet.print_colmin,
+          worksheet.print_colmax
         )
       end
 
@@ -1450,24 +1450,24 @@ bp=7897897
       elsif rowmin
         # Row title has been defined.
         store_name_short(
-        worksheet.index,
-        0x07, # NAME type = Print_Titles
-        ref,
-        rowmin,
-        rowmax,
-        0x00,
-        0xff
+          worksheet.index,
+          0x07, # NAME type = Print_Titles
+          ref,
+          rowmin,
+          rowmax,
+          0x00,
+          0xff
         )
       elsif colmin
         # Column title has been defined.
         store_name_short(
-        worksheet.index,
-        0x07, # NAME type = Print_Titles
-        ref,
-        0x0000,
-        0xffff,
-        colmin,
-        colmax
+          worksheet.index,
+          0x07, # NAME type = Print_Titles
+          ref,
+          0x0000,
+          0xffff,
+          colmin,
+          colmax
         )
       else
         # Nothing left to do
@@ -1658,14 +1658,14 @@ bp=7897897
 
     # Get the external refs
     ext_refs = @ext_refs
-    ext = sort ext_refs.keys
+    ext = ext_refs.keys.sort
 
     # Change the external refs from stringified "1:1" to [1, 1]
     ext.each do |e|
       e = e.split(/:/)
     end
 
-    cxti        = @ext.size                # Number of Excel XTI structures
+    cxti        = ext.size                 # Number of Excel XTI structures
     rgxti       = ''                       # Array of XTI structures
 
     # Write the XTI structs
@@ -1695,13 +1695,9 @@ bp=7897897
   # Store the NAME record in the short format that is used for storing the print
   # area, repeat rows only and repeat columns only.
   #
-  def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax)
+  def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden)
     record          = 0x0018       # Record identifier
     length          = 0x001b       # Number of bytes to follow
-
-    index           = shift        # Sheet index
-    type            = shift
-    ext_ref         = shift        # TODO
 
     grbit           = 0x0020       # Option flags
     chKey           = 0x00         # Keyboard shortcut
@@ -1956,7 +1952,7 @@ bp=7897897
       # Add Autofilter  NAME records
       #
       if filter != 0
-        if ext_ref[key].nil?
+        if ext_refs[key].nil?
           ext_refs[key] = ext_ref_count
           ext_ref_count += 1
         end
