@@ -1402,7 +1402,7 @@ attr_reader :compatibility
 
         # Return only the first error encountered, if any.
         error ||= ret
-        col = col + 1
+        col += 1
       end
     end
     return error
@@ -1439,7 +1439,7 @@ attr_reader :compatibility
 
         # Return only the first error encountered, if any.
         error ||= ret
-        col = col + 1
+        row += 1
       end
     end
     return error

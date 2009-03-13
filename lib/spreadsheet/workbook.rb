@@ -176,7 +176,7 @@ class Workbook < BIFFWriter
       #
       @filehandle.write data
       @datasize += data.length
-#print "append\n"
+#print "workbook tmpfile append\n"
 #print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     else
       data = super(*args)
@@ -755,12 +755,12 @@ class Workbook < BIFFWriter
     store_country
     if @ext_ref_count != 0
       store_supbook
+bp=7897897
       store_externsheet
       store_names
     end
     add_mso_drawing_group
     store_shared_strings
-bp=7897897
     store_extsst
 
     # End Workbook globals
@@ -800,7 +800,7 @@ bp=7897897
       @worksheets.each do |worksheet|
         while tmp = worksheet.get_data
           ole.write(tmp)
-#print "worksheet tmpfile\n"
+#print "workbook tmpfile\n"
 #print tmp.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
         end
       end
@@ -1661,9 +1661,7 @@ bp=7897897
     ext = ext_refs.keys.sort
 
     # Change the external refs from stringified "1:1" to [1, 1]
-    ext.each do |e|
-      e = e.split(/:/)
-    end
+    ext.map! {|e| e.split(/:/).map! {|e| e.to_i} }
 
     cxti        = ext.size                 # Number of Excel XTI structures
     rgxti       = ''                       # Array of XTI structures
