@@ -38,9 +38,9 @@ class TC_merge_formats < Test::Unit::TestCase
     @worksheet.set_column('G:G', nil, @merged_format)
   end
 
-  #   def teardown
-  #      File.delete(@test_file) if File.exist?(@test_file)
-  #   end
+  def teardown
+    @workbook.close
+  end
 
   def test_some
     # Test 1   Normal usage.
