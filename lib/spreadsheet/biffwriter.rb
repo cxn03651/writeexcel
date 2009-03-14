@@ -9,8 +9,6 @@
 class BIFFWriter
 
   BIFF_Version = 0x0600
-  byte_order = ''
-
   BigEndian    = [1].pack("I") == [1].pack("N")
 
   attr_reader :byte_order, :data, :datasize
@@ -21,12 +19,11 @@ class BIFFWriter
   ######################################################################
 
   def initialize(*args)
-    @byte_order      = 0
+    set_byte_order
     @data            = ''
     @datasize        = 0
     @limit           = 8224
     @ignore_continue = 0
-    set_byte_order
   end
 
   ###############################################################################
