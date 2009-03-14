@@ -46,8 +46,6 @@ attr_reader :compatibility
 
     @type                = 0x0000
     @ext_sheets          = []
-    @using_tmpfile       = 1
-    @filehandle          = ""
     @fileclosed          = false
     @offset              = 0
     @xls_rowmax          = RowMax
@@ -164,17 +162,7 @@ attr_reader :compatibility
     @db_indices          = []
 
     @validations         = []
-    _initialize
   end
-
-  def _initialize
-    @filehandle = Tempfile.new('spreadsheetwriteexcel')
-    @filehandle.binmode
-    # failed. store temporary data in memory.
-    @using_tmpfile = 0 unless @filehandle
-  end
-
-
 
   def activesheet
     @workbook.activesheet
@@ -390,37 +378,6 @@ bpp=1
   def compatibility_mode(compatibility = 1)
     @compatibility = compatibility
   end
-
-  ###############################################################################
-  #
-  # get_data().
-  #
-  # Retrieves data from memory in one chunk, or from disk in $buffer
-  # sized chunks.
-  #
-  def get_data
-    buflen = 4096
-
-    # Return data stored in memory
-    unless @data.nil?
-      tmp   = @data
-      @data = nil
-      if @using_tmpfile != 0
-        @filehandle.open
-        @filehandle.binmode
-      end
-      return tmp
-    end
-
-    # Return data stored on disk
-    if @using_tmpfile != 0
-      return @filehandle.read(buflen)
-    end
-
-    # No data to return
-    return nil
-  end
-
 
   ###############################################################################
   #

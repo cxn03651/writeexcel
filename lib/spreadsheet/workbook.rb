@@ -1,5 +1,4 @@
 require 'digest/md5'
-require 'tempfile'
 require 'biffwriter'
 require 'olewriter'
 require 'formula'
@@ -46,9 +45,6 @@ class Workbook < BIFFWriter
     @palette               = []
     @biff_only             = 0
 
-    @using_tmpfile         = 1
-    @filehandle            = ""
-    @temp_file             = ""
     @internal_fh           = 0
     @fh_out                = ""
 
@@ -114,26 +110,7 @@ class Workbook < BIFFWriter
     # Set colour palette.
     set_palette_xl97
 
-    _initialize
     get_checksum_method
-  end
-
-
-  ###############################################################################
-  #
-  # _initialize()
-  #
-  # Open a tmp file to store the majority of the Worksheet data. If this fails,
-  # for example due to write permissions, store the data in memory. This can be
-  # slow for large files.
-  #
-  # TODO: Move this and other methods shared with Worksheet up into BIFFWriter.
-  #
-  def _initialize
-    @filehandle = Tempfile.new('spreadsheetwriteexcel')
-    @filehandle.binmode
-    # failed. store temporary data in memory.
-    @using_tmpfile = 0 unless @filehandle
   end
 
   ###############################################################################
@@ -177,36 +154,6 @@ class Workbook < BIFFWriter
     end
 
     return data
-  end
-
-  ###############################################################################
-  #
-  # get_data().
-  #
-  # Retrieves data from memory in one chunk, or from disk in $buffer
-  # sized chunks.
-  #
-  def get_data
-    buflen = 4096
-
-    # Return data stored in memory
-    unless @data.nil?
-      tmp   = @data
-      @data = nil
-      if @using_tmpfile != 0
-        @filehandle.open
-        @filehandle.binmode
-      end
-      return tmp
-    end
-
-    # Return data stored on disk
-    if @using_tmpfile != 0
-      return @filehandle.read(buflen)
-    end
-
-    # No data to return
-    return nil
   end
 
   ###############################################################################

@@ -6,6 +6,9 @@
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
+
+require 'tempfile'
+
 class BIFFWriter
 
   BIFF_Version = 0x0600
@@ -24,6 +27,16 @@ class BIFFWriter
     @datasize        = 0
     @limit           = 8224
     @ignore_continue = 0
+    
+    # Open a tmp file to store the majority of the Worksheet data. If this fails,
+    # for example due to write permissions, store the data in memory. This can be
+    # slow for large files.
+    @filehandle = Tempfile.new('spreadsheetwriteexcel')
+    @filehandle.binmode
+
+    # failed. store temporary data in memory.
+    @using_tmpfile = 0 unless @filehandle
+    
   end
 
   ###############################################################################
@@ -89,6 +102,36 @@ class BIFFWriter
 #print "apend\n"
 #print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     return d
+  end
+
+  ###############################################################################
+  #
+  # get_data().
+  #
+  # Retrieves data from memory in one chunk, or from disk in $buffer
+  # sized chunks.
+  #
+  def get_data
+    buflen = 4096
+
+    # Return data stored in memory
+    unless @data.nil?
+      tmp   = @data
+      @data = nil
+      if @using_tmpfile != 0
+        @filehandle.open
+        @filehandle.binmode
+      end
+      return tmp
+    end
+
+    # Return data stored on disk
+    if @using_tmpfile != 0
+      return @filehandle.read(buflen)
+    end
+
+    # No data to return
+    return nil
   end
 
   ###############################################################################
