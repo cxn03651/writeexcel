@@ -35,7 +35,7 @@ class BIFFWriter
     @filehandle.binmode
 
     # failed. store temporary data in memory.
-    @using_tmpfile = 0 unless @filehandle
+    @using_tmpfile = @filehandle ? true : false
     
   end
 
@@ -93,7 +93,7 @@ class BIFFWriter
     d = args.join
     # Add CONTINUE records if necessary
     d = add_continue(d) if d.length > @limit
-    if @using_tmpfile != 0
+    if @using_tmpfile
       @filehandle.write d
       @datasize += d.length
     else
@@ -119,7 +119,7 @@ class BIFFWriter
     unless @data.nil?
       tmp   = @data
       @data = nil
-      if @using_tmpfile != 0
+      if @using_tmpfile
         @filehandle.open
         @filehandle.binmode
       end
@@ -127,7 +127,7 @@ class BIFFWriter
     end
 
     # Return data stored on disk
-    if @using_tmpfile != 0
+    if @using_tmpfile
       return @filehandle.read(buflen)
     end
 
