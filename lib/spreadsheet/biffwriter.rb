@@ -26,7 +26,7 @@ class BIFFWriter
     @datasize        = 0
     @limit           = 8224
     @ignore_continue = 0
-    # set_byte_order
+    set_byte_order
   end
 
   ###############################################################################
@@ -37,25 +37,22 @@ class BIFFWriter
   # recalculating it for each call to new().
   #
   def set_byte_order
-    if byte_order == ''
-      # Check if "pack" gives the required IEEE 64bit float
-      teststr = [1.2345].pack("d")
-      hexdata = [0x8D, 0x97, 0x6E, 0x12, 0x83, 0xC0, 0xF3, 0x3F]
-      number  = hexdata.pack("C8")
+    # Check if "pack" gives the required IEEE 64bit float
+    teststr = [1.2345].pack("d")
+    hexdata = [0x8D, 0x97, 0x6E, 0x12, 0x83, 0xC0, 0xF3, 0x3F]
+    number  = hexdata.pack("C8")
 
-      if number == teststr
-        byte_order = 0    # Little Endian
-      elsif number == teststr.reverse
-        byte_order = 1    # Big Endian
-      else
-        # Give up. I'll fix this in a later version.
-        raise( "Required floating point format not supported "  +
-        "on this platform. See the portability section " +
-        "of the documentation."
-        )
-      end
+    if number == teststr
+      @byte_order = 0    # Little Endian
+    elsif number == teststr.reverse
+      @byte_order = 1    # Big Endian
+    else
+      # Give up. I'll fix this in a later version.
+      raise( "Required floating point format not supported "  +
+      "on this platform. See the portability section " +
+      "of the documentation."
+      )
     end
-    @byte_order = byte_order
   end
 
   ###############################################################################
