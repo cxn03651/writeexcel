@@ -21,7 +21,7 @@ class BIFFWriter
   # subclasses.  I don't feel like creating multiple constructors.
   ######################################################################
 
-  def initialize(*args)
+  def initialize
     set_byte_order
     @data            = ''
     @datasize        = 0
@@ -73,9 +73,7 @@ class BIFFWriter
   #
   def prepend(*args)
     d = args.join
-    if d.length > @limit
-      d = add_continue d
-    end
+    d = add_continue(d) if d.length > @limit
 
     @datasize += d.length
     @data      = d + @data
@@ -93,12 +91,15 @@ class BIFFWriter
   #
   def append(*args)
     d = args.join
-    if d.length > @limit
-      d = add_continue d
+    # Add CONTINUE records if necessary
+    d = add_continue(d) if d.length > @limit
+    if @using_tmpfile != 0
+      @filehandle.write d
+      @datasize += d.length
+    else
+      @datasize += d.length
+      @data      = @data + d
     end
-
-    @datasize += d.length
-    @data      = @data + d
 #print "apend\n"
 #print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
     return d

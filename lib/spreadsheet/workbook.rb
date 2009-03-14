@@ -23,7 +23,7 @@ class Workbook < BIFFWriter
   # Constructor. Creates a new Workbook object from a BIFFwriter object.
   #
   def initialize(filename)
-    super
+    super()
     @filename              = filename
     @parser                = Formula.new(@byte_order)
     @tempdir               = nil
@@ -125,35 +125,6 @@ class Workbook < BIFFWriter
 
   def get_checksum_method
     @checksum_method = 3
-  end
-
-  ###############################################################################
-  #
-  # _append(), overloaded.
-  #
-  # Store Worksheet data in memory using the base class _append() or to a
-  # temporary file, the default.
-  #
-  def append(*args)
-    data = ''
-    if @using_tmpfile != 0
-      data = args.join('')
-
-      # Add CONTINUE records if necessary
-      data = add_continue(data) if data.length > @limit
-
-      #         # Protect print() from -l on the command line.
-      #         local $\ = undef;
-      #
-      @filehandle.write data
-      @datasize += data.length
-#print "workbook tmpfile append\n"
-#print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
-    else
-      data = super(*args)
-    end
-
-    return data
   end
 
   ###############################################################################

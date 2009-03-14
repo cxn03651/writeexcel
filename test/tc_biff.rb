@@ -29,7 +29,11 @@ class TC_BIFFWriter < Test::Unit::TestCase
 
   def test_data_added
     assert_nothing_raised{ @biff.append("Hello", "World") }
-    assert_equal("HelloWorld", @biff.data, "Bad data contents")
+    data = ''
+    while d = @biff.get_data
+      data = data + d
+    end
+    assert_equal("HelloWorld", data, "Bad data contents")
     assert_equal(10, @biff.datasize, "Bad data size")
   end
 
@@ -37,7 +41,11 @@ class TC_BIFFWriter < Test::Unit::TestCase
 
     assert_nothing_raised{ @biff.append("Hello") }
     assert_nothing_raised{ @biff.prepend("World") }
-    assert_equal("WorldHello", @biff.data, "Bad data contents")
+    data = ''
+    while d = @biff.get_data
+      data = data + d
+    end
+    assert_equal("WorldHello", data, "Bad data contents")
     assert_equal(10, @biff.datasize, "Bad data size")
   end
 

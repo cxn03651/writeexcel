@@ -27,7 +27,7 @@ attr_reader :compatibility
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
   def initialize(workbook, name, index, encoding)
-    super
+    super()
 
     @workbook            = workbook
     @name                = name
@@ -1452,34 +1452,6 @@ bpp=1
   #
   # Internal methods
   #
-
-
-  ###############################################################################
-  #
-  # _append(), overloaded.
-  #
-  # Store Worksheet data in memory using the base class _append() or to a
-  # temporary file, the default.
-  #
-  def append(*args)
-    if @using_tmpfile != 0
-      data = args.join('')
-
-      # Add CONTINUE records if necessary
-      data = add_continue(data) if data.length > @limit
-  
-      @filehandle.print(data)
-      @datasize += data.length
-#print "worksheet tempfile append\n";
-#print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
-    else
-      data = super(*args)
-#print "worksheet memory   append\n";
-#print data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
-    end
-  
-    return data
-  end
 
   ###############################################################################
   #
