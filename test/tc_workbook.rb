@@ -22,7 +22,15 @@ require 'formula'
 class TC_Workbook < Test::Unit::TestCase
 
   def setup
-    @wb = Workbook.new("test.xls")
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
+    @wb = Workbook.new(@test_file)
+  end
+
+  def teardown
+    @wb.close
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_new

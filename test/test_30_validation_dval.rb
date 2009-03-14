@@ -27,9 +27,16 @@ include Spreadsheet
 class TC_validation_dval < Test::Unit::TestCase
 
   def setup
-    @test_file  = 'temp_test_file.xls'
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
     @workbook   = Excel.new(@test_file)
     @worksheet  = @workbook.add_worksheet
+  end
+
+  def teardown
+    @workbook.close
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_1

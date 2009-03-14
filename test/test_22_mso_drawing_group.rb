@@ -27,11 +27,18 @@ include Spreadsheet
 class TC_mso_drawing_group < Test::Unit::TestCase
 
   def setup
-    @test_file  = 'temp_test_file.xls'
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
     @workbook   = Excel.new(@test_file)
     @worksheet1 = @workbook.add_worksheet
     @worksheet2 = @workbook.add_worksheet
     @worksheet3 = @workbook.add_worksheet
+  end
+
+  def teardown
+    @workbook.close
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_1_time

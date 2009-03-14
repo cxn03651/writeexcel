@@ -28,8 +28,10 @@ include Spreadsheet
 class TC_extsst < Test::Unit::TestCase
 
   def setup
-    test_file   = "temp_test_file.xls"
-    @workbook    = Excel.new(test_file)
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
+    @workbook    = Excel.new(@test_file)
 
     @tests = [  # Unique     Number of   Bucket
       # strings    buckets       size
@@ -62,6 +64,12 @@ class TC_extsst < Test::Unit::TestCase
       [4194304,    128,         32769],
       [8257536,    128,         64513],
     ]
+  end
+
+  def teardown
+    @workbook.str_unique = 0
+    @workbook.close
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_1

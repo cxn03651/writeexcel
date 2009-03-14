@@ -27,12 +27,19 @@ include Spreadsheet
 class TC_dimensions < Test::Unit::TestCase
 
   def setup
-    @test_file           = "temp_test_file.xls"
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
     @workbook            = Excel.new(@test_file)
     @worksheet           = @workbook.add_worksheet
     @format              = @workbook.add_format
     @dims                = ['row_min', 'row_max', 'col_min', 'col_max']
     @smiley              = [0x263a].pack('n')
+  end
+
+  def teardown
+    @workbook.close
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_no_worksheet_cell_data

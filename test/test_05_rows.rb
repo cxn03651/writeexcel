@@ -30,7 +30,9 @@ class TC_rows < Test::Unit::TestCase
   end
 
   def test_1
-    @test_file          = "temp_test_file.xls"
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
     workbook            = Excel.new(@test_file)
     workbook.compatibility_mode(1)
     @tests               = []
@@ -176,13 +178,14 @@ class TC_rows < Test::Unit::TestCase
         }
       )
     end
+    xlsfile.close
     (0 .. @tests.size - 1).each do |i|
       assert_equal(@tests[i][1], rows[i], @tests[i][0])
     end
   end
 
   def teardown
-    
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
 end

@@ -53,7 +53,9 @@ class TC_26_autofilter < Test::Unit::TestCase
   end
 
   def setup
-    @test_file  = 'temp_test_file.xls'
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
     @workbook   = Excel.new(@test_file)
     @worksheet  = @workbook.add_worksheet
     @tests = [
@@ -325,6 +327,11 @@ class TC_26_autofilter < Test::Unit::TestCase
                                )]
         }
       ]
+  end
+
+  def teardown
+    @workbook.close
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
 end
