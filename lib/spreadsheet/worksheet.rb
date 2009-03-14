@@ -168,16 +168,10 @@ attr_reader :compatibility
   end
 
   def _initialize
-    basename = 'spreadsheetwriteexcelworksheet' + $$.to_s + self.object_id.to_s
-
-    fh = open(basename, "w+b")
-      # failed. store temporary data in memory.
-    if fh
-      @filehandle = fh
-      @tempfile = basename
-    else
-      @using_tmpfile = 0
-    end
+    @filehandle = Tempfile.new('spreadsheetwriteexcel')
+    @filehandle.binmode
+    # failed. store temporary data in memory.
+    @using_tmpfile = 0 unless @filehandle
   end
 
 
@@ -251,7 +245,7 @@ attr_reader :compatibility
     # Prepend the sheet filtermode record.
 #print "store_filtermode\n"
     store_filtermode
-
+bpp=1
     # Prepend the COLINFO records if they exist
     unless @colinfo.empty?
       while (!@colinfo.empty?)
@@ -411,18 +405,16 @@ attr_reader :compatibility
     unless @data.nil?
       tmp   = @data
       @data = nil
-      @filehandle.seek(0, IO::SEEK_SET) if @using_tmpfile != 0
+      if @using_tmpfile != 0
+        @filehandle.open
+        @filehandle.binmode
+      end
       return tmp
     end
 
     # Return data stored on disk
     if @using_tmpfile != 0
-      tmp = @filehandle.read(buflen)
-      if tmp.nil?
-        @filehandle.close
-        File.delete(@tempfile)
-      end
-      return tmp
+      return @filehandle.read(buflen)
     end
 
     # No data to return
@@ -2922,6 +2914,7 @@ attr_reader :compatibility
     # convert to pixels and then to the internal units. The pixel to users-units
     # relationship is different for values less than 1.
     #
+    width ||= 8.43
     if width < 1
       pixels = width *12
     else

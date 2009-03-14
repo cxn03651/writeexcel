@@ -130,16 +130,10 @@ class Workbook < BIFFWriter
   # TODO: Move this and other methods shared with Worksheet up into BIFFWriter.
   #
   def _initialize
-    basename = 'spreadsheetwriteexcel' + $$.to_s + self.object_id.to_s
-
-    fh = open(basename, "w+b")
-      # failed. store temporary data in memory.
-    if fh
-      @filehandle = fh
-      @tempfile = basename
-    else
-      @using_tmpfile = 0
-    end
+    @filehandle = Tempfile.new('spreadsheetwriteexcel')
+    @filehandle.binmode
+    # failed. store temporary data in memory.
+    @using_tmpfile = 0 unless @filehandle
   end
 
   ###############################################################################
@@ -199,18 +193,16 @@ class Workbook < BIFFWriter
     unless @data.nil?
       tmp   = @data
       @data = nil
-      @filehandle.seek(0, IO::SEEK_SET) if @using_tmpfile != 0
+      if @using_tmpfile != 0
+        @filehandle.open
+        @filehandle.binmode
+      end
       return tmp
     end
 
     # Return data stored on disk
     if @using_tmpfile != 0
-      tmp = @filehandle.read(buflen)
-      if tmp.nil?
-        @filehandle.close
-        File.delete(@tempfile)
-      end
-      return tmp
+      return @filehandle.read(buflen)
     end
 
     # No data to return
