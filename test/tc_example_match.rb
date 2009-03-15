@@ -159,6 +159,25 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("perl_output/regions.xls", @filename)
   end
 
+  def test_hidden
+    workbook   = Excel.new(@filename)
+    worksheet1 = workbook.add_worksheet
+    worksheet2 = workbook.add_worksheet
+    worksheet3 = workbook.add_worksheet
+
+    # Sheet2 won't be visible until it is unhidden in Excel.
+    worksheet2.hide
+
+    worksheet1.write(0, 0, 'Sheet2 is hidden')
+    worksheet2.write(0, 0, 'How did you find me?')
+    worksheet3.write(0, 0, 'Sheet2 is hidden')
+
+    workbook.close
+
+    # do assertion
+    compare_file("perl_output/hidden.xls", @filename)
+  end
+
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")
     fh_t = File.open(target, "r")
