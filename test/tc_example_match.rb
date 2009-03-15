@@ -178,6 +178,40 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("perl_output/hidden.xls", @filename)
   end
 
+  def test_hyperlink1
+    # Create a new workbook and add a worksheet
+    workbook  = Excel.new(@filename)
+    worksheet = workbook.add_worksheet('Hyperlinks')
+    
+    # Format the first column
+    worksheet.set_column('A:A', 30)
+    worksheet.set_selection('B1')
+    
+    
+    # Add a sample format
+    format = workbook.add_format
+    format.set_size(12)
+    format.set_bold
+    format.set_color('red')
+    format.set_underline
+    
+    
+    # Write some hyperlinks
+    worksheet.write('A1', 'http://www.perl.com/'                )
+    worksheet.write('A3', 'http://www.perl.com/', 'Perl home'   )
+    worksheet.write('A5', 'http://www.perl.com/', nil, format)
+    worksheet.write('A7', 'mailto:jmcnamara@cpan.org', 'Mail me')
+    
+    # Write a URL that isn't a hyperlink
+    worksheet.write_string('A9', 'http://www.perl.com/')
+    
+    workbook.close
+
+    # do assertion
+    compare_file("perl_output/hyperlink.xls", @filename)
+  end
+
+
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")
     fh_t = File.open(target, "r")
