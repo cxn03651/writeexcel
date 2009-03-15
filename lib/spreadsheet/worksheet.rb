@@ -1338,7 +1338,7 @@ bpp=1
       raise "Not an array ref in call to write_row() #{$!}";
     end
 
-    row, col, tokens, *options = args
+    row, col, tokens, options = args
     error   = 0
     unless tokens.nil?
       tokens.each do |token|
@@ -1379,7 +1379,7 @@ bpp=1
       raise "Not an array ref in call to write_row()";
     end
 
-    row, col, tokens, *options = args
+    row, col, tokens, options = args
     error   = 0
     unless tokens.nil?
       tokens.each do |token|
