@@ -1157,6 +1157,18 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   def test_method_missing
   end
 
+  def test_copy
+    format1 = Format.new
+    format2 = Format.new
+    
+    format1.set_size(12)
+    
+    format2.copy(format1)
+    
+    assert_equal(format1.size, format2.size)
+  end
+
+
   # -----------------------------------------------------------------------------
 
   def get_valid_format_properties

@@ -37,7 +37,10 @@ class Format
   attr_accessor :align, :border
   attr_accessor :font_index
   attr_accessor :num_format
-  attr_reader   :font, :size, :font_strikeout, :font_script
+  attr_reader   :type
+  attr_reader   :font, :size, :font_family, :font_strikeout, :font_script, :font_charset
+  attr_reader   :font_encoding, :merge_range, :reading_order
+  attr_reader   :diag_type, :diag_color, :diag_border
   attr_reader   :num_format_enc, :locked, :hidden
   attr_reader   :rotation, :indent, :shrink, :pattern, :bottom, :top, :left, :right
   attr_reader   :bottom_color, :top_color, :left_color, :right_color
@@ -63,7 +66,7 @@ class Format
     @italic         = 0
     @color          = 0x7FFF
     @underline      = 0
-    @font_strikeout      = 0
+    @font_strikeout = 0
     @font_outline   = 0
     @font_shadow    = 0
     @font_script    = 0
@@ -115,13 +118,71 @@ class Format
     set_format_properties(*args) unless args.empty?
   end
 
+
   ###############################################################################
   #
-  # Note to porters. The majority of the set_property() methods are created
-  # dynamically via Perl' AUTOLOAD sub, see below. You may prefer/have to specify
-  # them explicitly in other implementation languages.
+  # copy($format)
   #
-
+  # Copy the attributes of another Spreadsheet::WriteExcel::Format object.
+  #
+  def copy(other)
+    return unless other.kind_of?(Format)
+  
+    # copy properties except xf, merge_range, used_merge
+    # Copy properties
+    @type           = other.type
+    @font_index     = other.font_index
+    @font           = other.font
+    @size           = other.size
+    @bold           = other.bold
+    @italic         = other.italic
+    @color          = other.color
+    @underline      = other.underline
+    @font_strikeout = other.font_strikeout
+    @font_outline   = other.font_outline
+    @font_shadow    = other.font_shadow
+    @font_script    = other.font_script
+    @font_family    = other.font_family
+    @font_charset   = other.font_charset
+    @font_encoding  = other.font_encoding
+    
+    @num_format     = other.num_format
+    @num_format_enc = other.num_format_enc
+    
+    @hidden         = other.hidden
+    @locked         = other.locked
+    
+    @text_h_align   = other.text_h_align
+    @text_wrap      = other.text_wrap
+    @text_v_align   = other.text_v_align
+    @text_justlast  = other.text_justlast
+    @rotation       = other.rotation
+    
+    @fg_color       = other.fg_color
+    @bg_color       = other.bg_color
+    
+    @pattern        = other.pattern
+    
+    @bottom         = other.bottom
+    @top            = other.top
+    @left           = other.left
+    @right          = other.right
+    
+    @bottom_color   = other.bottom_color
+    @top_color      = other.top_color
+    @left_color     = other.left_color
+    @right_color    = other.right_color
+    
+    @indent         = other.indent
+    @shrink         = other.shrink
+    @reading_order  = other.reading_order
+    
+    @diag_type      = other.diag_type
+    @diag_color     = other.diag_color
+    @diag_border    = other.diag_border
+    
+    @font_only      = other.font_only
+end
 
   ###############################################################################
   #

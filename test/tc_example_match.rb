@@ -17,11 +17,13 @@ include Spreadsheet
 class TC_example_match < Test::Unit::TestCase
 
   def setup
-    @filename = "tc_example_match.xls"
+    @filename  = "tc_example_match.xls"
+    @filename2 = "tc_example_match2.xls"
   end
 
   def teardown
-    File.delete(@filename) if File.exist?(@filename)
+    File.delete(@filename)  if File.exist?(@filename)
+    File.delete(@filename2) if File.exist?(@filename2)
   end
 
   def test_a_simple
@@ -211,6 +213,50 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("perl_output/hyperlink.xls", @filename)
   end
 
+  def test_copyformat
+    # Create workbook1
+    workbook1       = Excel.new(@filename)
+    worksheet1      = workbook1.add_worksheet
+    format1a        = workbook1.add_format
+    format1b        = workbook1.add_format
+    
+    # Create workbook2
+    workbook2       = Excel.new(@filename2)
+    worksheet2      = workbook2.add_worksheet
+    format2a        = workbook2.add_format
+    format2b        = workbook2.add_format
+    
+    # Create a global format object that isn't tied to a workbook
+    global_format   = Format.new
+    
+    # Set the formatting
+    global_format.set_color('blue')
+    global_format.set_bold
+    global_format.set_italic
+    
+    # Create another example format
+    format1b.set_color('red')
+    
+    # Copy the global format properties to the worksheet formats
+    format1a.copy(global_format)
+    format2a.copy(global_format)
+    
+    # Copy a format from worksheet1 to worksheet2
+    format2b.copy(format1b)
+    
+    # Write some output
+    worksheet1.write(0, 0, "Ciao", format1a)
+    worksheet1.write(1, 0, "Ciao", format1b)
+    
+    worksheet2.write(0, 0, "Hello", format2a)
+    worksheet2.write(1, 0, "Hello", format2b)
+    workbook1.close
+    workbook2.close
+
+    # do assertion
+    compare_file("perl_output/workbook1.xls", @filename)
+    compare_file("perl_output/workbook2.xls", @filename2)
+  end
 
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")
