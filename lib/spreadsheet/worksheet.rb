@@ -233,7 +233,7 @@ attr_reader :compatibility
     # Prepend the sheet filtermode record.
 #print "store_filtermode\n"
     store_filtermode
-bpp=1
+
     # Prepend the COLINFO records if they exist
     unless @colinfo.empty?
       while (!@colinfo.empty?)
@@ -328,7 +328,7 @@ bpp=1
     #
     # End of prepend. Read upwards from here.
     ################################################
-
+bpp=1
     # Append
 #print "store_table\n"
     store_table
@@ -4209,7 +4209,6 @@ bpp=1
 
     col1 = @filter_area[2]
     col2 = @filter_area[3]
-bpp=1
 
     col1.upto(col2) do |i|
       # Reverse order since records are being pre-pended.
@@ -6007,7 +6006,7 @@ bpp=1
     dv_count = cells.size
     dv_data  = [dv_count].pack('v')
     cells.each do |range|
-      dv_data = dv_data + [range[0], range[1], range[2], range[3]].pack('vvvv')
+      dv_data = dv_data + [range[0], range[2], range[1], range[3]].pack('vvvv')
     end
 
     # Pack the record.
@@ -6020,7 +6019,7 @@ bpp=1
       formula_2                    +
       dv_data
 
-    header = [record, length].pack('vv')
+    header = [record, data.length].pack('vv')
 
     append(header, data)
   end
