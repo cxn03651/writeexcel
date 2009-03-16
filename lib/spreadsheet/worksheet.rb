@@ -5709,7 +5709,7 @@ bpp=1
 
     # Check for valid input parameters.
     param.each_key do |param_key|
-      if valid_parameter[param_key].nil?
+      unless valid_parameter.has_key?(param_key) 
         #               carp "Unknown parameter '$param_key' in data_validation()";
         return -3
       end
@@ -5720,7 +5720,7 @@ bpp=1
     param[:value] = param[:minimum] unless param[:minimum].nil?
 
     # 'validate' is a required paramter.
-    if param[:validate].nil?
+    unless param.has_key?(:validate)
       #           carp "Parameter 'validate' is required in data_validation()";
       return -3
     end
@@ -5742,7 +5742,7 @@ bpp=1
     }
 
     # Check for valid validation types.
-    if valid_type[param[:validate].downcase].nil?
+    unless valid_type.has_key?(param[:validate].downcase)
       #           carp "Unknown validation type '$param->{validate}' for parameter " .
       #                "'validate' in data_validation()";
       return -3
@@ -5762,7 +5762,7 @@ bpp=1
     end
 
     # 'criteria' is a required parameter.
-    if param[:criteria].nil?
+    unless param.has_key?(:criteria)
       #           carp "Parameter 'criteria' is required in data_validation()";
       return -3
     end
@@ -5788,7 +5788,7 @@ bpp=1
     }
 
     # Check for valid criteria types.
-    if criteria_type[param[:criteria].downcase].nil?
+    unless criteria_type.has_key?(param[:criteria].downcase)
       #           carp "Unknown criteria type '$param->{criteria}' for parameter " .
       #                "'criteria' in data_validation()";
       return -3
@@ -5798,7 +5798,7 @@ bpp=1
 
     # 'Between' and 'Not between' criterias require 2 values.
     if param[:criteria] == 0 || param[:criteria] == 1
-      if param[:maximum].nil?
+      unless param.has_key?(:maximum)
         #               carp "Parameter 'maximum' is required in data_validation() " .
         #                    "when using 'between' or 'not between' criteria";
         return -3
@@ -5815,9 +5815,9 @@ bpp=1
     }
 
     # Check for valid error dialog types.
-    if param[:error_type].nil?
+    if not param.has_key?(:error_type)
       param[:error_type] = 0
-    elsif error_type[param[:error_type].downcase].nil?
+    elsif not error_type.has_key?(param[:error_type].downcase)
       #           carp "Unknown criteria type '$param->{error_type}' for parameter " .
       #                "'error_type' in data_validation()";
       return -3
@@ -5860,7 +5860,7 @@ bpp=1
     param[:cells] = [[row1, col1, row2, col2]]
 
     # A (for now) undocumented parameter to pass additional cell ranges.
-    if !param[:other_cells].nil?
+    if param.has_key?(:other_cells)
 
       param[:cells].push(param[:other_cells])
     end
