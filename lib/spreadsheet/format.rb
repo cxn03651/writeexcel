@@ -895,7 +895,7 @@ end
   #
   # Implements the Excel5 style "merge".
   #
-  def set_center_across(val)
+  def set_center_across(val=true)
     set_text_h_align(6)
   end
 
