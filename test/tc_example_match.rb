@@ -525,6 +525,28 @@ class TC_example_match < Test::Unit::TestCase
     # do assertion
     compare_file("perl_output/data_validate.xls", @filename)
   end
+
+  def test_merge1
+    workbook  = Excel.new(@filename)
+    worksheet = workbook.add_worksheet
+
+    # Increase the cell size of the merged cells to highlight the formatting.
+    worksheet.set_column('B:D', 20)
+    worksheet.set_row(2, 30)
+
+    # Create a merge format
+    format = workbook.add_format(:center_across => 1)
+
+    # Only one cell should contain text, the others should be blank.
+    worksheet.write(2, 1, "Center across selection", format)
+    worksheet.write_blank(2, 2,                 format)
+    worksheet.write_blank(2, 3,                 format)
+
+    workbook.close
+
+    # do assertion
+    compare_file("perl_output/merge1.xls", @filename)
+  end
   
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")
