@@ -7,12 +7,13 @@ prechigh
   left     '*' '/'
   left     '+' '-'
   left     '<' '>' '<=' '>=' '<>'
+  left     '='
 preclow
 
 rule
 
   formula      : expr_list
-  
+
   expr_list    :                      { result = [] }
                | expr_list expr EOL   { result.push val[1], '_arg', '1' }
                | expr_list EOL
@@ -28,6 +29,7 @@ rule
                | expr LE  expr        { result = [ val[0], val[2], 'ptgLE' ] }
                | expr GE  expr        { result = [ val[0], val[2], 'ptgGE' ] }
                | expr NE  expr        { result = [ val[0], val[2], 'ptgNE' ] }
+               | expr '=' expr        { result = [ val[0], val[2], 'ptgEQ' ] }
                | primary
 
   primary      : '(' expr ')'         { result = [ val[1], '_arg', '1', '_ptgParen'] }
@@ -63,9 +65,9 @@ class Node
       nodes.each { |i| v = i.evaluate }
       v
    end
-   
+
    def excelformulaparser_error(msg)
-      raise ExcelFormulaParserError, 
+      raise ExcelFormulaParserError,
                "in #{fname}:#{lineno}: #{msg}"
    end
 
@@ -76,13 +78,13 @@ class RootNode < Node
    def initialize(tree)
       @tree = tree
    end
-   
+
    def evaluate
       exec_list @tree
    end
 
 end
-   
+
 
 class FuncallNode < Node
 
@@ -90,7 +92,7 @@ class FuncallNode < Node
       @func = func
       @args = args
    end
-   
+
    def evaluate
       arg = @args.collect {|i| i.evaluate }
       out = []
@@ -98,7 +100,7 @@ class FuncallNode < Node
       o.push @func
       p o
    end
-   
+
 end
 
 class NumberNode < Node
@@ -106,7 +108,7 @@ class NumberNode < Node
    def initialize(val)
       @val = val
    end
-   
+
    def evaluate
       p @val
    end

@@ -5823,7 +5823,7 @@ bpp=1
       #                "'error_type' in data_validation()";
       return -3
     else
-      param[:error_type] = error_type[param[error_type].downcase]
+      param[:error_type] = error_type[param[:error_type].downcase]
     end
 
     # Convert date/times value sif required.
@@ -5898,20 +5898,21 @@ bpp=1
     return if @validations.size == 0
 
     @validations.each do |param|
-      store_dv(           param[:cells],
-      param[:validate],
-      param[:criteria],
-      param[:value],
-      param[:maximum],
-      param[:input_title],
-      param[:input_message],
-      param[:error_title],
-      param[:error_message],
-      param[:error_type],
-      param[:ignore_blank],
-      param[:dropdown],
-      param[:show_input],
-      param[:show_error]
+      store_dv(
+        param[:cells],
+        param[:validate],
+        param[:criteria],
+        param[:value],
+        param[:maximum],
+        param[:input_title],
+        param[:input_message],
+        param[:error_title],
+        param[:error_message],
+        param[:error_type],
+        param[:ignore_blank],
+        param[:dropdown],
+        param[:show_input],
+        param[:show_error]
       )
     end
   end
@@ -5979,7 +5980,7 @@ bpp=1
     end
 
     # The dropdown flag is stored as a negated value.
-    no_dropdown = !dropdown
+    no_dropdown = dropdown ? 0 : 1
 
     # Set the required flags.
     flags |= validation_type
@@ -6006,18 +6007,18 @@ bpp=1
     dv_count = cells.size
     dv_data  = [dv_count].pack('v')
     cells.each do |range|
-      dv_data = dv_data + [range[0]+range[1]+range[2]+range[3]].pack('vvvv')
+      dv_data = dv_data + [range[0], range[1], range[2], range[3]].pack('vvvv')
     end
 
     # Pack the record.
     data   = [flags].pack('V')            +
-    input_title                  +
-    error_title                  +
-    input_message                +
-    error_message                +
-    formula_1                    +
-    formula_2                    +
-    dv_data
+      input_title                  +
+      error_title                  +
+      input_message                +
+      error_message                +
+      formula_1                    +
+      formula_2                    +
+      dv_data
 
     header = [record, length].pack('vv')
 
