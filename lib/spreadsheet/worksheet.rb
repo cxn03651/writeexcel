@@ -2087,9 +2087,7 @@ bpp=1
     # in order to protect the callers args. We don't use "local @_" in case of
     # perl50005 threads.
     #
-#    args2 = args.dup
-
-#    args2[5], args2[6] = [ args2[6], args2[5] ] if 
+    args[5], args[6] = [ args[6], args[5] ] if args[5].kind_of?(Format)
 
     url = args[4]
 
