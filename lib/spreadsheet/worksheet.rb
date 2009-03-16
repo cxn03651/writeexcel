@@ -4,6 +4,50 @@ require 'workbook'
 
 class MaxSizeError < StandardError; end
 
+#
+# = class Worksheet
+#
+# A new worksheet is created by calling the add_worksheet() method from a workbook object:
+#
+# Examples:
+#
+# <tt>workbook   = Excel.new('file.xls')</tt>
+# <tt>worksheet1 = workbook.add_worksheet</tt>
+# <tt>worksheet2 = workbook.add_worksheet</tt>
+#
+# == Cell notation
+#
+# Spreadsheet::WriteExcel supports two forms of notation to designate 
+# the position of cells: Row-column notation and A1 notation. Row-column
+# notation uses a zero based index for both row and column while A1
+# notation uses the standard Excel alphanumeric sequence of column
+# letter and 1-based row.
+# For example:
+#
+# <tt>(0, 0)      # The top left cell in row-column notation.</tt>
+# <tt>('A1')      # The top left cell in A1 notation.</tt>
+# <tt>(1999, 29)  # Row-Column notation.</tt>
+# <tt>('AD2000')  # The same cell in A1 notation.</tt>
+#
+# Row-column notation is useful if you are refferring to cells
+# programmatically.
+#
+# <tt>0.upto(9) do |i|</tt>
+# <tt>  worksheet.write(i, 0, 'Hello')  # Cells A1 to A10</tt>
+# <tt>end</tt>
+#
+# A1 notation is useful for setting up a worksheet manually and
+# for working with formulas.
+#
+# <tt>worksheet.write('H1', 200)</tt>
+# <tt>worksheet.write('H2', '=H1+1')</tt>
+#
+# In formulas and applicable methods you can also use the <tt>A:A</tt>
+# column notation.
+#
+# <tt>worksheet.write('A1', '=SUM(B:B)')</tt>
+#
+
 class Worksheet < BIFFWriter
 
   RowMax = 65536
@@ -164,45 +208,55 @@ attr_reader :compatibility
     @validations         = []
   end
 
-  def activesheet
+  def activesheet  #:nodoc:
     @workbook.activesheet
   end
+  private :activesheet
 
-  def set_activesheet(val)
+  def set_activesheet(val)  #:nodoc:
     @workbook.activesheet = val
   end
+  private :set_activesheet
 
-  def firstsheet
+  def firstsheet  #:nodoc:
     @workbook.firstsheet
   end
+  private :firstsheet
 
-  def set_firstsheet(val)
+  def set_firstsheet(val)  #:nodoc:
     @workbook.firstsheet = val
   end
+  private :set_firstsheet
 
-  def str_total
+  def str_total  #:nodoc:
     @workbook.str_total
   end
+  private :str_total
 
-  def set_str_total(val)
+  def set_str_total(val)  #:nodoc:
     @workbook.str_total = val
   end
+  private :set_str_total
 
-  def str_unique
+  def str_unique  #:nodoc:
     @workbook.str_unique
   end
+  private :str_unique
 
-  def set_str_unique(val)
+  def set_str_unique(val)  #:nodoc:
     @workbook.str_unique = val
   end
+  private :set_str_unique
 
-  def add_str_total(val)
+  def add_str_total(val)  #:nodoc:
     @workbook.str_total += val
   end
+  private :add_str_total
 
-  def add_str_unique(val)
+  def add_str_unique(val)  #:nodoc:
     @workbook.str_unique += val
   end
+  private :add_str_unique
 
   ###############################################################################
   #
@@ -884,7 +938,7 @@ bpp=1
   #           'x = "foo bar"'
   #           'x = "foo "" bar"'
   #
-  def extract_filter_tokens(expression = nil)
+  def extract_filter_tokens(expression = nil)   #:nodoc:
     return [] unless expression
 
     #  @tokens = ($expression  =~ /"(?:[^"]|"")*"|\S+/g); #"
@@ -912,6 +966,7 @@ bpp=1
 
     return tokens
   end
+#  private :extract_filter_tokens
 
   ###############################################################################
   #
@@ -924,7 +979,7 @@ bpp=1
   #          ('x', '==', 2000) -> exp1
   #          ('x', '>',  2000, 'and', 'x', '<', 5000) -> exp1 and exp2
   #
-  def parse_filter_expression(expression, tokens)
+  def parse_filter_expression(expression, tokens)   #:nodoc:
     # The number of tokens will be either 3 (for 1 expression)
     # or 7 (for 2  expressions).
     #
@@ -945,6 +1000,7 @@ bpp=1
       return parse_filter_tokens(expression, tokens)
     end
   end
+#  private :parse_filter_expression
 
   ###############################################################################
   #
@@ -952,7 +1008,7 @@ bpp=1
   #
   # Parse the 3 tokens of a filter expression and return the operator and token.
   #
-  def parse_filter_tokens(expression, tokens)
+  def parse_filter_tokens(expression, tokens)     #:nodoc:
     operators = {
       '==' => 2,
       '='  => 2,
@@ -1037,6 +1093,7 @@ bpp=1
 
     return [operator, token]
   end
+  private :parse_filter_tokens
 
   ###############################################################################
   #
@@ -1446,6 +1503,7 @@ bpp=1
       return 0x0F
     end
   end
+  private :xf_record_index
 
   ###############################################################################
   ###############################################################################
@@ -1462,7 +1520,9 @@ bpp=1
   #
   # Ex: ("A4", "Hello") is converted to (3, 0, "Hello").
   #
-  def substitute_cellref(cell, *args)
+  def substitute_cellref(cell, *args)       #:nodoc:
+    return [*args] if cell.kind_of?(Numeric)
+  
     cell.upcase!
 
     # Convert a column range: 'A:A' or 'B:G'.
@@ -1489,6 +1549,7 @@ bpp=1
 
     raise("Unknown cell reference #{cell}")
   end
+#  private :substitute_cellref
 
   ###############################################################################
   #
@@ -1522,6 +1583,7 @@ bpp=1
 
     return [row, col]
   end
+  private :cell_to_rowcol
 
   ###############################################################################
   #
@@ -1830,6 +1892,7 @@ bpp=1
 
     return [num, grbit, is_string]
   end
+  private :encode_formula_result
 
   ###############################################################################
   #
@@ -2091,7 +2154,7 @@ bpp=1
 
     return error
   end
-
+  private :write_url_web
 
   ###############################################################################
   #
@@ -2153,6 +2216,7 @@ bpp=1
 
     return error
   end
+  private :write_url_internal
 
   ###############################################################################
   #
@@ -2266,6 +2330,7 @@ bpp=1
 
     return error
   end
+  private :write_url_external
 
   ###############################################################################
   #
@@ -2344,6 +2409,7 @@ bpp=1
 
     return error
   end
+  private :write_url_external_net
 
   ###############################################################################
   #
@@ -2616,6 +2682,7 @@ bpp=1
 
     append(header, data)
   end
+  private :write_row_default
 
   ###############################################################################
   #
@@ -2658,6 +2725,7 @@ bpp=1
 
     return 0
   end
+  private :check_dimensions
 
   ###############################################################################
   #
@@ -2671,7 +2739,7 @@ bpp=1
   #   We set the undef member data to 0 since it is used by _store_table().
   #   Inserting images or charts doesn't change the DIMENSION data.
   #
-  def store_dimensions
+  def store_dimensions   #:nodoc:
     record    = 0x0200         # Record identifier
     length    = 0x000E         # Number of bytes to follow
     reserved  = 0x0000         # Reserved by Excel
@@ -2693,6 +2761,7 @@ bpp=1
 
     return prepend(header, data)
   end
+#  private :store_dimensions
 
   ###############################################################################
   #
@@ -2700,7 +2769,7 @@ bpp=1
   #
   # Write BIFF record Window2.
   #
-  def store_window2
+  def store_window2   #:nodoc:
     record         = 0x023E     # Record identifier
     length         = 0x0012     # Number of bytes to follow
 
@@ -2746,6 +2815,7 @@ bpp=1
 
     append(header, data)
   end
+  private :store_window2
 
   ###############################################################################
   #
@@ -2753,11 +2823,12 @@ bpp=1
   #
   # Set page view mode. Only applicable to Mac Excel.
   #
-  def store_page_view
+  def store_page_view   #:nodoc:
     return if @page_view == 0
     data    = ['C8081100C808000000000040000000000900000000'].pack("H*")
     append(data)
   end
+  private :store_page_view
 
   ###############################################################################
   #
@@ -2765,7 +2836,7 @@ bpp=1
   #
   # Write the Tab Color BIFF record.
   #
-  def store_tab_color
+  def store_tab_color   #:nodoc:
     color   = @tab_color
 
     return if color == 0
@@ -2782,6 +2853,7 @@ bpp=1
 
     append(header, data)
   end
+  private :store_tab_color
 
   ###############################################################################
   #
@@ -2789,7 +2861,7 @@ bpp=1
   #
   # Write BIFF record DEFROWHEIGHT.
   #
-  def store_defrow
+  def store_defrow   #:nodoc:
     record   = 0x0225      # Record identifier
     length   = 0x0004      # Number of bytes to follow
 
@@ -2801,6 +2873,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_defrow
 
   ###############################################################################
   #
@@ -2808,7 +2881,7 @@ bpp=1
   #
   # Write BIFF record DEFCOLWIDTH.
   #
-  def store_defcol
+  def store_defcol   #:nodoc:
     record   = 0x0055      # Record identifier
     length   = 0x0002      # Number of bytes to follow
 
@@ -2819,6 +2892,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_defcol
 
   ###############################################################################
   #
@@ -2835,7 +2909,7 @@ bpp=1
   # Note: The SDK says the record length is 0x0B but Excel writes a 0x0C
   # length record.
   #
-  def store_colinfo(firstcol=0, lastcol=0, width=8.43, format=nil, hidden=0, level=0, collapsed=0)
+  def store_colinfo(firstcol=0, lastcol=0, width=8.43, format=nil, hidden=0, level=0, collapsed=0)  #:nodoc:
     record   = 0x007D          # Record identifier
     length   = 0x000B          # Number of bytes to follow
 
@@ -2878,6 +2952,7 @@ bpp=1
 
     prepend(header, data)
   end
+#  private :store_colinfo
 
   ###############################################################################
   #
@@ -2886,7 +2961,7 @@ bpp=1
   # Write BIFF record FILTERMODE to indicate that the worksheet contains
   # AUTOFILTER record, ie. autofilters with a filter set.
   #
-  def store_filtermode
+  def store_filtermode   #:nodoc:
     # Only write the record if the worksheet contains a filtered autofilter.
     return '' if @filter_on == 0
 
@@ -2897,7 +2972,7 @@ bpp=1
 
     prepend(header)
   end
-
+#  private :store_filtermode
 
   ###############################################################################
   #
@@ -2905,7 +2980,7 @@ bpp=1
   #
   # Write BIFF record AUTOFILTERINFO.
   #
-  def store_autofilterinfo
+  def store_autofilterinfo   #:nodoc:
     # Only write the record if the worksheet contains an autofilter.
     return '' if @filter_count == 0
 
@@ -2918,7 +2993,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_autofilterinfo
 
   ###############################################################################
   #
@@ -2926,7 +3001,7 @@ bpp=1
   #
   # Write BIFF record SELECTION.
   #
-  def store_selection(first_row=0, first_col=0, last_row = nil, last_col =nil)
+  def store_selection(first_row=0, first_col=0, last_row = nil, last_col =nil)   #:nodoc:
     record   = 0x001D                  # Record identifier
     length   = 0x000F                  # Number of bytes to follow
 
@@ -2960,7 +3035,7 @@ bpp=1
 
     append(header, data)
   end
-
+#  private :store_selection
 
   ###############################################################################
   #
@@ -2975,7 +3050,7 @@ bpp=1
   # complexity and eliminates the need for a two way dialogue between the formula
   # parser the worksheet objects.
   #
-  def store_externcount(count)
+  def store_externcount(count)   #:nodoc:
     record   = 0x0016          # Record identifier
     length   = 0x0002          # Number of bytes to follow
 
@@ -2986,7 +3061,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_externcount
 
   ###############################################################################
   #
@@ -2998,7 +3073,7 @@ bpp=1
   # reference to all of the external worksheets the EXTERNSHEET index is the same
   # as the worksheet index.
   #
-  def store_externsheet(sheetname)
+  def store_externsheet(sheetname)   #:nodoc:
     record    = 0x0017         # Record identifier
     # length;                     # Number of bytes to follow
 
@@ -3024,7 +3099,7 @@ bpp=1
 
     prepend(header, data, sheetname)
   end
-
+  private :store_externsheet
 
   ###############################################################################
   #
@@ -3042,7 +3117,7 @@ bpp=1
   # Frozen panes are specified in terms of a integer number of rows and columns.
   # Thawed panes are specified in terms of Excel's units for rows and columns.
   #
-  def store_panes(y=0, x=0, rwtop=nil,  colleft=nil, no_split=nil, pnnAct=nil)
+  def store_panes(y=0, x=0, rwtop=nil,  colleft=nil, no_split=nil, pnnAct=nil)   #:nodoc:
     record      = 0x0041       # Record identifier
     length      = 0x000A       # Number of bytes to follow
 
@@ -3083,7 +3158,7 @@ bpp=1
 
     append(header, data)
   end
-
+  private :store_panes
 
   ###############################################################################
   #
@@ -3091,7 +3166,7 @@ bpp=1
   #
   # Store the page setup SETUP BIFF record.
   #
-  def store_setup
+  def store_setup   #:nodoc:
     record       = 0x00A1                  # Record identifier
     length       = 0x0022                  # Number of bytes to follow
 
@@ -3144,6 +3219,7 @@ bpp=1
     prepend(header, data1, data2, data3)
 
   end
+  private :store_setup
 
   ###############################################################################
   #
@@ -3151,7 +3227,7 @@ bpp=1
   #
   # Store the header caption BIFF record.
   #
-  def store_header
+  def store_header   #:nodoc:
     record      = 0x0014                       # Record identifier
     # length                                     # Bytes to follow
 
@@ -3173,7 +3249,7 @@ bpp=1
 
     prepend(header, data, str)
   end
-
+  private :store_header
 
   ###############################################################################
   #
@@ -3181,7 +3257,7 @@ bpp=1
   #
   # Store the footer caption BIFF record.
   #
-  def store_footer
+  def store_footer   #:nodoc:
     record      = 0x0015                       # Record identifier
     # length;                                     # Bytes to follow
 
@@ -3203,7 +3279,7 @@ bpp=1
 
     prepend(header, data, str)
   end
-
+  private :store_footer
 
   ###############################################################################
   #
@@ -3211,7 +3287,7 @@ bpp=1
   #
   # Store the horizontal centering HCENTER BIFF record.
   #
-  def store_hcenter
+  def store_hcenter   #:nodoc:
     record   = 0x0083              # Record identifier
     length   = 0x0002              # Bytes to follow
 
@@ -3222,7 +3298,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_hcenter
 
   ###############################################################################
   #
@@ -3230,7 +3306,7 @@ bpp=1
   #
   # Store the vertical centering VCENTER BIFF record.
   #
-  def store_vcenter
+  def store_vcenter   #:nodoc:
     record   = 0x0084              # Record identifier
     length   = 0x0002              # Bytes to follow
 
@@ -3241,7 +3317,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_vcenter
 
   ###############################################################################
   #
@@ -3249,7 +3325,7 @@ bpp=1
   #
   # Store the LEFTMARGIN BIFF record.
   #
-  def store_margin_left
+  def store_margin_left   #:nodoc:
     record  = 0x0026                   # Record identifier
     length  = 0x0008                   # Bytes to follow
 
@@ -3262,7 +3338,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_margin_left
 
   ###############################################################################
   #
@@ -3270,7 +3346,7 @@ bpp=1
   #
   # Store the RIGHTMARGIN BIFF record.
   #
-  def store_margin_right
+  def store_margin_right   #:nodoc:
     record  = 0x0027                   # Record identifier
     length  = 0x0008                   # Bytes to follow
 
@@ -3283,7 +3359,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_margin_right
 
   ###############################################################################
   #
@@ -3291,7 +3367,7 @@ bpp=1
   #
   # Store the TOPMARGIN BIFF record.
   #
-  def store_margin_top
+  def store_margin_top   #:nodoc:
     record  = 0x0028                   # Record identifier
     length  = 0x0008                   # Bytes to follow
 
@@ -3304,7 +3380,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_margin_top
 
   ###############################################################################
   #
@@ -3312,7 +3388,7 @@ bpp=1
   #
   # Store the BOTTOMMARGIN BIFF record.
   #
-  def store_margin_bottom
+  def store_margin_bottom   #:nodoc:
     record  = 0x0029                   # Record identifier
     length  = 0x0008                   # Bytes to follow
 
@@ -3325,6 +3401,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_margin_bottom
 
   ###############################################################################
   #
@@ -3431,7 +3508,7 @@ bpp=1
   #
   # Write the PRINTHEADERS BIFF record.
   #
-  def store_print_headers
+  def store_print_headers   #:nodoc:
     record      = 0x002a                   # Record identifier
     length      = 0x0002                   # Bytes to follow
 
@@ -3442,6 +3519,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_print_headers
 
   ###############################################################################
   #
@@ -3450,7 +3528,7 @@ bpp=1
   # Write the PRINTGRIDLINES BIFF record. Must be used in conjunction with the
   # GRIDSET record.
   #
-  def store_print_gridlines
+  def store_print_gridlines   #:nodoc:
     record      = 0x002b                    # Record identifier
     length      = 0x0002                    # Bytes to follow
 
@@ -3461,6 +3539,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_print_gridlines
 
   ###############################################################################
   #
@@ -3469,7 +3548,7 @@ bpp=1
   # Write the GRIDSET BIFF record. Must be used in conjunction with the
   # PRINTGRIDLINES record.
   #
-  def store_gridset
+  def store_gridset   #:nodoc:
     record      = 0x0082                        # Record identifier
     length      = 0x0002                        # Bytes to follow
 
@@ -3480,6 +3559,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_gridset
 
   ###############################################################################
   #
@@ -3491,7 +3571,7 @@ bpp=1
   #
   # We are all in the gutter but some of us are looking at the stars.
   #
-  def store_guts
+  def store_guts   #:nodoc:
     record      = 0x0080   # Record identifier
     length      = 0x0008   # Bytes to follow
 
@@ -3524,6 +3604,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_guts
 
   ###############################################################################
   #
@@ -3532,7 +3613,7 @@ bpp=1
   # Write the WSBOOL BIFF record, mainly for fit-to-page. Used in conjunction
   # with the SETUP record.
   #
-  def store_wsbool
+  def store_wsbool   #:nodoc:
     record      = 0x0081   # Record identifier
     length      = 0x0002   # Bytes to follow
 
@@ -3551,6 +3632,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_wsbool
 
   ###############################################################################
   #
@@ -3558,7 +3640,7 @@ bpp=1
   #
   # Write the HORIZONTALPAGEBREAKS BIFF record.
   #
-  def store_hbreak
+  def store_hbreak   #:nodoc:
     # Return if the user hasn't specified pagebreaks
     return if @hbreaks.size == 0
 
@@ -3579,6 +3661,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_hbreak
 
   ###############################################################################
   #
@@ -3586,7 +3669,7 @@ bpp=1
   #
   # Write the VERTICALPAGEBREAKS BIFF record.
   #
-  def store_vbreak
+  def store_vbreak   #:nodoc:
     # Return if the user hasn't specified pagebreaks
     return if @vbreaks.size == 0
 
@@ -3607,7 +3690,7 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_vbreak
 
   ###############################################################################
   #
@@ -3615,7 +3698,7 @@ bpp=1
   #
   # Set the Biff PROTECT record to indicate that the worksheet is protected.
   #
-  def store_protect
+  def store_protect   #:nodoc:
     # Exit unless sheet protection has been specified
     return if @protect == 0
 
@@ -3629,6 +3712,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_protect
 
   ###############################################################################
   #
@@ -3636,7 +3720,7 @@ bpp=1
   #
   # Set the Biff OBJPROTECT record to indicate that objects are protected.
   #
-  def store_obj_protect
+  def store_obj_protect   #:nodoc:
     # Exit unless sheet protection has been specified
     return if @protect == 0
 
@@ -3650,6 +3734,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_obj_protect
 
   ###############################################################################
   #
@@ -3657,7 +3742,7 @@ bpp=1
   #
   # Write the worksheet PASSWORD record.
   #
-  def store_password
+  def store_password   #:nodoc:
     # Exit unless sheet protection and password have been specified
     return if (@protect == 0 or @password.nil?)
 
@@ -3671,7 +3756,8 @@ bpp=1
 
     prepend(header, data)
   end
-
+  private :store_password
+  
   #
   # Note about compatibility mode.
   #
@@ -3704,7 +3790,7 @@ bpp=1
   # DBCELL records in blocks of 32 rows. This is explained in detail (for a
   # change) in the Excel SDK and in the OOo Excel file format doc.
   #
-  def store_table
+  def store_table   #:nodoc:
     return if @compatibility == 0
 
     # Offset from the DBCELL record back to the first ROW of the 32 row block.
@@ -3783,6 +3869,7 @@ bpp=1
       end
     end
   end
+  private :store_table
 
   ###############################################################################
   #
@@ -3792,7 +3879,7 @@ bpp=1
   #
   # This is only used when compatibity_mode() is in operation.
   #
-  def store_dbcell(row_offset, cell_offsets)
+  def store_dbcell(row_offset, cell_offsets)   #:nodoc:
     record          = 0x00D7                     # Record identifier
     length          = 4 + 2 * cell_offsets.size  # Bytes to follow
 
@@ -3804,7 +3891,7 @@ bpp=1
 
     append(header, data)
   end
-
+  private :store_dbcell
 
   ###############################################################################
   #
@@ -3814,7 +3901,7 @@ bpp=1
   #
   # This is only used when compatibity_mode() is in operation.
   #
-  def store_index
+  def store_index   #:nodoc:
     return if @compatibility == 0
 
     indices     = @db_indices
@@ -3834,6 +3921,7 @@ bpp=1
 
     prepend(header, data)
   end
+  private :store_index
 
   ###############################################################################
   #
@@ -3942,7 +4030,7 @@ bpp=1
   # Note: the SDK incorrectly states that the height should be expressed as a
   # percentage of 1024.
   #
-  def position_object(col_start, row_start, x1, y1, width, height)
+  def position_object(col_start, row_start, x1, y1, width, height)   #:nodoc:
     # col_start;  # Col containing upper left corner of object
     # x1;         # Distance to left side of object
 
@@ -4025,7 +4113,7 @@ bpp=1
   # column width to the nearest pixel. If the width hasn't been set by the user
   # we use the default value. If the column is hidden we use a value of zero.
   #
-  def size_col(col)
+  def size_col(col)   #:nodoc:
     # Look up the cell value to see if it has been changed
     unless @col_sizes[col].nil?
       width = @col_sizes[col]
@@ -4040,6 +4128,7 @@ bpp=1
       return 64
     end
   end
+  private :size_col
 
   ###############################################################################
   #
@@ -4050,7 +4139,7 @@ bpp=1
   # use the default value. If the row is hidden we use a value of zero. (Not
   # possible to hide row yet).
   #
-  def size_row(row)
+  def size_row(row)   #:nodoc:
     # Look up the cell value to see if it has been changed
     unless @row_sizes[row].nil?
       if @row_sizes[row] == 0
@@ -4062,6 +4151,7 @@ bpp=1
       return 17
     end
   end
+  private :size_row
 
   ###############################################################################
   #
@@ -4071,7 +4161,7 @@ bpp=1
   # Store the window zoom factor. This should be a reduced fraction but for
   # simplicity we will store all fractions with a numerator of 100.
   #
-  def store_zoom
+  def store_zoom   #:nodoc:
     # If scale is 100 we don't need to write a record
     return if @zoom == 100
 
@@ -4083,6 +4173,7 @@ bpp=1
 
     append(header, data)
   end
+  private :store_zoom
 
   ###############################################################################
   #
@@ -4203,7 +4294,7 @@ bpp=1
   # Function to iterate through the columns that form part of an autofilter
   # range and write Biff AUTOFILTER records if a filter expression has been set.
   #
-  def store_autofilters
+  def store_autofilters   #:nodoc:
     # Skip all columns if no filter have been set.
     return '' if @filter_on == 0
 
@@ -4221,6 +4312,7 @@ bpp=1
       store_autofilter(col, *@filter_cols[col])
     end
   end
+  private :store_autofilters
 
   ###############################################################################
   #
@@ -4235,7 +4327,7 @@ bpp=1
   # Function to write worksheet AUTOFILTER records. These contain 2 Biff Doper
   # structures to represent the 2 possible filter conditions.
   #
-  def store_autofilter(index, operator_1, token_1,
+  def store_autofilter(index, operator_1, token_1,   #:nodoc:
                                  join = nil, operator_2 = nil, token_2 = nil)
     record          = 0x009E
     length          = 0x0000
@@ -4312,6 +4404,7 @@ bpp=1
 
     prepend(header, data)
   end
+#  private :store_autofilter
 
   ###############################################################################
   #
@@ -4320,7 +4413,7 @@ bpp=1
   # Create a Biff Doper structure that represents a filter expression. Depending
   # on the type of the token we pack an Empty, String or Number doper.
   #
-  def pack_doper(operator, token)
+  def pack_doper(operator, token)   #:nodoc:
     doper       = ''
     string      = ''
 
@@ -4358,6 +4451,7 @@ bpp=1
 
     return [doper, string]
   end
+  private :pack_doper
 
   ###############################################################################
   #
@@ -4365,9 +4459,10 @@ bpp=1
   #
   # Pack an empty Doper structure.
   #
-  def pack_unused_doper
+  def pack_unused_doper   #:nodoc:
     return [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0].pack('C10')
   end
+  private :pack_unused_doper
 
   ###############################################################################
   #
@@ -4375,7 +4470,7 @@ bpp=1
   #
   # Pack an Blanks/NonBlanks Doper structure.
   #
-  def pack_blanks_doper(operator, token)
+  def pack_blanks_doper(operator, token)   #:nodoc:
     if token == 'blanks'
       type     = 0x0C
       operator = 2
@@ -4390,6 +4485,7 @@ bpp=1
     ].pack('CCVV')
     return doper
   end
+  private :pack_blanks_doper
 
   ###############################################################################
   #
@@ -4397,7 +4493,7 @@ bpp=1
   #
   # Pack an string Doper structure.
   #
-  def pack_string_doper(operator, length)
+  def pack_string_doper(operator, length)   #:nodoc:
     doper = [0x06,     # Data type
       operator,
       0x0000,         #Reserved
@@ -4406,6 +4502,7 @@ bpp=1
     ].pack('CCVCCCC')
     return doper
   end
+  private :pack_string_doper
 
   ###############################################################################
   #
@@ -4413,13 +4510,14 @@ bpp=1
   #
   # Pack an IEEE double number Doper structure.
   #
-  def pack_number_doper(operator, number)
+  def pack_number_doper(operator, number)   #:nodoc:
     number = [number].pack('d')
     number.reverse! if @byte_order != '' && @byte_order != 0
 
     doper  = [0x04, operator].pack('CC') + number
     return doper
   end
+  private :pack_number_doper
 
   #
   # Methods related to comments and MSO objects.
@@ -4432,7 +4530,7 @@ bpp=1
   #
   # Turn the HoH that stores the images into an array for easier handling.
   #
-  def prepare_images
+  def prepare_images   #:nodoc:
     count  = 0
     images = []
 
@@ -4453,6 +4551,7 @@ bpp=1
 
     return count
   end
+#  private :prepare_images
 
   ###############################################################################
   #
@@ -4460,7 +4559,7 @@ bpp=1
   #
   # Turn the HoH that stores the comments into an array for easier handling.
   #
-  def prepare_comments
+  def prepare_comments   #:nodoc:
     count   = 0
     comments = []
 
@@ -4480,6 +4579,7 @@ bpp=1
 
     return count
   end
+#  private :prepare_comments
 
   ###############################################################################
   #
@@ -4487,7 +4587,7 @@ bpp=1
   #
   # Turn the HoH that stores the charts into an array for easier handling.
   #
-  def prepare_charts
+  def prepare_charts   #:nodoc:
     count  = 0
     charts = []
 
@@ -4506,6 +4606,7 @@ bpp=1
     @charts_array = charts
     count
   end
+#  private :prepare_charts
 
   ###############################################################################
   #
@@ -4513,7 +4614,7 @@ bpp=1
   #
   # Store the collections of records that make up images.
   #
-  def store_images
+  def store_images   #:nodoc:
     record          = 0x00EC           # Record identifier
     length          = 0x0000           # Bytes to follow
 
@@ -4597,6 +4698,7 @@ bpp=1
 
     @object_ids[0] = spid
   end
+  private :store_images
 
   ###############################################################################
   #
@@ -4604,7 +4706,7 @@ bpp=1
   #
   # Store the collections of records that make up charts.
   #
-  def store_charts
+  def store_charts   #:nodoc:
       record          = 0x00EC           # Record identifier
       length          = 0x0000           # Bytes to follow
   
@@ -4699,6 +4801,7 @@ bpp=1
   
       @object_ids[0] = spid
   end
+  private :store_charts
 
   ###############################################################################
   #
@@ -4706,7 +4809,7 @@ bpp=1
   #
   # Add a binary chart object extracted from an Excel file.
   #
-  def store_chart_binary(filename)
+  def store_chart_binary(filename)   #:nodoc:
     filehandle = File.open(filename, "rb")
     #                        die "Couldn't open $filename in add_chart_ext(): $!.\n";
 
@@ -4714,6 +4817,7 @@ bpp=1
       append(tmp)
     end
   end
+  private :store_chart_binary
 
   ###############################################################################
   #
@@ -4721,7 +4825,7 @@ bpp=1
   #
   # Store the collections of records that make up filters.
   #
-  def store_filters
+  def store_filters   #:nodoc:
     record          = 0x00EC           # Record identifier
     length          = 0x0000           # Bytes to follow
 
@@ -4793,6 +4897,7 @@ bpp=1
 
     @object_ids[0] = spid
   end
+  private :store_filters
 
   ###############################################################################
   #
@@ -4803,7 +4908,7 @@ bpp=1
   # NOTE: We write the comment objects last since that makes it a little easier
   # to write the NOTE records directly after the MSODRAWIING records.
   #
-  def store_comments
+  def store_comments   #:nodoc:
     record          = 0x00EC           # Record identifier
     length          = 0x0000           # Bytes to follow
 
@@ -4882,6 +4987,7 @@ bpp=1
       author, author_enc, visible)
     end
   end
+  private :store_comments
 
   ###############################################################################
   #
@@ -4889,13 +4995,14 @@ bpp=1
   #
   # Write the Escher DgContainer record that is part of MSODRAWING.
   #
-  def store_mso_dg_container(length)
+  def store_mso_dg_container(length)   #:nodoc:
     type        = 0xF002
     version     = 15
     instance    = 0
     data        = ''
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_dg_container
 
   ###############################################################################
   #
@@ -4903,7 +5010,7 @@ bpp=1
   #
   # Write the Escher Dg record that is part of MSODRAWING.
   #
-  def store_mso_dg(instance, num_shapes, max_spid)
+  def store_mso_dg(instance, num_shapes, max_spid)   #:nodoc:
     type        = 0xF008
     version     = 0
     data        = ''
@@ -4912,6 +5019,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_dg
 
   ###############################################################################
   #
@@ -4919,7 +5027,7 @@ bpp=1
   #
   # Write the Escher SpgrContainer record that is part of MSODRAWING.
   #
-  def store_mso_spgr_container(length)
+  def store_mso_spgr_container(length)   #:nodoc:
     type        = 0xF003
     version     = 15
     instance    = 0
@@ -4927,6 +5035,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_spgr_container
 
   ###############################################################################
   #
@@ -4934,7 +5043,7 @@ bpp=1
   #
   # Write the Escher SpContainer record that is part of MSODRAWING.
   #
-  def store_mso_sp_container(length)
+  def store_mso_sp_container(length)   #:nodoc:
     type        = 0xF004
     version     = 15
     instance    = 0
@@ -4942,6 +5051,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_sp_container
 
   ###############################################################################
   #
@@ -4949,7 +5059,7 @@ bpp=1
   #
   # Write the Escher Spgr record that is part of MSODRAWING.
   #
-  def store_mso_spgr
+  def store_mso_spgr   #:nodoc:
     type        = 0xF009
     version     = 1
     instance    = 0
@@ -4958,6 +5068,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_spgr
 
   ###############################################################################
   #
@@ -4965,7 +5076,7 @@ bpp=1
   #
   # Write the Escher Sp record that is part of MSODRAWING.
   #
-  def store_mso_sp(instance, spid, options)
+  def store_mso_sp(instance, spid, options)   #:nodoc:
     type        = 0xF00A
     version     = 2
     data        = ''
@@ -4974,6 +5085,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_sp
 
   ###############################################################################
   #
@@ -4981,7 +5093,7 @@ bpp=1
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
-  def store_mso_opt_comment(spid, visible = nil, colour = 0x50)
+  def store_mso_opt_comment(spid, visible = nil, colour = 0x50)   #:nodoc:
     type        = 0xF00B
     version     = 3
     instance    = 9
@@ -5006,6 +5118,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_opt_comment
 
   ###############################################################################
   #
@@ -5013,7 +5126,7 @@ bpp=1
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
-  def store_mso_opt_image(spid)
+  def store_mso_opt_image(spid)   #:nodoc:
     type        = 0xF00B
     version     = 3
     instance    = 3
@@ -5029,6 +5142,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_opt_image
 
   ###############################################################################
   #
@@ -5036,7 +5150,7 @@ bpp=1
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
-  def store_mso_opt_chart
+  def store_mso_opt_chart   #:nodoc:
     type        = 0xF00B
     version     = 3
     instance    = 9
@@ -5065,6 +5179,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_opt_chart
 
   ###############################################################################
   #
@@ -5072,7 +5187,7 @@ bpp=1
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
-  def store_mso_opt_filter
+  def store_mso_opt_filter   #:nodoc:
     type        = 0xF00B
     version     = 3
     instance    = 5
@@ -5092,6 +5207,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_opt_filter
 
   ###############################################################################
   #
@@ -5111,7 +5227,7 @@ bpp=1
   #
   # Write the Escher ClientAnchor record that is part of MSODRAWING.
   #
-  def store_mso_client_anchor(flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2)
+  def store_mso_client_anchor(flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2)   #:nodoc:
     type        = 0xF010
     version     = 0
     instance    = 0
@@ -5122,6 +5238,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_client_anchor
 
   ###############################################################################
   #
@@ -5129,7 +5246,7 @@ bpp=1
   #
   # Write the Escher ClientData record that is part of MSODRAWING.
   #
-  def store_mso_client_data
+  def store_mso_client_data   #:nodoc:
     type        = 0xF011
     version     = 0
     instance    = 0
@@ -5138,6 +5255,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_client_data
 
   ###############################################################################
   #
@@ -5146,7 +5264,7 @@ bpp=1
   #
   # Write the OBJ record that is part of cell comments.
   #
-  def store_obj_comment(obj_id)
+  def store_obj_comment(obj_id)   #:nodoc:
     record      = 0x005D   # Record identifier
     length      = 0x0034   # Bytes to follow
 
@@ -5182,6 +5300,7 @@ bpp=1
     append(header, data)
 
   end
+#  private :store_obj_comment
 
   ###############################################################################
   #
@@ -5190,7 +5309,7 @@ bpp=1
   #
   # Write the OBJ record that is part of image records.
   #
-  def store_obj_image(obj_id)
+  def store_obj_image(obj_id)   #:nodoc:
     record      = 0x005D   # Record identifier
     length      = 0x0026   # Bytes to follow
 
@@ -5232,7 +5351,7 @@ bpp=1
     append(header, data)
 
   end
-
+#  private :store_obj_image
 
   ###############################################################################
   #
@@ -5241,7 +5360,7 @@ bpp=1
   #
   # Write the OBJ record that is part of chart records.
   #
-  def store_obj_chart(obj_id)
+  def store_obj_chart(obj_id)   #:nodoc:
     record      = 0x005D   # Record identifier
     length      = 0x001A   # Bytes to follow
 
@@ -5271,6 +5390,7 @@ bpp=1
     append(header, data)
 
   end
+#  private :store_obj_chart
 
   ###############################################################################
   #
@@ -5280,7 +5400,7 @@ bpp=1
   #
   # Write the OBJ record that is part of filter records.
   #
-  def store_obj_filter(obj_id, col)
+  def store_obj_filter(obj_id, col)   #:nodoc:
     record      = 0x005D   # Record identifier
     length      = 0x0046   # Bytes to follow
 
@@ -5329,6 +5449,7 @@ bpp=1
 
     append(header, data)
   end
+#  private :store_obj_filter
 
   ###############################################################################
   #
@@ -5336,7 +5457,7 @@ bpp=1
   #
   # Write the MSODRAWING ClientTextbox record that is part of comments.
   #
-  def store_mso_drawing_text_box
+  def store_mso_drawing_text_box   #:nodoc:
     record      = 0x00EC           # Record identifier
     length      = 0x0008           # Bytes to follow
 
@@ -5345,6 +5466,7 @@ bpp=1
 
     append(header, data)
   end
+#  private :store_mso_drawing_text_box
 
   ###############################################################################
   #
@@ -5352,7 +5474,7 @@ bpp=1
   #
   # Write the Escher ClientTextbox record that is part of MSODRAWING.
   #
-  def store_mso_client_text_box
+  def store_mso_client_text_box   #:nodoc:
     type        = 0xF00D
     version     = 0
     instance    = 0
@@ -5361,6 +5483,7 @@ bpp=1
 
     return add_mso_generic(type, version, instance, data, length)
   end
+#  private :store_mso_client_text_box
 
   ###############################################################################
   #
@@ -5371,7 +5494,7 @@ bpp=1
   #
   # Write the worksheet TXO record that is part of cell comments.
   #
-  def store_txo(string_len, format_len = 16, rotation = 0)
+  def store_txo(string_len, format_len = 16, rotation = 0)   #:nodoc:
     record      = 0x01B6               # Record identifier
     length      = 0x0012               # Bytes to follow
 
@@ -5385,6 +5508,7 @@ bpp=1
 
     append(header, data)
   end
+#  private :store_txo
 
   ###############################################################################
   #
@@ -5395,7 +5519,7 @@ bpp=1
   # Write the first CONTINUE record to follow the TXO record. It contains the
   # text data.
   #
-  def store_txo_continue_1(string, encoding = 0)
+  def store_txo_continue_1(string, encoding = 0)   #:nodoc:
     record      = 0x003C               # Record identifier
 
     # Split long comment strings into smaller continue blocks if necessary.
@@ -5423,6 +5547,7 @@ bpp=1
 
     append(header, data)
   end
+#  private :store_txo_continue_1
 
   ###############################################################################
   #
@@ -5432,7 +5557,7 @@ bpp=1
   # Write the second CONTINUE record to follow the TXO record. It contains the
   # formatting information for the string.
   #
-  def store_txo_continue_2(formats)
+  def store_txo_continue_2(formats)   #:nodoc:
     record      = 0x003C               # Record identifier
     length      = 0x0000               # Bytes to follow
 
@@ -5448,6 +5573,7 @@ bpp=1
 
     append(header, data)
   end
+#  private :store_txo_continue_2
 
   ###############################################################################
   #
@@ -5461,7 +5587,7 @@ bpp=1
   #
   # Write the worksheet NOTE record that is part of cell comments.
   #
-  def store_note(row, col, obj_id, author = nil, author_enc = nil, visible = nil)
+  def store_note(row, col, obj_id, author = nil, author_enc = nil, visible = nil)   #:nodoc:
     record      = 0x001C               # Record identifier
     length      = 0x000C               # Bytes to follow
 
@@ -5493,6 +5619,7 @@ bpp=1
 
     append(header, data, author)
   end
+#  private :store_note
 
   ###############################################################################
   #
@@ -5501,7 +5628,7 @@ bpp=1
   # This method handles the additional optional parameters to write_comment() as
   # well as calculating the comment object position and vertices.
   #
-  def comment_params(row, col, string, options = {})
+  def comment_params(row, col, string, options = {})   #:nodoc:
     params  = {
       :author          => '',
       :author_encoding => 0,
@@ -5635,6 +5762,7 @@ bpp=1
       vertices
     ]
   end
+#  private :comment_params
 
   #
   # DATA VALIDATION
@@ -5878,7 +6006,7 @@ bpp=1
   # Note, this could be wrapped into _store_dv() but we may require separate
   # handling of the object id at a later stage.
   #
-  def store_validation_count
+  def store_validation_count   #:nodoc:
     dv_count = @validations.size
     obj_id   = -1
 
@@ -5886,6 +6014,7 @@ bpp=1
 
     store_dval(obj_id , dv_count)
   end
+  private :store_validation_count
 
   ###############################################################################
   #
@@ -5893,7 +6022,7 @@ bpp=1
   #
   # Store the data_validation records.
   #
-  def store_validations
+  def store_validations   #:nodoc:
     return if @validations.size == 0
 
     @validations.each do |param|
@@ -5915,6 +6044,7 @@ bpp=1
       )
     end
   end
+  private :store_validations
 
   ###############################################################################
   #
@@ -5925,7 +6055,7 @@ bpp=1
   # Store the DV record which contains the number of and information common to
   # all DV structures.
   #
-  def store_dval(obj_id, dv_count)
+  def store_dval(obj_id, dv_count)   #:nodoc:
     record      = 0x01B2       # Record identifier
     length      = 0x0012       # Bytes to follow
 
@@ -5939,6 +6069,7 @@ bpp=1
 
     append(header, data)
   end
+#  private :store_dval
 
   ###############################################################################
   #
@@ -5961,7 +6092,7 @@ bpp=1
   # Store the DV record that specifies the data validation criteria and options
   # for a range of cells..
   #
-  def store_dv(cells, validation_type, criteria_type,
+  def store_dv(cells, validation_type, criteria_type,   #:nodoc:
     formula_1, formula_2, input_title, input_message,
     error_title, error_message, error_type,
     ignore_blank, dropdown, input_box, error_box)
@@ -6023,6 +6154,7 @@ bpp=1
 
     append(header, data)
   end
+  private :store_dv
 
   ###############################################################################
   #
@@ -6031,7 +6163,7 @@ bpp=1
   # Pack the strings used in the input and error dialog captions and messages.
   # Captions are limited to 32 characters. Messages are limited to 255 chars.
   #
-  def pack_dv_string(string = nil, max_length = 0)
+  def pack_dv_string(string = nil, max_length = 0)   #:nodoc:
     str_length  = 0
     encoding    = 0
 
@@ -6049,6 +6181,7 @@ bpp=1
 
     return [str_length, encoding].pack('vC') + string
   end
+#  private :pack_dv_string
 
   ###############################################################################
   #
@@ -6059,7 +6192,7 @@ bpp=1
   # relative addressing (R1C1 and ptgXxxN) however we use the Formula.pm's
   # default absoulute addressing (A1 and ptgXxx).
   #
-  def pack_dv_formula(formula = nil)
+  def pack_dv_formula(formula = nil)   #:nodoc:
     encoding    = 0
     length      = 0
     unused      = 0x0000
@@ -6106,6 +6239,7 @@ bpp=1
 
     return [formula.length, unused].pack('vv') + formula
   end
+#  private :pack_dv_formula
 
 end
 
