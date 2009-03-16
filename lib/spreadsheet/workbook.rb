@@ -665,7 +665,6 @@ class Workbook < BIFFWriter
     store_country
     if @ext_ref_count != 0
       store_supbook
-bp=7897897
       store_externsheet
       store_names
     end
