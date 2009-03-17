@@ -253,7 +253,7 @@ class OLEWriter
     length = 0
     ord_name = []
     unless name.empty?
-      name += "\0"
+      name = name + "\0"
       ord_name = name.unpack("c*")
       length = name.length * 2
     end
