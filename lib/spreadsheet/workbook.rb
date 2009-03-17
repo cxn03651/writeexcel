@@ -3,6 +3,7 @@ require 'biffwriter'
 require 'olewriter'
 require 'formula'
 require 'properties'
+require 'ole/file_system'
 
 class Workbook < BIFFWriter
   BOF = 11
@@ -715,8 +716,23 @@ class Workbook < BIFFWriter
       end
 
       return ole.close
-=begin
     else
+      fh = open(@filename, 'wb+')
+      Ole::Storage.open fh do |ole|
+        ole.file.open 'Workbook', 'w' do |writer|
+          while tmp = get_data
+            writer.write(tmp)
+          end
+          @worksheets.each do |worksheet|
+            while tmp = worksheet.get_data
+              writer.write(tmp)
+            end
+          end
+        end
+      end
+    end
+  end
+=begin
       # Write the OLE file using ruby-ole if data > 7MB
    
       # Create the Workbook stream.
@@ -764,9 +780,9 @@ class Workbook < BIFFWriter
    
       # Close the filehandle if it was created internally.
       return CORE::close($self->{_fh_out}) if $self->{_internal_fh};
-=end
     end
   end
+=end
 
   ###############################################################################
   #
@@ -2098,7 +2114,7 @@ class Workbook < BIFFWriter
     strings.each do |string|
 
       string_length = string.length
-      encoding      = string.unpack("xx C")
+      encoding      = string.unpack("xx C")[0]
       split_string  = 0
       bucket_string = 0 # Used to track EXTSST bucket offsets.
 
