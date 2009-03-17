@@ -966,6 +966,7 @@ class Workbook < BIFFWriter
 
           # Slurp the file into a string and do some size calcs.
           #             my $data        = do {local $/; <$fh>};
+          data = fh.read
           size        = data.length
           checksum1   = image_checksum(data, image_id)
           checksum2   = checksum1
@@ -973,16 +974,16 @@ class Workbook < BIFFWriter
 
           # Process the image and extract dimensions.
           # Test for PNGs...
-          if  data.unpack('x A3') ==  'PNG'
+          if  data.unpack('x A3')[0] ==  'PNG'
             type, width, height = process_png(data)
             # Test for JFIF and Exif JPEGs...
-          elsif ( data.unpack('n') == 0xFFD8 &&
-            (data.unpack('x6 A4') == 'JFIF' ||
-            data.unpack('x6 A4') == 'Exif')
+          elsif ( data.unpack('n')[0] == 0xFFD8 &&
+            (data.unpack('x6 A4')[0] == 'JFIF' ||
+            data.unpack('x6 A4')[0] == 'Exif')
             )
             type, width, height = process_jpg(data, filename)
             # Test for BMPs...
-          elsif data.unpack('A2') == 'BM'
+          elsif data.unpack('A2')[0] == 'BM'
             type, width, height = process_bmp(data, filename)
             # The 14 byte header of the BMP is stripped off.
             data[0, 13] = ''
@@ -1012,7 +1013,7 @@ class Workbook < BIFFWriter
 
           images_seen[filename] = image_id
           image_id += 1
-          close(fh)
+          fh.close
         else
           # We've processed this file already.
           index = images_seen[filename] -1
@@ -1022,14 +1023,14 @@ class Workbook < BIFFWriter
 
           # Add previously calculated data back onto the Worksheet array.
           # $image_id, $type, $width, $height
-          a_ref = images_array[index]
-          image_ref.push(previous_images[index])
+          a_ref = sheet.images_array[index]
+          image.concat(previous_images[index])
         end
       end
 
       # Store information required by the Worksheet.
-      @num_images     = num_images
-      @image_mso_size = image_mso_size
+      sheet.num_images     = num_images
+      sheet.image_mso_size = image_mso_size
 
     end
 
@@ -1073,8 +1074,8 @@ class Workbook < BIFFWriter
   #
   def process_png(data)
     type    = 6 # Excel Blip type (MSOBLIPTYPE).
-    width   = data[16, 4].unpack("N")
-    height  = data[20, 4].unpack("N")
+    width   = data[16, 4].unpack("N")[0]
+    height  = data[20, 4].unpack("N")[0]
 
     return [type, width, height]
   end
@@ -2321,7 +2322,7 @@ class Workbook < BIFFWriter
   # Write the MSODRAWINGGROUP record that keeps track of the Escher drawing
   # objects in the file such as images, comments and filters.
   #
-  def add_mso_drawing_group
+  def add_mso_drawing_group  #:nodoc:
     return unless @mso_size != 0
 
     record  = 0x00EB               # Record identifier
@@ -2331,7 +2332,7 @@ class Workbook < BIFFWriter
     data    = data + store_mso_dgg(*@mso_clusters)
     data    = data + store_mso_bstore_container
     @images_data.each do |image|
-      data = data + store_mso_images(image)
+      data = data + store_mso_images(*image)
     end
     data    = data + store_mso_opt
     data    = data + store_mso_split_menu_colors
@@ -2484,17 +2485,19 @@ class Workbook < BIFFWriter
   #
   def store_mso_images(ref_count, image_type, image, size, checksum1, checksum2)
     blip_store_entry =  store_mso_blip_store_entry(
-    ref_count,
-    image_type,
-    size,
-    checksum1)
+        ref_count,
+        image_type,
+        size,
+        checksum1
+      )
 
     blip             =  store_mso_blip(
-    image_type,
-    image,
-    size,
-    checksum1,
-    checksum2)
+        image_type,
+        image,
+        size,
+        checksum1,
+        checksum2
+      )
 
     return blip_store_entry + blip
   end

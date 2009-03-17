@@ -11,9 +11,9 @@ class MaxSizeError < StandardError; end
 #
 # Examples:
 #
-# <tt>workbook   = Excel.new('file.xls')</tt>
-# <tt>worksheet1 = workbook.add_worksheet</tt>
-# <tt>worksheet2 = workbook.add_worksheet</tt>
+#  workbook   = Excel.new('file.xls')
+#  worksheet1 = workbook.add_worksheet
+#  worksheet2 = workbook.add_worksheet
 #
 # == Cell notation
 #
@@ -24,28 +24,28 @@ class MaxSizeError < StandardError; end
 # letter and 1-based row.
 # For example:
 #
-# <tt>(0, 0)      # The top left cell in row-column notation.</tt>
-# <tt>('A1')      # The top left cell in A1 notation.</tt>
-# <tt>(1999, 29)  # Row-Column notation.</tt>
-# <tt>('AD2000')  # The same cell in A1 notation.</tt>
+#  (0, 0)      # The top left cell in row-column notation.
+#  ('A1')      # The top left cell in A1 notation.
+#  (1999, 29)  # Row-Column notation.
+#  ('AD2000')  # The same cell in A1 notation.
 #
 # Row-column notation is useful if you are refferring to cells
 # programmatically.
 #
-# <tt>0.upto(9) do |i|</tt>
-# <tt>  worksheet.write(i, 0, 'Hello')  # Cells A1 to A10</tt>
-# <tt>end</tt>
+#  0.upto(9) do |i|
+#    worksheet.write(i, 0, 'Hello')  # Cells A1 to A10
+#  end
 #
 # A1 notation is useful for setting up a worksheet manually and
 # for working with formulas.
 #
-# <tt>worksheet.write('H1', 200)</tt>
-# <tt>worksheet.write('H2', '=H1+1')</tt>
+#  worksheet.write('H1', 200)
+#  worksheet.write('H2', '=H1+1')
 #
 # In formulas and applicable methods you can also use the <tt>A:A</tt>
 # column notation.
 #
-# <tt>worksheet.write('A1', '=SUM(B:B)')</tt>
+#  worksheet.write('A1', '=SUM(B:B)')
 #
 
 class Worksheet < BIFFWriter
@@ -382,7 +382,6 @@ attr_reader :compatibility
     #
     # End of prepend. Read upwards from here.
     ################################################
-bpp=1
     # Append
 #print "store_table\n"
     store_table
@@ -1309,18 +1308,52 @@ bpp=1
     @write_match.push([regexp, code_ref])
   end
 
-  ###############################################################################
   #
-  # write($row, $col, $token, $format)
+  #  write(row, col,    token, format)
+  #  write(A1_notation, token, format)
   #
-  # Parse $token and call appropriate write method. $row and $column are zero
-  # indexed. $format is optional.
+  # Parse token and call appropriate write method. row and column are zero
+  # indexed. format is optional.
   #
   # The write_url() methods have a flag to prevent recursion when writing a
   # string that looks like a url.
   #
   # Returns: return value of called subroutine
   #
+  #
+  # Excel makes a distinction between data types such as strings, numbers,
+  # blanks, formulas and hyperlinks. To simplify the process of writing
+  # data the write() method acts as a general alias for several more
+  # specific methods:
+  #    write_string()
+  #    write_number()
+  #    write_blank()
+  #    write_formula()
+  #    write_url()
+  #    write_row()
+  #    write_col()
+  #
+  # The general rule is that if the data looks like a something then a
+  # something is written. Here are some examples in both row-column
+  # and A1 notation:
+  #                                                         # Same as:
+  #    worksheet.write(0, 0, 'Hello'                     )  # write_string()
+  #    worksheet.write(1, 0, 'One'                       )  # write_string()
+  #    worksheet.write(2, 0,  2                          )  # write_number()
+  #    worksheet.write(3, 0,  3.00001                    )  # write_number()
+  #    worksheet.write(4, 0,  ""                         )  # write_blank()
+  #    worksheet.write(5, 0,  ''                         )  # write_blank()
+  #    worksheet.write(6, 0,  nil                        )  # write_blank()
+  #    worksheet.write(7, 0                              )  # write_blank()
+  #    worksheet.write(8, 0,  'http://www.ruby-lang.org/')  # write_url()
+  #    worksheet.write('A9',  'ftp://ftp.ruby-lang.org/' )  # write_url()
+  #    worksheet.write('A10', 'internal:Sheet1!A1'       )  # write_url()
+  #    worksheet.write('A11', 'external:c:\foo.xls'      )  # write_url()
+  #    worksheet.write('A12', '=A3 + 3*A4'               )  # write_formula()
+  #    worksheet.write('A13', '=SIN(PI()/4)'             )  # write_formula()
+  #    worksheet.write('A14', ['name', 'company']        )  # write_row()
+  #    worksheet.write('A15', [\@array]                  )  # write_col()
+
   def write(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/
@@ -3972,8 +4005,9 @@ bpp=1
     raise "Insufficient arguments in insert_image()" unless args.size >= 3
     raise "Couldn't locate #{image}: $!"             unless test(?e, image)
 
-    @images[row][col] = [ row, col, image,
-    x_offset, y_offset, scale_x, scale_y,]
+    @images[row] = {
+      col => [ row, col, image, x_offset, y_offset, scale_x, scale_y]
+    }
 
   end
 
@@ -4642,25 +4676,25 @@ bpp=1
       width       =   images[i][9]
       height      =   images[i][10]
 
-      width  = widhth  * scale_x unless scale_x == 0
-      height = height  * scale_y unless scale_y == 0
+      width  = width  * scale_x unless scale_x == 0
+      height = height * scale_y unless scale_y == 0
 
       # Calculate the positions of image object.
       vertices = position_object(col,row,x_offset,y_offset,width,height)
 
       if (i == 0)
         # Write the parent MSODRAWIING record.
-        dg_length   = 156 + 84*(num_images -1)
-        spgr_length = 132 + 84*(num_images -1)
+        dg_length   =  156 + 84*(num_images -1)
+        spgr_length =  132 + 84*(num_images -1)
 
-        dg_length   = dg_length   + 120 * num_charts
-        spgr_length = spgr_length + 120 * num_charts
+        dg_length   += 120 * num_charts
+        spgr_length += 120 * num_charts
 
-        dg_length   = dg_length   +  96 * num_filters
-        spgr_length = spgr_length +  96 * num_filters
+        dg_length   += 96 * num_filters
+        spgr_length += 96 * num_filters
 
-        dg_length   = dg_length   + 128 * num_comments
-        spgr_length = spgr_length + 128 * num_comments
+        dg_length   += 128 * num_comments
+        spgr_length += 128 * num_comments
 
         data = store_mso_dg_container(dg_length) +
           store_mso_dg(*ids)                     +
@@ -5341,7 +5375,7 @@ bpp=1
     # Add ftEnd (end of object) subobject
     sub_record  = 0x0000   # ftNts
     sub_length  = 0x0000
-    data        = data + [sub_record, sub_length].pack('vv') + sub_data
+    data        = data + [sub_record, sub_length].pack('vv')
 
     # Pack the record.
     header  = [record, length].pack('vv')
