@@ -1948,7 +1948,7 @@ class Workbook < BIFFWriter
     strings.each do |string|
 
       string_length = string.length
-      encoding      = string.unpack("xx C")
+      encoding      = string.unpack("xx C")[0]
       split_string  = 0
 
       # Block length is the total length of the strings that will be
