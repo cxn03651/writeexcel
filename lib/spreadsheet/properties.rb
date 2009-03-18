@@ -10,7 +10,7 @@
 # Documentation after __END__
 #
 
-
+require 'ole/types'
 
 ###############################################################################
 #
@@ -188,8 +188,9 @@ end
 # Pack an OLE property type: VT_LPSTR, String in the Codepage encoding.
 # The strings are null terminated and padded to a 4 byte boundary.
 #
-def pack_VT_LPSTR(string, codepage)
+def pack_VT_LPSTR(str, codepage)
     type        = 0x001E
+    string      = str + "\0"
 
     if codepage == 0x04E4
       # Latin1
@@ -198,7 +199,7 @@ def pack_VT_LPSTR(string, codepage)
     elsif codepage == 0xFDE9
       # UTF-8
       byte_string = string
-      length = length byte_string
+      length      = byte_string.length
     else
       raise "Unknown codepage: codepage\n"
     end
@@ -220,26 +221,7 @@ end
 #
 # Pack an OLE property type: VT_FILETIME.
 #
-=begin
 def pack_VT_FILETIME(localtime)
-
-    type        = 0x0040
-
-    # Convert from localtime to seconds.
-    seconds = Time::Local::timelocal(@{localtime})
-
-    # Add the number of seconds between the 1601 and 1970 epochs.
-    seconds += 11644473600
-
-    # The FILETIME seconds are in units of 100 nanoseconds.
-    nanoseconds = seconds * 1E7
-
-    # Pack the total nanoseconds into 64 bits.
-    time_hi = int(nanoseconds / 2**32)
-    time_lo = POSIX::fmod(nanoseconds, 2**32)
-
-    data = pack 'VVV', type, time_lo, time_hi
-
-    return data
+  type        = 0x0040
+  [type].pack('V') + Ole::Types::FileTime.dump(localtime)
 end
-=end
