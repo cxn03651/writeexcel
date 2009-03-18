@@ -136,7 +136,7 @@ end
 # calling functions. Currently we only need to handle 4 property types:
 # VT_I2, VT_LPSTR, VT_FILETIME.
 #
-def pack_property_data(properties, offset)
+def pack_property_data(properties, offset = 0)
     packed_property     = ''
     data                = ''
     offsets             = []
@@ -160,7 +160,7 @@ def pack_property_data(properties, offset)
       elsif property_type == 'VT_FILETIME'
         packed_property = pack_VT_FILETIME(property[2])
       else
-        raise "Unknown property type: property_type\n"
+        raise "Unknown property type: '#{property_type}'\n"
       end
 
       offset += packed_property.length
