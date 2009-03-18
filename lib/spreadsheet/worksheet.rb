@@ -1620,6 +1620,77 @@ attr_reader :compatibility
 
   ###############################################################################
   #
+  # _sort_pagebreaks()
+  #
+  #
+  # This is an internal method that is used to filter elements of the array of
+  # pagebreaks used in the _store_hbreak() and _store_vbreak() methods. It:
+  #   1. Removes duplicate entries from the list.
+  #   2. Sorts the list.
+  #   3. Removes 0 from the list if present.
+  #
+  def sort_pagebreaks(breaks)
+    breaks.uniq.sort!
+    breaks.shift if breaks[0] == 0
+
+    # 1000 vertical pagebreaks appears to be an internal Excel 5 limit.
+    # It is slightly higher in Excel 97/200, approx. 1026
+    breaks.size > 1000 ? breaks[0..999] : breaks
+  end
+  private :sort_pagebreaks
+  
+  ###############################################################################
+  #
+  # _encode_password($password)
+  #
+  # Based on the algorithm provided by Daniel Rentz of OpenOffice.
+  #
+  #
+  def encode_password(password)
+    i = 0
+    chars = password.split(//)
+    count = chars.size
+  
+    chars.each do |char|
+      i += 1
+      char     = char[0] << i
+      low_15   = char & 0x7fff
+      high_15  = char & 0x7fff << 15
+      high_15  = high_15 >> 15
+      char     = low_15 | high_15
+    end
+  
+    encoded_password  = 0x0000
+    chars.each { |c| encoded_password ^= c }
+    encoded_password ^= count
+    encoded_password ^= 0xCE4B
+  end
+  
+  ###############################################################################
+  #
+  # outline_settings($visible, $symbols_below, $symbols_right, $auto_style)
+  #
+  # This method sets the properties for outlining and grouping. The defaults
+  # correspond to Excel's defaults.
+  #
+  def outline_settings(*args)
+    @outline_on    = args[0] || 1
+    @outline_below = args[1] || 1
+    @outline_right = args[2] || 1
+    @outline_style = args[3] || 0
+  
+    # Ensure this is a boolean vale for Window2
+    @outline_on    = 1 if @outline_on == 0
+  end
+  
+  ###############################################################################
+  ###############################################################################
+  #
+  # BIFF RECORDS
+  #
+
+  ###############################################################################
+  #
   # write_number($row, $col, $num, $format)
   #
   # Write a double to the specified row and column (zero indexed).
@@ -1989,7 +2060,7 @@ attr_reader :compatibility
     # Check that formula is an array ref
     raise "Not a valid formula" unless formula_ref.kind_of?(Array)
 
-    tokens  = formula_ref.dup
+    tokens  = formula_ref.join("\t").split("\t")
 
     # Ensure that there are tokens to substitute
     raise "No tokens in formula" if tokens.empty?
@@ -2009,7 +2080,7 @@ attr_reader :compatibility
       replace = pairs.shift
 
       tokens.each do |token|
-        break if token.sub!(/pattern/, replace)
+        break if token.sub!(pattern, replace)
       end
     end
 
@@ -2042,8 +2113,8 @@ attr_reader :compatibility
 
     header    = [record, length].pack("vv")
     data      = [row, col, xf].pack("vvv") +
-    num                        +
-    [grbit, chn, formlen].pack('vVv')
+                num                        +
+                [grbit, chn, formlen].pack('vVv')
 
     # The STRING record if the formula evaluates to a string.
     string  = ''
@@ -6274,11 +6345,3 @@ attr_reader :compatibility
 #  private :pack_dv_formula
 
 end
-
-=begin
-= Differences between Worksheet.pm and worksheet.rb
----write_url
-   I made this a public method to be called directly by the user if they want
-   to write a url string.  A variable number of arguments made it a pain to
-   integrate into the 'write' method.
-=end

@@ -623,10 +623,7 @@ class Workbook < BIFFWriter
     calc_mso_sizes
 
     # Ensure that at least one worksheet has been selected.
-    if @activesheet == 0
-      @worksheets[0].selected = 1
-      @worksheets[0].hidden   = 0
-    end
+    @worksheets[0].select if @activesheet == 0
 
     # Calculate the number of selected worksheet tabs and call the finalization
     # methods for each worksheet
