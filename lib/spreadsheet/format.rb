@@ -250,7 +250,7 @@ end
     end
 
     # Set a default diagonal border style if none was specified.
-    @diag_border = 1 if (@diag_border !=0 and @diag_type != 0)
+    @diag_border = 1 if (@diag_border ==0 and @diag_type != 0)
 
     # Reset the default colours for the non-font properties
     @fg_color     = 0x40 if @fg_color     == 0x7FFF
@@ -336,7 +336,7 @@ end
 
     header = [record, length].pack("vv")
     data   = [ifnt, ifmt, style, align, indent,
-    border1, border2, border3, icv].pack("vvvvvvvVv")
+              border1, border2, border3, icv].pack("vvvvvvvVv")
 
     return header + data
   end

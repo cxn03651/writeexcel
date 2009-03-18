@@ -1008,6 +1008,29 @@ class TC_example_match < Test::Unit::TestCase
     # do assertion
     compare_file("perl_output/date_time.xls", @filename)
   end
+  def test_diag_border
+    workbook  = Excel.new(@filename)
+    worksheet = workbook.add_worksheet
+
+    format1   = workbook.add_format(:diag_type     => 1)
+    format2   = workbook.add_format(:diag_type     => 2)
+    format3   = workbook.add_format(:diag_type     => 3)
+    format4   = workbook.add_format(
+                                  :diag_type       => 3,
+                                  :diag_border     => 7,
+                                  :diag_color      => 'red'
+                )
+    
+    worksheet.write('B3',  'Text', format1)
+    worksheet.write('B6',  'Text', format2)
+    worksheet.write('B9',  'Text', format3)
+    worksheet.write('B12', 'Text', format4)
+    
+    workbook.close
+
+    # do assertion
+    compare_file("perl_output/diag_border.xls", @filename)
+  end
 
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")
