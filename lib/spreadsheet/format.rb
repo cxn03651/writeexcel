@@ -908,7 +908,7 @@ end
   # This is now deprecated. Use set_center_across() or better merge_range().
   #
   #
-  def set_merge
+  def set_merge(val=true)
     set_text_h_align(6)
   end
 

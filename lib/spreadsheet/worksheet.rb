@@ -4324,7 +4324,7 @@ attr_reader :compatibility
     raise "Uneven number of bytes in Unicode string" if num_bytes % 2 != 0
 
     # Change from UTF16 big-endian to little endian
-    str = str.unpack('n*').pack('v')
+    str = str.unpack('n*').pack('v*')
 
     # Add the encoding and length header to the string.
     str_header  = [num_chars, encoding].pack("vC")
