@@ -3277,12 +3277,12 @@ attr_reader :compatibility
     iPageStart   = @page_start    # Starting page number
     iFitWidth    = @fit_width     # Fit to number of pages wide
     iFitHeight   = @fit_height    # Fit to number of pages high
-    grbit        = 0x00                    # Option flags
-    iRes         = 0x0258                  # Print resolution
-    iVRes        = 0x0258                  # Vertical print resolution
+    grbit        = 0x00           # Option flags
+    iRes         = 0x0258         # Print resolution
+    iVRes        = 0x0258         # Vertical print resolution
     numHdr       = @margin_header # Header Margin
     numFtr       = @margin_footer # Footer Margin
-    iCopies      = 0x01                    # Number of copies
+    iCopies      = 0x01           # Number of copies
 
     fLeftToRight = @page_order    # Print over then down
     fLandscape   = @orientation   # Page orientation
@@ -3313,7 +3313,7 @@ attr_reader :compatibility
 
     header = [record, length].pack('vv')
     data1  = [iPaperSize, iScale, iPageStart,
-    iFitWidth, iFitHeight, grbit, iRes, iVRes].pack("vvvvvvvv")
+              iFitWidth, iFitHeight, grbit, iRes, iVRes].pack("vvvvvvvv")
 
     data2  = numHdr + numFtr
     data3  = [iCopies].pack('v')
@@ -3330,24 +3330,24 @@ attr_reader :compatibility
   # Store the header caption BIFF record.
   #
   def store_header   #:nodoc:
-    record      = 0x0014                       # Record identifier
-    # length                                     # Bytes to follow
+    record      = 0x0014              # Record identifier
+    # length                          # Bytes to follow
 
     str         = @header             # header string
-    cch         = str.length                 # Length of header string
+    cch         = str.length          # Length of header string
     encoding    = @header_encoding    # Character encoding
 
 
     # Character length is num of chars not num of bytes
-    cch           /= 2 if encoding != 0
+    cch         /= 2 if encoding != 0
 
     # Change the UTF-16 name from BE to LE
-    str            = [str].unpack('v*').pack('n*') if encoding != 0
+    str         = [str].unpack('v*').pack('n*') if encoding != 0
 
-    length         = 3 + str.length
+    length      = 3 + str.length
 
     header      = [record, length].pack('vv')
-    data        =  [cch, encoding].pack('vC')
+    data        = [cch, encoding].pack('vC')
 
     prepend(header, data, str)
   end
@@ -3369,12 +3369,12 @@ attr_reader :compatibility
 
 
     # Character length is num of chars not num of bytes
-    cch           /= 2 if encoding != 0
+    cch         /= 2 if encoding != 0
 
     # Change the UTF-16 name from BE to LE
-    str            = str.unpack('v*').pack('n*')
+    str         = str.unpack('v*').pack('n*') if encoding != 0
 
-    length         = 3 + str.length
+    length      = 3 + str.length
 
     header      = [record, length].pack('vv')
     data        =  [cch, encoding].pack('vC')
@@ -3395,8 +3395,8 @@ attr_reader :compatibility
 
     fHCenter = @hcenter   # Horizontal centering
 
-    header      = [record, length].pack('vv')
-    data      = [fHCenter].pack('v')
+    header   = [record, length].pack('vv')
+    data     = [fHCenter].pack('v')
 
     prepend(header, data)
   end
@@ -3414,7 +3414,7 @@ attr_reader :compatibility
 
     mfVCenter = @vcenter   # Horizontal centering
 
-    header      = [record, length].pack('vv')
+    header    = [record, length].pack('vv')
     data      = [mfVCenter].pack('v')
 
     prepend(header, data)
@@ -3804,10 +3804,10 @@ attr_reader :compatibility
     # Exit unless sheet protection has been specified
     return if @protect == 0
 
-    record      = 0x0012               # Record identifier
-    length      = 0x0002               # Bytes to follow
+    record = 0x0012               # Record identifier
+    length = 0x0002               # Bytes to follow
 
-    fLock       = @protect             # Worksheet is protected
+    fLock  = @protect             # Worksheet is protected
 
     header = [record, length].pack("vv")
     data   = [fLock].pack("v")
@@ -3826,10 +3826,10 @@ attr_reader :compatibility
     # Exit unless sheet protection has been specified
     return if @protect == 0
 
-    record      = 0x0063               # Record identifier
-    length      = 0x0002               # Bytes to follow
+    record = 0x0063               # Record identifier
+    length = 0x0002               # Bytes to follow
 
-    fLock       = @protect             # Worksheet is protected
+    fLock  = @protect             # Worksheet is protected
 
     header = [record, length].pack("vv")
     data   = [fLock].pack("v")
@@ -3853,8 +3853,8 @@ attr_reader :compatibility
 
     wPassword   = @password            # Encoded password
 
-    header = [record, length].pack("vv")
-    data   = [wPassword].pack("v")
+    header      = [record, length].pack("vv")
+    data        = [wPassword].pack("v")
 
     prepend(header, data)
   end
