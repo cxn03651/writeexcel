@@ -296,6 +296,12 @@ class Formula < ExcelFormulaParser
 
     length = str.length
 
+    # Handle utf8 strings
+    if Kconv.guess(str) == Kconv::UTF8
+      str = str.toutf16
+      encoding = 1
+    end
+    
     exit "String in formula has more than 255 chars\n" if length > 255
 
     return [@ptg['ptgStr'], length, encoding].pack("CCC") + str
@@ -478,6 +484,9 @@ class Formula < ExcelFormulaParser
   # sheet names is updated by the add_worksheet() method of the Workbook class.
   #
   def get_sheet_index(sheet_name)
+    # Handle utf8 sheetnames
+    sheet_name = sheet_name.toutf16 if Kconv.guess(sheet_name) == Kconv::UTF8
+    
     if @ext_sheets[sheet_name].nil?
       exit "Unknown sheet name #{sheet_name} in formula\n"
     else

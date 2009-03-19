@@ -1,3 +1,4 @@
+require 'Kconv'
 require 'format'
 require 'formula'
 require 'workbook'
@@ -273,149 +274,107 @@ attr_reader :compatibility
     #
 
     # Prepend the sheet dimensions
-#print "store_dimensions\n"
     store_dimensions
 
     # Prepend the autofilter filters.
-#print "store_autofilters\n"
     store_autofilters
 
     # Prepend the sheet autofilter info.
-#print "store_autofilterinfo\n"
     store_autofilterinfo
 
     # Prepend the sheet filtermode record.
-#print "store_filtermode\n"
     store_filtermode
 
     # Prepend the COLINFO records if they exist
     unless @colinfo.empty?
       while (!@colinfo.empty?)
         arrayref = @colinfo.pop
-#print "store_colinfo(arrayref)\n"
         store_colinfo(*arrayref)
       end
     end
 
     # Prepend the DEFCOLWIDTH record
-#print "store_defcol\n"
     store_defcol
 
     # Prepend the sheet password
-#print "store_password\n"
     store_password
 
     # Prepend the sheet protection
-#print "store_protect\n"
     store_protect
-#print "store_obj_protect\n"
     store_obj_protect
 
     # Prepend the page setup
-#print "store_setup\n"
     store_setup
 
     # Prepend the bottom margin
-#print "store_margin_bottom\n"
     store_margin_bottom
 
     # Prepend the top margin
-#print "store_margin_top\n"
     store_margin_top
 
     # Prepend the right margin
-#print "store_margin_right\n"
     store_margin_right
 
     # Prepend the left margin
-#print "store_margin_left\n"
     store_margin_left
 
     # Prepend the page vertical centering
-#print "store_vcenter\n"
     store_vcenter
 
     # Prepend the page horizontal centering
-#print "store_hcenter\n"
     store_hcenter
 
     # Prepend the page footer
-#print "store_footer\n"
     store_footer
 
     # Prepend the page header
-#print "store_header\n"
     store_header
 
     # Prepend the vertical page breaks
-#print "store_vbreak\n"
     store_vbreak
 
     # Prepend the horizontal page breaks
-#print "store_hbreak\n"
     store_hbreak
 
     # Prepend WSBOOL
-#print "store_wsbool\n"
     store_wsbool
 
     # Prepend the default row height.
-#print "store_defrow\n"
     store_defrow
 
     # Prepend GUTS
-#print "store_guts\n"
     store_guts
 
     # Prepend GRIDSET
-#print "store_gridset\n"
     store_gridset
 
     # Prepend PRINTGRIDLINES
-#print "store_print_gridlines\n"
     store_print_gridlines
 
     # Prepend PRINTHEADERS
-#print "store_print_headers\n"
     store_print_headers
 
     #
     # End of prepend. Read upwards from here.
     ################################################
     # Append
-#print "store_table\n"
     store_table
-#print "store_images\n"
     store_images
-#print "store_charts\n"
     store_charts
-#print "store_filters\n"
     store_filters
-#print "store_comments\n"
     store_comments
-#print "store_window2\n"
     store_window2
-#print "store_page_view\n"
     store_page_view
-#print "store_zoom\n"
     store_zoom
-#print "store_panes(*@panes)\n"
     store_panes(*@panes) if !@panes.nil? && !@panes.empty?
-#print "store_selection(*@selection)\n"
     store_selection(*@selection)
-#print "store_validation_count\n"
     store_validation_count
-#print "store_validations\n"
     store_validations
-#print "store_tab_color\n"
     store_tab_color
-#print "store_eof\n"
     store_eof
 
     # Prepend the BOF and INDEX records
-#print "store_index\n"
     store_index
-#print "store_bof(0x0010)\n"
     store_bof(0x0010)
   end
 
@@ -667,6 +626,12 @@ attr_reader :compatibility
   def set_header(string = '', margin = 0.50, encoding = 0)
     limit    = encoding != 0 ? 255 *2 : 255
 
+    # Handle utf8 strings
+    if Kconv.guess(string) == Kconv::UTF8
+      string = string.toutf16
+      encoding = 1
+    end
+    
     if string.length >= limit
       #           carp 'Header string must be less than 255 characters';
       return
@@ -686,6 +651,12 @@ attr_reader :compatibility
   #
   def set_footer(string = '', margin = 0.50, encoding = 0)
     limit    = encoding != 0 ? 255 *2 : 255
+
+    # Handle utf8 strings
+    if Kconv.guess(string) == Kconv::UTF8
+      string = string.toutf16
+      encoding = 1
+    end
 
     if string.length >= limit
       #           carp 'Header string must be less than 255 characters';
@@ -1769,6 +1740,9 @@ attr_reader :compatibility
     encoding    = 0x0
     str_error   = 0
 
+    # Handle utf8 strings
+    return write_utf16be_string(row, col, str.toutf16, args[3]) if Kconv.guess(str) == Kconv::UTF8
+
     # Check that row and col are valid and store max and min values
     return -2 if check_dimensions(row, col) != 0
 
@@ -1997,6 +1971,35 @@ attr_reader :compatibility
     return [num, grbit, is_string]
   end
   private :encode_formula_result
+
+  ###############################################################################
+  #
+  # _get_formula_string()
+  #
+  # Pack the string value when a formula evaluates to a string. The value cannot
+  # be calculated by the module and thus must be supplied by the user.
+  #
+  def get_formula_string(string)
+    record    = 0x0207         # Record identifier
+    length    = 0x00           # Bytes to follow
+    # string                   # Formula string.
+    strlen    = string.length  # Length of the formula string (chars).
+    encoding  = 0              # String encoding.
+  
+    # Handle utf8 strings in perl 5.8.
+    if Kconv.guess(string) == Kconv::UTF8
+      string = string.toutf16
+      encoding = 1
+    end
+  
+    length    = 0x03 + string.length  # Length of the record data
+
+    header    = [record, length].pack("vv")
+    data      = [strlen, encoding].pack("vC")
+  
+    return header . data . string
+  end
+  private :get_formula_string
 
   ###############################################################################
   #
@@ -2296,6 +2299,14 @@ attr_reader :compatibility
 
     # URL encoding.
     encoding    = 0
+
+    # Convert an Utf8 URL type and to a null terminated wchar string.
+    if Kconv.guess(str) == Kconv::UTF8
+      # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
+      url.substr!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
+      url      = url.toutf16 + "\0\0"  # URL is null terminated.
+      encoding = 1
+    end
 
     # Convert an Ascii URL type and to a null terminated wchar string.
     if encoding == 0
@@ -3342,7 +3353,7 @@ attr_reader :compatibility
     cch         /= 2 if encoding != 0
 
     # Change the UTF-16 name from BE to LE
-    str         = [str].unpack('v*').pack('n*') if encoding != 0
+    str         = str.unpack('v*').pack('n*') if encoding != 0
 
     length      = 3 + str.length
 
@@ -4536,14 +4547,10 @@ attr_reader :compatibility
       length   = string.length
 
       # Handle utf8 strings in perl 5.8.
-      #  if ($] >= 5.008) {
-      #      require Encode;
-      #
-      #      if (Encode::is_utf8($string)) {
-      #          $string = Encode::encode("UTF-16BE", $string);
-      #          $encoding = 1;
-      #      }
-      #  }
+      if Kconv.guess(string) == Kconv::UTF8
+        string = string.toutf16
+        encodign = 1
+      end
 
       string = [encoding].pack('C') + string
       doper  = pack_string_doper(operator, length)
@@ -5772,6 +5779,16 @@ attr_reader :compatibility
       params[:author] = [params[:author]].unpack('n*').pack('v*')
     end
 
+    # Handle utf8 strings
+    if Kconv.guess(string) == Kconv::UTF8
+      string = string.toutf16
+      params[:encoding] = 1
+    end
+    if Kconv.guess(params[:author]) == Kconv::UTF8
+      params[:author] = params[:author].toutf16
+      params[:author_encoding] = 1
+    end
+
     # Limit the string to the max number of chars (not bytes).
     max_len = 32767
     max_len = max_len * 2 if params[:encoding] != 0
@@ -6281,6 +6298,12 @@ attr_reader :compatibility
     end
 
     str_length = string.length
+
+    # Handle utf8 strings
+    if Kconv.guess(string) == Kconv::UTF8
+      string = string.toutf16
+      encoding = 1
+    end
 
     return [str_length, encoding].pack('vC') + string
   end

@@ -377,15 +377,11 @@ end
     encoding   = @font_encoding
 
     # Handle utf8 strings in perl 5.8.
-    #      if ($] >= 5.008) {
-    #         require Encode;
-    #
-    #         if (Encode::is_utf8($rgch)) {
-    #            $rgch = Encode::encode("UTF-16BE", $rgch);
-    #            $encoding = 1;
-    #         }
-    #      }
-    #
+    if Kconv.guess(rgch) == Kconv::UTF8
+      rgch = rgch.toutf16
+      encoding = 1
+    end
+
     cch = rgch.length
     #
     # Handle Unicode font names.

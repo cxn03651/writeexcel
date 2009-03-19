@@ -249,13 +249,15 @@ class Workbook < BIFFWriter
       # Check ASCII names
       raise 'Invalid character []:*?/\\ in worksheet name: ' + name
     else
-      #         # Extract any 8bit clean chars from the UTF16 name and validate them.
-      #         for my $wchar ($name =~ /../sg) {
-      #            my ($hi, $lo) = unpack "aa", $wchar;
-      #            if ($hi eq "\0" and $lo =~ $invalid_char)
-      #               raise 'Invalid character []:*?/\\ in worksheet name: ' + name
-      #            end
-      #        }
+      # Extract any 8bit clean chars from the UTF16 name and validate them.
+      str = name.dup
+      while str =~ /../m
+        hi, lo = $~[0].unpack('aa')
+        if hi == "\0" and lo =~ invalid_char
+          raise 'Invalid character []:*?/\\ in worksheet name: ' + name
+        end
+        str = $~.post_match
+      end
     end
 
     # Check that the worksheet name doesn't already exist since this is a fatal
@@ -601,7 +603,7 @@ class Workbook < BIFFWriter
   #
   def get_property_set_codepage(params, strings)
     # Allow for manually marked utf8 strings.
-    unless params[utf8].nil?
+    unless params[:utf8].nil?
       return 0xFDE9
     else
       return 0x04E4; # Default codepage, Latin 1.
@@ -707,8 +709,6 @@ class Workbook < BIFFWriter
       @worksheets.each do |worksheet|
         while tmp = worksheet.get_data
           ole.write(tmp)
-#print "workbook tmpfile\n"
-#print tmp.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
         end
       end
 
@@ -1507,17 +1507,22 @@ class Workbook < BIFFWriter
     # Char length of format string
     cch = format.length
 
+    # Handle utf8 strings
+    if Kconv.guess(format) == Kconv::UTF8
+      format = format.toutf16
+      encoding = 1
+    end
 
     # Handle Unicode format strings.
     if encoding == 1
       raise "Uneven number of bytes in Unicode font name" if cch % 2 != 0
       cch /= 2 if encoding != 0
-      format  = [format].unpack('n*').pack('v*')
+      format  = format.unpack('n*').pack('v*')
     end
 
     # Special case to handle Euro symbol, 0x80, in non-Unicode strings.
     if encoding == 0 and format =~ /\x80/
-      format   =  [format].unpack('C*').pack('v*')
+      format   =  format.unpack('C*').pack('v*')
       format.gsub!(/\x80\x00/, "\xAC\x20")
       encoding =  1
     end
@@ -2597,14 +2602,3 @@ class Workbook < BIFFWriter
   end
 
 end
-
-=begin
-= Notes on the difference between Workbook.pm and workbook.rb
----deprecated methods
-   I generally elminated any deprecated methods.  That means no 'write'
-   methods.
----date_system
-   This is the 1904 attribute.  However, since a number can't be a method,
-   this doesn't work very well for attribute_accessor.  Besides, date_system
-   is more descriptive.
-=end
