@@ -189,16 +189,7 @@ class Formula < ExcelFormulaParser
   end
 
   def reverse(expression)
-    q = []
-    expression.each do |e|
-      if e.kind_of?(Array)
-        qq = reverse(e)
-        qq.each { |ee| q.push ee }
-      else
-        q.push e
-      end
-    end
-    q
+    expression.flatten
   end
 
   ###############################################################################
