@@ -8,11 +8,11 @@
 # reverse('©'), August 2004, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 # Create a new workbook and add a worksheet
-workbook  = Excel.new("date_time.xls")
+workbook  = WriteExcel.new("date_time.xls")
 worksheet = workbook.add_worksheet
 bold      = workbook.add_format(:bold => 1)
 

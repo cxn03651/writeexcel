@@ -21,7 +21,7 @@ require "format"
 require "formula"
 require "worksheet"
 require "workbook"
-require "excel"
+require 'writeexcel'
 include Spreadsheet
 
 class TC_rows < Test::Unit::TestCase
@@ -33,7 +33,7 @@ class TC_rows < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    workbook            = Excel.new(@test_file)
+    workbook            = WriteExcel.new(@test_file)
     workbook.compatibility_mode(1)
     @tests               = []
     

@@ -18,7 +18,7 @@ include Spreadsheet
 version = Excel::VERSION
 puts "VERSION: " + version
 
-workbook = Excel.new("format_example.xls")
+workbook = WriteExcel.new("format_example.xls")
 
 # Preferred way to add a format
 f1 = workbook.add_format(:color=>"blue", :bold=>1, :italic=>true)

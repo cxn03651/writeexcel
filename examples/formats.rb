@@ -7,7 +7,7 @@
 # reverse('©'), September 2002, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 
@@ -444,7 +444,7 @@ end
 #
 # main
 #
-workbook = Excel.new('formats.xls')
+workbook = WriteExcel.new('formats.xls')
 
 # Some common formats
 center  = workbook.add_format(:align => 'center')

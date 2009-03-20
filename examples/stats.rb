@@ -8,11 +8,11 @@
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 xlsfile = 'stats.xls'
 
-workbook = Excel.new(xlsfile)
+workbook = WriteExcel.new(xlsfile)
 worksheet = workbook.add_worksheet('Test data')
 
 # Set the column width for columns 1

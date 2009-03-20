@@ -8,10 +8,10 @@
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook = Excel.new("regions.xls")
+workbook = WriteExcel.new("regions.xls")
 
 # Add some worksheets
 north = workbook.add_worksheet("North")

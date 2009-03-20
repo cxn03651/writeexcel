@@ -9,10 +9,10 @@
 # reverse('©'), May 2004, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook  = Excel.new('diag_border.xls')
+workbook  = WriteExcel.new('diag_border.xls')
 worksheet = workbook.add_worksheet
 
 format1   = workbook.add_format(:diag_type       => 1)

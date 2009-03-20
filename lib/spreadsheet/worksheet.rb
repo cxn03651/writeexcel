@@ -12,7 +12,7 @@ class MaxSizeError < StandardError; end
 #
 # Examples:
 #
-#  workbook   = Excel.new('file.xls')
+#  workbook   = WriteExcel.new('file.xls')
 #  worksheet1 = workbook.add_worksheet
 #  worksheet2 = workbook.add_worksheet
 #

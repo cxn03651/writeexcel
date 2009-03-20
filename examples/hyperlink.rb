@@ -8,11 +8,11 @@
 #
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 # Create a new workbook and add a worksheet
-workbook  = Excel.new("hyperlink.xls")
+workbook  = WriteExcel.new("hyperlink.xls")
 worksheet = workbook.add_worksheet('Hyperlinks')
 
 # Format the first column

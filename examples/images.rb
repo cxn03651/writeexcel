@@ -8,11 +8,11 @@
 # reverse('©'), October 2001, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 # Create a new workbook called simple.xls and add a worksheet
-workbook   = Excel.new("images.xls")
+workbook   = WriteExcel.new("images.xls")
 worksheet1 = workbook.add_worksheet('Image 1')
 worksheet2 = workbook.add_worksheet('Image 2')
 worksheet3 = workbook.add_worksheet('Image 3')

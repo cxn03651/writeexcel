@@ -17,7 +17,7 @@ require "format"
 require "formula"
 require "worksheet"
 require "workbook"
-require "excel"
+require 'writeexcel'
 
 class TC_add_worksheet < Test::Unit::TestCase
 

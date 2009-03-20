@@ -34,10 +34,10 @@
 # reverse('©'), March 2002, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook  = Excel.new("headers.xls")
+workbook  = WriteExcel.new("headers.xls")
 preview   = "Select Print Preview to see the header and footer"
 
 

@@ -7,7 +7,7 @@
 # reverse('©'), September 2007, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 def get_data
@@ -72,7 +72,7 @@ end
 
 xlsfile = 'autofilters.xls'
 
-workbook = Excel.new(xlsfile)
+workbook = WriteExcel.new(xlsfile)
 bp=1
 
 worksheet1 = workbook.add_worksheet

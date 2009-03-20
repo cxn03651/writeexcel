@@ -7,10 +7,10 @@
 # reverse('©'), May 2006, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook   = Excel.new('tab_colors.xls')
+workbook   = WriteExcel.new('tab_colors.xls')
 
 worksheet1 =  workbook.add_worksheet
 worksheet2 =  workbook.add_worksheet

@@ -6,11 +6,11 @@
 #
 # reverse('©'), April 2005, John McNamara, jmcnamara@cpan.org
 #
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 
-workbook   = Excel.new('hidden.xls')
+workbook   = WriteExcel.new('hidden.xls')
 worksheet1 = workbook.add_worksheet
 worksheet2 = workbook.add_worksheet
 worksheet3 = workbook.add_worksheet

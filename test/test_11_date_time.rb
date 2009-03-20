@@ -21,7 +21,7 @@ require "format"
 require "formula"
 require "worksheet"
 require "workbook"
-require "excel"
+require 'writeexcel'
 include Spreadsheet
 
 class TC_data_time < Test::Unit::TestCase
@@ -30,7 +30,7 @@ class TC_data_time < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook  = Excel.new(@test_file)
+    @workbook  = WriteExcel.new(@test_file)
     @worksheet = @workbook.add_worksheet
     @fit_delta = 0.5/(24*60*60*1000)
   end

@@ -8,10 +8,10 @@
 # reverse('©'), August 2008, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook  = Excel.new('data_validate.xls')
+workbook  = WriteExcel.new('data_validate.xls')
 worksheet = workbook.add_worksheet
 
 # Add a format for the header cells.

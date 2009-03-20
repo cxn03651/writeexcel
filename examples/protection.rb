@@ -8,10 +8,10 @@
 # reverse('©'), August 2001, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook  = Excel.new("protection.xls")
+workbook  = WriteExcel.new("protection.xls")
 worksheet = workbook.add_worksheet
 
 # Create some format objects

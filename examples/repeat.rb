@@ -7,10 +7,10 @@
 # reverse('©'), August 2002, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook  = Excel.new("repeat.xls")
+workbook  = WriteExcel.new("repeat.xls")
 worksheet = workbook.add_worksheet
 
 limit = 1000

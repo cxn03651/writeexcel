@@ -5,17 +5,17 @@
 # Example of how to use the format copying method with Spreadsheet::WriteExcel #
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 # Create workbook1
-workbook1       = Excel.new("workbook1.xls")
+workbook1       = WriteExcel.new("workbook1.xls")
 worksheet1      = workbook1.add_worksheet
 format1a        = workbook1.add_format
 format1b        = workbook1.add_format
 
 # Create workbook2
-workbook2       = Excel.new("workbook2.xls")
+workbook2       = WriteExcel.new("workbook2.xls")
 worksheet2      = workbook2.add_worksheet
 format2a        = workbook2.add_format
 format2b        = workbook2.add_format

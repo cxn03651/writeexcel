@@ -14,7 +14,7 @@ if base == "test" || base =~ /spreadsheet/i
 end
 
 require 'test/unit'
-require "excel"
+require 'writeexcel'
 include Spreadsheet
 
 

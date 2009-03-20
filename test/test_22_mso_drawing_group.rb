@@ -20,7 +20,7 @@ require "format"
 require "formula"
 require "worksheet"
 require "workbook"
-require "excel"
+require 'writeexcel'
 include Spreadsheet
 
 
@@ -30,7 +30,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook   = Excel.new(@test_file)
+    @workbook   = WriteExcel.new(@test_file)
     @worksheet1 = @workbook.add_worksheet
     @worksheet2 = @workbook.add_worksheet
     @worksheet3 = @workbook.add_worksheet

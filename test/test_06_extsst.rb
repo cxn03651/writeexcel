@@ -22,7 +22,7 @@ require "format"
 require "formula"
 require "worksheet"
 require "workbook"
-require "excel"
+require 'writeexcel'
 include Spreadsheet
 
 class TC_extsst < Test::Unit::TestCase
@@ -31,7 +31,7 @@ class TC_extsst < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook    = Excel.new(@test_file)
+    @workbook    = WriteExcel.new(@test_file)
 
     @tests = [  # Unique     Number of   Bucket
       # strings    buckets       size

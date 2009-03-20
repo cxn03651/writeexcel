@@ -17,7 +17,7 @@ include Spreadsheet
 
 puts "VERSION: " + Excel::VERSION
 
-workbook = Excel.new("basic_example.xls")
+workbook = WriteExcel.new("basic_example.xls")
 
 worksheet = workbook.add_worksheet
 

@@ -9,11 +9,11 @@
 # reverse('©'), September 2002, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
 # Create a new workbook and add a worksheet
-workbook  = Excel.new('merge5.xls')
+workbook  = WriteExcel.new('merge5.xls')
 worksheet = workbook.add_worksheet
 
 

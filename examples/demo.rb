@@ -9,10 +9,10 @@
 # reverse('©'), October 2001, John McNamara, jmcnamara@cpan.org
 #
 
-require 'excel'
+require 'writeexcel'
 include Spreadsheet
 
-workbook   = Excel.new("demo.xls")
+workbook   = WriteExcel.new("demo.xls")
 worksheet  = workbook.add_worksheet('Demo')
 worksheet2 = workbook.add_worksheet('Another sheet')
 worksheet3 = workbook.add_worksheet('And another')
