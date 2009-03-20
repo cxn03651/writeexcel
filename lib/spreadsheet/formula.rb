@@ -4,7 +4,7 @@ require 'excelformulaparser'
 
 class Formula < ExcelFormulaParser
 
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` \0\n]/
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
   attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 

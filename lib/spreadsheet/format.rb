@@ -32,7 +32,7 @@ class Format
     'white'   => 0x09,
     'yellow'  => 0x0D,
   }
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` \0\n]/
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
   attr_accessor :xf_index, :used_merge
   attr_accessor :bold, :text_wrap, :text_justlast

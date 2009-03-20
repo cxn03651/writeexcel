@@ -9,7 +9,7 @@ class Workbook < BIFFWriter
   BOF = 11
   EOF = 4
   SheetName = "Sheet"
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` \0\n]/
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
   attr_accessor :date_system, :str_unique, :biff_only
   attr_reader :encoding, :url_format, :parser, :tempdir, :date_1904, :compatibility
