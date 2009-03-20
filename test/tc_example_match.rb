@@ -1239,6 +1239,28 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("perl_output/demo.xls", @filename)
   end
 
+  def test_unicode_cyrillic
+    # Create a Russian worksheet name in utf8.
+    sheet   = [0x0421, 0x0442, 0x0440, 0x0430, 0x043D, 0x0438,
+                         0x0446, 0x0430].pack("U*")
+
+    # Create a Russian string.
+    str     = [0x0417, 0x0434, 0x0440, 0x0430, 0x0432, 0x0441,
+                       0x0442, 0x0432, 0x0443, 0x0439, 0x0020, 0x041C,
+                       0x0438, 0x0440, 0x0021].pack("U*")
+
+    workbook  = Excel.new(@filename)
+    worksheet = workbook.add_worksheet(sheet + '1')
+
+    worksheet.set_column('A:A', 18)
+    worksheet.write('A1', str)
+
+    workbook.close
+
+    # do assertion
+    compare_file("perl_output/unicode_cyrillic.xls", @filename)
+  end
+
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")
     fh_t = File.open(target, "r")

@@ -262,6 +262,12 @@ class Workbook < BIFFWriter
       end
     end
 
+    # Handle utf8 strings
+    if name =~ NonAscii
+      name = NKF.nkf('-w16B0 -m0 -W', name)
+      encoding = 1
+    end
+
     # Check that the worksheet name doesn't already exist since this is a fatal
     # error in Excel 97. The check must also exclude case insensitive matches
     # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
@@ -277,10 +283,10 @@ class Workbook < BIFFWriter
       if    encd_a == 0 and encd_b == 0
         error  = 1 if name_a.downcase == name_b.downcase
       elsif encd_a == 0 and encd_b == 1
-        name_a = [name_a].unpack("C*").pack("n*")
+        name_a = name_a.unpack("C*").pack("n*")
         error  = 1 if name_a.downcase == name_b.downcase
       elsif encd_a == 1 and encd_b == 0
-        name_b = [name_b].unpack("C*").pack("n*")
+        name_b = name_b.unpack("C*").pack("n*")
         error  = 1 if name_a.downcase == name_b.downcase
       elsif encd_a == 1 and encd_b == 1
         #            # We can do a true case insensitive test with Perl 5.8 and utf8.
@@ -1463,7 +1469,7 @@ class Workbook < BIFFWriter
     cch /= 2 if encoding != 0
 
     # Change the UTF-16 name from BE to LE
-    sheetname = [sheetname].unpack('v*').pack('n*') if encoding != 0
+    sheetname = sheetname.unpack('v*').pack('n*') if encoding != 0
 
     header    = [record, length].pack("vv")
     data      = [offset, grbit, cch, encoding].pack("VvCC")

@@ -1743,7 +1743,7 @@ attr_reader :compatibility
 
     # Handle utf8 strings
     if str =~ NonAscii
-      return write_utf16be_string(row, col, NKF.nkf('-w16L0 -m0 -W', str), args[3])
+      return write_utf16le_string(row, col, NKF.nkf('-w16L0 -m0 -W', str), args[3])
     end
 
     # Check that row and col are valid and store max and min values
@@ -5772,14 +5772,14 @@ attr_reader :compatibility
       raise "Uneven number of bytes in comment string" if string.length % 2 != 0
 
       # Change from UTF-16BE to UTF-16LE
-      string = [string].unpack('n*').pack('v*')
+      string = string.unpack('n*').pack('v*')
     end
 
     if params[:author_encoding] != 0
       raise "Uneven number of bytes in author string"  if params[:author] % 2 != 0
 
       # Change from UTF-16BE to UTF-16LE
-      params[:author] = [params[:author]].unpack('n*').pack('v*')
+      params[:author] = params[:author].unpack('n*').pack('v*')
     end
 
     # Handle utf8 strings
@@ -6304,6 +6304,9 @@ attr_reader :compatibility
 
     # Handle utf8 strings
     if string =~ NonAscii
+      require 'jcode'
+      $KCODE = 'u'
+      str_length = string.jlength
       string = NKF.nkf('-w16L0 -m0 -W', string)
       encoding = 1
     end
