@@ -7,6 +7,8 @@
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
+require 'nkf'
+
 class Format
 
   COLORS = {
@@ -30,6 +32,7 @@ class Format
     'white'   => 0x09,
     'yellow'  => 0x0D,
   }
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` \0\n]/
 
   attr_accessor :xf_index, :used_merge
   attr_accessor :bold, :text_wrap, :text_justlast
@@ -49,13 +52,13 @@ class Format
 
   ###############################################################################
   #
-  # initialize(xf_index=0, properties = nil)
+  # initialize(xf_index=0, properties = {})
   #    xf_index   :
   #    properties : Hash of property => value
   #
   # Constructor
   #
-  def initialize(xf_index = 0, *args)
+  def initialize(xf_index = 0, properties = {})
     @xf_index       = xf_index
   
     @type           = 0
@@ -115,7 +118,7 @@ class Format
     # Temp code to prevent merged formats in non-merged cells.
     @used_merge     = 0
 
-    set_format_properties(*args) unless args.empty?
+    set_format_properties(properties) unless properties.empty?
   end
 
 
@@ -376,9 +379,9 @@ end
     rgch       = @font
     encoding   = @font_encoding
 
-    # Handle utf8 strings in perl 5.8.
-    if Kconv.guess(rgch) == Kconv::UTF8
-      rgch = rgch.toutf16
+    # Handle utf8 strings
+    if rgch =~ NonAscii
+      rgch = NKF.nkf('-w16B0 -m0 -W', rgch)
       encoding = 1
     end
 

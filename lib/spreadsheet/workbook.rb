@@ -9,6 +9,7 @@ class Workbook < BIFFWriter
   BOF = 11
   EOF = 4
   SheetName = "Sheet"
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` \0\n]/
 
   attr_accessor :date_system, :str_unique, :biff_only
   attr_reader :encoding, :url_format, :parser, :tempdir, :date_1904, :compatibility
@@ -23,9 +24,10 @@ class Workbook < BIFFWriter
   #
   # Constructor. Creates a new Workbook object from a BIFFwriter object.
   #
-  def initialize(filename)
+  def initialize(filename, default_formats = {})
     super()
     @filename              = filename
+    @default_formats       = default_formats
     @parser                = Formula.new(@byte_order)
     @tempdir               = nil
     @date_1904             = false
@@ -86,7 +88,7 @@ class Workbook < BIFFWriter
     add_format(:type => 1)                        # 12 ColLevel 5
     add_format(:type => 1)                        # 13 ColLevel 6
     add_format(:type => 1)                        # 14 ColLevel 7
-    add_format()                                  # 15 Cell XF
+    add_format(default_formats)                   # 15 Cell XF
     add_format(:type => 1, :num_format => 0x2B)   # 16 Comma
     add_format(:type => 1, :num_format => 0x29)   # 17 Comma[0]
     add_format(:type => 1, :num_format => 0x2C)   # 18 Currency
@@ -321,8 +323,8 @@ class Workbook < BIFFWriter
   # Add a new format to the Excel workbook. This adds an XF record and
   # a FONT record. Also, pass any properties to the Format::new().
   #
-  def add_format(*args)
-    format = Format.new(@xf_index, *args)
+  def add_format(formats = {})
+    format = Format.new(@xf_index, @default_formats.merge(formats))
     @xf_index += 1
     @formats.push format # Store format reference
     return format
@@ -1508,8 +1510,8 @@ class Workbook < BIFFWriter
     cch = format.length
 
     # Handle utf8 strings
-    if Kconv.guess(format) == Kconv::UTF8
-      format = format.toutf16
+    if format =~ NonAscii
+      format = NKF.nkf('-w16B0 -m0 -W', format)
       encoding = 1
     end
 

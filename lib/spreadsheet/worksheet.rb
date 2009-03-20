@@ -51,10 +51,11 @@ class MaxSizeError < StandardError; end
 
 class Worksheet < BIFFWriter
 
-  RowMax = 65536
-  ColMax = 256
-  StrMax = 0
-  Buffer = 4096
+  RowMax   = 65536
+  ColMax   = 256
+  StrMax   = 0
+  Buffer   = 4096
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
   attr_reader :name, :encoding, :xf_index, :index, :type, :images_array
   attr_reader :filter_area, :filter_count
@@ -627,8 +628,8 @@ attr_reader :compatibility
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
-    if Kconv.guess(string) == Kconv::UTF8
-      string = string.toutf16
+    if string =~ NonAscii
+      string = NKF.nkf('-w16B0 -m0 -W', string)
       encoding = 1
     end
     
@@ -653,8 +654,8 @@ attr_reader :compatibility
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
-    if Kconv.guess(string) == Kconv::UTF8
-      string = string.toutf16
+    if string =~ NonAscii
+      string = NKF.nkf('-w16B0 -m0 -W', string)
       encoding = 1
     end
 
@@ -1741,7 +1742,9 @@ attr_reader :compatibility
     str_error   = 0
 
     # Handle utf8 strings
-    return write_utf16be_string(row, col, str.toutf16, args[3]) if Kconv.guess(str) == Kconv::UTF8
+    if str =~ NonAscii
+      return write_utf16be_string(row, col, NKF.nkf('-w16L0 -m0 -W', str), args[3])
+    end
 
     # Check that row and col are valid and store max and min values
     return -2 if check_dimensions(row, col) != 0
@@ -1987,8 +1990,8 @@ attr_reader :compatibility
     encoding  = 0              # String encoding.
   
     # Handle utf8 strings in perl 5.8.
-    if Kconv.guess(string) == Kconv::UTF8
-      string = string.toutf16
+    if string =~ NonAscii
+      string = NKF.nkf('-w16B0 -m0 -W', string)
       encoding = 1
     end
   
@@ -2301,10 +2304,10 @@ attr_reader :compatibility
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    if Kconv.guess(str) == Kconv::UTF8
+    if str =~ NonAscii
       # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
       url.substr!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
-      url      = url.toutf16 + "\0\0"  # URL is null terminated.
+      url      = NKF.nkf('-w16L0 -m0 -W', url) + "\0\0"  # URL is null terminated.
       encoding = 1
     end
 
@@ -4546,9 +4549,9 @@ attr_reader :compatibility
       encoding = 0
       length   = string.length
 
-      # Handle utf8 strings in perl 5.8.
-      if Kconv.guess(string) == Kconv::UTF8
-        string = string.toutf16
+      # Handle utf8 strings
+      if string =~ NonAscii
+        string = NKF.nkf('-w16B0 -m0 -W', string)
         encodign = 1
       end
 
@@ -5780,12 +5783,12 @@ attr_reader :compatibility
     end
 
     # Handle utf8 strings
-    if Kconv.guess(string) == Kconv::UTF8
-      string = string.toutf16
+    if string =~ NonAscii
+      string = NKF.nkf('-w16L0 -m0 -W', string)
       params[:encoding] = 1
     end
-    if Kconv.guess(params[:author]) == Kconv::UTF8
-      params[:author] = params[:author].toutf16
+    if params[:author] =~ NonAscii
+      params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
       params[:author_encoding] = 1
     end
 
@@ -6300,8 +6303,8 @@ attr_reader :compatibility
     str_length = string.length
 
     # Handle utf8 strings
-    if Kconv.guess(string) == Kconv::UTF8
-      string = string.toutf16
+    if string =~ NonAscii
+      string = NKF.nkf('-w16L0 -m0 -W', string)
       encoding = 1
     end
 

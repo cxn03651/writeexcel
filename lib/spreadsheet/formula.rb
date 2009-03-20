@@ -1,7 +1,10 @@
+require 'nkf'
 require 'strscan'
 require 'excelformulaparser'
 
 class Formula < ExcelFormulaParser
+
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` \0\n]/
 
   attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
@@ -297,8 +300,8 @@ class Formula < ExcelFormulaParser
     length = str.length
 
     # Handle utf8 strings
-    if Kconv.guess(str) == Kconv::UTF8
-      str = str.toutf16
+    if str =~ NonAscii
+      str = NKF.nkf('-w16L0 -m0 -W', str)
       encoding = 1
     end
     
@@ -485,7 +488,9 @@ class Formula < ExcelFormulaParser
   #
   def get_sheet_index(sheet_name)
     # Handle utf8 sheetnames
-    sheet_name = sheet_name.toutf16 if Kconv.guess(sheet_name) == Kconv::UTF8
+    if sheet_name =~ NonAscii
+      sheet_name = NKF.nkf('-w16B0 -m0 -W', sheet_name)
+    end
     
     if @ext_sheets[sheet_name].nil?
       exit "Unknown sheet name #{sheet_name} in formula\n"
