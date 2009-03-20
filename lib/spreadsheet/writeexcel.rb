@@ -1,11 +1,15 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-
-require "biffwriter"
-require "olewriter"
+###############################################################################
+#
+# WriteExcel.
+#
+# Spreadsheet::WriteExcel - Write to a cross-platform Excel binary file.
+#
+# Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
+#
+# original written in Perl by John McNamara
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
 require "workbook"
-require "worksheet"
-require "format"
-require "formula"
 
 module Spreadsheet
   class WriteExcel < Workbook

@@ -1,8 +1,15 @@
-# olewriter.rb
+###############################################################################
 #
-# This class should never be instantiated directly. The entire class, and all
-# its methods should be considered private.
-
+# BIFFwriter - An abstract base class for Excel workbooks and worksheets.
+#
+#
+# Used in conjunction with Spreadsheet::WriteExcel
+#
+# Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
+#
+# original written in Perl by John McNamara
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
 class MaxSizeError < StandardError; end
 
 class OLEWriter

@@ -1,3 +1,7 @@
+#
+# copyright (c) 2009  Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+
+
 class ExcelFormulaParser
 
 prechigh

@@ -7,6 +7,9 @@
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
+# original written in Perl by John McNamara
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
 require 'nkf'
 
 class Format
