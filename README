@@ -1,0 +1,94 @@
+= WriteExcel
+
+ Write to a cross-platform Excel binary file.
+
+== Description
+
+ This library is converted from  Spreadsheet::WriteExcel module of Perl.
+ http://search.cpan.org/~jmcnamara/Spreadsheet-WriteExcel-2.25/
+
+ Some function does not implemented yet.
+ * import externally generated charts into WriteExcel file.
+ * output is file only. not to a memory.
+ * file property of Excel(such as author, time, etc.) is not supported.
+
+ Some examples written in perl was successfully converted to Ruby. But
+ this library written in Ruby has many bugs, I think.
+
+ Original description is below:
+
+    The Spreadsheet::WriteExcel module can be used to create a cross-
+    platform Excel binary file. Multiple worksheets can be added to a
+    workbook and formatting can be applied to cells. Text, numbers,
+    formulas, hyperlinks and images can be written to the cells.
+
+    TThe Excel file produced by this module is compatible with 97,
+    2000, 2002 and 2003.
+
+    The module will work on the majority of Windows, UNIX and
+    Macintosh platforms. Generated files are also compatible with the
+    spreadsheet applications Gnumeric and OpenOffice.org.
+
+    This module cannot be used to read an Excel file. See
+    Spreadsheet::ParseExcel or look at the main documentation for some
+    suggestions. This module cannot be uses to write to an existing
+    Excel file.
+
+
+== Usage
+
+ Document has not converted yet.
+ reference of methods, see original document.
+ http://search.cpan.org/~jmcnamara/Spreadsheet-WriteExcel-2.25/lib/Spreadsheet/WriteExcel.pm
+
+ Example Code:
+
+    require 'writeexcel'
+    include Spreadsheet
+
+    # Create a new Excel Workbook
+    workbook = WriteExcel.new('ruby.xls')
+
+    # Add worksheet(s)
+    worksheet  = workbook.add_worksheet
+    worksheet2 = workbook.add_worksheet
+
+    # Add and define a format
+    format = workbook.add_format
+    format.set_bold
+    format.set_color('red')
+    format.set_align('right')
+
+    # write a formatted and unformatted string.
+    worksheet.write(1, 1, 'Hi Excel.', format)  # cell B2
+    worksheet.write(2, 1, 'Hi Excel.')          # cell B3
+
+    # write a number and formula using A1 notation
+    worksheet.write('B4', 3.14159)
+    worksheet.write('B5', '=SIN(B4/4)')  # -> 0.707106
+
+    # write to file
+    workbook.close
+
+== Caution
+
+ This library can handle multibyte character written in utf8. I tested in Japanese,
+ and it looks work well. But, in this version, utf8 or not is recognized
+ by matching non-ascii characters because ruby 1.8 can not recognize character code
+ correctly.
+
+== Dependencies
+
+ * ruby 1.8.6
+ * ruby-ole (you can install via rubygem)
+
+== Author
+
+ Original was written in Perl by John McNamara (jmcnamara@cpan.org).
+
+ Convert to ruby by Hideo Nakamura (cxn03651@msj.biglobe.ne.jp)
+
+
+== License
+
+ same as Ruby.
