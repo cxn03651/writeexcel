@@ -11,10 +11,9 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
 # Create a new workbook and add a worksheet
-workbook  = WriteExcel.new("stocks.xls")
+workbook  = Spreadsheet::WriteExcel.new("stocks.xls")
 worksheet = workbook.add_worksheet
 
 # Set the column width for columns 1, 2, 3 and 4

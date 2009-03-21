@@ -8,9 +8,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook   = WriteExcel.new('tab_colors.xls')
+workbook   = Spreadsheet::WriteExcel.new('tab_colors.xls')
 
 worksheet1 =  workbook.add_worksheet
 worksheet2 =  workbook.add_worksheet

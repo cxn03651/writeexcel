@@ -11,7 +11,7 @@
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 
-require 'biffwriter'
+require 'writeexcel/biffwriter'
 
 class Chart
 

@@ -1,24 +1,12 @@
-#####################################################
-# tc_format.rb
-#
-# Test suite for the Format class (format.rb)
-#####################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
-require "biffwriter"
-require "olewriter"
-require "workbook"
-require "worksheet"
-require "format"
-require 'formula'
+require "writeexcel"
 
 class TC_Format < Test::Unit::TestCase
+
+  TEST_DIR    = File.expand_path(File.dirname(__FILE__))
+  PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
 
   def setup
     @ruby_file = "xf_test"
@@ -994,7 +982,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
 
 
   def test_xf_biff_size
-    perl_file = "perl_output/file_xf_biff"
+    perl_file = "#{PERL_OUTDIR}/file_xf_biff"
     size = File.size(perl_file)
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_xf)
@@ -1017,7 +1005,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   #end
 
   def test_font_biff_size
-    perl_file = "perl_output/file_font_biff"
+    perl_file = "#{PERL_OUTDIR}/file_font_biff"
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_font)
     @fh.close
@@ -1027,7 +1015,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   end
 
   def test_font_biff_contents
-    perl_file = "perl_output/file_font_biff"
+    perl_file = "#{PERL_OUTDIR}/file_font_biff"
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_font)
     @fh.close
@@ -1037,7 +1025,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   end
 
   def test_get_font_key_size
-    perl_file = "perl_output/file_font_key"
+    perl_file = "#{PERL_OUTDIR}/file_font_key"
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_font_key)
     @fh.close
@@ -1045,7 +1033,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   end
 
   def test_get_font_key_contents
-    perl_file = "perl_output/file_font_key"
+    perl_file = "#{PERL_OUTDIR}/file_font_key"
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_font_key)
     @fh.close
@@ -1065,7 +1053,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   # added by Nakamura
 
   def test_get_xf
-    perl_file = "perl_output/file_xf_biff"
+    perl_file = "#{PERL_OUTDIR}/file_xf_biff"
     size = File.size(perl_file)
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_xf)
@@ -1093,7 +1081,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   end
 
   def test_get_font
-    perl_file = "perl_output/file_font_biff"
+    perl_file = "#{PERL_OUTDIR}/file_font_biff"
     size = File.size(perl_file)
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_font)
@@ -1121,7 +1109,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   end
 
   def test_get_font_key
-    perl_file = "perl_output/file_font_key"
+    perl_file = "#{PERL_OUTDIR}/file_font_key"
     size = File.size(perl_file)
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@format.get_font_key)

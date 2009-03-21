@@ -10,9 +10,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook   = WriteExcel.new("demo.xls")
+workbook   = Spreadsheet::WriteExcel.new("demo.xls")
 worksheet  = workbook.add_worksheet('Demo')
 worksheet2 = workbook.add_worksheet('Another sheet')
 worksheet3 = workbook.add_worksheet('And another')

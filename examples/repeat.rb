@@ -8,9 +8,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook  = WriteExcel.new("repeat.xls")
+workbook  = Spreadsheet::WriteExcel.new("repeat.xls")
 worksheet = workbook.add_worksheet
 
 limit = 1000

@@ -12,7 +12,7 @@ require 'writeexcel'
 include Spreadsheet
 xlsfile = 'stats.xls'
 
-workbook = WriteExcel.new(xlsfile)
+workbook = Spreadsheet::WriteExcel.new(xlsfile)
 worksheet = workbook.add_worksheet('Test data')
 
 # Set the column width for columns 1

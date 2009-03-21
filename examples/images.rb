@@ -9,10 +9,9 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
 # Create a new workbook called simple.xls and add a worksheet
-workbook   = WriteExcel.new("images.xls")
+workbook   = Spreadsheet::WriteExcel.new("images.xls")
 worksheet1 = workbook.add_worksheet('Image 1')
 worksheet2 = workbook.add_worksheet('Image 2')
 worksheet3 = workbook.add_worksheet('Image 3')

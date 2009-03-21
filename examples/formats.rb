@@ -8,7 +8,6 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
 
 ######################################################################
@@ -444,7 +443,7 @@ end
 #
 # main
 #
-workbook = WriteExcel.new('formats.xls')
+workbook = Spreadsheet::WriteExcel.new('formats.xls')
 
 # Some common formats
 center  = workbook.add_format(:align => 'center')

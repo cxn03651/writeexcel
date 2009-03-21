@@ -10,9 +10,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook  = WriteExcel.new('diag_border.xls')
+workbook  = Spreadsheet::WriteExcel.new('diag_border.xls')
 worksheet = workbook.add_worksheet
 
 format1   = workbook.add_format(:diag_type       => 1)

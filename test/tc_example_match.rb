@@ -1,24 +1,16 @@
-#######################################################
-# tc_example_match.rb
-#
-# Test suite for matching with xls file made by perl.
-#######################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
 require 'writeexcel'
-include Spreadsheet
 
 class TC_example_match < Test::Unit::TestCase
 
+  TEST_DIR    = File.expand_path(File.dirname(__FILE__))
+  PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
+
   def setup
-    @filename  = "tc_example_match.xls"
-    @filename2 = "tc_example_match2.xls"
+    @filename  = File.join(TEST_DIR, "tc_example_match.xls")
+    @filename2 = File.join(TEST_DIR, "tc_example_match2.xls")
   end
 
   def teardown
@@ -27,7 +19,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_a_simple
-    workbook  = WriteExcel.new(@filename);
+    workbook  = Spreadsheet::WriteExcel.new(@filename);
     worksheet = workbook.add_worksheet
     
     # The general syntax is write(row, column, token). Note that row and
@@ -57,11 +49,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
     
     # do assertion
-    compare_file("perl_output/a_simple.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/a_simple.xls", @filename)
   end
 
   def test_regions
-    workbook = WriteExcel.new(@filename)
+    workbook = Spreadsheet::WriteExcel.new(@filename)
 
     # Add some worksheets
     north = workbook.add_worksheet("North")
@@ -98,11 +90,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/regions.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/regions.xls", @filename)
   end
 
   def test_stats
-    workbook = WriteExcel.new(@filename)
+    workbook = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet('Test data')
 
     # Set the column width for columns 1
@@ -158,11 +150,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/regions.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/regions.xls", @filename)
   end
 
   def test_hidden
-    workbook   = WriteExcel.new(@filename)
+    workbook   = Spreadsheet::WriteExcel.new(@filename)
     worksheet1 = workbook.add_worksheet
     worksheet2 = workbook.add_worksheet
     worksheet3 = workbook.add_worksheet
@@ -177,12 +169,12 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/hidden.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/hidden.xls", @filename)
   end
 
   def test_hyperlink1
     # Create a new workbook and add a worksheet
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet('Hyperlinks')
     
     # Format the first column
@@ -210,18 +202,18 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/hyperlink.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/hyperlink.xls", @filename)
   end
 
   def test_copyformat
     # Create workbook1
-    workbook1       = WriteExcel.new(@filename)
+    workbook1       = Spreadsheet::WriteExcel.new(@filename)
     worksheet1      = workbook1.add_worksheet
     format1a        = workbook1.add_format
     format1b        = workbook1.add_format
     
     # Create workbook2
-    workbook2       = WriteExcel.new(@filename2)
+    workbook2       = Spreadsheet::WriteExcel.new(@filename2)
     worksheet2      = workbook2.add_worksheet
     format2a        = workbook2.add_format
     format2b        = workbook2.add_format
@@ -254,12 +246,12 @@ class TC_example_match < Test::Unit::TestCase
     workbook2.close
 
     # do assertion
-    compare_file("perl_output/workbook1.xls", @filename)
-    compare_file("perl_output/workbook2.xls", @filename2)
+    compare_file("#{PERL_OUTDIR}/workbook1.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/workbook2.xls", @filename2)
   end
 
   def test_data_validate
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
     
     # Add a format for the header cells.
@@ -523,11 +515,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/data_validate.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/data_validate.xls", @filename)
   end
 
   def test_merge1
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -545,11 +537,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/merge1.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/merge1.xls", @filename)
   end
 
   def test_merge2
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -575,11 +567,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/merge2.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/merge2.xls", @filename)
   end
   
   def test_merge3
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet()
     
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -627,12 +619,12 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/merge3.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/merge3.xls", @filename)
   end
 
   def test_merge4
     # Create a new workbook and add a worksheet
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
     
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -699,12 +691,12 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/merge4.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/merge4.xls", @filename)
   end
 
   def test_merge5
     # Create a new workbook and add a worksheet
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
     
     
@@ -767,12 +759,12 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
     
     # do assertion
-    compare_file("perl_output/merge5.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/merge5.xls", @filename)
   end
 
   def test_images
     # Create a new workbook called simple.xls and add a worksheet
-    workbook   = WriteExcel.new(@filename)
+    workbook   = Spreadsheet::WriteExcel.new(@filename)
     worksheet1 = workbook.add_worksheet('Image 1')
     worksheet2 = workbook.add_worksheet('Image 2')
     worksheet3 = workbook.add_worksheet('Image 3')
@@ -781,16 +773,16 @@ class TC_example_match < Test::Unit::TestCase
     
     # Insert a basic image
     worksheet1.write('A10', "Image inserted into worksheet.")
-    worksheet1.insert_image('A1', 'republic.png')
+    worksheet1.insert_image('A1', File.join(TEST_DIR,'republic.png'))
     
     
     # Insert an image with an offset
     worksheet2.write('A10', "Image inserted with an offset.")
-    worksheet2.insert_image('A1', 'republic.png', 32, 10)
+    worksheet2.insert_image('A1', File.join(TEST_DIR,'republic.png'), 32, 10)
     
     # Insert a scaled image
     worksheet3.write('A10', "Image scaled: width x 2, height x 0.8.")
-    worksheet3.insert_image('A1', 'republic.png', 0, 0, 2, 0.8)
+    worksheet3.insert_image('A1', File.join(TEST_DIR,'republic.png'), 0, 0, 2, 0.8)
     
     # Insert an image over varied column and row sizes
     # This does not require any additional work
@@ -804,16 +796,16 @@ class TC_example_match < Test::Unit::TestCase
     worksheet4.set_row(3, 5)
     
     worksheet4.write('A10', "Image inserted over scaled rows and columns.")
-    worksheet4.insert_image('A1', 'republic.png')
+    worksheet4.insert_image('A1', File.join(TEST_DIR,'republic.png'))
     
     workbook.close
 
     # do assertion
-    compare_file("perl_output/images.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/images.xls", @filename)
   end
 
   def test_tab_colors
-    workbook   = WriteExcel.new(@filename)
+    workbook   = Spreadsheet::WriteExcel.new(@filename)
     
     worksheet1 =  workbook.add_worksheet
     worksheet2 =  workbook.add_worksheet
@@ -828,12 +820,12 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/tab_colors.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/tab_colors.xls", @filename)
   end
 
   def test_stocks
     # Create a new workbook and add a worksheet
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
     
     # Set the column width for columns 1, 2, 3 and 4
@@ -895,11 +887,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/stocks.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/stocks.xls", @filename)
   end
 
   def test_protection
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
     
     # Create some format objects
@@ -930,12 +922,12 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/protection.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/protection.xls", @filename)
   end
 
   def test_date_time
     # Create a new workbook and add a worksheet
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
     bold      = workbook.add_format(:bold => 1)
     
@@ -1006,10 +998,10 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/date_time.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/date_time.xls", @filename)
   end
   def test_diag_border
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     format1   = workbook.add_format(:diag_type     => 1)
@@ -1029,11 +1021,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/diag_border.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/diag_border.xls", @filename)
   end
 
   def test_header
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     preview   = "Select Print Preview to see the header and footer"
     
     
@@ -1129,11 +1121,11 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/headers.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/headers.xls", @filename)
   end
 
   def test_demo
-    workbook   = WriteExcel.new(@filename)
+    workbook   = Spreadsheet::WriteExcel.new(@filename)
     worksheet  = workbook.add_worksheet('Demo')
     worksheet2 = workbook.add_worksheet('Another sheet')
     worksheet3 = workbook.add_worksheet('And another')
@@ -1223,7 +1215,7 @@ class TC_example_match < Test::Unit::TestCase
     # Images
     #
     worksheet.write('A10', "Images")
-    worksheet.insert_image('B10', 'republic.png', 16, 8)
+    worksheet.insert_image('B10', File.join(TEST_DIR,'republic.png'), 16, 8)
     
     
     #######################################################################
@@ -1236,7 +1228,7 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
     
     # do assertion
-    compare_file("perl_output/demo.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/demo.xls", @filename)
   end
 
   def test_unicode_cyrillic
@@ -1249,7 +1241,7 @@ class TC_example_match < Test::Unit::TestCase
                        0x0442, 0x0432, 0x0443, 0x0439, 0x0020, 0x041C,
                        0x0438, 0x0440, 0x0021].pack("U*")
 
-    workbook  = WriteExcel.new(@filename)
+    workbook  = Spreadsheet::WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet(sheet + '1')
 
     worksheet.set_column('A:A', 18)
@@ -1258,7 +1250,7 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("perl_output/unicode_cyrillic.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/unicode_cyrillic.xls", @filename)
   end
 
   def compare_file(expected, target)

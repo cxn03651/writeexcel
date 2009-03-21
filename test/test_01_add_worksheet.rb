@@ -1,22 +1,6 @@
-#########################################
-# test_01_add_worksheet.rb
-#
-# Tests for valid worksheet name handling.
-#########################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
-require "biffwriter"
-require "olewriter"
-require "format"
-require "formula"
-require "worksheet"
-require "workbook"
 require 'writeexcel'
 
 class TC_add_worksheet < Test::Unit::TestCase

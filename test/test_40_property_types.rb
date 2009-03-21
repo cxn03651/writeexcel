@@ -6,17 +6,10 @@
 # reverse('©'), September 2005, John McNamara, jmcnamara@cpan.org
 #
 #########################################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require 'test/unit'
 require 'writeexcel'
-include Spreadsheet
-
 
 class TC_property_types < Test::Unit::TestCase
 

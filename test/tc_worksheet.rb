@@ -1,36 +1,20 @@
-######################################################################
-# tc_worksheet.rb
-#
-# Test suite for the Worksheet class (worksheet.rb).
-#
-# I do lots of octal dump comparisons because I don't trust simply
-# visually comparing the file contents (you never know if there's
-# a hidden space or newline somewhere).  Besides, it can't hurt.
-#######################################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
-require "biffwriter"
-require "olewriter"
-require "format"
-require "workbook"
-require "worksheet"
-require "FileUtils"
+require "writeexcel"
 
 class TC_Worksheet < Test::Unit::TestCase
+  TEST_DIR    = File.expand_path(File.dirname(__FILE__))
+  PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
+
   def setup
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook = Workbook.new(@test_file)
+    @workbook = Spreadsheet::WriteExcel.new(@test_file)
     @sheetname = 'test'
     @ws      = @workbook.add_worksheet(@sheetname,0)
-    @perldir = "perl_output/"
+    @perldir = "#{PERL_OUTDIR}/"
     @format  = Format.new(:color=>"green")
   end
 

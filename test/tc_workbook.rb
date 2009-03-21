@@ -1,23 +1,7 @@
-#####################################################
-# t_workbook.rb
-#
-# Test suite for the Workbook class (workbook.rb)
-# Requires testunit 0.1.8 or greater to run properly
-#####################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
-require "biffwriter"
-require "olewriter"
-require "workbook"
-require "worksheet"
-require "format"
-require 'formula'
+require "writeexcel"
 
 class TC_Workbook < Test::Unit::TestCase
 

@@ -9,10 +9,9 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
 # Create a new workbook and add a worksheet
-workbook  = WriteExcel.new("date_time.xls")
+workbook  = Spreadsheet::WriteExcel.new("date_time.xls")
 worksheet = workbook.add_worksheet
 bold      = workbook.add_format(:bold => 1)
 

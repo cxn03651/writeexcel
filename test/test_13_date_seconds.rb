@@ -7,22 +7,10 @@
 # reverse('©'), May 2004, John McNamara, jmcnamara@cpan.org
 #
 ############################################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
-require "biffwriter"
-require "olewriter"
-require "format"
-require "formula"
-require "worksheet"
-require "workbook"
 require 'writeexcel'
-include Spreadsheet
 
 class TC_data_seconds < Test::Unit::TestCase
 
@@ -30,7 +18,7 @@ class TC_data_seconds < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook  = WriteExcel.new(@test_file)
+    @workbook  = Spreadsheet::WriteExcel.new(@test_file)
     @worksheet = @workbook.add_worksheet
     @fit_delta = 0.5/(24*60*60*1000)
   end

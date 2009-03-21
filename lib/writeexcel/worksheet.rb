@@ -10,9 +10,9 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'format'
-require 'formula'
-require 'workbook'
+require 'writeexcel/format'
+require 'writeexcel/formula'
+require 'writeexcel/workbook'
 
 class MaxSizeError < StandardError; end
 

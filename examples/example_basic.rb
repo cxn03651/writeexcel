@@ -13,11 +13,10 @@ if base == "examples" || base =~ /spreadsheet/i
 end
 
 require "spreadsheet/excel"
-include Spreadsheet
 
 puts "VERSION: " + Excel::VERSION
 
-workbook = WriteExcel.new("basic_example.xls")
+workbook = Spreadsheet::WriteExcel.new("basic_example.xls")
 
 worksheet = workbook.add_worksheet
 

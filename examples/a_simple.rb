@@ -5,10 +5,9 @@
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
 require 'writeexcel'
-include Spreadsheet
 
 # Create a new workbook called simple.xls and add a worksheet
-workbook  = WriteExcel.new('a_simple.xls');
+workbook  = Spreadsheet::WriteExcel.new('a_simple.xls');
 worksheet = workbook.add_worksheet
 
 # The general syntax is write(row, column, token). Note that row and

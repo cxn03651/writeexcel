@@ -10,10 +10,9 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
 # Create a new workbook and add a worksheet
-workbook  = WriteExcel.new('merge5.xls')
+workbook  = Spreadsheet::WriteExcel.new('merge5.xls')
 worksheet = workbook.add_worksheet
 
 

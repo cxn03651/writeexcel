@@ -1,21 +1,7 @@
-###########################################################################
-# t_ole.rb
-#
-# Test suite for the OLEWriter class (olewriter.rb)
-#
-# In some cases, even though the file sizes are identical, the files
-# themselves do not appear to be identical.  The Perl output appears to
-# contain a newline which the Ruby output does not.
-###########################################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
-require "olewriter"
+require "writeexcel"
 
 class TC_OLE < Test::Unit::TestCase
 

@@ -65,7 +65,7 @@
 
     # write a number and formula using A1 notation
     worksheet.write('B4', 3.14159)
-    worksheet.write('B5', '=SIN(B4/4)')  # -> 0.707106
+    worksheet.write('B5', '=SIN(B4/4)')
 
     # write to file
     workbook.close

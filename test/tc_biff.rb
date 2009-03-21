@@ -1,19 +1,13 @@
-#######################################################
-# tc_biff.rb
-#
-# Test suite for the BIFFWriter class (biffwriter.rb)
-#######################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
-require "biffwriter"
+require "writeexcel"
 
 class TC_BIFFWriter < Test::Unit::TestCase
+
+  TEST_DIR    = File.expand_path(File.dirname(__FILE__))
+  PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
+
   def setup
     @biff = BIFFWriter.new
     @ruby_file = "delete_me"
@@ -68,7 +62,7 @@ class TC_BIFFWriter < Test::Unit::TestCase
   end
 
   def test_add_continue
-    perl_file = "perl_output/biff_add_continue_testdata"
+    perl_file = "#{PERL_OUTDIR}/biff_add_continue_testdata"
     size = File.size(perl_file)
     @fh = File.new(@ruby_file,"w+")
     @fh.print(@biff.add_continue('testdata'))

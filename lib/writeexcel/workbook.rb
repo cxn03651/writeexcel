@@ -10,11 +10,13 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
+require 'writeexcel/biffwriter'
+require 'writeexcel/olewriter'
+require 'writeexcel/formula'
+require 'writeexcel/format'
+require 'writeexcel/worksheet'
+require 'writeexcel/properties'
 require 'digest/md5'
-require 'biffwriter'
-require 'olewriter'
-require 'formula'
-require 'properties'
 require 'ole/file_system'
 
 class Workbook < BIFFWriter

@@ -12,10 +12,9 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
 # Create a new workbook and add a worksheet
-workbook  = WriteExcel.new("merge2.xls")
+workbook  = Spreadsheet::WriteExcel.new("merge2.xls")
 worksheet = workbook.add_worksheet
 
 # Increase the cell size of the merged cells to highlight the formatting.

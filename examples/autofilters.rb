@@ -8,7 +8,6 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
 def get_data
   [
@@ -72,7 +71,7 @@ end
 
 xlsfile = 'autofilters.xls'
 
-workbook = WriteExcel.new(xlsfile)
+workbook = Spreadsheet::WriteExcel.new(xlsfile)
 bp=1
 
 worksheet1 = workbook.add_worksheet

@@ -9,9 +9,9 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require "spreadsheet/workbook"
+require "writeexcel/workbook"
 
-module Spreadsheet
+class Spreadsheet
   class WriteExcel < Workbook
     VERSION = "0.1.0"
   end

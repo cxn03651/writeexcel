@@ -11,12 +11,7 @@ if base == "test" || base =~ /spreadsheet/i
 end
 
 require "test/unit"
-require "biffwriter"
-require "olewriter"
-require "workbook"
-require "worksheet"
-require "format"
-require 'formula'
+require "writeexcel"
 
 class TC_Chart < Test::Unit::TestCase
 

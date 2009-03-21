@@ -9,9 +9,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook = WriteExcel.new("regions.xls")
+workbook = Spreadsheet::WriteExcel.new("regions.xls")
 
 # Add some worksheets
 north = workbook.add_worksheet("North")

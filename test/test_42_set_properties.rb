@@ -6,17 +6,10 @@
 # reverse('©'), September 2005, John McNamara, jmcnamara@cpan.org
 #
 #########################################################################
-base = File.basename(Dir.pwd)
-if base == "test" || base =~ /spreadsheet/i
-  Dir.chdir("..") if base == "test"
-  $LOAD_PATH.unshift(Dir.pwd + "/lib/spreadsheet")
-  Dir.chdir("test") rescue nil
-end
+$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require 'test/unit'
 require 'writeexcel'
-include Spreadsheet
-
 
 class TC_set_properties < Test::Unit::TestCase
 
@@ -24,7 +17,7 @@ class TC_set_properties < Test::Unit::TestCase
     test_file = 'temp_test_file.xls'
     smiley = '☺'   # chr 0x263A;    in perl
     
-    workbook  = WriteExcel.new(test_file)
+    workbook  = Spreadsheet::WriteExcel.new(test_file)
     worksheet = workbook.add_worksheet
 
     ###############################################################################

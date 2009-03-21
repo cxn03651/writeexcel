@@ -9,9 +9,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook  = WriteExcel.new('data_validate.xls')
+workbook  = Spreadsheet::WriteExcel.new('data_validate.xls')
 worksheet = workbook.add_worksheet
 
 # Add a format for the header cells.

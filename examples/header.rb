@@ -35,9 +35,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook  = WriteExcel.new("headers.xls")
+workbook  = Spreadsheet::WriteExcel.new("headers.xls")
 preview   = "Select Print Preview to see the header and footer"
 
 

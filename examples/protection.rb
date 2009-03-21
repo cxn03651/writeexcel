@@ -9,9 +9,8 @@
 #
 
 require 'writeexcel'
-include Spreadsheet
 
-workbook  = WriteExcel.new("protection.xls")
+workbook  = Spreadsheet::WriteExcel.new("protection.xls")
 worksheet = workbook.add_worksheet
 
 # Create some format objects

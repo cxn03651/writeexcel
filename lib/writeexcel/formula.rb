@@ -12,7 +12,7 @@
 #
 require 'nkf'
 require 'strscan'
-require 'excelformulaparser'
+require 'writeexcel/excelformulaparser'
 
 class Formula < ExcelFormulaParser
 
