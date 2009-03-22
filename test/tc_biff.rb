@@ -9,8 +9,11 @@ class TC_BIFFWriter < Test::Unit::TestCase
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
 
   def setup
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file  = File.join(Dir.tmpdir, path)
     @biff = BIFFWriter.new
-    @ruby_file = "delete_me"
+    @ruby_file = @test_file
   end
 
   def test_append_no_error

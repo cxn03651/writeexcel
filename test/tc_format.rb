@@ -9,7 +9,9 @@ class TC_Format < Test::Unit::TestCase
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
 
   def setup
-    @ruby_file = "xf_test"
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @ruby_file  = File.join(Dir.tmpdir, path)
     @format = Format.new
   end
 

@@ -7,7 +7,11 @@
 #
 # reverse('©'), August 2008, John McNamara, jmcnamara@cpan.org
 #
+# original written in Perl by John McNamara
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
 
+require 'rubygems'
 require 'writeexcel'
 
 workbook  = Spreadsheet::WriteExcel.new('data_validate.xls')

@@ -6,7 +6,9 @@ require "writeexcel"
 class TC_OLE < Test::Unit::TestCase
 
   def setup
-    @file = "test.ole"
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @file  = File.join(Dir.tmpdir, path)
     @ole  = OLEWriter.new(@file)
   end
 

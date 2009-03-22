@@ -5,6 +5,10 @@
 # Example of how to use the format copying method with Spreadsheet::WriteExcel #
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
+# original written in Perl by John McNamara
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
+require 'rubygems'
 require 'writeexcel'
 
 # Create workbook1

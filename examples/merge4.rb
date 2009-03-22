@@ -7,7 +7,11 @@
 #
 # reverse('©'), September 2002, John McNamara, jmcnamara@cpan.org
 #
+# original written in Perl by John McNamara
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
 
+require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet

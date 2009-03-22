@@ -9,8 +9,11 @@ class TC_example_match < Test::Unit::TestCase
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
 
   def setup
-    @filename  = File.join(TEST_DIR, "tc_example_match.xls")
-    @filename2 = File.join(TEST_DIR, "tc_example_match2.xls")
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file  = File.join(Dir.tmpdir, path)
+    @filename  = @test_file
+    @filename2 = @test_file + "2"
   end
 
   def teardown
