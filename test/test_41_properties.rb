@@ -9,6 +9,7 @@
 $LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require 'test/unit'
+require 'rubygems'
 require 'writeexcel'
 
 class TC_properties < Test::Unit::TestCase
