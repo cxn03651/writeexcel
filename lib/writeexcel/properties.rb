@@ -11,7 +11,7 @@
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 
-require 'ole/types'
+require 'date'
 
 ###############################################################################
 #
@@ -199,8 +199,15 @@ def pack_VT_LPSTR(str, codepage)
       length      = byte_string.length
     elsif codepage == 0xFDE9
       # UTF-8
-      byte_string = string
-      length      = byte_string.length
+      nonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
+      if string =~ nonAscii
+        require 'jcode'
+        byte_string = string
+        length = byte_string.jlength
+      else
+        byte_string = string
+        length = byte_string.length
+      end
     else
       raise "Unknown codepage: codepage\n"
     end
@@ -224,5 +231,20 @@ end
 #
 def pack_VT_FILETIME(localtime)
   type        = 0x0040
-  [type].pack('V') + Ole::Types::FileTime.dump(localtime)
+  
+  epoch = DateTime.new(1601, 1, 1)
+
+  datetime = DateTime.new(
+                localtime.year,
+                localtime.mon,
+                localtime.mday,
+                localtime.hour,
+                localtime.min,
+                localtime.sec,
+                localtime.usec
+              )
+  bignum = (datetime - epoch) * 86400 * 1e7.to_i
+  high, low = bignum.divmod 1 << 32
+  
+  [type].pack('V') + [low, high].pack('V2')
 end

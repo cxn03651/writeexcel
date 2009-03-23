@@ -628,6 +628,10 @@ class Workbook < BIFFWriter
     unless params[:utf8].nil?
       return 0xFDE9
     else
+      strings.each do |string|
+        next unless params.has_key?(string.to_sym)
+        return 0xFDE9 if params[string.to_sym] =~ NonAscii
+      end
       return 0x04E4; # Default codepage, Latin 1.
     end
   end
