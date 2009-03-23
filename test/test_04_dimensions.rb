@@ -6,6 +6,9 @@
 #
 # reverse('©'), October 2007, John McNamara, jmcnamara@cpan.org
 #
+# original written in Perl by John McNamara
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
 ############################################################################
 $LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
