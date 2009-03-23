@@ -32,7 +32,8 @@ class Workbook < BIFFWriter
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
   attr_reader :data
   attr_writer :mso_size
-
+  attr_accessor :localtime
+  
   ###############################################################################
   #
   # new()
