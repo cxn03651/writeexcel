@@ -95,7 +95,7 @@ def create_doc_summary_property_set(properties)
     offset_1 = [0x0044 + data_len].pack('V')
 
     # We will use a static property set stream rather than try to generate it.
-    property_data_1 = %w(
+    property_data_1 = [%w(
         98 00 00 00 03 00 00 00 00 00 00 00 20 00 00 00
         01 00 00 00 36 00 00 00 02 00 00 00 3E 00 00 00
         01 00 00 00 02 00 00 00 0A 00 00 00 5F 50 49 44
@@ -106,7 +106,7 @@ def create_doc_summary_property_set(properties)
         30 00 33 00 44 00 2D 00 39 00 31 00 30 00 46 00
         41 00 44 00 46 00 41 00 37 00 30 00 31 00 42 00
         7D 00 00 00 00 00 00 00 2D 00 39 00 30 00 33 00
-    ).join('').pack('H*')
+    ).join('')].pack('H*')
 
     return  byte_order         +
             version            +

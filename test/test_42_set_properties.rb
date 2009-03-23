@@ -85,6 +85,33 @@ class TC_set_properties < Test::Unit::TestCase
     result     = workbook.get_property_set_codepage(params, strings)
     assert_equal(target, result, caption)
 
+  ###############################################################################
+  #
+  # Note, the "created => nil" parameters in some of the following tests is
+  # used to avoid adding the default date to the property sets.
+  
+  
+  ###############################################################################
+  #
+  # Test 4. Codepage only.
+  #
+  
+  workbook.set_properties(
+                              :created     => nil
+                           )
+  
+  caption    = " \tset_properties(codepage)"
+  target     = %w(
+                              FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
+                              00 00 00 00 00 00 00 00 01 00 00 00 E0 85 9F F2
+                              F9 4F 68 10 AB 91 08 00 2B 27 B3 D9 30 00 00 00
+                              18 00 00 00 01 00 00 00 01 00 00 00 10 00 00 00
+                              02 00 00 00 E4 04 00 00
+                 ).join(' ')
+  
+  result     = unpack_record( workbook.summary )
+  assert_equal(target, result, caption)
+
   end
 
   ###############################################################################

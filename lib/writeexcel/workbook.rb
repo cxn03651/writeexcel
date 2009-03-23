@@ -27,6 +27,7 @@ class Workbook < BIFFWriter
 
   attr_accessor :date_system, :str_unique, :biff_only
   attr_reader :encoding, :url_format, :parser, :tempdir, :date_1904, :compatibility
+  attr_reader :summary
   attr_accessor :activesheet, :firstsheet, :str_total, :str_unique, :str_table
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
   attr_reader :data
@@ -527,12 +528,9 @@ class Workbook < BIFFWriter
   # Set the document properties such as Title, Author etc. These are written to
   # property sets in the OLE container.
   #
-  def set_properties(*args)
+  def set_properties(params)
     # Ignore if no args were passed.
-    return -1 unless args.size == 0
-
-    # Allow the parameters to be passed as a hash or hash ref.
-    param = args[0].kind_of?(Hash) ? args[0] : Hash[*args]
+    return -1 if !params.kind_of?(Hash) || params.empty?
 
     # List of valid input parameters.
     properties = {
@@ -551,15 +549,15 @@ class Workbook < BIFFWriter
     }
 
     # Check for valid input parameters.
-    param.each_key do |k|
+    params.each_key do |k|
       unless properties.has_key?(k)
         raise "Unknown parameter '#{k}' in set_properties()";
       end
     end
 
     # Set the creation time unless specified by the user.
-    unless param.has_key(:created)
-      param[:created] = @localtime
+    unless params.has_key?(:created)
+      params[:created] = @localtime
     end
 
     #
@@ -568,18 +566,18 @@ class Workbook < BIFFWriter
 
     # Get the codepage of the strings in the property set.
     strings = ["title", "subject", "author", "keywords",  "comments", "last_author"]
-    param[:codepage] = get_property_set_codepage(param, strings)
+    params[:codepage] = get_property_set_codepage(params, strings)
 
     # Create an array of property set values.
     property_sets = []
     strings.unshift("codepage")
     strings.push("created")
     strings.each do |property|
-      if param.has_key?(property) && !param[property].nil?
+      if params.has_key?(property.to_sym) && !params[property.to_sym].nil?
         property_sets.push(
-        [ properties[property][0],
-          properties[property][1],
-        param[property]  ]
+        [ properties[property.to_sym][0],
+          properties[property.to_sym][1],
+        params[property.to_sym]  ]
         )
       end
     end
@@ -593,17 +591,17 @@ class Workbook < BIFFWriter
 
     # Get the codepage of the strings in the property set.
     strings = ["category", "manager", "company"]
-    param[:codepage] = get_property_set_codepage(param, strings)
+    params[:codepage] = get_property_set_codepage(params, strings)
 
     # Create an array of property set values.
     property_sets = []
 
     ["codepage", "category", "manager", "company"].each do |property|
-      if param.has_key?(property) && !param[property].nil?
+      if params.has_key?(property.to_sym) && !params[property.to_sym].nil?
         property_sets.push(
-        [ properties[property][0],
-          properties[property][1],
-        param[property]  ]
+        [ properties[property.to_sym][0],
+          properties[property.to_sym][1],
+        params[property.to_sym]  ]
         )
       end
     end
