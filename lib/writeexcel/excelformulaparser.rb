@@ -285,14 +285,14 @@ Racc_debug_parser = false
 
 # reduce 1 omitted
 
-module_eval(<<'.,.,', 'excelformula.y', 16)
+module_eval(<<'.,.,', 'excelformula.y', 20)
   def _reduce_2(val, _values, result)
      result = [] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 17)
+module_eval(<<'.,.,', 'excelformula.y', 21)
   def _reduce_3(val, _values, result)
      result.push val[1], '_arg', '1' 
     result
@@ -301,84 +301,84 @@ module_eval(<<'.,.,', 'excelformula.y', 17)
 
 # reduce 4 omitted
 
-module_eval(<<'.,.,', 'excelformula.y', 20)
+module_eval(<<'.,.,', 'excelformula.y', 24)
   def _reduce_5(val, _values, result)
      result = [ val[0], val[2], 'ptgAdd' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 21)
+module_eval(<<'.,.,', 'excelformula.y', 25)
   def _reduce_6(val, _values, result)
      result = [ val[0], val[2], 'ptgSub' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 22)
+module_eval(<<'.,.,', 'excelformula.y', 26)
   def _reduce_7(val, _values, result)
      result = [ val[0], val[2], 'ptgMul' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 23)
+module_eval(<<'.,.,', 'excelformula.y', 27)
   def _reduce_8(val, _values, result)
      result = [ val[0], val[2], 'ptgDiv' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 24)
+module_eval(<<'.,.,', 'excelformula.y', 28)
   def _reduce_9(val, _values, result)
      result = [ val[0], val[2], 'ptgPower' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 25)
+module_eval(<<'.,.,', 'excelformula.y', 29)
   def _reduce_10(val, _values, result)
      result = [ val[0], val[2], 'ptgConcat' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 26)
+module_eval(<<'.,.,', 'excelformula.y', 30)
   def _reduce_11(val, _values, result)
      result = [ val[0], val[2], 'ptgLT' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 27)
+module_eval(<<'.,.,', 'excelformula.y', 31)
   def _reduce_12(val, _values, result)
      result = [ val[0], val[2], 'ptgGT' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 28)
+module_eval(<<'.,.,', 'excelformula.y', 32)
   def _reduce_13(val, _values, result)
      result = [ val[0], val[2], 'ptgLE' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 29)
+module_eval(<<'.,.,', 'excelformula.y', 33)
   def _reduce_14(val, _values, result)
      result = [ val[0], val[2], 'ptgGE' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 30)
+module_eval(<<'.,.,', 'excelformula.y', 34)
   def _reduce_15(val, _values, result)
      result = [ val[0], val[2], 'ptgNE' ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 31)
+module_eval(<<'.,.,', 'excelformula.y', 35)
   def _reduce_16(val, _values, result)
      result = [ val[0], val[2], 'ptgEQ' ] 
     result
@@ -387,72 +387,72 @@ module_eval(<<'.,.,', 'excelformula.y', 31)
 
 # reduce 17 omitted
 
-module_eval(<<'.,.,', 'excelformula.y', 34)
+module_eval(<<'.,.,', 'excelformula.y', 38)
   def _reduce_18(val, _values, result)
-     result = [ val[1], '_arg', '1', '_ptgParen'] 
+     result = [ val[1], '_arg', '1', 'ptgParen'] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 35)
+module_eval(<<'.,.,', 'excelformula.y', 39)
   def _reduce_19(val, _values, result)
-     result = [ -1, val[1], '_ptgMul' ] 
+     result = [ '_num', '-1', val[1], 'ptgMul' ] 
     result
   end
 .,.,
 
 # reduce 20 omitted
 
-module_eval(<<'.,.,', 'excelformula.y', 37)
+module_eval(<<'.,.,', 'excelformula.y', 41)
   def _reduce_21(val, _values, result)
      result = [ '_num',     val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 38)
+module_eval(<<'.,.,', 'excelformula.y', 42)
   def _reduce_22(val, _values, result)
      result = [ '_str',     val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 39)
+module_eval(<<'.,.,', 'excelformula.y', 43)
   def _reduce_23(val, _values, result)
      result = [ '_ref2d',   val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 40)
+module_eval(<<'.,.,', 'excelformula.y', 44)
   def _reduce_24(val, _values, result)
      result = [ '_ref3d',   val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 41)
+module_eval(<<'.,.,', 'excelformula.y', 45)
   def _reduce_25(val, _values, result)
      result = [ '_range2d', val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 42)
+module_eval(<<'.,.,', 'excelformula.y', 46)
   def _reduce_26(val, _values, result)
      result = [ '_range3d', val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 43)
+module_eval(<<'.,.,', 'excelformula.y', 47)
   def _reduce_27(val, _values, result)
      result = [ 'ptgBool',  '1'    ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 44)
+module_eval(<<'.,.,', 'excelformula.y', 48)
   def _reduce_28(val, _values, result)
      result = [ 'ptgBool',  '0'    ] 
     result
@@ -461,28 +461,28 @@ module_eval(<<'.,.,', 'excelformula.y', 44)
 
 # reduce 29 omitted
 
-module_eval(<<'.,.,', 'excelformula.y', 47)
+module_eval(<<'.,.,', 'excelformula.y', 51)
   def _reduce_30(val, _values, result)
      result = [ '_class', val[0], val[2], '_arg', val[2].size.to_s, '_func', val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 48)
+module_eval(<<'.,.,', 'excelformula.y', 52)
   def _reduce_31(val, _values, result)
      result = [ '_func', val[0] ] 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 50)
+module_eval(<<'.,.,', 'excelformula.y', 54)
   def _reduce_32(val, _values, result)
      result = val 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'excelformula.y', 51)
+module_eval(<<'.,.,', 'excelformula.y', 55)
   def _reduce_33(val, _values, result)
      result.push val[2] 
     result

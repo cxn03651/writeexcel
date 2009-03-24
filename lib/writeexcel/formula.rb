@@ -81,6 +81,7 @@ class Formula < ExcelFormulaParser
     #
     while (!args.empty?)
       token = args.shift
+bpp=1
 
       if (token == '_arg')
         num_args = args.shift
@@ -193,6 +194,7 @@ class Formula < ExcelFormulaParser
   def parse(formula)
     @q = scan(formula)
     @q.push [false, nil]
+@yydebug=true
     do_parse
   end
 
@@ -261,12 +263,24 @@ class Formula < ExcelFormulaParser
 
   ###############################################################################
   #
+  # _convert_volatile()
+  #
+  # Convert _vol to a ptgAttr tag formatted to indicate that the formula contains
+  # a volatile function. See _check_volatile()
+  #
+  def convert_volatile
+      # Set bitFattrSemi flag to indicate volatile function, "w" is set to zero.
+      return [@ptg['ptgAttr'], 0x1, 0x0].pack("CCv")
+  end
+
+  ###############################################################################
+  #
   # _convert_bool()
   #
   # Convert a boolean token to ptgBool
   #
   def convert_bool(bool)
-    return [@ptg['ptgBool'], bool].pack("CC")
+    return [@ptg['ptgBool'], bool.to_i].pack("CC")
   end
 
 

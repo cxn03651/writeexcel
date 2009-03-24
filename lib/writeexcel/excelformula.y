@@ -36,8 +36,8 @@ rule
                | expr '=' expr        { result = [ val[0], val[2], 'ptgEQ' ] }
                | primary
 
-  primary      : '(' expr ')'         { result = [ val[1], '_arg', '1', '_ptgParen'] }
-               | '-' expr  = UMINUS   { result = [ -1, val[1], '_ptgMul' ] }
+  primary      : '(' expr ')'         { result = [ val[1], '_arg', '1', 'ptgParen'] }
+               | '-' expr  = UMINUS   { result = [ '_num', '-1', val[1], 'ptgMul' ] }
                | FUNC
                | NUMBER               { result = [ '_num',     val[0] ] }
                | STRING               { result = [ '_str',     val[0] ] }

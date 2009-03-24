@@ -44,7 +44,6 @@
  Example Code:
 
     require 'writeexcel'
-    include Spreadsheet
 
     # Create a new Excel Workbook
     workbook = WriteExcel.new('ruby.xls')
@@ -79,7 +78,7 @@
 
 == Dependencies
 
- * ruby 1.8.6
+ * ruby 1.8
  * ruby-ole (you can install via rubygem)
 
 == Author
