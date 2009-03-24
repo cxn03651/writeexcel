@@ -81,7 +81,6 @@ class Formula < ExcelFormulaParser
     #
     while (!args.empty?)
       token = args.shift
-bpp=1
 
       if (token == '_arg')
         num_args = args.shift

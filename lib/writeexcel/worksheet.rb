@@ -1874,7 +1874,7 @@ attr_reader :compatibility
 
     row       = args[0]      # Zero indexed row
     col       = args[1]      # Zero indexed column
-    formula   = args[2]      # The formula text string
+    formula   = args[2].dup  # The formula text string
     value     = args[4]      # The formula text string
 
 
@@ -1898,8 +1898,6 @@ attr_reader :compatibility
 
     # Strip the = sign at the beginning of the formula string
     formula.sub!(/^=/, '')
-
-    tmp     = formula
 
     # Parse the formula using the parser in Formula.pm
     # nakamura add:  to get byte_stream, set second arg TRUE
