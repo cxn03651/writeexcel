@@ -185,7 +185,7 @@ attr_reader :compatibility
     @print_scale         = 100
     @page_view           = 0
 
-    @leading_zeros       = 0
+    @leading_zeros       = false
 
     @outline_row_level   = 0
     @outline_style       = 0
@@ -1192,12 +1192,8 @@ attr_reader :compatibility
   # Causes the write() method to treat integers with a leading zero as a string.
   # This ensures that any leading zeros such, as in zip codes, are maintained.
   #
-  def keep_leading_zeros(val = nil)
-    if val.nil?
-      @leading_zeros = 1
-    else
-      @leading_zeros = val
-    end
+  def keep_leading_zeros(val = true)
+    @leading_zeros = val
   end
 
   ###############################################################################
@@ -1335,7 +1331,7 @@ attr_reader :compatibility
   #    worksheet.write('A12', '=A3 + 3*A4'               )  # write_formula()
   #    worksheet.write('A13', '=SIN(PI()/4)'             )  # write_formula()
   #    worksheet.write('A14', ['name', 'company']        )  # write_row()
-  #    worksheet.write('A15', [\@array]                  )  # write_col()
+  #    worksheet.write('A15', [ ['name', 'company'] ]    )  # write_col()
 
   def write(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -1362,11 +1358,7 @@ attr_reader :compatibility
     # Match an array ref.
     if token.kind_of?(Array)
       return write_row(*args)
-      # Match integer with leading zero(s)
-    elsif @leading_zeros != 0 and token =~ /^0\d+$/
-      return write_string(*args)
-      # Match number
-    elsif token.to_s =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+    elsif token.kind_of?(Numeric)
       return write_number(*args)
       # Match http, https or ftp URL
     elsif token =~ %r|^[fh]tt?ps?://|    and @writing_url == 0
