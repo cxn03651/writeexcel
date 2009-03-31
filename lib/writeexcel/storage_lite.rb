@@ -2,18 +2,18 @@ require 'tempfile'
 require 'stringio'
 
 class OLEStorageLite
-  PPS_TYPE_ROOT  5
-  PPS_TYPE_DIR   1
-  PPS_TYPE_FILE  2
-  DATA_SIZE_SMALL 0x1000
-  LONG_INT_SIZE  4
-  PPS_SIZE       0x80
+  PPS_TYPE_ROOT   = 5
+  PPS_TYPE_DIR    = 1
+  PPS_TYPE_FILE   = 2
+  DATA_SIZE_SMALL = 0x1000
+  LONG_INT_SIZE   = 4
+  PPS_SIZE        = 0x80
 
   def asc2ucs(str)
     str.split(//).join("\0") + "\0"
   end
 
-  def usc2asc(str)
+  def ucs2asc(str)
     ary = str.unpack('v*').map { |s| [s].pack('c')}
     ary.join('')
   end
@@ -22,6 +22,7 @@ end
 class OLEStorageLitePPS < OLEStorageLite
   attr_accessor :no, :name, :type, :prev_pps, :next_pps, :dir_pps
   attr_accessor :time_1st, :time_2nd, :start_block, :size, :data, :child
+  attr_reader   :pps_file
 
   def initialize(iNo, sNm, iType, iPrev, iNext, iDir,
                  raTime1st, raTime2nd, iStart, iSize, sData, raChild)
@@ -46,7 +47,7 @@ class OLEStorageLitePPS < OLEStorageLite
   
     aList.each do |pps|
       #1. Make SBD, small data string
-      if (pps.type == PPS_TYPE_FILE
+      if pps.type == PPS_TYPE_FILE
         next if pps.size <= 0
         if pps.size < rh_info[:small_size]
           iSmbCnt  = pps.size / rh_info[:small_block_size]
@@ -55,12 +56,12 @@ class OLEStorageLitePPS < OLEStorageLite
           0.upto(iSmbCnt-1-1) do |i|
             file.write([i + iSmBlk+1].pack("V"))
           end
-          file.write([-2].pack("V")
+          file.write([-2].pack("V"))
           
           #1.2 Add to Data String(this will be written for RootEntry)
           #Check for update
           sRes = ''
-          if(pps.pps_file)
+          if pps.pps_file
             pps.pps_file.seek(0) #To The Top
             while sBuff = pps.pps_file.read(4096)
               sRes << sBuff
@@ -144,7 +145,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
 
     #3.Make Small Data string (write SBD)
     # Small Datas become RootEntry Data
-    @data = _makeSmallData(\@aList, rh_info)
+    @data = _makeSmallData(aList, rh_info)
 
     #4. Write BB
     iBBlk = iSBDcnt
@@ -261,9 +262,9 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
       cnt = i1stBdL
       cnt = iBdCnt if iBdCnt < i1stBdL
       0.upto(cnt-1) do |i|
-        file.write([iAll + i].pack("V")
+        file.write([iAll + i].pack("V"))
       end
-      file.write([-1].pack("V") * i1stBdL - cnt if cnt < i1stBdL
+      file.write([-1].pack("V") * (i1stBdL - cnt)) if cnt < i1stBdL
   end
   private :_saveHeader
 
@@ -337,10 +338,10 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
 end
 
 class OLEStorageLitePPSFile < OLEStorageLitePPS
-  def initialize(sNm, data)
+  def initialize(sNm, data = '')
     super(
         nil,
-        sNm,
+        sNm || '',
         PPS_TYPE_FILE,
         nil,
         nil,
@@ -349,7 +350,7 @@ class OLEStorageLitePPSFile < OLEStorageLitePPS
         nil,
         nil,
         nil,
-        data,
+        data || '',
         nil
       )
   end
@@ -371,6 +372,7 @@ class OLEStorageLitePPSFile < OLEStorageLitePPS
   end
 
   def append (data)
+    return if data.nil?
     if @pps_file
       @pps_file << data
     else
