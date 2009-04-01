@@ -18,7 +18,7 @@ require 'writeexcel/format'
 require 'writeexcel/worksheet'
 require 'writeexcel/properties'
 require 'digest/md5'
-require 'ole/file_system'
+require 'writeexcel/storage_lite'
 
 class Workbook < BIFFWriter
   BOF = 11
@@ -87,6 +87,8 @@ class Workbook < BIFFWriter
     @compatibility         = 0
 
     @add_doc_properties    = 0
+    @summary               = ''
+    @doc_summary           = ''
     @localtime             = Time.now
 
     # Add the in-built style formats and the default cell format.
@@ -577,9 +579,9 @@ class Workbook < BIFFWriter
     strings.each do |property|
       if params.has_key?(property.to_sym) && !params[property.to_sym].nil?
         property_sets.push(
-        [ properties[property.to_sym][0],
-          properties[property.to_sym][1],
-        params[property.to_sym]  ]
+          [ properties[property.to_sym][0],
+            properties[property.to_sym][1],
+          params[property.to_sym]  ]
         )
       end
     end
@@ -714,6 +716,7 @@ class Workbook < BIFFWriter
   #
   def store_OLE_file
     maxsize = 7_087_104
+    maxsize = 1
 
     if @add_doc_properties == 0 && @biffsize <= maxsize
       # Write the OLE file using OLEwriter if data <= 7MB
@@ -740,72 +743,53 @@ class Workbook < BIFFWriter
 
       return ole.close
     else
-      fh = open(@filename, 'wb+')
-      Ole::Storage.open fh do |ole|
-        ole.file.open 'Workbook', 'w' do |writer|
-          while tmp = get_data
-            writer.write(tmp)
-          end
-          @worksheets.each do |worksheet|
-            while tmp = worksheet.get_data
-              writer.write(tmp)
-            end
-          end
-        end
-      end
-    end
-  end
-=begin
       # Write the OLE file using ruby-ole if data > 7MB
    
       # Create the Workbook stream.
       stream   = 'Workbook'.unpack('C*').pack('v*')
-      workbook = OLE::Storage_Lite::PPS::File->newFile($stream);
+      workbook = OLEStorageLitePPSFile.new(stream)
+      workbook.set_file   # use tempfile
    
-      while (my $tmp = $self->get_data()) {
-         $workbook->append($tmp);
-      }
+      while tmp = get_data
+        workbook.append(tmp)
+      end
    
-      foreach my $worksheet (@{$self->{_worksheets}}) {
-        while (my $tmp = $worksheet->get_data()) {
-              $workbook->append($tmp);
-         }
-      }
+      @worksheets.each do |worksheet|
+        while tmp = worksheet.get_data
+          workbook.append(tmp)
+        end
+      end
    
-      push @streams, $workbook;
-   
-   
+      streams = []
+      streams << workbook
+
       # Create the properties streams, if any.
-      if ($self->{_add_doc_properties}) {
-        my $stream;
-        my $summary;
+      if @add_doc_properties != 0
+        stream  = "\5SummaryInformation".unpack('C*').pack('v*')
+        summary = OLEStorageLitePPSFile.new(stream, @summary)
+        streams << summary
    
-        $stream  = pack 'v*', unpack 'C*', "\5SummaryInformation";
-        $summary = $self->{summary};
-        $summary = OLE::Storage_Lite::PPS::File->new($stream, $summary);
-        push @streams, $summary;
-   
-        $stream  = pack 'v*', unpack 'C*', "\5DocumentSummaryInformation";
-        $summary = $self->{doc_summary};
-        $summary = OLE::Storage_Lite::PPS::File->new($stream, $summary);
-        push @streams, $summary;
-      }
+        stream  = "\5DocumentSummaryInformation".unpack('C*').pack('v*')
+        summary = OLEStorageLitePPSFile.new(stream, @doc_summary)
+        streams << summary
+      end
    
       # Create the OLE root document and add the substreams.
-      my @localtime = @{ $self->{_localtime} };
-      splice(@localtime, 6);
+      localtime = @localtime.to_a[0..5]
+      localtime[4] -= 1  # month
+      localtime[5] -= 1900
    
-      my $ole_root = OLE::Storage_Lite::PPS::Root->new(\@localtime,
-                                                          \@localtime,
-                                                          \@streams);
-      $ole_root->save($self->{_filename});
-   
-   
+      ole_root = OLEStorageLitePPSRoot.new(
+                     localtime,
+                     localtime,
+                     streams
+                   )
+      ole_root.save(@filename)
+
       # Close the filehandle if it was created internally.
-      return CORE::close($self->{_fh_out}) if $self->{_internal_fh};
-    end
-  end
-=end
+      return @fh_out.close if @internal_fh != 0
+    end 
+  end 
 
   ###############################################################################
   #
