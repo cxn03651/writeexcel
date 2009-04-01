@@ -17,11 +17,20 @@ require 'writeexcel'
 
 class TC_set_properties < Test::Unit::TestCase
 
+  def setup
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
+  end
+
+  def teardown
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
+  end
+
   def test_same_as_previous_plus_creation_date
-    test_file = 'temp_test_file.xls'
     smiley = '☺'   # chr 0x263A;    in perl
     
-    workbook  = Spreadsheet::WriteExcel.new(test_file)
+    workbook  = Spreadsheet::WriteExcel.new(@test_file)
     worksheet = workbook.add_worksheet
 
     ###############################################################################
@@ -405,6 +414,8 @@ class TC_set_properties < Test::Unit::TestCase
   
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
+
+  workbook.close
 
   end
 
