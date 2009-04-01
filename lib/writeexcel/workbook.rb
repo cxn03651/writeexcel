@@ -716,7 +716,7 @@ class Workbook < BIFFWriter
   #
   def store_OLE_file
     maxsize = 7_087_104
-    maxsize = 1
+#    maxsize = 1
 
     if @add_doc_properties == 0 && @biffsize <= maxsize
       # Write the OLE file using OLEwriter if data <= 7MB
