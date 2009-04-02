@@ -93,7 +93,6 @@ class OLEStorageLitePPS < OLEStorageLite
           
           #1.2 Add to Data String(this will be written for RootEntry)
           #Check for update
-          sRes = ''
           if pps.pps_file
             pps.pps_file.seek(0) #To The Top
             while sBuff = pps.pps_file.read(4096)
@@ -394,6 +393,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
   def _savePpsSetPnt(pps_array, aList, rh_info)
     #1. make Array as Children-Relations
     #1.1 if No Children
+bpp=1
     if pps_array.nil? || pps_array.size == 0
         return 0xFFFFFFFF
     #1.2 Just Only one
@@ -406,17 +406,19 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
       return pps_array[0].no
     #1.3 Array
     else
-      iCnt = pps_array.size + 1
+      iCnt = pps_array.size
       #1.3.1 Define Center
       iPos = Integer(iCnt / 2.0)     #$iCnt
 
       aList.push(pps_array[iPos])
-      pps_array[iPos].no = aList.size
+      pps_array[iPos].no = aList.size - 1
       
-      aWk = pps_array
+      aWk = pps_array.dup
       #1.3.2 Devide a array into Previous,Next
       aPrev = aWk[0, iPos]
-      aNext = aWk[1, iCnt - iPos - 1] 
+      aWk[0..iPos-1] = nil
+      aNext = aWk[1, iCnt - iPos - 1]
+      aWk[1..(1 + iCnt - iPos -1 -1)] = nil
       pps_array[iPos].prev_pps = _savePpsSetPnt(aPrev, aList, rh_info)
       pps_array[iPos].next_pps = _savePpsSetPnt(aNext, aList, rh_info)
       pps_array[iPos].dir_pps  = _savePpsSetPnt(pps_array[iPos].child, aList, rh_info)
@@ -440,12 +442,13 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
       return pps_array[0].no
     #1.3 Array
     else
-      iCnt = pps_array.size + 1
+      iCnt = pps_array.size
       #1.3.1 Define Center
       iPos = 0  #int($iCnt/ 2);     #$iCnt
   
-      aWk = pps_array
+      aWk = pps_array.dup
       aPrev = aWk[1, 1]
+      aWk[1..1] = nil
       aNext = aWk[1..aWk.size]      #, $iCnt - $iPos -1);
       pps_array[iPos].prev_pps = _savePpsSetPnt2(pps_array, aList, rh_info)
       aList.push(pps_array[iPos])
