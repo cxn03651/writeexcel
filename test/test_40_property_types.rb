@@ -91,7 +91,7 @@ class TC_property_types < Test::Unit::TestCase
     assert_equal(target, result, caption)
   end
 
-  def test_pack_a_VT_LPSTR_string_and_check_for_padding_5
+  def test_pack_a_VT_LPSTR_string_and_check_for_padding_6
     string     = 'Username'
     codepage   = 0x04E4
     caption    = " \tDoc properties: _pack_VT_LPSTR('#{string}',\t#{codepage}')"

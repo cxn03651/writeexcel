@@ -979,9 +979,6 @@ Format properties directly using hashes.
 
 Note: this is not a copy constructor, both objects must exist prior to copying.
 =end
-  def test_copy
-  end
-
 
   def test_xf_biff_size
     perl_file = "#{PERL_OUTDIR}/file_xf_biff"
