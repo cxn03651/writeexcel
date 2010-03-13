@@ -320,7 +320,7 @@ class Formula < ExcelFormulaParser
       str = NKF.nkf('-w16L0 -m0 -W', str)
       encoding = 1
     end
-    
+
     exit "String in formula has more than 255 chars\n" if length > 255
 
     return [@ptg['ptgStr'], length, encoding].pack("CCC") + str
@@ -507,7 +507,7 @@ class Formula < ExcelFormulaParser
     if sheet_name =~ NonAscii
       sheet_name = NKF.nkf('-w16B0 -m0 -W', sheet_name)
     end
-    
+
     if @ext_sheets[sheet_name].nil?
       exit "Unknown sheet name #{sheet_name} in formula\n"
     else

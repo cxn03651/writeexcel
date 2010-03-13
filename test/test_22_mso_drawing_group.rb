@@ -61,7 +61,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
     @workbook.sheets.each do |sheet|
       sheet.object_ids.each {|id| result_ids.push(id) }
     end
-    
+
     assert_equal(target_ids, result_ids, caption)
 
   end

@@ -63,7 +63,7 @@ class Format
   #
   def initialize(xf_index = 0, properties = {})
     @xf_index       = xf_index
-  
+
     @type           = 0
     @font_index     = 0
     @font           = 'Arial'
@@ -133,7 +133,7 @@ class Format
   #
   def copy(other)
     return unless other.kind_of?(Format)
-  
+
     # copy properties except xf, merge_range, used_merge
     # Copy properties
     @type           = other.type
@@ -151,42 +151,42 @@ class Format
     @font_family    = other.font_family
     @font_charset   = other.font_charset
     @font_encoding  = other.font_encoding
-    
+
     @num_format     = other.num_format
     @num_format_enc = other.num_format_enc
-    
+
     @hidden         = other.hidden
     @locked         = other.locked
-    
+
     @text_h_align   = other.text_h_align
     @text_wrap      = other.text_wrap
     @text_v_align   = other.text_v_align
     @text_justlast  = other.text_justlast
     @rotation       = other.rotation
-    
+
     @fg_color       = other.fg_color
     @bg_color       = other.bg_color
-    
+
     @pattern        = other.pattern
-    
+
     @bottom         = other.bottom
     @top            = other.top
     @left           = other.left
     @right          = other.right
-    
+
     @bottom_color   = other.bottom_color
     @top_color      = other.top_color
     @left_color     = other.left_color
     @right_color    = other.right_color
-    
+
     @indent         = other.indent
     @shrink         = other.shrink
     @reading_order  = other.reading_order
-    
+
     @diag_type      = other.diag_type
     @diag_color     = other.diag_color
     @diag_border    = other.diag_border
-    
+
     @font_only      = other.font_only
 end
 
@@ -460,7 +460,7 @@ end
     if colour.kind_of?(Numeric)
       if colour < 0
         return 0x7FFF
-        
+
       # or an index < 8 mapped into the correct range,
       elsif colour < 8
         return (colour + 8).to_i

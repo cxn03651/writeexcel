@@ -22,13 +22,13 @@ class TC_26_autofilter < Test::Unit::TestCase
       expression = test['expression']
       tokens     = @worksheet.extract_filter_tokens(expression)
       tokens     = @worksheet.parse_filter_expression(expression, tokens)
-  
+
       result     = @worksheet.store_autofilter(column, *tokens)
-  
+
       target     = test['data'].join(" ")
-  
+
       caption    = " \tfilter_column(#{column}, '#{expression}')"
-  
+
       result     = unpack_record(result)
       assert_equal(target, result, caption)
     end
@@ -55,7 +55,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 00 00 84 32 0C 02 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -64,7 +64,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 01 00 84 32 0E 05 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -73,7 +73,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 02 00 80 32 04 04 6A BC 74 93 18 04
                                     F0 3F 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -82,7 +82,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                       9E 00 18 00 03 00 80 32 04 06 6A BC 74 93 18 04
                                     F0 3F 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -91,7 +91,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 04 00 80 32 04 01 6A BC 74 93 18 04
                                     F0 3F 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -100,7 +100,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 05 00 80 32 04 03 6A BC 74 93 18 04
                                     F0 3F 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -109,7 +109,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 06 00 80 32 04 04 6A BC 74 93 18 04
                                     F0 3F 04 03 1B 2F DD 24 06 01 14 40
-    
+
                                )]
         },
         {
@@ -118,7 +118,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 07 00 81 32 04 04 6A BC 74 93 18 04
                                     F0 3F 04 03 1B 2F DD 24 06 01 14 40
-    
+
                                )]
         },
         {
@@ -127,7 +127,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 08 00 80 32 04 05 35 5E BA 49 0C 02
                                     00 40 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -137,7 +137,7 @@ class TC_26_autofilter < Test::Unit::TestCase
                                     9E 00 1E 00 09 00 84 32 06 02 00 00 00 00 05 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 31 2E 30
                                     30 31
-    
+
                                )]
         },
         {
@@ -147,7 +147,7 @@ class TC_26_autofilter < Test::Unit::TestCase
                                     9E 00 1D 00 0A 00 84 32 06 02 00 00 00 00 04 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 57 65 73
                                     74
-    
+
                                )]
         },
         {
@@ -157,7 +157,7 @@ class TC_26_autofilter < Test::Unit::TestCase
                                     9E 00 1D 00 0B 00 84 32 06 02 00 00 00 00 04 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 45 61 73
                                     74
-    
+
                                )]
         },
         {
@@ -167,7 +167,7 @@ class TC_26_autofilter < Test::Unit::TestCase
                                     9E 00 1D 00 0C 00 80 32 06 05 00 00 00 00 04 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 57 65 73
                                     74
-    
+
                                )]
         },
         {
@@ -176,7 +176,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 1B 00 0D 00 80 32 06 02 00 00 00 00 02 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 62 2A
-    
+
                                )]
         },
         {
@@ -185,7 +185,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 1B 00 0E 00 80 32 06 05 00 00 00 00 02 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 62 2A
-    
+
                                )]
         },
         {
@@ -194,7 +194,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 1B 00 0F 00 80 32 06 02 00 00 00 00 02 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 2A 62
-    
+
                                )]
         },
         {
@@ -203,7 +203,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 1B 00 10 00 80 32 06 05 00 00 00 00 02 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 2A 62
-    
+
                                )]
         },
         {
@@ -212,7 +212,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 1C 00 11 00 80 32 06 02 00 00 00 00 03 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 2A 62 2A
-    
+
                                )]
         },
         {
@@ -221,7 +221,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 1C 00 12 00 80 32 06 05 00 00 00 00 03 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 2A 62 2A
-    
+
                                )]
         },
         {
@@ -230,7 +230,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 1C 00 13 00 80 32 06 02 00 00 00 00 03 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 66 6F 3F
-    
+
                                )]
         },
         {
@@ -240,7 +240,7 @@ class TC_26_autofilter < Test::Unit::TestCase
                                     9E 00 1D 00 14 00 80 32 06 02 00 00 00 00 04 00
                                     00 00 00 00 00 00 00 00 00 00 00 00 00 66 6F 7E
                                     3F
-    
+
                                )]
         },
         {
@@ -250,7 +250,7 @@ class TC_26_autofilter < Test::Unit::TestCase
                                     9E 00 22 00 15 00 8C 32 06 02 00 00 00 00 04 00
                                     00 00 06 02 00 00 00 00 04 00 00 00 00 45 61 73
                                     74 00 57 65 73 74
-    
+
                                )]
         },
         {
@@ -259,7 +259,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 16 00 30 05 04 06 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -268,7 +268,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 17 00 70 05 04 06 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -277,7 +277,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 18 00 10 05 04 03 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -286,7 +286,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 19 00 50 05 04 03 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -295,7 +295,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 1A 00 B0 02 04 06 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -304,7 +304,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 1B 00 30 32 04 06 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         },
         {
@@ -313,7 +313,7 @@ class TC_26_autofilter < Test::Unit::TestCase
             'data'          => [%w(
                                     9E 00 18 00 1C 00 B0 32 04 06 00 00 00 00 00 00
                                     00 00 00 00 00 00 00 00 00 00 00 00
-    
+
                                )]
         }
       ]

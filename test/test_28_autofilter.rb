@@ -22,9 +22,9 @@ class TC_28_autofilter < Test::Unit::TestCase
       expected   = test[1]
       tokens     = @worksheet.extract_filter_tokens(expression)
       result     = @worksheet.parse_filter_expression(expression, tokens)
-  
+
       testname   = expression || 'none'
-      
+
       assert_equal(expected, result, testname)
     end
   end

@@ -17,11 +17,20 @@ require 'writeexcel'
 
 class TC_set_properties < Test::Unit::TestCase
 
+  def setup
+    t = Time.now.strftime("%Y%m%d")
+    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
+    @test_file           = File.join(Dir.tmpdir, path)
+  end
+
+  def teardown
+    File.unlink(@test_file) if FileTest.exist?(@test_file)
+  end
+
   def test_same_as_previous_plus_creation_date
-    test_file = 'temp_test_file.xls'
     smiley = '☺'   # chr 0x263A;    in perl
-    
-    workbook  = Spreadsheet::WriteExcel.new(test_file)
+
+    workbook  = Spreadsheet::WriteExcel.new(@test_file)
     worksheet = workbook.add_worksheet
 
     ###############################################################################
@@ -41,7 +50,7 @@ class TC_set_properties < Test::Unit::TestCase
 
     caption    = " \t_get_property_set_codepage('latin1')"
     target     = 0x04E4
-    
+
     result     = workbook.get_property_set_codepage(params, strings)
     assert_equal(target, result, caption)
 
@@ -49,7 +58,7 @@ class TC_set_properties < Test::Unit::TestCase
     #
     # Test 2. _get_property_set_codepage() for manual utf8 strings.
     #
-    
+
     params =   {
                     :title       => 'Title',
                     :subject     => 'Subject',
@@ -59,7 +68,7 @@ class TC_set_properties < Test::Unit::TestCase
                     :last_author => 'Username',
                     :utf8        => 1,
             }
-    
+
     strings = %w(title subject author keywords comments last_author)
 
     caption    = " \t_get_property_set_codepage('utf8')"
@@ -80,12 +89,12 @@ class TC_set_properties < Test::Unit::TestCase
                     :comments    => 'Comments',
                     :last_author => 'Username',
                 }
-    
+
     strings = %w(title subject author keywords comments last_author)
 
     caption    = " \t_get_property_set_codepage('utf8')";
     target     = 0xFDE9;
-    
+
     result     = workbook.get_property_set_codepage(params, strings)
     assert_equal(target, result, caption)
 
@@ -93,17 +102,17 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Note, the "created => nil" parameters in some of the following tests is
   # used to avoid adding the default date to the property sets.
-  
-  
+
+
   ###############################################################################
   #
   # Test 4. Codepage only.
   #
-  
+
   workbook.set_properties(
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties(codepage)"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -112,7 +121,7 @@ class TC_set_properties < Test::Unit::TestCase
                               18 00 00 00 01 00 00 00 01 00 00 00 10 00 00 00
                               02 00 00 00 E4 04 00 00
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -120,12 +129,12 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Test 5. Same as previous + Title.
   #
-  
+
   workbook.set_properties(
                               :title       => 'Title',
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties('Title')"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -135,7 +144,7 @@ class TC_set_properties < Test::Unit::TestCase
                               02 00 00 00 20 00 00 00 02 00 00 00 E4 04 00 00
                               1E 00 00 00 06 00 00 00 54 69 74 6C 65 00 00 00
                 ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -143,13 +152,13 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Test 6. Same as previous + Subject.
   #
-  
+
   workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties('+ Subject')"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -161,7 +170,7 @@ class TC_set_properties < Test::Unit::TestCase
                               54 69 74 6C 65 00 00 00 1E 00 00 00 08 00 00 00
                               53 75 62 6A 65 63 74 00
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -169,14 +178,14 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Test 7. Same as previous + Author.
   #
-  
+
   workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :author      => 'Author',
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties('+ Author')"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -189,7 +198,7 @@ class TC_set_properties < Test::Unit::TestCase
                               1E 00 00 00 08 00 00 00 53 75 62 6A 65 63 74 00
                               1E 00 00 00 07 00 00 00 41 75 74 68 6F 72 00 00
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -197,7 +206,7 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Test 8. Same as previous + Keywords.
   #
-  
+
   workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
@@ -205,7 +214,7 @@ class TC_set_properties < Test::Unit::TestCase
                               :keywords    => 'Keywords',
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties('+ Keywords')"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -220,7 +229,7 @@ class TC_set_properties < Test::Unit::TestCase
                               41 75 74 68 6F 72 00 00 1E 00 00 00 09 00 00 00
                               4B 65 79 77 6F 72 64 73 00 00 00 00
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -228,7 +237,7 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Test 9. Same as previous + Comments.
   #
-  
+
   workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
@@ -237,7 +246,7 @@ class TC_set_properties < Test::Unit::TestCase
                               :comments    => 'Comments',
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties('+ Comments')"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -254,7 +263,7 @@ class TC_set_properties < Test::Unit::TestCase
                               00 00 00 00 1E 00 00 00 09 00 00 00 43 6F 6D 6D
                               65 6E 74 73 00 00 00 00
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -272,7 +281,7 @@ class TC_set_properties < Test::Unit::TestCase
                               :last_author => 'Username',
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties('+ Last author')"
   target     = %w(
                             FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -291,7 +300,7 @@ class TC_set_properties < Test::Unit::TestCase
                             1E 00 00 00 09 00 00 00 55 73 65 72 6E 61 6D 65
                             00 00 00 00
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -315,7 +324,7 @@ class TC_set_properties < Test::Unit::TestCase
                               :last_author => 'Username',
                               :created     => filetime
                            )
-  
+
   caption    = " \tset_properties('+ Creation date')"
   target     = %w(
                             FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -335,7 +344,7 @@ class TC_set_properties < Test::Unit::TestCase
                             55 73 65 72 6E 61 6D 65 00 00 00 00 40 00 00 00
                             80 74 89 21 52 02 C9 01
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -343,13 +352,13 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Test 12. Same as previous. Date set at the workbook level.
   #
-  
+
   # Wed Aug 20 00:20:13 2008
   # $sec,$min,$hour,$mday,$mon,$year
   # We normalise the time using timegm() so that the tests don't fail due to
   # different timezones.
   workbook.localtime  = Time.gm(2008,8,19,23,20,13)
-  
+
   workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
@@ -358,7 +367,7 @@ class TC_set_properties < Test::Unit::TestCase
                               :comments    => 'Comments',
                               :last_author => 'Username'
                            )
-  
+
   caption    = " \tset_properties('+ Creation date')"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -378,7 +387,7 @@ class TC_set_properties < Test::Unit::TestCase
                               55 73 65 72 6E 61 6D 65 00 00 00 00 40 00 00 00
                               80 74 89 21 52 02 C9 01
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
 
@@ -386,12 +395,12 @@ class TC_set_properties < Test::Unit::TestCase
   #
   # Test 14. UTF-8 string used.
   #
-  
+
   workbook.set_properties(
                               :title       => 'Title' + smiley,
                               :created     => nil
                            )
-  
+
   caption    = " \tset_properties(utf8)"
   target     = %w(
                               FE FF 00 00 05 01 02 00 00 00 00 00 00 00 00 00
@@ -402,9 +411,11 @@ class TC_set_properties < Test::Unit::TestCase
                               1E 00 00 00 09 00 00 00 54 69 74 6C 65 E2 98 BA
                               00 00 00 00
                  ).join(' ')
-  
+
   result     = unpack_record( workbook.summary )
   assert_equal(target, result, caption)
+
+  workbook.close
 
   end
 

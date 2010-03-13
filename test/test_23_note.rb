@@ -38,7 +38,7 @@ class TC_note < Test::Unit::TestCase
     encoding = data[5]
     visible  = data[6]
     obj_id   = 1
-    
+
     caption = sprintf(" \tstore_note")
     target  = %w(
         1C 00 0C 00 02 00 00 00 00 00 01 00 00 00 00 00
@@ -56,7 +56,7 @@ class TC_note < Test::Unit::TestCase
     encoding = data[5]
     visible  = data[6]
     obj_id   = 1
-    
+
     caption = sprintf(" \tstore_note")
     target  = %w(
         1C 00 14 00 02 00 00 00 00 00 01 00 08 00 00 55

@@ -29,7 +29,7 @@ class MaxSizeError < StandardError; end
 #
 # == Cell notation
 #
-# Spreadsheet::WriteExcel supports two forms of notation to designate 
+# Spreadsheet::WriteExcel supports two forms of notation to designate
 # the position of cells: Row-column notation and A1 notation. Row-column
 # notation uses a zero based index for both row and column while A1
 # notation uses the standard Excel alphanumeric sequence of column
@@ -185,7 +185,7 @@ attr_reader :compatibility
     @print_scale         = 100
     @page_view           = 0
 
-    @leading_zeros       = 0
+    @leading_zeros       = false
 
     @outline_row_level   = 0
     @outline_style       = 0
@@ -643,7 +643,7 @@ attr_reader :compatibility
       string = NKF.nkf('-w16B0 -m0 -W', string)
       encoding = 1
     end
-    
+
     if string.length >= limit
       #           carp 'Header string must be less than 255 characters';
       return
@@ -1192,12 +1192,8 @@ attr_reader :compatibility
   # Causes the write() method to treat integers with a leading zero as a string.
   # This ensures that any leading zeros such, as in zip codes, are maintained.
   #
-  def keep_leading_zeros(val = nil)
-    if val.nil?
-      @leading_zeros = 1
-    else
-      @leading_zeros = val
-    end
+  def keep_leading_zeros(val = true)
+    @leading_zeros = val
   end
 
   ###############################################################################
@@ -1335,7 +1331,7 @@ attr_reader :compatibility
   #    worksheet.write('A12', '=A3 + 3*A4'               )  # write_formula()
   #    worksheet.write('A13', '=SIN(PI()/4)'             )  # write_formula()
   #    worksheet.write('A14', ['name', 'company']        )  # write_row()
-  #    worksheet.write('A15', [\@array]                  )  # write_col()
+  #    worksheet.write('A15', [ ['name', 'company'] ]    )  # write_col()
 
   def write(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -1362,11 +1358,7 @@ attr_reader :compatibility
     # Match an array ref.
     if token.kind_of?(Array)
       return write_row(*args)
-      # Match integer with leading zero(s)
-    elsif @leading_zeros != 0 and token =~ /^0\d+$/
-      return write_string(*args)
-      # Match number
-    elsif token.to_s =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+    elsif token.kind_of?(Numeric)
       return write_number(*args)
       # Match http, https or ftp URL
     elsif token =~ %r|^[fh]tt?ps?://|    and @writing_url == 0
@@ -1538,7 +1530,7 @@ attr_reader :compatibility
   #
   def substitute_cellref(cell, *args)       #:nodoc:
     return [*args] if cell.kind_of?(Numeric)
-  
+
     cell.upcase!
 
     # Convert a column range: 'A:A' or 'B:G'.
@@ -1621,7 +1613,7 @@ attr_reader :compatibility
     breaks.size > 1000 ? breaks[0..999] : breaks
   end
   private :sort_pagebreaks
-  
+
   ###############################################################################
   #
   # _encode_password($password)
@@ -1633,7 +1625,7 @@ attr_reader :compatibility
     i = 0
     chars = password.split(//)
     count = chars.size
-  
+
     chars.each do |char|
       i += 1
       char     = char[0] << i
@@ -1642,13 +1634,13 @@ attr_reader :compatibility
       high_15  = high_15 >> 15
       char     = low_15 | high_15
     end
-  
+
     encoded_password  = 0x0000
     chars.each { |c| encoded_password ^= c }
     encoded_password ^= count
     encoded_password ^= 0xCE4B
   end
-  
+
   ###############################################################################
   #
   # outline_settings($visible, $symbols_below, $symbols_right, $auto_style)
@@ -1661,11 +1653,11 @@ attr_reader :compatibility
     @outline_below = args[1] || 1
     @outline_right = args[2] || 1
     @outline_style = args[3] || 0
-  
+
     # Ensure this is a boolean vale for Window2
     @outline_on    = 1 if @outline_on == 0
   end
-  
+
   ###############################################################################
   ###############################################################################
   #
@@ -1997,18 +1989,18 @@ attr_reader :compatibility
     # string                   # Formula string.
     strlen    = string.length  # Length of the formula string (chars).
     encoding  = 0              # String encoding.
-  
+
     # Handle utf8 strings in perl 5.8.
     if string =~ NonAscii
       string = NKF.nkf('-w16B0 -m0 -W', string)
       encoding = 1
     end
-  
+
     length    = 0x03 + string.length  # Length of the record data
 
     header    = [record, length].pack("vv")
     data      = [strlen, encoding].pack("vC")
-  
+
     return header . data . string
   end
   private :get_formula_string
@@ -3882,7 +3874,7 @@ attr_reader :compatibility
     prepend(header, data)
   end
   private :store_password
-  
+
   #
   # Note about compatibility mode.
   #
@@ -4359,7 +4351,7 @@ attr_reader :compatibility
     end
 
     add_str_total(1)
-    
+
     header = [record, length].pack("vv")
     data   = [row, col, xf, @str_table[str]].pack("vvvV")
 
@@ -4831,22 +4823,22 @@ attr_reader :compatibility
   def store_charts   #:nodoc:
       record          = 0x00EC           # Record identifier
       length          = 0x0000           # Bytes to follow
-  
+
       ids             = @object_ids.dup
       spid            = ids.shift
-  
+
       charts          = @charts_array
       num_charts      = charts.size
-  
+
       num_filters     = @filter_count
       num_comments    = @comments_array
-  
+
       # Number of objects written so far.
       num_objects     = @images_array.size
-  
+
       # Skip this if there aren't any charts.
       return if num_charts == 0
-  
+
       (0 .. num_charts-1 ).each do |i|
           row         =   charts[i][0]
           col         =   charts[i][1]
@@ -4857,10 +4849,10 @@ attr_reader :compatibility
           scale_y     =   charts[i][6]
           width       =   526
           height      =   319
-  
+
           width  *= scale_x if scale_x.kind_of?(Numeric) && scale_x != 0
           height *= scale_y if scale_y.kind_of?(Numeric) && scale_y != 0
-  
+
           # Calculate the positions of chart object.
           vertices = position_object( col,
                                       row,
@@ -4874,14 +4866,14 @@ attr_reader :compatibility
               # Write the parent MSODRAWIING record.
               dg_length    = 192 + 120*(num_charts -1)
               spgr_length  = 168 + 120*(num_charts -1)
-  
+
               dg_length   +=  96 *num_filters
               spgr_length +=  96 *num_filters
-  
+
               dg_length   += 128 *num_comments
               spgr_length += 128 *num_comments
-  
-  
+
+
               data        = store_mso_dg_container(dg_length)     +
                             store_mso_dg(*ids)                     +
                             store_mso_spgr_container(spgr_length) +
@@ -4907,7 +4899,7 @@ attr_reader :compatibility
           length      = data.length
           header      = [record, length].pack("vv")
           append(header, data)
-  
+
           store_obj_chart(num_objects+i+1)
           store_chart_binary(name)
       end
@@ -4920,7 +4912,7 @@ attr_reader :compatibility
       #
       formula = "='#{@name}'!A1"
       store_formula(formula)
-  
+
       @object_ids[0] = spid
   end
   private :store_charts
@@ -5969,7 +5961,7 @@ attr_reader :compatibility
 
     # Check for valid input parameters.
     param.each_key do |param_key|
-      unless valid_parameter.has_key?(param_key) 
+      unless valid_parameter.has_key?(param_key)
         #               carp "Unknown parameter '$param_key' in data_validation()";
         return -3
       end
@@ -6313,8 +6305,8 @@ attr_reader :compatibility
 
     # Handle utf8 strings
     if string =~ NonAscii
-      require 'jcode'
       $KCODE = 'u'
+      require 'jcode'
       str_length = string.jlength
       string = NKF.nkf('-w16L0 -m0 -W', string)
       encoding = 1

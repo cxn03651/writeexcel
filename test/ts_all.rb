@@ -1,3 +1,5 @@
+#!/usr/bin/ruby -w
+
 $LOAD_PATH.unshift(Dir.pwd)
 $LOAD_PATH.unshift(Dir.pwd + "/test")
 
@@ -32,3 +34,4 @@ require 'test_40_property_types'
 require 'test_41_properties'
 require 'test_42_set_properties'
 require 'tc_example_match'
+require 'tc_storage_lite'

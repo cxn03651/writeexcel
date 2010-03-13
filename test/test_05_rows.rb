@@ -27,7 +27,7 @@ class TC_rows < Test::Unit::TestCase
     workbook            = Spreadsheet::WriteExcel.new(@test_file)
     workbook.compatibility_mode(1)
     @tests               = []
-    
+
     # for test case 1
     row  = 1
     col1 = 0
@@ -152,16 +152,16 @@ class TC_rows < Test::Unit::TestCase
     workbook.close
     # Read in the row records
     rows = []
-  
+
     xlsfile = open(@test_file, "rb")
     while header = xlsfile.read(4)
       record, length = header.unpack('vv')
       data = xlsfile.read(length)
-    
+
       #read the row records only
       next unless record == 0x0208
       col_min, col_max = data.unpack('x2 vv')
-      
+
       rows.push(
         {
           :col_min => col_min,

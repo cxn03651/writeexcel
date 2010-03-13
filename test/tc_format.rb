@@ -155,7 +155,7 @@ Set the font colour. The set_color() method is used as follows:
     format.set_color('red')
     worksheet.write(0, 0, 'wheelbarrow', format)
 
-Note: The set_color() method is used to set the colour of the font in a cell. 
+Note: The set_color() method is used to set the colour of the font in a cell.
 To set the colour of a cell use the set_bg_color() and set_pattern() methods.
 =end
   def test_set_color
@@ -486,8 +486,8 @@ set_locked()
     Valid args:         0, 1
 
 This property can be used to prevent modification of a cells
- contents. Following Excel's convention, cell locking is 
- turned on by default. However, it only has an effect if 
+ contents. Following Excel's convention, cell locking is
+ turned on by default. However, it only has an effect if
  the worksheet has been protected, see the worksheet protect()
   method.
 
@@ -953,7 +953,7 @@ set_border_color()
 Set the colour of the cell borders. A cell border is comprised of a border
 on the bottom, top, left and right. These can be set to the same colour
 using set_border_color() or individually using the relevant method
-calls shown above. 
+calls shown above.
 =end
   def test_set_border_color
   end
@@ -979,9 +979,6 @@ Format properties directly using hashes.
 
 Note: this is not a copy constructor, both objects must exist prior to copying.
 =end
-  def test_copy
-  end
-
 
   def test_xf_biff_size
     perl_file = "#{PERL_OUTDIR}/file_xf_biff"
@@ -1150,11 +1147,11 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   def test_copy
     format1 = Format.new
     format2 = Format.new
-    
+
     format1.set_size(12)
-    
+
     format2.copy(format1)
-    
+
     assert_equal(format1.size, format2.size)
   end
 

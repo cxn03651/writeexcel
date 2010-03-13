@@ -31,7 +31,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
 
   def test_valid_jpg_image_1
     testname = '3w x 5h jpeg image.'
-    
+
     data = %w(
       FF D8 FF E0 00 10 4A 46 49 46 00 01 01 01 00 60
       00 60 00 00 FF DB 00 43 00 06 04 05 06 05 04 06
@@ -61,7 +61,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
 
   def test_valid_jpg_image_2
     testname = '5w x 3h jpeg image.'
-    
+
     data = %w(
       FF D8 FF E0 00 10 4A 46 49 46 00 01 01 01 00 60
       00 60 00 00 FF DB 00 43 00 06 04 05 06 05 04 06
@@ -91,7 +91,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
 
   def test_valid_jpg_image_3_ffco_marker_missing
     testname = 'FFCO marker missing in image.'
-    
+
     data = %w(
       FF D8 FF E0 00 10 4A 46 49 46 00 01 01 01 00 60
       00 60 00 00 FF DB 00 43 00 06 04 05 06 05 04 06
@@ -122,7 +122,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
   def test_invalid_jpeg_image
     testname = 'empty image'
     image    = ''
-    
+
     assert_raise(RuntimeError, " \t" + testname) {
       @workbook.process_jpg(image, 'test.jpg')
     }

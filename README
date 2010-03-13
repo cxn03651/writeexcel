@@ -69,6 +69,16 @@
     # write to file
     workbook.close
 
+== Difference with Perl module
+
+* Spreadsheet::WriteExcel.new()
+  * accept default format parameter such as new('foo.xls', :font => 'Roman', :size => 12)
+* Worksheet.write(row, col, token, format)
+  * if token.kind_of?(Numeric) then call write_number, if token.kind_of?(String) then not call write_number().
+* Worksheet.keep_leading_zeros()
+  * ignore. if write 0001, use string such as write(1,2, '0001')
+* and ......
+
 == Caution
 
  This library can handle multibyte character written in utf8. I tested in Japanese,
@@ -79,7 +89,6 @@
 == Dependencies
 
  * ruby 1.8
- * ruby-ole (you can install via rubygem)
 
 == Author
 

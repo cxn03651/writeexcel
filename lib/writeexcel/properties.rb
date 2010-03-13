@@ -43,7 +43,7 @@ def create_summary_property_set(properties)
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
     size = 8 + (property_offsets).length + property_data.length
     size = [size].pack('V')
-    
+
     return  byte_order         +
             version            +
             system_id          +
@@ -72,7 +72,7 @@ def create_doc_summary_property_set(properties)
     system_id           = [0x00020105].pack('V')
     class_id            = ['00000000000000000000000000000000'].pack('H*')
     num_property_sets   = [0x0002].pack('V')
-    
+
     format_id_0         = ['02D5CDD59C2E1B10939708002B2CF9AE'].pack('H*')
     format_id_1         = ['05D5CDD59C2E1B10939708002B2CF9AE'].pack('H*')
     offset_0            = [0x0044].pack('V')
@@ -90,7 +90,7 @@ def create_doc_summary_property_set(properties)
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
     data_len = 8 + (property_offsets_0).length + property_data_0.length
     size_0   = [data_len].pack('V')
-    
+
     # The second property set offset is at the end of the first property set.
     offset_1 = [0x0044 + data_len].pack('V')
 
@@ -201,6 +201,7 @@ def pack_VT_LPSTR(str, codepage)
       # UTF-8
       nonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
       if string =~ nonAscii
+#        $KCODE = 'u'
         require 'jcode'
         byte_string = string
         length = byte_string.jlength
@@ -231,7 +232,7 @@ end
 #
 def pack_VT_FILETIME(localtime)
   type        = 0x0040
-  
+
   epoch = DateTime.new(1601, 1, 1)
 
   datetime = DateTime.new(
@@ -245,6 +246,6 @@ def pack_VT_FILETIME(localtime)
               )
   bignum = (datetime - epoch) * 86400 * 1e7.to_i
   high, low = bignum.divmod 1 << 32
-  
+
   [type].pack('V') + [low, high].pack('V2')
 end
