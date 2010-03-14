@@ -1,0 +1,583 @@
+= 説明
+
+Spreadsheet::WriteExcelライブラリは、エクセルのバイナリファイルを作成することができます。プラットフォームを問いません。複数のワークシートを作成することができますし、セルの書式を設定することもできます。テキスト、数値、数式、ハイパーリンク、画像を格納することが出来ます。
+
+このライブラリで作成されるエクセルファイルは、エクセル97、2000、2002、2003と互換性があります。
+
+このライブラリは主要なWindows、UNIX、マッキントッシュプラットフォームで動作します。作成されたファイルは、LinuxやUNIXのスプレッドシートアプリケーションであるGnumericやOpenOffice.orgとも互換性があります。
+
+このライブラリは、既存のエクセルファイルの編集には使うことができません。(See "MODIFYING AND REWRITING EXCEL FILES")
+= クイックスタート
+
+Spreadsheet::WriteExcelは、エクセルの機能へのできるだけ多くのインターフェイスを提供しようとしています。結果として、インターフェイスに関する多くのドキュメントがあります。最初はどれが重要でどれがそうでないかわかりずらいでしょう。イケアの家具を組み立てるのが好みの人は、まずこの使用説明を読んでください。３つの簡単なステップです。
+
+1.new()メソッドで新規にエクセルのワークブックを作成する。
+2.add_worksheet()メソッドでこのワークブックにワークシートを加える。
+3.write()メソッドでこのワークシートにデータを書き込む。
+
+こんな感じです。
+
+ require 'writeexcel'                                    # Step 0
+
+ workbook  = Spreadsheet::WriteExcel.new('ruby.xls')     # Step 1
+ worksheet = workbook.add_worksheet                      # Step 2
+ worksheet.write('A1', 'Hi Excel!')                      # Step 3
+ workbook.close                                          # ファイルに出力
+
+これで、一つのワークシートを持ち、A1セルに'Hi Excel!'というテキストが書き込まれたエクセルファイルが作成されます。これでできあがりです。実際は０番目のステップがありますが、これはgoes without saying. 多くの使用例がgemには含まれていますので、それを参考にすることも出来ます。 See EXAMPLES
+
+最初にこの使用方法を読んで後で家具を作る人は、どうやって進めるかわかるでしょう。;-)
+
+= Workbook メソッド
+
+Spreadsheet::WriteExcel ライブラリは新規のワークブックへのオブジェクト指向のインターフェイスを提供します。新たなワークブックに対して次のメソッドを使用することが出来ます。
+
+ new
+ add_worksheet
+ add_format
+ add_chart_ext ※ 未対応
+ close
+ compatibility_mode
+ set_properties ※ 未対応
+ set_tempdir
+ set_custom_color
+ sheets
+ set_1904
+ set_codepage
+
+== new()
+
+new コンストラクタは新しいエクセルワークブックを作成します。パラメータとしてファイル名かファイルハンドルを受け取ります。（※ファイル名しか対応していません）
+
+ workbook  = Spreadsheet::WriteExcel.new('filename.xls')
+ worksheet = workbook.add_worksheet
+ worksheet.write(0, 0, 'Hi Excel!')
+
+※ また、デフォルトのフォーマットを指定することもできます。例えば、ＭＳＰ ゴシックで１１ポイントなど。
+
+ workbook  = Spreadsheet::WriteExcel.new('filename.xls', :font => 'ＭＳＰ ゴシック', :size = 11)
+
+ファイル名を使った別の使用例です。
+
+ workbook = Spreadsheet::WriteExcel.new(filename)
+ workbook = Spreadsheet::WriteExcel.new('/tmp/filename.xls')
+ workbook = Spreadsheet::WriteExcel.new("c:\\tmp\\filename.xls")
+ workbook = Spreadsheet::WriteExcel.new('c:\tmp\filename.xls')
+
+最後の２つの例は、DOSやWindowsでディレクトリの区切りの「\」をエスケープするか、シングルクォートで囲んでそのまま指定していするかの例です。
+
+new() コンストラクタは、Spreadsheet::WriteExcelオブジェクト（ワークブックオブジェクト）を返し、これにワークシートを加えデータを書き込みます。
+
+== add_worksheet([sheetname])
+
+ワークブックには少なくとも一つのワークシートを加える必要があります。ワークシートはセルにデータを記述するのに用いられます。
+
+ worksheet1 = workbook.add_worksheet                 # Sheet1
+ worksheet2 = workbook.add_worksheet('Foglio2')      # Foglio2
+ worksheet3 = workbook.add_worksheet('Data')         # Data
+ worksheet4 = workbook.add_worksheet                 # Sheet4
+
+sheetname が指定されなければ、Sheet1, Sheet2といったデフォルトのエクセルの慣習に従います。
+
+ワークシート名はエクセルのワークシート名として正しいものである必要があります。すなわち、[ ] : * ? / \ といった文字は使用できませんし、３２文字以内でなければなりません。加えて、大文字小文字の別なく、同じシート名は使うことが出来ません。
+
+シート名sheetnameには、UTF8文字列も使用することが出来ます。
+
+ worksheet = workbook.add_format('シート１')        # UTF8でソースファイルを保存のこと
+
+== add_format(properties)
+
+add_format()メソッドは、セルに書式を設定するのに使用する新しいFormatオブジェクトを作成します。作成の際にpropertiesのハッシュ引数で指定することも出来ますし、後でメソッドを呼び出して指定することも出来ます。
+
+ format1 = workbook.add_format(props)              # 作成時にプロパティをセットする
+ format2 = workbook.add_format                     # 後でプロパティをセットする
+
+書式プロパティの詳細及び指定方法については、CELL FORMATTING セクションをご覧ください。
+
+== close()
+
+※ワークブックをエクセルファイルに書き出します。
+
+== compatibility_mode()
+
+※未検証
+
+== set_properties()
+
+※未対応
+
+== set_tempdir()
+
+速度と効率のため、ワークブックのデータを最後に組み立てる前に、Spreadsheet::WriteExcelはワークシートのデータをテンポラリファイルに置きます。テンポラリファイルを作ることが出来ない場合はメモリ上で作業します。この場合、大きなファイルになると遅くなることがあります。
+この問題はWindows上でIISと併せて使っているときに主として発生しますが、UNIXシステムでも起こることがあります。
+この問題は概して、既定の一時ファイルディレクトリがC:\やその他IISが書き込みを提供していないディレクトリに設定されているのが原因で発生します。
+この問題を避けるために、set_tempdir()メソッドを使って一時ファイルを作成できるディレクトリを指定します。
+
+お使いのシステムでどのディレクトリが使用されるかは、以下で知ることが出来ます。
+
+ ruby -e "print ENV['TMPDIR'] || ENV['TMP'] || ENV['TEMP'] || '/tmp'"
+
+デフォルトの一時ファイルディレクトリは使用できる場合でも、セキュリティやメンテナンスの理由から別の場所を指定することもできます。
+
+ workbook.set_tempdir('/tmp/writeexcel')
+ workbook.set_tempdir('c:\windows\temp\writeexcel')
+
+この一時ファイル用のディレクトリは実在しなければなりません。set_tempdir()が新たにディレクトリを作成することはしません。
+
+set_tempdir()を使う一つの欠点は、Windowsシステムの中にはおおよそ800のコンカレント一時ファイルを限度としているのがあることです。これらのシステムで動かす単一のプログラムは総計で800のワークブックとワークシートオブジェクトを作成するのが上限となります。必要なら複数の、ノン・コンカレントなプログラムを実行してください。
+
+== set_custom_color(index, red, green, ble)
+
+set_custom_color()メソッドは、ビルトインされているパレットの値に、もう少し好みの色を加えるのに使用します。
+index の値は、8から63の間でなければなりません。See "COLOURS IN EXCEL"
+デフォルトの名前付きカラーは次のようになっています。
+
+     8   =>   black
+     9   =>   white
+    10   =>   red
+    11   =>   lime
+    12   =>   blue
+    13   =>   yellow
+    14   =>   magenta
+    15   =>   cyan
+    16   =>   brown
+    17   =>   green
+    18   =>   navy
+    20   =>   purple
+    22   =>   silver
+    23   =>   gray
+    33   =>   pink
+    53   =>   orange
+
+RGB(red green blue)要素を用いて新しい色をセットすることも出来ます。red, green, blue の各値は0から255までの間でなければなりません。エクセルを使ってTools（ツール）->Options（オプション）->Colors（色）->Modify（変更）で必要な値を決めることが出来ます。
+
+set_custom_color()メソッドでは、HTMLで用いられる#rrggbb形式の16進数値も使用できます。
+
+ workbook.set_custom_color(40,  255,  102,    0)   # orange
+ workbook.set_custom_color(40, 0xFF, 0x66, 0x00)   # same thing
+ workbook.set_custom_color(40, '#FF6600')          # same thing
+
+ font = workbook.add_format(:color => 40)          # use the modified color
+
+set_custom_color()は作成された色のindexを返します。
+
+ ferrari = workbook.set_custom_color(40, 216, 12, 12)
+ format  = workbook.add_format(
+              :bg_color => ferrari,
+              :pattern  => 1,
+              :border   => 1
+           )
+
+== sheets([0, 1, ...])
+
+sheets()メソッドはワークブック内のワークシートの全リストあるいは指定されたシートのリストを返します。
+引数を指定しなければ全てのシートのリストを返します。これはそれぞれのシートに、ある操作を繰り返して行いたいときに便利です。
+
+ workbook.sheets.each do |worksheet|
+   print $worksheet.get_name
+ end
+
+一つあるいは複数のワークシートオブジェクトを指定することもできます。
+
+ worksheet = workbook.sheets(0)
+ worksheet.write('A1', 'Hello')
+
+ workbook.sheets(0).write('A1', 'Hello')   # same thing
+
+次の例は、ワークブック内の最初と最後のワークシートを返し、操作します。
+
+ workbook.sheets(0, -1).each do |worksheet|
+    # Do something
+ end
+
+== set_1904()
+
+エクセルは日付を実数で格納しています。その整数部分は「epoch」からの日数を、小数部分は１日のうちのパーセンテージを格納しています。「epoch」は、Windowsのエクセルでは1900年、マッキントッシュのエクセルでは1904年です。ですが、どちらのプラットフォームでもエクセルは自動的にシステム間の相違をコンバートして扱います。
+
+Spreadsheet::WriteExcelではデフォルトで1900年を用います。もしも変更したいのであれば、workbookに対してset_1904()メソッドを呼んでください。現在の値を問い合わせるにはget_1904()を呼びます。これは、1900ならば0を、1904ならば1を返します。
+
+エクセルの日付の取り扱いについては、"DATES AND TIME IN EXCEL"も見てください。
+
+通常であれば、set_1904()を使う必要はありません。
+
+== set_codepage(codepage)
+
+Spreadsheet::WriteExcelで使われるデフォルトのコードページ、文字セットはANSIです。これはWindowsのエクセルの既定値でもあります。しかしながら、たまにコードページを変更する必要が生じたときは、set_codepage()メソッドを使って変更します。
+
+コードページの変更は、マッキントッシュ上でSpreadsheet::WriteExcelを使用していて、ASCII 128以外の文字セットを使いたい場合に必要になることがあります。
+
+ workbook.set_codepage(1)  # ANSI, MS Windows
+ workbook.set_codepage(2)  # Apple Macintosh
+
+set_codepage()はめったに必要にはなりません。
+
+= Worksheet メソッド
+
+ワークブックオブジェクトにadd_worksheet()メソッドを呼ぶことで新しいワークシートが作成されます。
+
+ worksheet1 = workbook.add_worksheet
+ worksheet2 = workbook.add_worksheet
+
+新しいワークシートに対して、次のメソッドを使うことが出来ます。
+
+    write()
+    write_number()
+    write_string()
+    write_utf16be_string()
+    write_utf16le_string()
+    keep_leading_zeros()
+    write_blank()
+    write_row()
+    write_col()
+    write_date_time()
+    write_url()
+    write_url_range()
+    write_formula()
+    store_formula()
+    repeat_formula()
+    write_comment()
+    show_comments()
+    add_write_handler()
+    insert_image()
+    embed_chart()
+    data_validation()
+    get_name()
+    activate()
+    select()
+    hide()
+    set_first_sheet()
+    protect()
+    set_selection()
+    set_row()
+    set_column()
+    outline_settings()
+    freeze_panes()
+    split_panes()
+    merge_range()
+    set_zoom()
+    right_to_left()
+    hide_zero()
+    set_tab_color()
+    autofilter()
+
+== セル・ノーテーション
+
+Spreadsheet::WriteExcelはセルの位置を指定するのに２つの表記法、Row-Column法とA1法をサポートしています。
+
+Row-Column法は行、桁ともに0から始まるインデックスですが、A1法はエクセルで標準的に用いられる桁を示す英字と行を示す1から始まる数字からなる英数字の並びです。例えば、
+
+ (0, 0)    # The top left cell in row-column notation.
+ ('A1')    # The top left cell in A1 notation.
+
+ (1999,29) # Row-column notation.
+ ('AD2000') # The same cell in A1 notation.
+
+Row-column法はセルをプログラムで扱うのに便利です。
+
+ 0.upto(9) do |i|
+   worksheet.write(i, 0, 'Hello')  # Cells A1 to A10
+ end
+
+A1法はワークシートを手動で設定したり数式を用いるときに便利です。
+
+ worksheet.write('H1', 200)
+ worksheet.write('H2', '=H1+1')  # 201
+
+数式中やいくつかのメソッドでは、A:Aカラム法も使用できます。
+
+ worksheet.write('A1', '=SUM(B:B)')
+
+簡便さのために、以下のワークシートのメソッドではrow-column法で記述していますが、全てA1法も用いることができます。
+
+注：エクセルではR1C1法も使うことができますが、Spreadsheet::WriteExcelではサポートしていません。
+
+== write(row, column, [token, format])
+
+エクセルは、データのタイプ（文字列、数値、ブランク、数式、ハイパーリンク）によって区別して扱います。データの書き込みを簡単に扱うため、write()メソッドはいくつかのメソッドのエイリアスとして振る舞います。
+
+    write_string
+    write_number
+    write_blank
+    write_formula
+    write_url
+    write_row
+    write_col
+
+全般的な規則は、データが何かを見て、何を書き込むかを決めます。row-column法とA1法それぞれの例を示します。オリジナルのパール版では'1'や'2.5E-4'といった数値風
+の文字列を書き込むと数値として扱われますが、ruby版では異なるので注意。
+
+                                                       # same as
+ worksheet.write(0, 0,  'Hello'                    )   # write_string
+ worksheet.write(1, 0,  '1'                        )   # write_string
+ worksheet.write(2, 0,  2                          )   # write_number
+ worksheet.write(3, 0,  3.00001                    )   # write_number
+ worksheet.write(4, 0,  ""                         )   # write_blank
+ worksheet.write(5, 0,  ''                         )   # write_blank
+ worksheet.write(6, 0,  nil                        )   # write_blank
+ worksheet.write(7, 0                              )   # write_blank
+ worksheet.write(8, 0,  'http://www.ruby-lang.org/')   # write_url
+ worksheet.write('A9',  'ftp://ftp.ruby-lang.org/' )   # write_url
+ worksheet.write('A10', 'internal:Sheet1!A1'       )   # write_url
+ worksheet.write('A11', 'external:c:\foo.xls'      )   # write_url
+ worksheet.write('A12', '=A3 + 3*A4'               )   # write_formula
+ worksheet.write('A13', '=SIN(PI()/4)'             )   # write_formula
+ worksheet.write('A14', Array                      )   # write_row
+ worksheet.write('A15', [ Array ]                  )   # write_col
+
+オリジナルのパール版にあるkeep_leading_zeros プロパティは無効です。
+0で始まる数字列を書き込むには、文字列にしてください。
+数値リテラルで0で始まる数値を書き込むときは、８進数に解釈される
+ので気を付けてください。
+
+ worksheet.write('A16',  010                       )   # write_number 8
+ worksheet.write('A17',  '010'                     )   # write_string '010'
+ worksheet.write('A18',  000020                    )   # write_number 16
+
+Arrayを渡すときの挙動は以下の通り。
+
+ TODO 記述すること
+
+引数formatはオプションです。有効なFormatオブジェクトである必要があります。
+"CELL FORMATTING"を参照。
+
+ format = workbook.add_format
+ format.set_bold
+ format.set_color('red')
+ format.set_align('center')
+ worksheet.write(4, 0, 'Hello', format) # formatted string
+
+write()メソッドは空文字列''やnilがtokenとして渡された場合、formatが渡されなければ何もしません。つまり、上記の例では何もしない（無視する）ということです。ですから、空データやnilを扱うのに特別のことを気にする必要はありません。write_blank()メソッドも見てください。
+
+add_write_handler()を使って、あなた独自のwrite()メソッドのデータ処理を加えることもできます。（※未検証）
+
+UTF8文字列も扱うことが出来ます（※暫定実装）
+
+write()メソッドは、次の値を返します。
+
+ 0  : 成功
+ -1 : 引数の数が不足
+ -2 : 行や桁が範囲外
+ -3 : 文字列が長すぎる(32767バイト以上）
+
+== write_number(row, column, number[, format])
+
+指定されたセルに整数又は実数を書き込む。
+
+ worksheet.write_number(0, 0, 1234556)
+ worksheet.write_number('A2', 2.3456)
+
+"Cell notation"も参照。formatはオプション。
+
+一般的にはwrite()メソッドを使えばこと足りる。
+
+== write_string(row, column, string[, format])
+
+指定されたセルに文字列を書き込む。
+
+ worksheet.write_string(0, 0, 'Your text here')
+ worksheet.write_string('A2', 'or here')
+
+文字列の最大サイズは32767文字。
+
+== write_blank(row, column, format)
+
+指定されたセルにブランクを書き込む。
+
+ worksheet.write_brank(0, 0, format)
+
+このメソッドは、文字列も数値もないセルに書式を書き込むのに用いる。
+エクセルでは空（Empty）セルとブランクセルとは異なる。空セルは何のデータも持たないが、ブランクセルは書式情報を持つ。
+
+書式情報を持たない書き込みは無視される。
+
+ worksheet.write('A1', nil, format)   # write_blank('A1', format)
+ worksheet.write('A1', nil        )   # ignored
+
+すなわち、配列にある一連のデータを書き込む際に、nilあるいは空白のセルについて特別の扱いをしなくても良いと言うことである。
+
+"Cell notation"も参照。
+
+== write_row(row, column, array[, format])
+
+write_row()メソッドは、１次元あるいは２次元配列を一度に書き込む際に使用できます。データベースからのクエリ結果をエクセルに書き込む際に便利です。
+実際は配列の各要素に対してwrite()メソッドを呼び出します。
+
+ array = ['awk', 'gawk', 'mawk']
+ worksheet.write_row(0, 0, array)
+
+ # この例は次と同じ
+ worksheet.write(0, 0, array[0])
+ worksheet.write(0, 1, array[1])
+ worksheet.write(0, 2, array[2])
+
+注記：利便さのため、配列を渡されたときはwrite()はwrite_row()と同様に振る舞います。ですから、次の二つの例は同じことです。
+
+ worksheet.write_row('A1', array)   # write a row of data
+ worksheet.write(    'A1', array)   # same thing
+
+format引数はオプションです。指定された場合、全ての配列要素の書き込みに際し適用されます。
+
+２次元配列を渡すとこんな感じになります。
+
+ eec =  [
+          ['maggie', 'milly', 'molly', 'may'  ],
+          [13,       14,      15,      16     ],
+          ['shell',  'star',  'crab',  'stone']
+        ]
+
+ worksheet.write_row('A1', eec)
+
+ 以下のワークシートが作成されます。
+
+ -----------------------------------------------------------
+ |   |    A    |    B    |    C    |    D    |    E    | ...
+ -----------------------------------------------------------
+ | 1 | maggie  | 13      | shell   | ...     |  ...    | ...
+ | 2 | milly   | 14      | star    | ...     |  ...    | ...
+ | 3 | molly   | 15      | crab    | ...     |  ...    | ...
+ | 4 | may     | 16      | stone   | ...     |  ...    | ...
+ | 5 | ...     | ...     | ...     | ...     |  ...    | ...
+ | 6 | ...     | ...     | ...     | ...     |  ...    | ...
+
+縦横を反転して作成するには、下のwrite_col()メソッドを使うか、write()メソッドで２次元配列の配列、[ eec ] を渡してください。
+
+nil要素は、formatが指定されていなければ無視されますし、指定されていればブランクセルとして書き込まれます。
+
+write_row()メソッドの返値は、無事に終われば0、何か問題があれば最初に発生したエラーコードを返します。上のwrite()に記載された返値を見てください。
+
+examplesディレクトリにあるwrite_arrays.rbもご覧ください。
+
+== write_col(row, column, array[, format])
+
+write_col()メソッドは、１次元あるいは２次元配列を一度に書き込む際に使用できます。データベースからのクエリ結果をエクセルに書き込む際に便利です。
+実際は配列の各要素に対してwrite()メソッドを呼び出します。
+
+ array = ['awk', 'gawk', 'mawk']
+ worksheet.write_col(0, 0, array)
+
+ # この例は次と同じ
+ worksheet.write(0, 0, array[0])
+ worksheet.write(1, 0, array[1])
+ worksheet.write(2, 0, array[2])
+
+format引数はオプションです。指定された場合、全ての配列要素の書き込みに際し適用されます。
+
+２次元配列を渡すとこんな感じになります。
+
+ eec =  [
+          ['maggie', 'milly', 'molly', 'may'  ],
+          [13,       14,      15,      16     ],
+          ['shell',  'star',  'crab',  'stone']
+        ]
+
+ worksheet.write_row('A1', eec)
+
+ 以下のワークシートが作成されます。
+
+ -----------------------------------------------------------
+ |   |    A    |    B    |    C    |    D    |    E    | ...
+ -----------------------------------------------------------
+ | 1 | maggie  | milly   | molly   | may     |  ...    | ...
+ | 2 | 13      | 14      | 15      | 16      |  ...    | ...
+ | 3 | shell   | star    | crab    | stone   |  ...    | ...
+ | 4 | ...     | ...     | ...     | ...     |  ...    | ...
+ | 5 | ...     | ...     | ...     | ...     |  ...    | ...
+ | 6 | ...     | ...     | ...     | ...     |  ...    | ...
+
+縦横を反転して作成するには、上のwrite_col()メソッドを使うか、write()メソッドで２次元配列、eec を渡してください。
+
+nil要素は、formatが指定されていなければ無視されますし、指定されていればブランクセルとして書き込まれます。
+
+write_col()メソッドの返値は、無事に終われば0、何か問題があれば最初に発生したエラーコードを返します。上のwrite()に記載された返値を見てください。
+
+examplesディレクトリにあるwrite_arrays.rbもご覧ください。
+
+== write_date_time(row, column, date_string, format)
+
+write_date_time()メソッドは、指定したセルに日付あるいは時刻を書き込みます。
+
+ worksheet.write_date_time('A1', '2009-03-25T12:30', date_format)
+
+date_stringは次の形式です。
+
+ yyyy-mm-ddThh:mm:ss.sss
+
+これはISO8601に適合していますが、ISO8601全てのフォーマットには適合していないことに留意してください。
+
+date_stirngでは、次のバリエーションも使用できます。どの場合でも'T'は必要です。
+
+ yyyy-mm-ddThh:mm:ss.sss     # standard format
+ yyyy-mm-ddT                 # No time
+           Thh:mm:ss.sss     # No Date
+ yyyy-mm-ddThh:mm:ss.sssZ    # Additional Z ( but not time zone)
+ yyyy-mm-ddThh:mm:ss         # No fractal seconds
+ yyyy-mm-ddThh:mm            # No seconds.
+
+日時には書式(format)が必要です。指定しなければ数値として書き込まれます。"DATES AND TIME IN EXCEL"及び"CELL FORMATTING"を参照ください。
+典型的な例です。
+
+ date_format = workbook.add_format(:num_format => 'mm/dd/yy')
+ worksheet.write_date_time('A1', '2009-03-25T12:30', date_format)   # date
+ worksheet.write_date_time('A1', '2009-03-25T12:30'             )   # number
+
+日付としては、epochが1900の場合は1900-01-01から9999-12-31まで、epochが1904の場合は1904-01-01から9999-12-31までです。この範囲外の時は文字列が書き込まれます。
+
+examplesディレクトリにあるdate_time.rbもご覧ください。
+
+== write_url(row, column, url[, label, format])
+
+指定されたセルにURLへのハイパーリンクを書き込みます。ハイパーリンクは、表示されるlabelと表示はされない実際のurlの２つからなります。labelが指定されない場合、urlが表示されます。labelとformatはオプションですし、その順番が入れ替わってもかまいません。
+
+labelはwrite()メソッドで書き込まれます。ですから、書き込み可能な文字列、数値または数式でなければなりません。
+
+URLの形式は４つ(http://, https://, ftp://, mailto:)をサポートしています。
+
+ worksheet.write_url(0, 0,  'ftp://www.ruby-lang.org/'                 )
+ worksheet.write_url(1, 0,  'http://www.ruby-lang.org/', 'Ruby home'   )
+ worksheet.write_url('A3',  'http://www.ruby-lang.org/', format        )
+ worksheet.write_url('A4',  'http://www.ruby-lang.org/', 'Perl', format)
+ worksheet.write_url('A5',  'mailto:foo@bar.com'                       )
+
+このほか、ローカルリンクの２つ（internal:, external:）もサポートしています。これらは同じワークブック内のワークシートへ、あるいは他のワークブックへの参照に用います。
+
+ worksheet.write_url('A6',  'internal:Sheet2!A1'                   )
+ worksheet.write_url('A7',  'internal:Sheet2!A1',   format         )
+ worksheet.write_url('A8',  'internal:Sheet2!A1:B2'                )
+ worksheet.write_url('A9',  %q{internal:'Sales Data'!A1}           )
+ worksheet.write_url('A10', 'external:c:\temp\foo.xls'             )
+ worksheet.write_url('A11', 'external:c:\temp\foo.xls#Sheet2!A1'   )
+ worksheet.write_url('A12', 'external:..\..\..\foo.xls'            )
+ worksheet.write_url('A13', 'external:..\..\..\foo.xls#Sheet2!A1'  )
+ worksheet.write_url('A14', 'external:\\\\NETWORK\share\foo.xls'   )
+
+これらのURLの形式はwrite()メソッドで自動的に認識されます。
+
+ワークシートへの参照はSheet1!A1といった形式です。Sheet1!A1:B2といった範囲指定も使用できます。
+外部の参照の際、ワークブック名とワークシート名の間は#で区切る必要があります。 external:workbook.xls#Sheet1!A1
+
+※以下の名前付け範囲への対応は、未検証
+名前付けされた範囲へのリンクも張ることができます。例えば、外部のc:\temp\foo.xlsにあるmy_nameという名前の範囲へのリンクは、
+
+ worksheet.write_url('A15', 'external:c;\temp\foo.xls#my_name')
+
+注：現在のSpreadsheet::WriteExcelでは、名前付け範囲の設定は対応していません。
+
+エクセルでは、シート名に空白や非英数字が含まれる場合、'Sales Data'!A1のようにクォートで囲む必要があります。この場合、シート名に含まれる文字は必要であればエスケープしてください。 'c:\temp' はダブルクォートでは"c:\\temp"とします。
+
+DOSやWindowsであっても、ファイル名の区切りには'/'を使用することが出来ます。これで先ほどのエスケープの問題は回避することができます。
+
+ worksheet.write_url('A16', 'external:c:/temp/foo.xls')
+ worksheet.write_url('A16', 'external:c://NETWORK/share/foo.xls')
+
+"Cell notation"も参照。
+
+== write_formula(row, column, formula[, format, value])
+
+指定されたセルに数式あるいは関数を書き込みます。
+
+ worksheet.write_formula(0, 0, '=$B$3 + B4'  )
+ worksheet.write_formula(1, 0, '=SIN(PI()/4)')
+ worksheet.write_formula(2, 0, '=SUM(B1:B5)' )
+ worksheet.write_formula('A4', '=IF(A3>1,"Yes", "No")'   )
+ worksheet.write_formula('A5', '=AVERAGE(1, 2, 3, 4)'    )
+ worksheet.write_formula('A6', '=DATEVALUE("1-Jan-2001")')
