@@ -13,6 +13,6 @@ require "writeexcel/workbook"
 
 class Spreadsheet
   class WriteExcel < Workbook
-    VERSION = "0.2.1"
+    VERSION = "0.2.2"
   end
 end

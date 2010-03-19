@@ -1691,10 +1691,6 @@ class Workbook < BIFFWriter
     record          = 0x0018       # Record identifier
     length          = 0x002a       # Number of bytes to follow
 
-    index           = shift        # Sheet index
-    type            = shift
-    ext_ref         = shift        # TODO
-
     grbit           = 0x0020       # Option flags
     chKey           = 0x00         # Keyboard shortcut
     cch             = 0x01         # Length of text name
@@ -1854,7 +1850,7 @@ class Workbook < BIFFWriter
       # Add area NAME records
       #
       if !worksheet.print_rowmin.nil? && worksheet.print_rowmin != 0
-        if ext_ref[key].nil?
+        if ext_refs[key].nil?
           ext_refs[key] = ext_ref_count
           ext_ref_count += 1
         end
@@ -1864,14 +1860,14 @@ class Workbook < BIFFWriter
       # Add title  NAME records
       #
       if rowmin and colmin
-        if ext_ref[key].nil?
+        if ext_refs[key].nil?
           ext_refs[key] = ext_ref_count
           ext_ref_count += 1
         end
 
         length += 46
       elsif rowmin or colmin
-        if ext_ref[key].nil?
+        if ext_refs[key].nil?
           ext_refs[key] = ext_ref_count
           ext_ref_count += 1
         end

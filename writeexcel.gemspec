@@ -1,6 +1,6 @@
 require 'rubygems'
 
-version = '0.2.1'
+version = '0.2.2'
 
 spec = Gem::Specification.new do |s|
   s.name      = 'writeexcel'
