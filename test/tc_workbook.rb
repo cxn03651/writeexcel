@@ -2,6 +2,7 @@ $LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
 require "writeexcel"
+require "stringio"
 
 class TC_Workbook < Test::Unit::TestCase
 
@@ -79,6 +80,25 @@ class TC_Workbook < Test::Unit::TestCase
   def test_raise_set_compatibility_after_sheet_creation
     @workbook.add_worksheet
     assert_raise(RuntimeError) { @workbook.compatibility_mode }
+  end
+
+  def test_write_to_io
+    # write to @test_file
+    @workbook.add_worksheet
+    @workbook.close
+    file = ''
+    File.open(@test_file, "rb") do |f|
+      file = f.read
+    end
+
+    # write to io
+    io = StringIO.new
+    wb = Workbook.new(io)
+    wb.add_worksheet
+    wb.close
+
+    # compare @test_file and io
+    assert_equal(file, io.string)
   end
 
   def valid_sheetname

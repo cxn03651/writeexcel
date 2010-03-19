@@ -20,22 +20,22 @@ class OLEStorageLite
 
   def localDate2OLE(localtime)
     return "\x00" * 8 unless localtime
-  
+
     # Convert from localtime (actually gmtime) to seconds.
     args = localtime.reverse
     args[0] += 1900   # year
     args[1] += 1      # month
     time = Time.gm(*args)
-    
+
     # Add the number of seconds between the 1601 and 1970 epochs.
     time = time.to_i + 11644473600
-  
+
     # The FILETIME seconds are in units of 100 nanoseconds.
     nanoseconds = time * 10000000
-  
+
     # Pack the total nanoseconds into 64 bits...
     hi, lo = nanoseconds.divmod 1 << 32
-  
+
     oletime = [lo, hi].pack("VV")
     return oletime
   end
@@ -77,7 +77,7 @@ class OLEStorageLitePPS < OLEStorageLite
     file = rh_info[:fileh]
     iSmBlk = 0
     sRes = ''
-  
+
     aList.each do |pps|
       #1. Make SBD, small data string
       if pps.type == PPS_TYPE_FILE
@@ -90,7 +90,7 @@ class OLEStorageLitePPS < OLEStorageLite
             file.write([i + iSmBlk+1].pack("V"))
           end
           file.write([-2].pack("V"))
-          
+
           #1.2 Add to Data String(this will be written for RootEntry)
           #Check for update
           if pps.pps_file
@@ -98,7 +98,7 @@ class OLEStorageLitePPS < OLEStorageLite
             while sBuff = pps.pps_file.read(4096)
               sRes << sBuff
             end
-          else 
+          else
             sRes << pps.data
           end
           if pps.size % rh_info[:small_block_size] > 0
@@ -224,7 +224,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
     _saveBbd(iSBDcnt, iBBcnt, iPPScnt, rh_info)
 
     #7.Close File
-    return rh_info[:fileh].close if close_file != 0
+    rh_info[:fileh].close if close_file
   end
 
   def _calcSize(aList, rh_info)
@@ -266,7 +266,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
 
   def _saveHeader(rh_info, iSBDcnt, iBBcnt, iPPScnt)
     file = rh_info[:fileh]
-  
+
     #0. Calculate Basic Setting
     iBlCnt = rh_info[:big_block_size] / LONG_INT_SIZE
     i1stBdL = (rh_info[:big_block_size] - 0x4C) / LONG_INT_SIZE
@@ -292,7 +292,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
     end
     iBdCnt += i1stBdL
     #print "iBdCnt = iBdCnt \n"
-  
+
     #1.Save Header
     file.write(
         "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1" +
@@ -323,7 +323,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
           [iBdExL].pack("V")
         )
     end
-  
+
     #3. BDList
       cnt = i1stBdL
       cnt = iBdCnt if iBdCnt < i1stBdL
@@ -337,7 +337,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
   def _saveBigData(iStBlk, aList, rh_info)
     iRes = 0
     file = rh_info[:fileh]
-  
+
     #1.Write Big (ge 0x1000) Data into Block
     aList.each do |pps|
       if pps.type != PPS_TYPE_DIR
@@ -372,7 +372,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS
       end
     end
   end
-  
+
   def _savePps(aList, rh_info)
     #0. Initial
     file = rh_info[:fileh]
@@ -412,7 +412,7 @@ bpp=1
 
       aList.push(pps_array[iPos])
       pps_array[iPos].no = aList.size - 1
-      
+
       aWk = pps_array.dup
       #1.3.2 Devide a array into Previous,Next
       aPrev = aWk[0, iPos]
@@ -426,7 +426,7 @@ bpp=1
     end
   end
   private :_savePpsSetPnt
-  
+
   def _savePpsSetPnt2(pps_array, aList, rh_info)
     #1. make Array as Children-Relations
     #1.1 if No Children
@@ -445,7 +445,7 @@ bpp=1
       iCnt = pps_array.size
       #1.3.1 Define Center
       iPos = 0  #int($iCnt/ 2);     #$iCnt
-  
+
       aWk = pps_array.dup
       aPrev = aWk[1, 1]
       aWk[1..1] = nil
@@ -453,7 +453,7 @@ bpp=1
       pps_array[iPos].prev_pps = _savePpsSetPnt2(pps_array, aList, rh_info)
       aList.push(pps_array[iPos])
       pps_array[iPos].no = aList.size
-  
+
       #1.3.2 Devide a array into Previous,Next
       pps_array[iPos].next_pps = _savePpsSetPnt2(aNext, aList, rh_info)
       pps_array[iPos].dir_pps  = _savePpsSetPnt2(pps_array[iPos].child, aList, rh_info)
@@ -491,7 +491,7 @@ bpp=1
     iAllW  += iBdExL
     iBdCnt += i1stBdL
     #print "iBdCnt = iBdCnt \n"
-  
+
     #1. Making BD
     #1.1 Set for SBD
     if iSbdSize > 0
@@ -505,7 +505,7 @@ bpp=1
       file.write([i + iSbdSize + 1].pack('V'))
     end
     file.write([-2].pack('V'))
-  
+
     #1.3 Set for PPS
     0.upto(iPpsCnt-1-1) do |i|
       file.write([i+iSbdSize+iBsize+1].pack("V"))

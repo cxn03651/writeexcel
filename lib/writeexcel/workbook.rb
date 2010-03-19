@@ -41,9 +41,9 @@ class Workbook < BIFFWriter
   #
   # Constructor. Creates a new Workbook object from a BIFFwriter object.
   #
-  def initialize(filename, default_formats = {})
+  def initialize(file, default_formats = {})
     super()
-    @filename              = filename
+    @file                  = file
     @default_formats       = default_formats
     @parser                = Formula.new(@byte_order)
     @tempdir               = nil
@@ -117,16 +117,11 @@ class Workbook < BIFFWriter
     # Add the default format for hyperlinks
     @url_format = add_format(:color => 'blue', :underline => 1)
 
-    # Convert the filename to a filehandle to pass to the OLE writer when the
-    # file is closed. If the filename is a reference it is assumed that it is
-    # a valid filehandle.
-    #
-    if filename.kind_of?(String) && filename != ''
-      @fh_out      = open(filename, "wb")
+    if file.kind_of?(String) && file != ''
+      @fh_out      = open(file, "wb")
       @internal_fh = 1
     else
-      print "Workbook#new - filename required."
-      exit
+      @fh_out = file
     end
 
     # Set colour palette.
@@ -784,7 +779,7 @@ class Workbook < BIFFWriter
                      localtime,
                      streams
                    )
-      ole_root.save(@filename)
+      ole_root.save(@file)
 
       # Close the filehandle if it was created internally.
       return @fh_out.close if @internal_fh != 0
