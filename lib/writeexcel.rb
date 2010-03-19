@@ -2,7 +2,7 @@
 #
 # WriteExcel.
 #
-# Spreadsheet::WriteExcel - Write to a cross-platform Excel binary file.
+# WriteExcel - Write to a cross-platform Excel binary file.
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
@@ -11,8 +11,6 @@
 #
 require "writeexcel/workbook"
 
-class Spreadsheet
-  class WriteExcel < Workbook
-    VERSION = "0.2.2"
-  end
+class WriteExcel < Workbook
+  VERSION = "0.2.2"
 end

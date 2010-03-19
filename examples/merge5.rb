@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-# Example of how to use the Spreadsheet::WriteExcel merge_cells() workbook
+# Example of how to use the WriteExcel merge_cells() workbook
 # method with complex formatting and rotation.
 #
 #
@@ -16,7 +16,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new('merge5.xls')
+workbook  = WriteExcel.new('merge5.xls')
 worksheet = workbook.add_worksheet
 
 

@@ -2,7 +2,7 @@
 # BIFFwriter - An abstract base class for Excel workbooks and worksheets.
 #
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
@@ -31,7 +31,7 @@ class BIFFWriter
     @datasize        = 0
     @limit           = 8224
     @ignore_continue = 0
-    
+
     # Open a tmp file to store the majority of the Worksheet data. If this fails,
     # for example due to write permissions, store the data in memory. This can be
     # slow for large files.
@@ -40,7 +40,7 @@ class BIFFWriter
 
     # failed. store temporary data in memory.
     @using_tmpfile = @filehandle ? true : false
-    
+
   end
 
   ###############################################################################

@@ -2,7 +2,7 @@
 
 #######################################################################
 #
-# Demo of some of the features of Spreadsheet::WriteExcel.
+# Demo of some of the features of WriteExcel.
 # Used to create the project screenshot for Freshmeat.
 #
 #
@@ -15,7 +15,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook   = Spreadsheet::WriteExcel.new("demo.xls")
+workbook   = WriteExcel.new("demo.xls")
 worksheet  = workbook.add_worksheet('Demo')
 worksheet2 = workbook.add_worksheet('Another sheet')
 worksheet3 = workbook.add_worksheet('And another')
@@ -38,7 +38,7 @@ heading  = workbook.add_format(
                                 :align  => 'vcenter'
                               )
 
-headings = ['Features of Spreadsheet::WriteExcel', '']
+headings = ['Features of WriteExcel', '']
 worksheet.write_row('A1', headings, heading)
 
 

@@ -3,7 +3,7 @@
 # Chart - A writer class for Excel Charts.
 #
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #

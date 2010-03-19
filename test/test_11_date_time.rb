@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# A test for Spreadsheet::WriteExcel.
+# A test for WriteExcel.
 #
 # Tests date and time handling.
 #
@@ -21,7 +21,7 @@ class TC_data_time < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook  = Spreadsheet::WriteExcel.new(@test_file)
+    @workbook  = WriteExcel.new(@test_file)
     @worksheet = @workbook.add_worksheet
     @fit_delta = 0.5/(24*60*60*1000)
   end

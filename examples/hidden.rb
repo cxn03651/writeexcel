@@ -2,7 +2,7 @@
 
 #######################################################################
 #
-# Example of how to hide a worksheet with Spreadsheet::WriteExcel.
+# Example of how to hide a worksheet with WriteExcel.
 #
 # reverse('©'), April 2005, John McNamara, jmcnamara@cpan.org
 #
@@ -13,7 +13,7 @@ require 'rubygems'
 require 'writeexcel'
 
 
-workbook   = Spreadsheet::WriteExcel.new('hidden.xls')
+workbook   = WriteExcel.new('hidden.xls')
 worksheet1 = workbook.add_worksheet
 worksheet2 = workbook.add_worksheet
 worksheet3 = workbook.add_worksheet

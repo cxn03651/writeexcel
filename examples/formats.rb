@@ -2,7 +2,7 @@
 
 ######################################################################
 #
-# Examples of formatting using the Spreadsheet::WriteExcel module
+# Examples of formatting using the WriteExcel module
 #
 # reverse('©'), September 2002, John McNamara, jmcnamara@cpan.org
 #
@@ -36,7 +36,7 @@ def intro(workbook)
 
     worksheet.write(2, 0, 'This workbook demonstrates some of',  format)
     worksheet.write(3, 0, 'the formatting options provided by',  format)
-    worksheet.write(4, 0, 'the Spreadsheet::WriteExcel module.', format)
+    worksheet.write(4, 0, 'the WriteExcel module.', format)
 
     worksheet.write('A7',  'Sections:', format2)
     worksheet.write('A8',  "internal:Fonts!A1",             'Fonts'          )
@@ -447,7 +447,7 @@ end
 #
 # main
 #
-workbook = Spreadsheet::WriteExcel.new('formats.xls')
+workbook = WriteExcel.new('formats.xls')
 
 # Some common formats
 center  = workbook.add_format(:align => 'center')

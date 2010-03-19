@@ -22,7 +22,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_a_simple
-    workbook  = Spreadsheet::WriteExcel.new(@filename);
+    workbook  = WriteExcel.new(@filename);
     worksheet = workbook.add_worksheet
 
     # The general syntax is write(row, column, token). Note that row and
@@ -56,7 +56,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_regions
-    workbook = Spreadsheet::WriteExcel.new(@filename)
+    workbook = WriteExcel.new(@filename)
 
     # Add some worksheets
     north = workbook.add_worksheet("North")
@@ -97,7 +97,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_stats
-    workbook = Spreadsheet::WriteExcel.new(@filename)
+    workbook = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet('Test data')
 
     # Set the column width for columns 1
@@ -157,7 +157,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_hidden
-    workbook   = Spreadsheet::WriteExcel.new(@filename)
+    workbook   = WriteExcel.new(@filename)
     worksheet1 = workbook.add_worksheet
     worksheet2 = workbook.add_worksheet
     worksheet3 = workbook.add_worksheet
@@ -177,7 +177,7 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_hyperlink1
     # Create a new workbook and add a worksheet
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet('Hyperlinks')
 
     # Format the first column
@@ -210,13 +210,13 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_copyformat
     # Create workbook1
-    workbook1       = Spreadsheet::WriteExcel.new(@filename)
+    workbook1       = WriteExcel.new(@filename)
     worksheet1      = workbook1.add_worksheet
     format1a        = workbook1.add_format
     format1b        = workbook1.add_format
 
     # Create workbook2
-    workbook2       = Spreadsheet::WriteExcel.new(@filename2)
+    workbook2       = WriteExcel.new(@filename2)
     worksheet2      = workbook2.add_worksheet
     format2a        = workbook2.add_format
     format2b        = workbook2.add_format
@@ -254,7 +254,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_data_validate
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Add a format for the header cells.
@@ -277,7 +277,7 @@ class TC_example_match < Test::Unit::TestCase
 
     # Write the header cells and some data that will be used in the examples.
     row = 0
-    heading1 = 'Some examples of data validation in Spreadsheet::WriteExcel'
+    heading1 = 'Some examples of data validation in WriteExcel'
     heading2 = 'Enter values in this column'
     heading3 = 'Sample Data'
 
@@ -522,7 +522,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_merge1
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -544,7 +544,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_merge2
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -574,7 +574,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_merge3
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet()
 
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -627,7 +627,7 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_merge4
     # Create a new workbook and add a worksheet
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Increase the cell size of the merged cells to highlight the formatting.
@@ -699,7 +699,7 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_merge5
     # Create a new workbook and add a worksheet
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
 
@@ -767,7 +767,7 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_images
     # Create a new workbook called simple.xls and add a worksheet
-    workbook   = Spreadsheet::WriteExcel.new(@filename)
+    workbook   = WriteExcel.new(@filename)
     worksheet1 = workbook.add_worksheet('Image 1')
     worksheet2 = workbook.add_worksheet('Image 2')
     worksheet3 = workbook.add_worksheet('Image 3')
@@ -808,7 +808,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_tab_colors
-    workbook   = Spreadsheet::WriteExcel.new(@filename)
+    workbook   = WriteExcel.new(@filename)
 
     worksheet1 =  workbook.add_worksheet
     worksheet2 =  workbook.add_worksheet
@@ -828,7 +828,7 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_stocks
     # Create a new workbook and add a worksheet
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Set the column width for columns 1, 2, 3 and 4
@@ -894,7 +894,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_protection
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     # Create some format objects
@@ -930,7 +930,7 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_date_time
     # Create a new workbook and add a worksheet
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
     bold      = workbook.add_format(:bold => 1)
 
@@ -1004,7 +1004,7 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/date_time.xls", @filename)
   end
   def test_diag_border
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
 
     format1   = workbook.add_format(:diag_type     => 1)
@@ -1028,7 +1028,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_header
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     preview   = "Select Print Preview to see the header and footer"
 
 
@@ -1128,7 +1128,7 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_demo
-    workbook   = Spreadsheet::WriteExcel.new(@filename)
+    workbook   = WriteExcel.new(@filename)
     worksheet  = workbook.add_worksheet('Demo')
     worksheet2 = workbook.add_worksheet('Another sheet')
     worksheet3 = workbook.add_worksheet('And another')
@@ -1151,7 +1151,7 @@ class TC_example_match < Test::Unit::TestCase
                                     :align  => 'vcenter'
                                   )
 
-    headings = ['Features of Spreadsheet::WriteExcel', '']
+    headings = ['Features of WriteExcel', '']
     worksheet.write_row('A1', headings, heading)
 
 
@@ -1244,7 +1244,7 @@ class TC_example_match < Test::Unit::TestCase
                        0x0442, 0x0432, 0x0443, 0x0439, 0x0020, 0x041C,
                        0x0438, 0x0440, 0x0021].pack("U*")
 
-    workbook  = Spreadsheet::WriteExcel.new(@filename)
+    workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet(sheet + '1')
 
     worksheet.set_column('A:A', 18)

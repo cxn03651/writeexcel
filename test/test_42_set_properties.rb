@@ -30,7 +30,7 @@ class TC_set_properties < Test::Unit::TestCase
   def test_same_as_previous_plus_creation_date
     smiley = '☺'   # chr 0x263A;    in perl
 
-    workbook  = Spreadsheet::WriteExcel.new(@test_file)
+    workbook  = WriteExcel.new(@test_file)
     worksheet = workbook.add_worksheet
 
     ###############################################################################

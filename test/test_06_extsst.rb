@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# A test for Spreadsheet::WriteExcel.
+# A test for WriteExcel.
 #
 # Check that we calculate the correct bucket size and number for the EXTSST
 # record. The data is taken from actual Excel files.
@@ -22,7 +22,7 @@ class TC_extsst < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook    = Spreadsheet::WriteExcel.new(@test_file)
+    @workbook    = WriteExcel.new(@test_file)
 
     @tests = [  # Unique     Number of   Bucket
       # strings    buckets       size

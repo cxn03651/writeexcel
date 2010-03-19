@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-# Simple example of merging cells using the Spreadsheet::WriteExcel module.
+# Simple example of merging cells using the WriteExcel module.
 #
 # This merges three cells using the "Centre Across Selection" alignment.
 # This was the Excel 5 method of achieving a merge. Use the merge_range()
@@ -18,7 +18,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new('merge1.xls')
+workbook  = WriteExcel.new('merge1.xls')
 worksheet = workbook.add_worksheet
 
 

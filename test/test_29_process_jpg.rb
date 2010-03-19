@@ -20,7 +20,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook   = Spreadsheet::WriteExcel.new(@test_file)
+    @workbook   = WriteExcel.new(@test_file)
     @type       = 5   # Excel Blip type (MSOBLIPTYPE).
   end
 

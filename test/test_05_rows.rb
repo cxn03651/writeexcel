@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# A test for Spreadsheet::WriteExcel.
+# A test for WriteExcel.
 #
 # Check that max/min columns of the Excel ROW record are written correctly.
 #
@@ -24,7 +24,7 @@ class TC_rows < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    workbook            = Spreadsheet::WriteExcel.new(@test_file)
+    workbook            = WriteExcel.new(@test_file)
     workbook.compatibility_mode(1)
     @tests               = []
 

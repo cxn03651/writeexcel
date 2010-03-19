@@ -3,7 +3,7 @@
 ###############################################################################
 #
 # Example of how to add data validation and dropdown lists to a
-# Spreadsheet::WriteExcel file.
+# WriteExcel file.
 #
 # reverse('©'), August 2008, John McNamara, jmcnamara@cpan.org
 #
@@ -14,7 +14,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook  = Spreadsheet::WriteExcel.new('data_validate.xls')
+workbook  = WriteExcel.new('data_validate.xls')
 worksheet = workbook.add_worksheet
 
 # Add a format for the header cells.
@@ -37,7 +37,7 @@ worksheet.set_selection('B3')
 
 # Write the header cells and some data that will be used in the examples.
 row = 0
-heading1 = 'Some examples of data validation in Spreadsheet::WriteExcel'
+heading1 = 'Some examples of data validation in WriteExcel'
 heading2 = 'Enter values in this column'
 heading3 = 'Sample Data'
 

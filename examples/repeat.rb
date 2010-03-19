@@ -13,7 +13,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook  = Spreadsheet::WriteExcel.new("repeat.xls")
+workbook  = WriteExcel.new("repeat.xls")
 worksheet = workbook.add_worksheet
 
 limit = 1000

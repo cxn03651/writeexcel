@@ -13,7 +13,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook   = Spreadsheet::WriteExcel.new('tab_colors.xls')
+workbook   = WriteExcel.new('tab_colors.xls')
 
 worksheet1 =  workbook.add_worksheet
 worksheet2 =  workbook.add_worksheet

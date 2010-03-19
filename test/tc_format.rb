@@ -885,7 +885,7 @@ set_border() or individually using the relevant method
 calls shown above.
 
 The following shows the border styles sorted
-by Spreadsheet::WriteExcel index number:
+by WriteExcel index number:
 
     Index   Name            Weight   Style
     =====   =============   ======   ===========

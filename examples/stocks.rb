@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-# Example of formatting using the Spreadsheet::WriteExcel module
+# Example of formatting using the WriteExcel module
 #
 # This example shows how to use a conditional numerical format
 # with colours to indicate if a share price has gone up or down.
@@ -17,7 +17,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new("stocks.xls")
+workbook  = WriteExcel.new("stocks.xls")
 worksheet = workbook.add_worksheet
 
 # Set the column width for columns 1, 2, 3 and 4

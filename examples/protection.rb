@@ -3,7 +3,7 @@
 ########################################################################
 #
 # Example of cell locking and formula hiding in an Excel  worksheet via
-# the Spreadsheet::WriteExcel module.
+# the WriteExcel module.
 #
 # reverse('©'), August 2001, John McNamara, jmcnamara@cpan.org
 #
@@ -14,7 +14,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook  = Spreadsheet::WriteExcel.new("protection.xls")
+workbook  = WriteExcel.new("protection.xls")
 worksheet = workbook.add_worksheet
 
 # Create some format objects

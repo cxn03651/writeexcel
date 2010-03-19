@@ -3,7 +3,7 @@
 # Properties - A module for creating Excel property sets.
 #
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # Copyright 2000-2008, John McNamara.
 #

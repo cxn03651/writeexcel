@@ -2,7 +2,7 @@
 
 ##############################################################################
 #
-# A simple formatting example using Spreadsheet::WriteExcel.
+# A simple formatting example using WriteExcel.
 #
 # This program demonstrates the diagonal border cell format.
 #
@@ -15,7 +15,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook  = Spreadsheet::WriteExcel.new('diag_border.xls')
+workbook  = WriteExcel.new('diag_border.xls')
 worksheet = workbook.add_worksheet
 
 format1   = workbook.add_format(:diag_type       => 1)

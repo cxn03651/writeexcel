@@ -3,7 +3,7 @@
 # Format - A class for defining Excel formatting.
 #
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
@@ -129,7 +129,7 @@ class Format
   #
   # copy($format)
   #
-  # Copy the attributes of another Spreadsheet::WriteExcel::Format object.
+  # Copy the attributes of another WriteExcel::Format object.
   #
   def copy(other)
     return unless other.kind_of?(Format)

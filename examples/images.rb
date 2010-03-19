@@ -3,7 +3,7 @@
 #######################################################################
 #
 # Example of how to insert images into an Excel worksheet using the
-# Spreadsheet::WriteExcel insert_image() method.
+# WriteExcel insert_image() method.
 #
 # reverse('©'), October 2001, John McNamara, jmcnamara@cpan.org
 #
@@ -15,7 +15,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook called simple.xls and add a worksheet
-workbook   = Spreadsheet::WriteExcel.new("images.xls")
+workbook   = WriteExcel.new("images.xls")
 worksheet1 = workbook.add_worksheet('Image 1')
 worksheet2 = workbook.add_worksheet('Image 2')
 worksheet3 = workbook.add_worksheet('Image 3')

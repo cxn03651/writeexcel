@@ -3,7 +3,7 @@
 # BIFFwriter - An abstract base class for Excel workbooks and worksheets.
 #
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
@@ -15,7 +15,7 @@ class MaxSizeError < StandardError; end
 class OLEWriter
 
   # Not meant for public consumption
-  MaxSize    = 7087104 # Use Spreadsheet::WriteExcel::Big to exceed this
+  MaxSize    = 7087104 # Use WriteExcel::Big to exceed this
   BlockSize  = 4096
   BlockDiv   = 512
   ListBlocks = 127

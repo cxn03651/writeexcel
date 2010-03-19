@@ -14,7 +14,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new("hyperlink.xls")
+workbook  = WriteExcel.new("hyperlink.xls")
 worksheet = workbook.add_worksheet('Hyperlinks')
 
 # Format the first column

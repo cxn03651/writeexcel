@@ -2,7 +2,7 @@
 
 #######################################################################
 #
-# Example of how to create autofilters with Spreadsheet::WriteExcel.
+# Example of how to create autofilters with WriteExcel.
 #
 # reverse('©'), September 2007, John McNamara, jmcnamara@cpan.org
 #
@@ -74,7 +74,7 @@ end
 
 xlsfile = 'autofilters.xls'
 
-workbook = Spreadsheet::WriteExcel.new(xlsfile)
+workbook = WriteExcel.new(xlsfile)
 bp=1
 
 worksheet1 = workbook.add_worksheet

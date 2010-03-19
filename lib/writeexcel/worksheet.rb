@@ -3,7 +3,7 @@
 # Worksheet - A writer class for Excel Worksheets.
 #
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
@@ -29,7 +29,7 @@ class MaxSizeError < StandardError; end
 #
 # == Cell notation
 #
-# Spreadsheet::WriteExcel supports two forms of notation to designate
+# WriteExcel supports two forms of notation to designate
 # the position of cells: Row-column notation and A1 notation. Row-column
 # notation uses a zero based index for both row and column while A1
 # notation uses the standard Excel alphanumeric sequence of column

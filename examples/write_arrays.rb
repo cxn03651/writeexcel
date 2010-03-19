@@ -2,13 +2,13 @@
 
 #######################################################################
 #
-# Example of how to use the Spreadsheet::WriteExcel module to
+# Example of how to use the WriteExcel module to
 # write 1D and 2D arrays of data.
 #
 require 'rubygems'
 require 'writeexcel'
 
-workbook   = Spreadsheet::WriteExcel.new("write_arrays.xls")
+workbook   = WriteExcel.new("write_arrays.xls")
 worksheet1 = workbook.add_worksheet('Example 1')
 worksheet2 = workbook.add_worksheet('Example 2')
 worksheet3 = workbook.add_worksheet('Example 3')

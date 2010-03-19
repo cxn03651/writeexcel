@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# A test for Spreadsheet::WriteExcel.
+# A test for WriteExcel.
 #
 # Check that the Excel DIMENSIONS record is written correctly.
 #
@@ -21,7 +21,7 @@ class TC_dimensions < Test::Unit::TestCase
     t = Time.now.strftime("%Y%m%d")
     path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
     @test_file           = File.join(Dir.tmpdir, path)
-    @workbook            = Spreadsheet::WriteExcel.new(@test_file)
+    @workbook            = WriteExcel.new(@test_file)
     @worksheet           = @workbook.add_worksheet
     @format              = @workbook.add_format
     @dims                = ['row_min', 'row_max', 'col_min', 'col_max']

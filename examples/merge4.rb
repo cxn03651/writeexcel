@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-# Example of how to use the Spreadsheet::WriteExcel merge_range() workbook
+# Example of how to use the WriteExcel merge_range() workbook
 # method with complex formatting.
 #
 # reverse('©'), September 2002, John McNamara, jmcnamara@cpan.org
@@ -15,7 +15,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new('merge4.xls')
+workbook  = WriteExcel.new('merge4.xls')
 worksheet = workbook.add_worksheet
 
 # Increase the cell size of the merged cells to highlight the formatting.

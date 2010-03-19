@@ -3,7 +3,7 @@
 # Workbook - A writer class for Excel Workbooks.
 #
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
 #
@@ -2352,7 +2352,7 @@ class Workbook < BIFFWriter
   #
   # _add_mso_drawing_group_continue()
   #
-  # See first the Spreadsheet::WriteExcel::BIFFwriter::_add_continue() method.
+  # See first the WriteExcel::BIFFwriter::_add_continue() method.
   #
   # Add specialised CONTINUE headers to large MSODRAWINGGROUP data block.
   # We use the Excel 97 max block size of 8228 - 4 bytes for the header = 8224.

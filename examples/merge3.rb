@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-# Example of how to use Spreadsheet::WriteExcel to write a hyperlink in a
+# Example of how to use WriteExcel to write a hyperlink in a
 # merged cell. There are two options write_url_range() with a standard merge
 # format or merge_range().
 #
@@ -16,7 +16,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new("merge3.xls")
+workbook  = WriteExcel.new("merge3.xls")
 worksheet = workbook.add_worksheet()
 
 # Increase the cell size of the merged cells to highlight the formatting.

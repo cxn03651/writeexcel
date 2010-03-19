@@ -3,7 +3,7 @@
 ###############################################################################
 #
 # This is a simple example of how to use functions with the
-# Spreadsheet::WriteExcel module.
+# WriteExcel module.
 #
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
@@ -16,7 +16,7 @@ require 'writeexcel'
 include Spreadsheet
 xlsfile = 'stats.xls'
 
-workbook = Spreadsheet::WriteExcel.new(xlsfile)
+workbook = WriteExcel.new(xlsfile)
 worksheet = workbook.add_worksheet('Test data')
 
 # Set the column width for columns 1

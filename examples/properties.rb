@@ -2,7 +2,7 @@
 
 ##############################################################################
 #
-# An example of adding document properties to a Spreadsheet::WriteExcel file.
+# An example of adding document properties to a WriteExcel file.
 #
 # reverse('©'), August 2008, John McNamara, jmcnamara@cpan.org
 #
@@ -12,7 +12,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook  = Spreadsheet::WriteExcel.new('properties.xls')
+workbook  = WriteExcel.new('properties.xls')
 worksheet = workbook.add_worksheet
 bp =1
 workbook.set_properties(
@@ -23,7 +23,7 @@ workbook.set_properties(
     :company  => 'Rubygem',
     :category => 'Example spreadsheets',
     :keywords => 'Sample, Example, Properties',
-    :comments => 'Created with Ruby and Spreadsheet::WriteExcel'
+    :comments => 'Created with Ruby and WriteExcel'
 )
 
 

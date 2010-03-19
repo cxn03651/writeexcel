@@ -14,7 +14,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook = Spreadsheet::WriteExcel.new("regions.xls")
+workbook = WriteExcel.new("regions.xls")
 
 # Add some worksheets
 north = workbook.add_worksheet("North")

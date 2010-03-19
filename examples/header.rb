@@ -3,7 +3,7 @@
 ######################################################################
 #
 # This program shows several examples of how to set up headers and
-# footers with Spreadsheet::WriteExcel.
+# footers with WriteExcel.
 #
 # The control characters used in the header/footer strings are:
 #
@@ -40,7 +40,7 @@
 require 'rubygems'
 require 'writeexcel'
 
-workbook  = Spreadsheet::WriteExcel.new("headers.xls")
+workbook  = WriteExcel.new("headers.xls")
 preview   = "Select Print Preview to see the header and footer"
 
 

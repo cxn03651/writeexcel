@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-# Example of how to use the format copying method with Spreadsheet::WriteExcel #
+# Example of how to use the format copying method with WriteExcel #
 # reverse('©'), March 2001, John McNamara, jmcnamara@cpan.org
 #
 # original written in Perl by John McNamara
@@ -12,13 +12,13 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create workbook1
-workbook1       = Spreadsheet::WriteExcel.new("workbook1.xls")
+workbook1       = WriteExcel.new("workbook1.xls")
 worksheet1      = workbook1.add_worksheet
 format1a        = workbook1.add_format
 format1b        = workbook1.add_format
 
 # Create workbook2
-workbook2       = Spreadsheet::WriteExcel.new("workbook2.xls")
+workbook2       = WriteExcel.new("workbook2.xls")
 worksheet2      = workbook2.add_worksheet
 format2a        = workbook2.add_format
 format2b        = workbook2.add_format

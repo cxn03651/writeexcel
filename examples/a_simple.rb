@@ -12,7 +12,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook called simple.xls and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new('a_simple.xls');
+workbook  = WriteExcel.new('a_simple.xls');
 worksheet = workbook.add_worksheet
 
 # The general syntax is write(row, column, token). Note that row and

@@ -2,7 +2,7 @@
 
 ###############################################################################
 #
-# Spreadsheet::WriteExcel example of writing dates and times using the
+# WriteExcel example of writing dates and times using the
 # write_date_time() Worksheet method.
 #
 # reverse('©'), August 2004, John McNamara, jmcnamara@cpan.org
@@ -15,7 +15,7 @@ require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook and add a worksheet
-workbook  = Spreadsheet::WriteExcel.new("date_time.xls")
+workbook  = WriteExcel.new("date_time.xls")
 worksheet = workbook.add_worksheet
 bold      = workbook.add_format(:bold => 1)
 
