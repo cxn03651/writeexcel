@@ -35,12 +35,9 @@ class Workbook < BIFFWriter
   attr_writer :mso_size
   attr_accessor :localtime
 
-  ###############################################################################
   #
-  # new()
-  #
-  # Constructor. Creates a new Workbook object from a BIFFwriter object.
-  #
+  # file is a filename (as string) or io object where to out spreadsheet data.
+  # you can set default format of workbook using default_formats.
   def initialize(file, default_formats = {})
     super()
     @file                  = file
@@ -143,13 +140,30 @@ class Workbook < BIFFWriter
   def get_checksum_method
     @checksum_method = 3
   end
+  private :get_checksum_method
 
-  ###############################################################################
   #
-  # close()
-  #
-  # Calls finalization methods and explicitly close the OLEwriter file
+  # Calls finalization methods and explicitly close the OLEwriter files
   # handle.
+  #
+  # In general your Excel file will be closed automatically when your program
+  # ends or when the Workbook object goes out of scope, however the close method
+  # can be used to explicitly close an Excel file.
+  #
+  #     workbook.close
+  #
+  # An explicit close() is required if the file must be closed prior to performing
+  # some external action on it such as copying it, reading its size or attaching
+  # it to an email.
+  #
+  # In general, if you create a file with a size of 0 bytes or you fail to create
+  # a file you need to call close().
+  #
+  # The return value of close() is the same as that returned by perl when it
+  # closes the file created by new(). This allows you to handle error conditions
+  # in the usual way:
+  #
+  #     $workbook->close() or die "Error closing file: $!";
   #
   def close
     return if @fileclosed  # Prevent close() from being called twice.
@@ -158,13 +172,37 @@ class Workbook < BIFFWriter
     return store_workbook
   end
 
-  ###############################################################################
+  # get array of Worksheet objects
   #
-  # sheets(slice,...)
+  # :call-seq:
+  #   sheets              -> array of all Wordsheet object
+  #   sheets(1, 3, 4)     -> array of spcified Worksheet object.
   #
-  # An accessor for the _worksheets[] array
+  # The sheets() method returns a array, or a sliced array, of the worksheets
+  # in a workbook.
   #
-  # Returns: an optionally sliced list of the worksheet objects in a workbook.
+  # If no arguments are passed the method returns a list of all the worksheets
+  # in the workbook. This is useful if you want to repeat an operation on each
+  # worksheet:
+  #
+  #     workbook.sheets.each do |worksheet|
+  #        print worksheet.get_name
+  #     end
+  #
+  # You can also specify a slice list to return one or more worksheet objects:
+  #
+  #     worksheet = workbook.sheets(0)
+  #     worksheet.write('A1', 'Hello')
+  #
+  # you can write the above example as:
+  #
+  #     workbook.sheets(0).write('A1', 'Hello')
+  #
+  # The following example returns the first and last worksheet in a workbook:
+  #
+  #     workbook.sheets(0, -1).each do |sheet|
+  #        # Do something
+  #     end
   #
   def sheets(*args)
     if args.empty?
@@ -178,16 +216,38 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # add_worksheet($name, $encoding)
   #
   # Add a new worksheet to the Excel workbook.
   #
-  # Returns: reference to a worksheet object
+  # if _sheetname_ is UTF-16BE format, pass 1 as _encoding_.
   #
-  def add_worksheet(name = '', encoding = 0)
-    name, encoding = check_sheetname(name, encoding)
+  # At least one worksheet should be added to a new workbook. A worksheet is
+  # used to write data into cells:
+  #
+  #     worksheet1 = workbook.add_worksheet            # Sheet1
+  #     worksheet2 = workbook.add_worksheet('Foglio2') # Foglio2
+  #     worksheet3 = workbook.add_worksheet('Data')    # Data
+  #     worksheet4 = workbook.add_worksheet            # Sheet4
+  #
+  # If sheetname is not specified the default Excel convention will be followed,
+  # i.e. Sheet1, Sheet2, etc. The utf_16_be parameter is optional, see below.
+  #
+  # The worksheet name must be a valid Excel worksheet name, i.e. it cannot
+  # contain any of the following characters, [ ] : * ? / \
+  # and it must be less than 32 characters. In addition, you cannot use the same,
+  # case insensitive, _sheetname_ for more than one worksheet.
+  #
+  # This method will also handle strings in UTF-8 format.
+  #
+  #     worksheet = workbook.add_worksheet("シート名");
+  #
+  # UTF-16BE worksheet names using an additional optional parameter:
+  #
+  #     name = [0x263a].pack('n')
+  #     worksheet = workbook.add_worksheet(name, 1)   # Smiley
+  #
+  def add_worksheet(sheetname = '', encoding = 0)
+    name, encoding = check_sheetname(sheetname, encoding)
 
     index = @worksheets.size
 
@@ -197,11 +257,15 @@ class Workbook < BIFFWriter
       index,
       encoding
     )
-    @worksheets[index] = worksheet     # Store ref for iterator
+    @worksheets[index] = worksheet
     @sheetnames[index] = name          # Store EXTERNSHEET names
     #       @parser->set_ext_sheets($name, $index) # Store names in Formula.pm
-    return worksheet
+    worksheet
   end
+
+=begin
+
+ not converted yet.
 
   ###############################################################################
   #
@@ -230,6 +294,7 @@ class Workbook < BIFFWriter
     @parser.set_ext_sheets(name, index) # Store names in Formula.pm
     return worksheet
   end
+=end
 
   ###############################################################################
   #
@@ -333,28 +398,61 @@ class Workbook < BIFFWriter
         "is already in use"
       end
     end
-    return [name,  encoding]
+    [name,  encoding]
   end
+  private :check_sheetname
 
-  ###############################################################################
   #
-  # add_format(%properties)
+  # The add_format method can be used to create new Format objects which are
+  # used to apply formatting to a cell. You can either define the properties
+  # at creation time via a hash of property values or later via method calls.
   #
-  # Add a new format to the Excel workbook. This adds an XF record and
-  # a FONT record. Also, pass any properties to the Format::new().
+  #     format1 = workbook.add_format(props) # Set properties at creation
+  #     format2 = workbook.add_format        # Set properties later
+  #
+  # See the "CELL FORMATTING" section for more details about Format properties and how to set them.
   #
   def add_format(formats = {})
     format = Format.new(@xf_index, @default_formats.merge(formats))
     @xf_index += 1
     @formats.push format # Store format reference
-    return format
+    format
   end
 
-  ###############################################################################
-  #
-  # compatibility_mode()
   #
   # Set the compatibility mode.
+  #
+  # This method is used to improve compatibility with third party
+  # applications that read Excel files.
+  #
+  #     workbook.compatibility_mode
+  #
+  # An Excel file is comprised of binary records that describe properties of
+  # a spreadsheet. Excel is reasonably liberal about this and, outside of a
+  # core subset, it doesn't require every possible record to be present when
+  # it reads a file. This is also true of Gnumeric and OpenOffice.Org Calc.
+  #
+  # WriteExcel takes advantage of this fact to omit some records in order to
+  # minimise the amount of data stored in memory and to simplify and speed up
+  # the writing of files. However, some third party applications that read
+  # Excel files often expect certain records to be present. In
+  # "compatibility mode" WriteExcel writes these records and tries to be as
+  # close to an Excel generated file as possible.
+  #
+  # Applications that require compatibility_mode() are Apache POI,
+  # Apple Numbers, and Quickoffice on Nokia, Palm and other devices. You should
+  # also use compatibility_mode() if your Excel file will be used as an external
+  # data source by another Excel file.
+  #
+  # If you encounter other situations that require compatibility_mode(),
+  # please let me know.
+  #
+  # It should be noted that compatibility_mode() requires additional data to be
+  # stored in memory and additional processing. This incurs a memory and speed
+  # penalty and may not be suitable for very large files (>20MB).
+  #
+  # You must call compatibility_mode() before calling add_worksheet().
+  #
   #
   # Excel doesn't require every possible Biff record to be present in a file.
   # In particular if the indexing records INDEX, ROW and DBCELL aren't present
@@ -377,11 +475,25 @@ class Workbook < BIFFWriter
     @compatibility = mode
   end
 
-  ###############################################################################
-  #
-  # set_1904()
   #
   # Set the date system: false = 1900 (the default), true = 1904
+  #
+  # Excel stores dates as real numbers where the integer part stores the
+  # number of days since the epoch and the fractional part stores the
+  # percentage of the day. The epoch can be either 1900 or 1904. Excel for
+  # Windows uses 1900 and Excel for Macintosh uses 1904. However, Excel on
+  # either platform will convert automatically between one system and
+  # the other.
+  #
+  # WriteExcel stores dates in the 1900 format by default. If you wish to
+  # change this you can call the set_1904() workbook method. You can query
+  # the current value by calling the get_1904() workbook method. This returns
+  # 0 for 1900 and 1 for 1904.
+  #
+  # See also "DATES AND TIME IN EXCEL" for more information about working
+  # with Excel's date system.
+  #
+  # In general you probably won't need to use set_1904().
   #
   def set_1904(mode = true)
     unless sheets.empty?
@@ -389,12 +501,58 @@ class Workbook < BIFFWriter
     end
     @date_1904 = mode
   end
+  private :set_1904
 
-  ###############################################################################
-  #
-  # set_custom_color()
   #
   # Change the RGB components of the elements in the colour palette.
+  #
+  # The set_custom_color() method can be used to override one of the built-in
+  # palette values with a more suitable colour.
+  #
+  # The value for _index_ should be in the range 8..63, see "COLOURS IN EXCEL".
+  #
+  # The default named colours use the following indices:
+  #
+  #      8   =>   black
+  #      9   =>   white
+  #     10   =>   red
+  #     11   =>   lime
+  #     12   =>   blue
+  #     13   =>   yellow
+  #     14   =>   magenta
+  #     15   =>   cyan
+  #     16   =>   brown
+  #     17   =>   green
+  #     18   =>   navy
+  #     20   =>   purple
+  #     22   =>   silver
+  #     23   =>   gray
+  #     33   =>   pink
+  #     53   =>   orange
+  #
+  # A new colour is set using its RGB (red green blue) components. The red,
+  # green and blue values must be in the range 0..255. You can determine the
+  # required values in Excel using the Tools->Options->Colors->Modify dialog.
+  #
+  # The set_custom_color() workbook method can also be used with a HTML style
+  # #rrggbb hex value:
+  #
+  #     workbook.set_custom_color(40, 255,  102,  0   ) # Orange
+  #     workbook.set_custom_color(40, 0xFF, 0x66, 0x00) # Same thing
+  #     workbook.set_custom_color(40, '#FF6600'       ) # Same thing
+  #
+  #     font = workbook.add_format(color => 40)   # Use the modified colour
+  #
+  # The return value from set_custom_color() is the index of the colour that
+  # was changed:
+  #
+  #     ferrari = workbook.set_custom_color(40, 216, 12, 12)
+  #
+  #     format  = workbook.add_format(
+  #                                 bg_color => $ferrari,
+  #                                 pattern  => 1,
+  #                                 border   => 1
+  #                            )
   #
   def set_custom_color(index = nil, red = nil, green = nil, blue = nil)
     # Match a HTML #xxyyzz style parameter
@@ -492,11 +650,50 @@ class Workbook < BIFFWriter
     return 0
   end
 
-  ###############################################################################
   #
-  # set_tempdir()
+  # Change the default temp directory
   #
-  # Change the default temp directory used by _initialize() in Worksheet.pm.
+  #
+  # For speed and efficiency WriteExcel stores worksheet data in temporary
+  # files prior to assembling the final workbook.
+  #
+  # If WriteExcel is unable to create these temporary files it will store
+  # the required data in memory. This can be slow for large files.
+  #
+  # The problem occurs mainly with IIS on Windows although it could feasibly
+  # occur on Unix systems as well. The problem generally occurs because the
+  # default temp file directory is defined as C:/ or some other directory that
+  # IIS doesn't provide write access to.
+  #
+  # To check if this might be a problem on a particular system you can run a
+  # simple test program with -w or use warnings. This will generate a warning
+  # if the module cannot create the required temporary files:
+  #
+  #     #!/usr/bin/ruby -w
+  #
+  #     require 'WriteExcel'
+  #
+  #     workbook  = WriteExcel.new('test.xls')
+  #     worksheet = workbook.add_worksheet
+  #     workbook.close
+  #
+  # To avoid this problem the set_tempdir() method can be used to specify a
+  # directory that is accessible for the creation of temporary files.
+  #
+  # Even if the default temporary file directory is accessible you may wish
+  # to specify an alternative location for security or maintenance reasons:
+  #
+  #     workbook.set_tempdir('/tmp/writeexcel')
+  #     workbook.set_tempdir('c:\windows\temp\writeexcel')
+  #
+  # The directory for the temporary file must exist, set_tempdir() will not
+  # create a new directory.
+  #
+  # One disadvantage of using the set_tempdir() method is that on some Windows
+  # systems it will limit you to approximately 800 concurrent tempfiles. This
+  # means that a single program running on one of these systems will be limited
+  # to creating a total of 800 workbook and worksheet objects. You can run
+  # multiple, non-concurrent programs to work around this if necessary.
   #
   def set_tempdir(dir = '')
     raise "#{dir} is not a valid directory" if dir != '' && !FileTest.directory?(dir)
@@ -505,12 +702,18 @@ class Workbook < BIFFWriter
     @tempdir = dir
   end
 
-  ###############################################################################
   #
-  # set_codepage()
+  # The default code page or character set used by WriteExcel is ANSI. This is
+  # also the default used by Excel for Windows. Occasionally however it may be
+  # necessary to change the code page via the set_codepage() method.
   #
-  # See also the _store_codepage method. This is used to store the code page, i.e.
-  # the character set used in the workbook.
+  # Changing the code page may be required if your are using WriteExcel on the
+  # Macintosh and you are using characters outside the ASCII 128 character set:
+  #
+  #     workbook.set_codepage(1) # ANSI, MS Windows
+  #     workbook.set_codepage(2) # Apple Macintosh
+  #
+  # The set_codepage() method is rarely required.
   #
   def set_codepage(type = 1)
     if type == 2
@@ -520,12 +723,56 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # set_properties()
   #
   # Set the document properties such as Title, Author etc. These are written to
   # property sets in the OLE container.
+  #
+  # The set_properties method can be used to set the document properties of
+  # the Excel file created by WriteExcel. These properties are visible when you
+  # use the File->Properties  menu option in Excel and are also available to
+  # external applications that read or index windows files.
+  #
+  # The properties should be passed as a hash of values as follows:
+  #
+  #     workbook.set_properties(
+  #         title    => 'This is an example spreadsheet',
+  #         author   => 'cxn03651',
+  #         comments => 'Created with Ruby and WriteExcel',
+  #     )
+  #
+  # The properties that can be set are:
+  #
+  #    * title
+  #    * subject
+  #    * author
+  #    * manager
+  #    * company
+  #    * category
+  #    * keywords
+  #    * comments
+  #
+  # User defined properties are not supported due to effort required.
+  #
+  # You can also pass UTF-8 strings as properties.
+  #
+  #     $workbook->set_properties(
+  #         subject => "住所録",
+  #     );
+  #
+  # Usually WriteExcel allows you to use UTF-16. However, document properties
+  # don't support UTF-16 for these type of strings.
+  #
+  # In order to promote the usefulness of Ruby and the WriteExcel module
+  # consider adding a comment such as the following when using document
+  # properties:
+  #
+  #     workbook.set_properties(
+  #         ...,
+  #         comments => 'Created with Ruby and WriteExcel',
+  #         ...,
+  #     )
+  #
+  # See also the properties.rb program in the examples directory of the distro.
   #
   def set_properties(params)
     # Ignore if no args were passed.
@@ -632,6 +879,7 @@ class Workbook < BIFFWriter
       return 0x04E4; # Default codepage, Latin 1.
     end
   end
+  private :get_property_set_codepage
 
   ###############################################################################
   #
@@ -699,8 +947,9 @@ class Workbook < BIFFWriter
     store_eof
 
     # Store the workbook in an OLE container
-    return store_OLE_file
+    store_OLE_file
   end
+  private :store_workbook
 
   ###############################################################################
   #
@@ -785,6 +1034,7 @@ class Workbook < BIFFWriter
       return @fh_out.close if @internal_fh != 0
     end
   end
+  private :store_OLE_file
 
   ###############################################################################
   #
@@ -829,6 +1079,7 @@ class Workbook < BIFFWriter
 
     @biffsize = offset
   end
+  private :calc_sheet_offsets
 
   ###############################################################################
   #
@@ -908,6 +1159,7 @@ class Workbook < BIFFWriter
       drawings_saved, clusters
     ]
   end
+  private :calc_mso_sizes
 
   ###############################################################################
   #
@@ -1040,8 +1292,8 @@ class Workbook < BIFFWriter
     # Store information required by the Workbook.
     @images_size = images_size
     @images_data = image_data     # Store the data for MSODRAWINGGROUP.
-
   end
+  private :process_images
 
   ###############################################################################
   #
@@ -1067,6 +1319,7 @@ class Workbook < BIFFWriter
       return sprintf('%016X%016X', index2, index1)
     end
   end
+  private :image_checksum
 
   ###############################################################################
   #
@@ -1081,6 +1334,7 @@ class Workbook < BIFFWriter
 
     return [type, width, height]
   end
+  private :process_png
 
   ###############################################################################
   #
@@ -1129,6 +1383,7 @@ class Workbook < BIFFWriter
 
     return [type, width, height]
   end
+  private :process_bmp
 
   ###############################################################################
   #
@@ -1168,6 +1423,7 @@ class Workbook < BIFFWriter
 
     return [type, width, height]
   end
+  private :process_jpg
 
   ###############################################################################
   #
@@ -1220,6 +1476,7 @@ class Workbook < BIFFWriter
       end
     end
   end
+  private :store_all_fonts
 
   ###############################################################################
   #
@@ -1258,6 +1515,7 @@ class Workbook < BIFFWriter
       end
     end
   end
+  private :store_all_num_formats
 
   ###############################################################################
   #
@@ -1271,6 +1529,7 @@ class Workbook < BIFFWriter
       append(xf)
     end
   end
+  private :store_all_xfs
 
   ###############################################################################
   #
@@ -1301,6 +1560,7 @@ class Workbook < BIFFWriter
       store_style(type, xf_index)
     end
   end
+  private :store_all_styles
 
   ###############################################################################
   #
@@ -1402,6 +1662,7 @@ class Workbook < BIFFWriter
       end
     end
   end
+  private :store_names
 
   ###############################################################################
   ###############################################################################
@@ -1442,6 +1703,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_window1
 
   ###############################################################################
   #
@@ -1473,6 +1735,7 @@ class Workbook < BIFFWriter
 
     append(header, data, sheetname)
   end
+  private :store_boundsheet
 
   ###############################################################################
   #
@@ -1495,6 +1758,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_style
 
   ###############################################################################
   #
@@ -1539,6 +1803,7 @@ class Workbook < BIFFWriter
 
     append(header, data, format)
   end
+  private :store_num_format
 
   ###############################################################################
   #
@@ -1557,6 +1822,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_1904
 
   ###############################################################################
   #
@@ -1577,6 +1843,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_supbook
 
   ###############################################################################
   #
@@ -1609,6 +1876,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_externsheet
 
   ###############################################################################
   #
@@ -1669,6 +1937,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_name_short
 
   ###############################################################################
   #
@@ -1744,6 +2013,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_name_long
 
   ###############################################################################
   #
@@ -1766,6 +2036,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_palette
 
   ###############################################################################
   #
@@ -1783,6 +2054,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_codepage
 
   ###############################################################################
   #
@@ -1802,6 +2074,7 @@ class Workbook < BIFFWriter
     data            = [country_default, country_win_ini].pack("vv")
     append(header, data)
   end
+  private :store_country
 
   ###############################################################################
   #
@@ -1819,6 +2092,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
+  private :store_hideobj
 
   ###############################################################################
   ###############################################################################
@@ -1904,6 +2178,7 @@ class Workbook < BIFFWriter
 
     return length
   end
+  private :calculate_extern_sizes
 
   ###############################################################################
   #
@@ -2063,6 +2338,7 @@ class Workbook < BIFFWriter
 
     return length
   end
+  private :calculate_shared_string_sizes
 
   ###############################################################################
   #
@@ -2262,6 +2538,7 @@ class Workbook < BIFFWriter
       end
     end
   end
+  private :store_shared_strings
 
   ###############################################################################
   #
@@ -2289,6 +2566,7 @@ class Workbook < BIFFWriter
 
     return 6 + 8 * buckets
   end
+  private :calculate_extsst_size
 
   ###############################################################################
   #
@@ -2311,8 +2589,8 @@ class Workbook < BIFFWriter
     end
 
     append(header, data)
-
   end
+  private :store_extsst
 
   #
   # Methods related to comments and MSO objects.
@@ -2347,6 +2625,7 @@ class Workbook < BIFFWriter
 
     return header + data # For testing only.
   end
+  private :add_mso_drawing_group
 
   ###############################################################################
   #
@@ -2407,6 +2686,7 @@ class Workbook < BIFFWriter
     # Turn the base class _add_continue() method back on.
     @ignore_continue = 0
   end
+  private :add_mso_drawing_group_continue
 
   ###############################################################################
   #
@@ -2423,7 +2703,7 @@ class Workbook < BIFFWriter
 
     return add_mso_generic(type, version, instance, data, length)
   end
-
+  private :store_mso_dgg_container
 
   ###############################################################################
   #
@@ -2455,6 +2735,7 @@ class Workbook < BIFFWriter
 
     return add_mso_generic(type, version, instance, data, length)
   end
+  private :store_mso_dgg
 
   ###############################################################################
   #
@@ -2473,6 +2754,7 @@ class Workbook < BIFFWriter
 
     return add_mso_generic(type, version, instance, data, length)
   end
+  private :store_mso_bstore_container
 
   ###############################################################################
   #
@@ -2504,6 +2786,7 @@ class Workbook < BIFFWriter
 
     return blip_store_entry + blip
   end
+  private :store_mso_images
 
   ###############################################################################
   #
@@ -2534,6 +2817,7 @@ class Workbook < BIFFWriter
 
     return add_mso_generic(type, version, instance, data, length)
   end
+  private :store_mso_blip_store_entry
 
   ###############################################################################
   #
@@ -2565,6 +2849,7 @@ class Workbook < BIFFWriter
 
     return add_mso_generic(type, version, instance, data, length)
   end
+  private :store_mso_blip
 
   ###############################################################################
   #
@@ -2583,6 +2868,7 @@ class Workbook < BIFFWriter
 
     return add_mso_generic(type, version, instance, data, length)
   end
+  private :store_mso_opt
 
   ###############################################################################
   #
@@ -2601,5 +2887,5 @@ class Workbook < BIFFWriter
 
     return add_mso_generic(type, version, instance, data, length)
   end
-
+  private :store_mso_split_menu_colors
 end

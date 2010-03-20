@@ -53,6 +53,10 @@ class TC_Workbook < Test::Unit::TestCase
     }
   end
 
+=begin
+#
+# Comment out because Workbook#check_sheetname was set to private method.
+#
   def test_check_sheetname
     valids   = valid_sheetname
     invalids = invalid_sheetname
@@ -76,6 +80,7 @@ class TC_Workbook < Test::Unit::TestCase
         }
     end
   end
+=end
 
   def test_raise_set_compatibility_after_sheet_creation
     @workbook.add_worksheet
