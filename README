@@ -9,8 +9,6 @@
 
  Some function does not implemented yet.
  * import externally generated charts into WriteExcel file.
- * output is file only. not to a memory.
- * file property of Excel(such as author, time, etc.) is not supported.
 
  Some examples written in perl was successfully converted to Ruby. But
  this library written in Ruby has many bugs, I think.
