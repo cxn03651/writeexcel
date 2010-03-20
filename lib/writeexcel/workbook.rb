@@ -649,6 +649,7 @@ class Workbook < BIFFWriter
     ]
     return 0
   end
+  private :set_palette_xl97
 
   #
   # Change the default temp directory
