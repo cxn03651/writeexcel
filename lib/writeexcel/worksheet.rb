@@ -14,6 +14,88 @@ require 'writeexcel/format'
 require 'writeexcel/formula'
 require 'writeexcel/workbook'
 
+#
+# = Worksheet
+# A new worksheet is created by calling the add_worksheet() method from
+# a workbook object:
+#
+# == Cell notation
+# WriteExcel supports two forms of notation to designate the position of cells:
+# Row-column notation and A1 notation.
+#
+# Row-column notation uses a zero based index for both row and column while A1
+# notation uses the standard Excel alphanumeric sequence of column letter and
+# 1-based row. For example:
+#
+#    (0, 0)      # The top left cell in row-column notation.
+#    ('A1')      # The top left cell in A1 notation.
+#
+#    (1999, 29)  # Row-column notation.
+#    ('AD2000')  # The same cell in A1 notation.
+#
+# Row-column notation is useful if you are referring to cells
+# programmatically:
+#
+#    (0 .. 10).each do |i|
+#        worksheet.write(i, 0, 'Hello')  # Cells A1 to A10
+#    end
+#
+# A1 notation is useful for setting up a worksheet manually and for working
+# with formulas:
+#
+#    worksheet.write('H1', 200)
+#    worksheet.write('H2', '=H1+1')
+#
+# In formulas and applicable methods you can also use the A:A column notation:
+#
+#    worksheet.write('A1', '=SUM(B:B)')
+#
+# For simplicity, the parameter lists for the worksheet method calls in the
+# following sections are given in terms of row-column notation. In all cases
+# it is also possible to use A1 notation.
+#
+# Note: in Excel it is also possible to use a R1C1 notation. This is not
+# supported by WriteExcel.
+#
+# ==PAGE SET-UP METHODS
+#
+# Page set-up methods affect the way that a worksheet looks when it is printed.
+# They control features such as page headers and footers and margins. These
+# methods are really just standard worksheet methods. They are documented
+# here in a separate section for the sake of clarity.
+#
+# The following methods are available for page set-up:
+#
+#     set_landscape()
+#     set_portrait()
+#     set_page_view()
+#     set_paper()
+#     center_horizontally()
+#     center_vertically()
+#     set_margins()
+#     set_header()
+#     set_footer()
+#     repeat_rows()
+#     repeat_columns()
+#     hide_gridlines()
+#     print_row_col_headers()
+#     print_area()
+#     print_across()
+#     fit_to_pages()
+#     set_start_page()
+#     set_print_scale()
+#     set_h_pagebreaks()
+#     set_v_pagebreaks()
+#
+# A common requirement when working with WriteExcel is to apply the same page
+# set-up features to all of the worksheets in a workbook. To do this you can use
+# the sheets() method of the workbook class to access the array of worksheets
+# in a workbook:
+#
+#     workbook.sheets.each do |worksheet|
+#        worksheet->set_landscape
+#     end
+#
 class MaxSizeError < StandardError; end
 
 #
@@ -59,7 +141,6 @@ class MaxSizeError < StandardError; end
 #
 #  worksheet.write('A1', '=SUM(B:B)')
 #
-
 class Worksheet < BIFFWriter
 
   RowMax   = 65536
@@ -68,14 +149,14 @@ class Worksheet < BIFFWriter
   Buffer   = 4096
   NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
-  attr_reader :name, :encoding, :xf_index, :index, :type, :images_array
+  attr_reader :encoding, :xf_index, :index, :type, :images_array
   attr_reader :filter_area, :filter_count
   attr_reader :title_rowmin, :title_rowmax, :title_colmin, :title_colmax
   attr_reader :print_rowmin, :print_rowmax, :print_colmin, :print_colmax
   attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
   attr_accessor :object_ids, :num_images, :image_mso_size
   attr_writer :date_1904
-attr_reader :compatibility
+  attr_reader :compatibility
 
   ###############################################################################
   #
@@ -402,13 +483,38 @@ attr_reader :compatibility
   def compatibility_mode(compatibility = 1)
     @compatibility = compatibility
   end
+  private :compatibility_mode
 
-  ###############################################################################
   #
-  # select()
+  # The name() method is used to retrieve the name of a worksheet. For example:
+  #
+  #     workbook.sheets.each do |sheet|
+  #         print sheet.name
+  #     end
+  #
+  # For reasons related to the design of WriteExcel and to the internals of
+  # Excel there is no set_name() method. The only way to set the worksheet
+  # name is via the add_worksheet() method.
+  #
+  def name
+    @name
+  end
+
   #
   # Set this worksheet as a selected worksheet, i.e. the worksheet has its tab
   # highlighted.
+  #
+  # The select() method is used to indicate that a worksheet is selected in a
+  # multi-sheet workbook:
+  #
+  #     worksheet1.activate
+  #     worksheet2.select
+  #     worksheet3.select
+  #
+  # A selected worksheet has its tab highlighted. Selecting worksheets is a way
+  # of grouping them together so that, for example, several worksheets could be
+  # printed in one go. A worksheet that has been activated via the activate()
+  # method will also appear as selected.
   #
   def select
     @hidden         = 0  # Selected worksheet can't be hidden.
@@ -416,12 +522,24 @@ attr_reader :compatibility
   end
 
 
-  ###############################################################################
-  #
-  # activate()
   #
   # Set this worksheet as the active worksheet, i.e. the worksheet that is
   # displayed when the workbook is opened. Also set it as selected.
+  #
+  # The activate() method is used to specify which worksheet is initially
+  # visible in a multi-sheet workbook:
+  #
+  #     worksheet1 = workbook.add_worksheet('To')
+  #     worksheet2 = workbook.add_worksheet('the')
+  #     worksheet3 = workbook.add_worksheet('wind')
+  #
+  #     worksheet3.activate
+  #
+  # This is similar to the Excel VBA activate method. More than one worksheet
+  # can be selected via the select() method, see below, however only one
+  # worksheet can be active.
+  #
+  # The default active worksheet is the first worksheet.
   #
   def activate
     @hidden      = 0  # Active worksheet can't be hidden.
@@ -430,11 +548,23 @@ attr_reader :compatibility
   end
 
 
-  ###############################################################################
-  #
-  # hide()
   #
   # Hide this worksheet.
+  #
+  # The hide() method is used to hide a worksheet:
+  #
+  #     worksheet2.hide
+  #
+  # You may wish to hide a worksheet in order to avoid confusing a user with
+  # intermediate data or calculations.
+  #
+  # A hidden worksheet can not be activated or selected so this method is
+  # mutually exclusive with the activate() and select() methods. In addition,
+  # since the first worksheet will default to being the active worksheet,
+  # you cannot hide the first worksheet without activating another sheet:
+  #
+  #     worksheet2.activate
+  #     worksheet1.hide
   #
   def hide
     @hidden         = 1
@@ -446,13 +576,26 @@ attr_reader :compatibility
   end
 
 
-  ###############################################################################
-  #
-  # set_first_sheet()
   #
   # Set this worksheet as the first visible sheet. This is necessary
   # when there are a large number of worksheets and the activated
   # worksheet is not visible on the screen.
+  #
+  # The activate() method determines which worksheet is initially selected.
+  # However, if there are a large number of worksheets the selected worksheet
+  # may not appear on the screen. To avoid this you can select which is the
+  # leftmost visible worksheet using set_first_sheet
+  #
+  #     20.times { workbook.add_worksheet }
+  #
+  #     worksheet21 = workbook.add_worksheet
+  #     worksheet22 = workbook.add_worksheet
+  #
+  #     worksheet21.set_first_sheet
+  #     worksheet22.activate
+  #
+  # This method is not required very often. The default value is the first
+  # worksheet.
   #
   def set_first_sheet
     @hidden      = 0  # Active worksheet can't be hidden.
@@ -460,25 +603,149 @@ attr_reader :compatibility
   end
 
 
-  ###############################################################################
-  #
-  # protect($password)
   #
   # Set the worksheet protection flag to prevent accidental modification and to
   # hide formulas if the locked and hidden format properties have been set.
+  #
+  # The protect() method is used to protect a worksheet from modification:
+  #
+  #     worksheet.protect
+  #
+  # It can be turned off in Excel via the
+  # Tools->Protection->Unprotect Sheet menu command.
+  #
+  # The protect() method also has the effect of enabling a cell's locked and
+  # hidden properties if they have been set. A "locked" cell cannot be edited.
+  # A "hidden" cell will display the results of a formula but not the formula
+  # itself. In Excel a cell's locked property is on by default.
+  #
+  #     # Set some format properties
+  #     unlocked  = workbook.add_format(locked => 0)
+  #     hidden    = workbook.add_format(hidden => 1)
+  #
+  #     # Enable worksheet protection
+  #     worksheet.protect
+  #
+  #     # This cell cannot be edited, it is locked by default
+  #     worksheet.write('A1', '=1+2')
+  #
+  #     # This cell can be edited
+  #     worksheet.write('A2', '=1+2', unlocked)
+  #
+  #     # The formula in this cell isn't visible
+  #     worksheet.write('A3', '=1+2', hidden)
+  #
+  # See also the set_locked and set_hidden format methods in "CELL FORMATTING".
+  #
+  # You can optionally add a password to the worksheet protection:
+  #
+  #     worksheet.protect('drowssap')
+  #
+  # Note,
+  #
+  #  the worksheet level password in Excel provides very weak protection. It
+  # does not encrypt your data in any way and it is very easy to deactivate.
+  # Therefore, do not use the above method if you wish to protect sensitive
+  # data or calculations. However, before you get worried, Excel's own
+  # workbook level password protection does provide strong encryption in
+  # Excel 97+. For technical reasons this will never be supported by
+  # WriteExcel.
   #
   def protect(password = nil)
     @protect   = 1
     @password  = encode_password(password) unless password.nil?
   end
 
-  ###############################################################################
   #
-  # set_column($first_col, $last_col, $width, $format, $hidden, $level, $collapsed)
-  # set_column($A1_notation,          $width, $format, $hidden, $level, $collapsed)
+  # :call-seq:
+  #   set_column(first_col, last_col, width, format, hidden, level, collapsed)
+  #   set_column(A1_notation,         width, format, hidden, level, collapsed)
   #
   # Set the width of a single column or a range of columns.
+  #--
   # See also: _store_colinfo
+  #++
+  #
+  # This method can be used to change the default properties of a single
+  # column or a range of columns. All parameters apart from _first_col_ and
+  # _last_col_ are optional.
+  #
+  # If set_column() is applied to a single column the value of _first_col_ and
+  # _last_col_ should be the same. In the case where _last_col_ is zero it is
+  # set to the same value as _first_col_.
+  #
+  # It is also possible, and generally clearer, to specify a column range
+  # using the form of A1 notation used for columns. See the note about
+  # "Cell notation".
+  #
+  # Examples:
+  #
+  #     worksheet.set_column(0, 0,  20) # Column  A   width set to 20
+  #     worksheet.set_column(1, 3,  30) # Columns B-D width set to 30
+  #     worksheet.set_column('E:E', 20) # Column  E   width set to 20
+  #     worksheet.set_column('F:H', 30) # Columns F-H width set to 30
+  #
+  # The width corresponds to the column width value that is specified in Excel.
+  # It is approximately equal to the length of a string in the default font
+  # of Arial 10. Unfortunately, there is no way to specify "AutoFit" for a
+  # column in the Excel file format. This feature is only available at
+  # runtime from within Excel.
+  #
+  # As usual the _format_ parameter is optional, for additional information,
+  # see "CELL FORMATTING". If you wish to set the format without changing the
+  # width you can pass undef as the width parameter:
+  #
+  #     worksheet.set_column(0, 0, nil, format)
+  #
+  # The _format_ parameter will be applied to any cells in the column that
+  # don't have a format. For example
+  #
+  #     worksheet.set_column('A:A', nil, format1)   # Set format for col 1
+  #     worksheet.write('A1', 'Hello')              # Defaults to format1
+  #     worksheet.write('A2', 'Hello', format2)     # Keeps format2
+  #
+  # If you wish to define a column format in this way you should call the
+  # method before any calls to write(). If you call it afterwards it won't
+  # have any effect.
+  #
+  # A default row format takes precedence over a default column format
+  #
+  #     worksheet.set_row(0, nil,        format1)   # Set format for row 1
+  #     worksheet.set_column('A:A', nil, format2)   # Set format for col 1
+  #     worksheet.write('A1', 'Hello')              # Defaults to format1
+  #     worksheet.write('A2', 'Hello')              # Defaults to format2
+  #
+  # The _hidden_ parameter should be set to 1 if you wish to hide a column.
+  # This can be used, for example, to hide intermediary steps in a complicated
+  # calculation:
+  #
+  #     worksheet.set_column('D:D', 20,  format, 1)
+  #     worksheet.set_column('E:E', nil, nil,    1)
+  #
+  # The _level_ parameter is used to set the outline level of the column.
+  # Outlines are described in "OUTLINES AND GROUPING IN EXCEL". Adjacent
+  # columns with the same outline level are grouped together into a single
+  # outline.
+  #
+  # The following example sets an outline level of 1 for columns B to G:
+  #
+  #     worksheet.set_column('B:G', nil, nil, 0, 1)
+  #
+  # The _hidden_ parameter can also be used to hide collapsed outlined columns
+  # when used in conjunction with the _level_ parameter.
+  #
+  #     worksheet.set_column('B:G', nil, nil, 1, 1)
+  #
+  # For collapsed outlines you should also indicate which row has the
+  # collapsed + symbol using the optional _collapsed_ parameter.
+  #
+  #     worksheet.set_column('H:H', nil, nil, 0, 0, 1)
+  #
+  # For a more complete example see the outline.pl and outline_collapsed.rb
+  # programs in the examples directory of the distro.
+  #
+  # Excel allows up to 7 outline levels. Therefore the _level_ parameter
+  # should be in the range 0 <= $level <= 7.
   #
   def set_column(*args)
     data = args
@@ -524,12 +791,32 @@ attr_reader :compatibility
     end
   end
 
-  ###############################################################################
   #
-  # set_selection()
+  # :call-seq:
+  #   set_selection(first_row, first_col[, last_row, last_col])
+  #   set_selection('B3')
+  #   set_selection('B3:C8')
   #
   # Set which cell or cells are selected in a worksheet: see also the
   # sub _store_selection
+  #
+  # This method can be used to specify which cell or cells are selected in a
+  # worksheet. The most common requirement is to select a single cell, in which
+  # case _last_row_ and _last_col_ can be omitted. The active cell within a
+  # selected range is determined by the order in which _first_ and _last_ are
+  # specified. It is also possible to specify a cell or a range using
+  # A1 notation. See the note about "Cell notation".
+  #
+  # Examples:
+  #
+  #     worksheet1.set_selection(3, 3)       # 1. Cell D4.
+  #     worksheet2.set_selection(3, 3, 6, 6) # 2. Cells D4 to G7.
+  #     worksheet3.set_selection(6, 6, 3, 3) # 3. Cells G7 to D4.
+  #     worksheet4.set_selection('D4')       # Same as 1.
+  #     worksheet5.set_selection('D4:G7')    # Same as 2.
+  #     worksheet6.set_selection('G7:D4')    # Same as 3.
+  #
+  # The default cell selections is (0, 0), 'A1'.
   #
   def set_selection(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -540,11 +827,49 @@ attr_reader :compatibility
   end
 
 
-  ###############################################################################
   #
-  # freeze_panes()
+  # :call-seq:
+  #    freeze_pane(row, col, top_row, left_col)
   #
-  # Set panes and mark them as frozen. See also _store_panes().
+  # Set panes and mark them as frozen.
+  #--
+  # See also _store_panes().
+  #++
+  #
+  # This method can be used to divide a worksheet into horizontal or vertical
+  # regions known as panes and to also "freeze" these panes so that the
+  # splitter bars are not visible. This is the same as the Window->Freeze Panes
+  # menu command in Excel
+  #
+  # The parameters _row_ and _col_ are used to specify the location of the split.
+  # It should be noted that the split is specified at the top or left of a
+  # cell and that the method uses zero based indexing. Therefore to freeze the
+  # first row of a worksheet it is necessary to specify the split at row 2
+  # (which is 1 as the zero-based index). This might lead you to think that
+  # you are using a 1 based index but this is not the case.
+  #
+  # You can set one of the _row_ and _col_ parameters as zero if you do not
+  # want either a vertical or horizontal split.
+  #
+  # Examples:
+  #
+  #     worksheet.freeze_panes(1, 0)  # Freeze the first row
+  #     worksheet.freeze_panes('A2')  # Same using A1 notation
+  #     worksheet.freeze_panes(0, 1)  # Freeze the first column
+  #     worksheet.freeze_panes('B1')  # Same using A1 notation
+  #     worksheet.freeze_panes(1, 2)  # Freeze first row and first 2 columns
+  #     worksheet.freeze_panes('C2')  # Same using A1 notation
+  #
+  # The parameters _top_row_ and _left_col_ are optional. They are used to
+  # specify the top-most or left-most visible row or column in the scrolling
+  # region of the panes. For example to freeze the first row and to have the
+  # scrolling region begin at row twenty:
+  #
+  #     worksheet.freeze_panes(1, 0, 20, 0)
+  #
+  # You cannot use A1 notation for the _top_row_ and _left_col_ parameters.
+  #
+  # See also the panes.rb program in the examples directory of the distribution.
   #
   def freeze_panes(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -559,11 +884,45 @@ attr_reader :compatibility
   end
 
 
-  ###############################################################################
   #
-  # split_panes()
+  # :call-seq:
+  #   split_panes(y, x, top_row, left_col)
   #
-  # Set panes and mark them as split. See also _store_panes().
+  # Set panes and mark them as split.
+  #--
+  # See also _store_panes().
+  #++
+  #
+  # This method can be used to divide a worksheet into horizontal or vertical
+  # regions known as panes. This method is different from the freeze_panes()
+  # method in that the splits between the panes will be visible to the user
+  # and each pane will have its own scroll bars.
+  #
+  # The parameters _y_ and _x_ are used to specify the vertical and horizontal
+  # position of the split. The units for _y_ and _x_ are the same as those
+  # used by Excel to specify row height and column width. However, the
+  # vertical and horizontal units are different from each other. Therefore you
+  # must specify the $y and $x parameters in terms of the row heights and
+  # column widths that you have set or the default values which are 12.75 for
+  # a row and 8.43 for a column.
+  #
+  # You can set one of the _y_ and _x_ parameters as zero if you do not want
+  # either a vertical or horizontal split. The parameters _top_row_ and
+  # _left_col_ are optional. They are used to specify the top-most or
+  # left-most visible row or column in the bottom-right pane.
+  #
+  # Example:
+  #
+  #     worksheet.split_panes(12.75, 0,    1, 0)  # First row
+  #     worksheet.split_panes(0,     8.43, 0, 1)  # First column
+  #     worksheet.split_panes(12.75, 8.43, 1, 1)  # First row and column
+  #
+  # You cannot use A1 notation with this method.
+  #
+  # See also the freeze_panes() method and the panes.pl program in the examples
+  # directory of the distribution.
+  #
+  # Note:
   #
   def split_panes(*args)
     @frozen            = 0
@@ -574,20 +933,18 @@ attr_reader :compatibility
   # Older method name for backwards compatibility.
   # *thaw_panes = *split_panes;
 
-  ###############################################################################
-  #
-  # set_portrait()
   #
   # Set the page orientation as portrait.
+  #
+  # This method is used to set the orientation of a worksheet's printed page
+  # to portrait. The default worksheet orientation is portrait, so you won't
+  # generally need to call this method.
   #
   def set_portrait
     @orientation = 1
   end
 
 
-  ###############################################################################
-  #
-  # set_landscape()
   #
   # Set the page orientation as landscape.
   #
@@ -595,23 +952,27 @@ attr_reader :compatibility
     @orientation = 0
   end
 
-
-  ###############################################################################
   #
-  # set_page_view()
+  # This method is used to display the worksheet in "Page View" mode. This
+  # is currently only supported by Mac Excel, where it is the default.
   #
-  # Set the page view mode for Mac Excel.
-  #
-  def set_page_view(val = nil)
-    @page_view = val.nil? ? 1 : val
+  def set_page_view
+    @page_view = 1
   end
 
 
-  ###############################################################################
-  #
-  # set_tab_color()
   #
   # Set the colour of the worksheet colour.
+  #
+  # The set_tab_color() method is used to change the colour of the worksheet
+  # tab. This feature is only available in Excel 2002 and later. You can
+  # use one of the standard colour names provided by the Format object or a
+  # colour index. See "COLOURS IN EXCEL" and the set_custom_color() method.
+  #
+  #     worksheet1.set_tab_color('red')
+  #     worksheet2.set_tab_color(0x0C)
+  #
+  # See the tab_colors.rb program in the examples directory of the distro.
   #
   def set_tab_color(colour)
     color = Format._get_color(colour)
@@ -619,21 +980,218 @@ attr_reader :compatibility
     @tab_color = color
   end
 
-  ###############################################################################
   #
   # set_paper()
   #
   # Set the paper type. Ex. 1 = US Letter, 9 = A4
   #
+  # This method is used to set the paper format for the printed output of a
+  # worksheet. The following paper styles are available:
+  #
+  #     Index   Paper format            Paper size
+  #     =====   ============            ==========
+  #       0     Printer default         -
+  #       1     Letter                  8 1/2 x 11 in
+  #       2     Letter Small            8 1/2 x 11 in
+  #       3     Tabloid                 11 x 17 in
+  #       4     Ledger                  17 x 11 in
+  #       5     Legal                   8 1/2 x 14 in
+  #       6     Statement               5 1/2 x 8 1/2 in
+  #       7     Executive               7 1/4 x 10 1/2 in
+  #       8     A3                      297 x 420 mm
+  #       9     A4                      210 x 297 mm
+  #      10     A4 Small                210 x 297 mm
+  #      11     A5                      148 x 210 mm
+  #      12     B4                      250 x 354 mm
+  #      13     B5                      182 x 257 mm
+  #      14     Folio                   8 1/2 x 13 in
+  #      15     Quarto                  215 x 275 mm
+  #      16     -                       10x14 in
+  #      17     -                       11x17 in
+  #      18     Note                    8 1/2 x 11 in
+  #      19     Envelope  9             3 7/8 x 8 7/8
+  #      20     Envelope 10             4 1/8 x 9 1/2
+  #      21     Envelope 11             4 1/2 x 10 3/8
+  #      22     Envelope 12             4 3/4 x 11
+  #      23     Envelope 14             5 x 11 1/2
+  #      24     C size sheet            -
+  #      25     D size sheet            -
+  #      26     E size sheet            -
+  #      27     Envelope DL             110 x 220 mm
+  #      28     Envelope C3             324 x 458 mm
+  #      29     Envelope C4             229 x 324 mm
+  #      30     Envelope C5             162 x 229 mm
+  #      31     Envelope C6             114 x 162 mm
+  #      32     Envelope C65            114 x 229 mm
+  #      33     Envelope B4             250 x 353 mm
+  #      34     Envelope B5             176 x 250 mm
+  #      35     Envelope B6             176 x 125 mm
+  #      36     Envelope                110 x 230 mm
+  #      37     Monarch                 3.875 x 7.5 in
+  #      38     Envelope                3 5/8 x 6 1/2 in
+  #      39     Fanfold                 14 7/8 x 11 in
+  #      40     German Std Fanfold      8 1/2 x 12 in
+  #      41     German Legal Fanfold    8 1/2 x 13 in
+  #
+  # Note, it is likely that not all of these paper types will be available to
+  # the end user since it will depend on the paper formats that the user's
+  # printer supports. Therefore, it is best to stick to standard paper types.
+  #
+  #     worksheet.set_paper(1)  # US Letter
+  #     worksheet.set_paper(9)  # A4
+  #
+  # If you do not specify a paper type the worksheet will print using the
+  # printer's default paper.
+  #
   def set_paper(paper_size = 0)
     @paper_size = paper_size
   end
 
-  ###############################################################################
-  #
-  # set_header()
   #
   # Set the page header caption and optional margin.
+  #
+  # Headers and footers are generated using a _string_ which is a combination
+  # of plain text and control characters. The _margin_ parameter is optional.
+  #
+  # The available control character are:
+  #
+  #     Control             Category            Description
+  #     =======             ========            ===========
+  #     &L                  Justification       Left
+  #     &C                                      Center
+  #     &R                                      Right
+  #
+  #     &P                  Information         Page number
+  #     &N                                      Total number of pages
+  #     &D                                      Date
+  #     &T                                      Time
+  #     &F                                      File name
+  #     &A                                      Worksheet name
+  #     &Z                                      Workbook path
+  #
+  #     &fontsize           Font                Font size
+  #     &"font,style"                           Font name and style
+  #     &U                                      Single underline
+  #     &E                                      Double underline
+  #     &S                                      Strikethrough
+  #     &X                                      Superscript
+  #     &Y                                      Subscript
+  #
+  #     &&                  Miscellaneous       Literal ampersand &
+  #
+  # Text in headers and footers can be justified (aligned) to the left, center
+  # and right by prefixing the text with the control characters &L, &C and &R.
+  #
+  # For example (with ASCII art representation of the results):
+  #
+  #     worksheet.set_header('&LHello')
+  #
+  #      ---------------------------------------------------------------
+  #     |                                                               |
+  #     | Hello                                                         |
+  #     |                                                               |
+  #
+  #
+  #     worksheet.set_header('&CHello')
+  #
+  #      ---------------------------------------------------------------
+  #     |                                                               |
+  #     |                          Hello                                |
+  #     |                                                               |
+  #
+  #
+  #     worksheet.set_header('&RHello')
+  #
+  #      ---------------------------------------------------------------
+  #     |                                                               |
+  #     |                                                         Hello |
+  #     |                                                               |
+  #
+  # For simple text, if you do not specify any justification the text will be
+  # centred. However, you must prefix the text with &C if you specify a font
+  # name or any other formatting:
+  #
+  #     worksheet.set_header('Hello')
+  #
+  #      ---------------------------------------------------------------
+  #     |                                                               |
+  #     |                          Hello                                |
+  #     |                                                               |
+  #
+  # You can have text in each of the justification regions:
+  #
+  #     worksheet.set_header('&LCiao&CBello&RCielo')
+  #
+  #      ---------------------------------------------------------------
+  #     |                                                               |
+  #     | Ciao                     Bello                          Cielo |
+  #     |                                                               |
+  #
+  # The information control characters act as variables that Excel will update
+  # as the workbook or worksheet changes. Times and dates are in the users
+  # default format:
+  #
+  #     worksheet.set_header('&CPage &P of &N')
+  #
+  #      ---------------------------------------------------------------
+  #     |                                                               |
+  #     |                        Page 1 of 6                            |
+  #     |                                                               |
+  #
+  #
+  #     worksheet.set_header('&CUpdated at &T')
+  #
+  #      ---------------------------------------------------------------
+  #     |                                                               |
+  #     |                    Updated at 12:30 PM                        |
+  #     |                                                               |
+  #
+  # You can specify the font size of a section of the text by prefixing it
+  # with the control character &n where n is the font size:
+  #
+  #     worksheet1.set_header('&C&30Hello Big'  )
+  #     worksheet2.set_header('&C&10Hello Small')
+  #
+  # You can specify the font of a section of the text by prefixing it with the
+  # control sequence &"font,style" where fontname is a font name such as
+  # "Courier New" or "Times New Roman" and style is one of the standard Windows
+  # font descriptions: "Regular", "Italic", "Bold" or "Bold Italic":
+  #
+  #     worksheet1.set_header('&C&"Courier New,Italic"Hello')
+  #     worksheet2.set_header('&C&"Courier New,Bold Italic"Hello')
+  #     worksheet3.set_header('&C&"Times New Roman,Regular"Hello')
+  #
+  # It is possible to combine all of these features together to create
+  # sophisticated headers and footers. As an aid to setting up complicated
+  # headers and footers you can record a page set-up as a macro in Excel and
+  # look at the format strings that VBA produces. Remember however that VBA uses
+  # two double quotes "" to indicate a single double quote. For the last example
+  # above the equivalent VBA code looks like this:
+  #
+  #     .LeftHeader   = ""
+  #     .CenterHeader = "&""Times New Roman,Regular""Hello"
+  #     .RightHeader  = ""
+  #
+  # To include a single literal ampersand & in a header or footer you should
+  # use a double ampersand &&:
+  #
+  #     worksheet1.set_header('&CCuriouser && Curiouser - Attorneys at Law')
+  #
+  # As stated above the margin parameter is optional. As with the other margins
+  # the value should be in inches. The default header and footer margin is 0.50
+  # inch. The header and footer margin size can be set as follows:
+  #
+  #     worksheet.set_header('&CHello', 0.75)
+  #
+  # The header and footer margins are independent of the top and bottom margins.
+  #
+  # Note, the header or footer string must be less than 255 characters. Strings
+  # longer than this will not be written and a warning will be generated.
+  #
+  #     worksheet.set_header("&C\x{263a}")
+  #
+  # See, also the headers.rb program in the examples directory of the
+  # distribution.
   #
   def set_header(string = '', margin = 0.50, encoding = 0)
     limit    = encoding != 0 ? 255 *2 : 255
@@ -654,12 +1212,11 @@ attr_reader :compatibility
     @header_encoding = encoding
   end
 
-
-  ###############################################################################
-  #
-  # set_footer()
   #
   # Set the page footer caption and optional margin.
+  #
+  # The syntax of the set_footer()  method is the same as set_header(), see
+  # there.
   #
   def set_footer(string = '', margin = 0.50, encoding = 0)
     limit    = encoding != 0 ? 255 *2 : 255
@@ -680,39 +1237,38 @@ attr_reader :compatibility
     @footer_encoding = encoding
   end
 
-  ###############################################################################
   #
-  # center_horizontally()
+  # Center the worksheet data horizontally between the margins on the printed page.
   #
-  # Center the page horizontally.
-  #
-  def center_horizontally(hcenter = nil)
-    if hcenter.nil?
-      @hcenter = 1
-    else
-      @hcenter = hcenter
-    end
+  def center_horizontally
+    @hcenter = 1
   end
 
-  ###############################################################################
   #
-  # center_vertically()
+  # Center the worksheet data vertically between the margins on the printed page:
   #
-  # Center the page horinzontally.
-  #
-  def center_vertically(vcenter = nil)
-    if vcenter.nil?
-      @vcenter = 1
-    else
-      @vcenter = vcenter
-    end
+  def center_vertically
+    @vcenter = 1
   end
 
-  ###############################################################################
-  #
-  # set_margins()
   #
   # Set all the page margins to the same value in inches.
+  #
+  # There are several methods available for setting the worksheet margins on
+  # the printed page:
+  #
+  #     set_margins()        # Set all margins to the same value
+  #     set_margins_LR()     # Set left and right margins to the same value
+  #     set_margins_TB()     # Set top and bottom margins to the same value
+  #     set_margin_left();   # Set left margin
+  #     set_margin_right();  # Set right margin
+  #     set_margin_top();    # Set top margin
+  #     set_margin_bottom(); # Set bottom margin
+  #
+  # All of these methods take a distance in inches as a parameter.
+  #
+  # Note: 1 inch = 25.4mm. ;-) The default left and right margin is 0.75 inch.
+  # The default top and bottom margin is 1.00 inch.
   #
   def set_margins(margin)
     set_margin_left(margin)
@@ -785,24 +1341,50 @@ attr_reader :compatibility
     @margin_bottom = margin
   end
 
-  ###############################################################################
   #
-  # repeat_rows($first_row, $last_row)
+  # Set the rows to repeat at the top of each printed page.
+  #--
+  # See also the _store_name_xxxx() methods in Workbook.rb.
+  #++
   #
-  # Set the rows to repeat at the top of each printed page. See also the
-  # _store_name_xxxx() methods in Workbook.pm.
+  # Set the number of rows to repeat at the top of each printed page.
+  #
+  # For large Excel documents it is often desirable to have the first row or
+  # rows of the worksheet print out at the top of each page. This can be
+  # achieved by using the repeat_rows() method. The parameters _first_row_ and
+  # _last_row_ are zero based. The _last_row_ parameter is optional if you
+  # only wish to specify one row:
+  #
+  #     worksheet1.repeat_rows(0)     # Repeat the first row
+  #     worksheet2.repeat_rows(0, 1)  # Repeat the first two rows
   #
   def repeat_rows(first_row, last_row = nil)
     @title_rowmin  = first_row
     @title_rowmax  = last_row || first_row # Second row is optional
   end
 
-  ###############################################################################
   #
-  # repeat_columns($first_col, $last_col)
+  # :call-seq:
+  #   repeat_columns(first_col[, last_col])
+  #   repeat_columns(A1_notation)
   #
   # Set the columns to repeat at the left hand side of each printed page.
+  #--
   # See also the _store_names() methods in Workbook.pm.
+  #++
+  #
+  # For large Excel documents it is often desirable to have the first column
+  # or columns of the worksheet print out at the left hand side of each page.
+  # This can be achieved by using the repeat_columns() method. The parameters
+  # _first_column_ and _last_column_ are zero based. The _last_column_
+  # parameter is optional if you only wish to specify one column. You can also
+  # specify the columns using A1 column notation, see the note about
+  # "Cell notation".
+  #
+  #     worksheet1.repeat_columns(0)      # Repeat the first column
+  #     worksheet2.repeat_columns(0, 1)   # Repeat the first two columns
+  #     worksheet3.repeat_columns('A:A')  # Repeat the first column
+  #     worksheet4.repeat_columns('A:B')  # Repeat the first two columns
   #
   def repeat_columns(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -818,12 +1400,23 @@ attr_reader :compatibility
     @title_colmax  = args[1] || args[0] # Second col is optional
   end
 
-  ###############################################################################
   #
-  # print_area($first_row, $first_col, $last_row, $last_col)
+  # :call-seq:
+  #   print_area(first_row, first_col, last_row, last_col)
+  #   print_area(A1_notation)
   #
-  # Set the area of each worksheet that will be printed. See also the
-  # _store_names() methods in Workbook.pm.
+  # Set the area of each worksheet that will be printed.
+  #--
+  # See also the_store_names() methods in Workbook.rb.
+  #++
+  #
+  # This method is used to specify the area of the worksheet that will be
+  # printed. All four parameters must be specified. You can also use
+  # A1 notation, see the note about "Cell notation".
+  #
+  #     worksheet1.print_area('A1:H20')     # Cells A1 to H20
+  #     worksheet2.print_area(0, 0, 19, 7)  # The same
+  #     worksheet2.print_area('A:H')        # Columns A to H if rows have data
   #
   def print_area(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -836,11 +1429,28 @@ attr_reader :compatibility
     @print_rowmin, @print_colmin, @print_rowmax, @print_colmax = args
   end
 
-  ###############################################################################
   #
-  # autofilter($first_row, $first_col, $last_row, $last_col)
+  # :call-seq:
+  #    autofilter(first_row, first_col, last_row, last_col)
+  #    autofilter("A1:G10")
   #
   # Set the autofilter area in the worksheet.
+  #
+  #
+  # This method allows an autofilter to be added to a worksheet. An
+  # autofilter is a way of adding drop down lists to the headers of a 2D range
+  # of worksheet data. This is turn allow users to filter the data based on
+  # simple criteria so that some data is highlighted and some is hidden.
+  #
+  # To add an autofilter to a worksheet:
+  #
+  #     worksheet.autofilter(0, 0, 10, 3)
+  #     worksheet.autofilter('A1:D11')    # Same as above in A1 notation.
+  #
+  # Filter conditions can be applied using the filter_column() method.
+  #
+  # See the autofilter.rb program in the examples directory of the distro
+  # for a more detailed example.
   #
   def autofilter(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -869,11 +1479,101 @@ attr_reader :compatibility
     @filter_count = 1 + col2 -col1
   end
 
-  ###############################################################################
   #
-  # filter_column($column, $criteria, ...)
+  # :call-seq:
+  #   filter_column(column, expression)
   #
   # Set the column filter criteria.
+  #
+  # The filter_column method can be used to filter columns in a autofilter
+  # range based on simple conditions.
+  #
+  # NOTE:
+  # It isn't sufficient to just specify the filter condition. You must also
+  # hide any rows that don't match the filter condition. Rows are hidden using
+  # the set_row() visible parameter. Spreadsheet::WriteExcel cannot do this
+  # automatically since it isn't part of the file format. See the autofilter.rb
+  # program in the examples directory of the distro for an example.
+  #
+  # The conditions for the filter are specified using simple expressions:
+  #
+  #     worksheet.filter_column('A', 'x > 2000')
+  #     worksheet.filter_column('B', 'x > 2000 and x < 5000')
+  #
+  # The _column_ parameter can either be a zero indexed column number or a
+  # string column name.
+  #
+  # The following operators are available:
+  #
+  #     Operator        Synonyms
+  #        ==           =   eq  =~
+  #        !=           <>  ne  !=
+  #        >
+  #        <
+  #        >=
+  #        <=
+  #
+  #        and          &&
+  #        or           ||
+  #
+  # The operator synonyms are just syntactic sugar to make you more comfortable
+  # using the expressions. It is important to remember that the expressions will
+  # be interpreted by Excel and not by ruby.
+  #
+  # An expression can comprise a single statement or two statements separated by
+  # the and and or operators. For example:
+  #
+  #     'x <  2000'
+  #     'x >  2000'
+  #     'x == 2000'
+  #     'x >  2000 and x <  5000'
+  #     'x == 2000 or  x == 5000'
+  #
+  # Filtering of blank or non-blank data can be achieved by using a value of
+  # Blanks or NonBlanks in the expression:
+  #
+  #     'x == Blanks'
+  #     'x == NonBlanks'
+  #
+  # Top 10 style filters can be specified using a expression like the
+  # following:
+  #
+  #     Top|Bottom 1-500 Items|%
+  #
+  # For example:
+  #
+  #     'Top    10 Items'
+  #     'Bottom  5 Items'
+  #     'Top    25 %'
+  #     'Bottom 50 %'
+  #
+  # Excel also allows some simple string matching operations:
+  #
+  #     'x =~ b*'   # begins with b
+  #     'x !~ b*'   # doesn't begin with b
+  #     'x =~ *b'   # ends with b
+  #     'x !~ *b'   # doesn't end with b
+  #     'x =~ *b*'  # contains b
+  #     'x !~ *b*'  # doesn't contains b
+  #
+  # You can also use * to match any character or number and ? to match any
+  # single character or number. No other regular expression quantifier is
+  # supported by Excel's filters. Excel's regular expression characters can
+  # be escaped using ~.
+  #
+  # The placeholder variable x in the above examples can be replaced by any
+  # simple string. The actual placeholder name is ignored internally so the
+  # following are all equivalent:
+  #
+  #     'x     < 2000'
+  #     'col   < 2000'
+  #     'Price < 2000'
+  #
+  # Also, note that a filter condition can only be applied to a column in a
+  # range specified by the autofilter() Worksheet method.
+  #
+  # See the autofilter.rb program in the examples directory of the distro
+  # for a more detailed example.
   #
   def filter_column(col, expression)
     raise "Must call autofilter() before filter_column()" if @filter_count == 0
@@ -1077,17 +1777,36 @@ attr_reader :compatibility
   end
   private :parse_filter_tokens
 
-  ###############################################################################
   #
-  # hide_gridlines()
+  # :call-seq:
+  #    hide_gridlines(option = 1)
   #
   # Set the option to hide gridlines on the screen and the printed page.
+  #--
   # There are two ways of doing this in the Excel BIFF format: The first is by
   # setting the DspGrid field of the WINDOW2 record, this turns off the screen
   # and subsequently the print gridline. The second method is to via the
   # PRINTGRIDLINES and GRIDSET records, this turns off the printed gridlines
   # only. The first method is probably sufficient for most cases. The second
   # method is supported for backwards compatibility. Porters take note.
+  #++
+  #
+  # This method is used to hide the gridlines on the screen and printed page.
+  # Gridlines are the lines that divide the cells on a worksheet. Screen and
+  # printed gridlines are turned on by default in an Excel worksheet. If you
+  # have defined your own cell borders you may wish to hide the default
+  # gridlines.
+  #
+  #     worksheet.hide_gridlines
+  #
+  # The following values of _option_ are valid:
+  #
+  #     0 : Don't hide gridlines
+  #     1 : Hide printed gridlines only
+  #     2 : Hide screen and printed gridlines
+  #
+  # If you don't supply an argument the default option is 1, i.e.
+  # only the printed gridlines are hidden.
   #
   def hide_gridlines(option = 1)
     if option == 0
@@ -1102,12 +1821,30 @@ attr_reader :compatibility
     end
   end
 
-  ###############################################################################
-  #
-  # print_row_col_headers()
   #
   # Set the option to print the row and column headers on the printed page.
-  # See also the _store_print_headers() method below.
+  # See also the _store_print_headers() method.
+  #
+  # An Excel worksheet looks something like the following;
+  #
+  #      ------------------------------------------
+  #     |   |   A   |   B   |   C   |   D   |  ...
+  #      ------------------------------------------
+  #     | 1 |       |       |       |       |  ...
+  #     | 2 |       |       |       |       |  ...
+  #     | 3 |       |       |       |       |  ...
+  #     | 4 |       |       |       |       |  ...
+  #     |...|  ...  |  ...  |  ...  |  ...  |  ...
+  #
+  # The headers are the letters and numbers at the top and the left of the
+  # worksheet. Since these headers serve mainly as a indication of position on
+  # the worksheet they generally do not appear on the printed page. If you wish
+  # to have them printed you can use the print_row_col_headers() method :
+  #
+  #     worksheet.print_row_col_headers
+  #
+  # Do not confuse these headers with page headers as described in the
+  # set_header() section.
   #
   def print_row_col_headers(option = nil)
     if option.nil?
@@ -1117,12 +1854,38 @@ attr_reader :compatibility
     end
   end
 
-  ###############################################################################
-  #
-  # fit_to_pages($width, $height)
   #
   # Store the vertical and horizontal number of pages that will define the
-  # maximum area printed. See also _store_setup() and _store_wsbool() below.
+  # maximum area printed.
+  #--
+  # See also _store_setup() and _store_wsbool() below.
+  #++
+  #
+  # The fit_to_pages() method is used to fit the printed area to a specific
+  # number of pages both vertically and horizontally. If the printed area
+  # exceeds the specified number of pages it will be scaled down to fit.
+  # This guarantees that the printed area will always appear on the
+  # specified number of pages even if the page size or margins change.
+  #
+  #     worksheet1.fit_to_pages(1, 1)  # Fit to 1x1 pages
+  #     worksheet2.fit_to_pages(2, 1)  # Fit to 2x1 pages
+  #     worksheet3.fit_to_pages(1, 2)  # Fit to 1x2 pages
+  #
+  # The print area can be defined using the print_area() method.
+  #
+  # A common requirement is to fit the printed output to n pages wide but
+  # have the height be as long as necessary. To achieve this set the _height_
+  # to zero or leave it blank:
+  #
+  #     worksheet1.fit_to_pages(1, 0)  # 1 page wide and as long as necessary
+  #     worksheet2.fit_to_pages(1)     # The same
+  #
+  # Note that although it is valid to use both fit_to_pages() and set_print
+  #_scale() on the same worksheet only one of these options can be active at
+  # a time. The last method call made will set the active option.
+  #
+  # Note that fit_to_pages() will override any manual page breaks that are
+  # defined in the worksheet.
   #
   def fit_to_pages(width = 0, height = 0)
     @fit_page      = 1
@@ -1130,31 +1893,74 @@ attr_reader :compatibility
     @fit_height    = height
   end
 
-  ###############################################################################
   #
-  # set_h_pagebreaks(@breaks)
+  # Store the horizontal page breaks on a worksheet. _breaks_ is Fixnum or Array
+  # of Fixnum.
   #
-  # Store the horizontal page breaks on a worksheet.
+  # Add horizontal page breaks to a worksheet. A page break causes all the
+  # data that follows it to be printed on the next page. Horizontal page breaks
+  # act between rows. To create a page break between rows 20 and 21 you must
+  # specify the break at row 21. However in zero index notation this is
+  # actually row 20. So you can pretend for a small while that you are using 1
+  # index notation:
+  #
+  #     worksheet1.set_h_pagebreaks(20)  # Break between row 20 and 21
+  #
+  # The set_h_pagebreaks() method will accept a array of page breaks and you
+  # can call it more than once:
+  #
+  #     worksheet2.set_h_pagebreaks([ 20,  40,  60,  80, 100])  # Add breaks
+  #     worksheet2.set_h_pagebreaks([120, 140, 160, 180, 200])  # Add some more
+  #
+  # Note: If you specify the "fit to page" option via the fit_to_pages()
+  # method it will override all manual page breaks.
+  #
+  # There is a silent limitation of about 1000 horizontal page breaks per
+  # worksheet in line with an Excel internal limitation.
   #
   def set_h_pagebreaks(breaks)
-    @hbreaks.push(breaks)
+    @hbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
   end
 
-  ###############################################################################
   #
-  # set_v_pagebreaks(@breaks)
+  # Store the vertical page breaks on a worksheet. _breaks_ is Fixnum or Array
+  # of Fixnum.
   #
-  # Store the vertical page breaks on a worksheet.
+  # Add vertical page breaks to a worksheet. A page break causes all the data
+  # that follows it to be printed on the next page. Vertical page breaks act
+  # between columns. To create a page break between columns 20 and 21 you must
+  # specify the break at column 21. However in zero index notation this is
+  # actually column 20. So you can pretend for a small while that you are using
+  # 1 index notation:
+  #
+  #     worksheet1.set_v_pagebreaks(20) # Break between column 20 and 21
+  #
+  # The set_v_pagebreaks() method will accept a list of page breaks and you
+  # can call it more than once:
+  #
+  #     worksheet2.set_v_pagebreaks([ 20,  40,  60,  80, 100]) # Add breaks
+  #     worksheet2.set_v_pagebreaks([120, 140, 160, 180, 200]) # Add some more
+  #
+  # Note: If you specify the "fit to page" option via the fit_to_pages() method
+  # it will override all manual page breaks.
   #
   def set_v_pagebreaks(breaks)
-    @vbreaks.push(breaks)
+    @vbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
   end
 
-  ###############################################################################
   #
-  # set_zoom($scale)
+  # Set the worksheet zoom factor in the range 10 <= $scale <= 400:
   #
-  # Set the worksheet zoom factor.
+  #     worksheet1.set_zoom(50)
+  #     worksheet2.set_zoom(75)
+  #     worksheet3.set_zoom(300)
+  #     worksheet4.set_zoom(400)
+  #
+  # The default zoom factor is 100. You cannot zoom to "Selection" because
+  # it is calculated by Excel at run-time.
+  #
+  # Note, set_zoom() does not affect the scale of the printed page. For that
+  # you should use set_print_scale().
   #
   def set_zoom(scale = 100)
     # Confine the scale to Excel's range
@@ -1166,11 +1972,21 @@ attr_reader :compatibility
     @zoom = scale.to_i
   end
 
-  ###############################################################################
   #
-  # set_print_scale($scale)
+  # Set the scale factor of the printed page. Scale factors in the range
+  # 10 <= _scale_ <= 400 are valid:
   #
-  # Set the scale factor for the printed page.
+  #     worksheet1.set_print_scale(50)
+  #     worksheet2.set_print_scale(75)
+  #     worksheet3.set_print_scale(300)
+  #     worksheet4.set_print_scale(400)
+  #
+  # The default scale factor is 100. Note, set_print_scale() does not affect
+  # the scale of the visible page in Excel. For that you should use set_zoom().
+  #
+  # Note also that although it is valid to use both fit_to_pages() and
+  # set_print_scale() on the same worksheet only one of these options can be
+  # active at a time. The last method call made will set the active option.
   #
   def set_print_scale(scale = 100)
     # Confine the scale to Excel's range
@@ -1185,12 +2001,74 @@ attr_reader :compatibility
     @print_scale = scale.to_i
   end
 
-  ###############################################################################
-  #
-  # keep_leading_zeros()
   #
   # Causes the write() method to treat integers with a leading zero as a string.
   # This ensures that any leading zeros such, as in zip codes, are maintained.
+  #
+  # This method changes the default handling of integers with leading zeros
+  # when using the write() method.
+  #
+  # The write() method uses regular expressions to determine what type of data
+  # to write to an Excel worksheet. If the data looks like a number it writes
+  # a number using write_number(). One problem with this approach is that
+  # occasionally data looks like a number but you don't want it treated as
+  # a number.
+  #
+  # Zip codes and ID numbers, for example, often start with a leading zero.
+  # If you write this data as a number then the leading zero(s) will be
+  # stripped. This is the also the default behaviour when you enter data
+  # manually in Excel.
+  #
+  # To get around this you can use one of three options. Write a formatted
+  # number, write the number as a string or use the keep_leading_zeros()
+  # method to change the default behaviour of write():
+  #
+  #    # Implicitly write a number, the leading zero is removed: 1209
+  #    worksheet.write('A1', '01209')
+  #
+  #    # Write a zero padded number using a format: 01209
+  #    my $format1 = $workbook.add_format(num_format => '00000')
+  #    $worksheet.write('A2', '01209', $format1)
+  #
+  #    # Write explicitly as a string: 01209
+  #    $worksheet.write_string('A3', '01209')
+  #
+  #    # Write implicitly as a string: 01209
+  #    $worksheet.keep_leading_zeros()
+  #    $worksheet.write('A4', '01209')
+  #
+  # The above code would generate a worksheet that looked like the following:
+  #
+  #     -----------------------------------------------------------
+  #    |   |     A     |     B     |     C     |     D     | ...
+  #     -----------------------------------------------------------
+  #    | 1 |      1209 |           |           |           | ...
+  #    | 2 |     01209 |           |           |           | ...
+  #    | 3 | 01209     |           |           |           | ...
+  #    | 4 | 01209     |           |           |           | ...
+  #
+  # The examples are on different sides of the cells due to the fact that Excel
+  # displays strings with a left justification and numbers with a right
+  # justification by default. You can change this by using a format to justify
+  # the data, see "CELL FORMATTING".
+  #
+  # It should be noted that if the user edits the data in examples A3 and A4
+  # the strings will revert back to numbers. Again this is Excel's default
+  # behaviour. To avoid this you can use the text format @:
+  #
+  #    # Format as a string (01209)
+  #    format2 = workbook.add_format(num_format => '@')
+  #    worksheet.write_string('A5', '01209', $format2)
+  #
+  # The keep_leading_zeros() property is off by default. The keep
+  #_leading_zeros() method takes 0 or 1 as an argument. It defaults to 1 if
+  # an argument isn't specified:
+  #
+  #    worksheet.keep_leading_zeros()  # Set on
+  #    worksheet.keep_leading_zeros(1) # Set on
+  #    worksheet.keep_leading_zeros(0) # Set off
+  #
+  # See also the add_write_handler() method.
   #
   def keep_leading_zeros(val = true)
     @leading_zeros = val
@@ -1201,6 +2079,20 @@ attr_reader :compatibility
   # show_comments()
   #
   # Make any comments in the worksheet visible.
+  #
+  # This method is used to make all cell comments visible when a worksheet is
+  # opened.
+  #
+  # Individual comments can be made visible using the visible parameter of the
+  # write_comment method (see above):
+  #
+  #     worksheet.write_comment('C3', 'Hello', visible => 1)
+  #
+  # If all of the cell comments have been made visible you can hide individual
+  # comments as follows:
+  #
+  #     worksheet.write_comment('C3', 'Hello', visible => 0)
+  #
   #
   def show_comments(val = nil)
     @comments_visible = val.nil? ? 1 : val
@@ -1217,45 +2109,69 @@ attr_reader :compatibility
     @comments_author_enc = author_enc
   end
 
-  ###############################################################################
-  #
-  # right_to_left()
   #
   # Display the worksheet right to left for some eastern versions of Excel.
   #
-  def right_to_left(val = nil)
-    @display_arabic = val.nil? ? 1 : val
+  # The right_to_left() method is used to change the default direction of the
+  # worksheet from left-to-right, with the A1 cell in the top left, to
+  # right-to-left, with the he A1 cell in the top right.
+  #
+  #     worksheet.right_to_left
+  #
+  # This is useful when creating Arabic, Hebrew or other near or far eastern
+  # worksheets that use right-to-left as the default direction.
+  #
+  def right_to_left
+    @display_arabic = 1
   end
 
-  ###############################################################################
-  #
-  # hide_zero()
   #
   # Hide cell zero values.
   #
-  def hide_zero(val = nil)
-    @display_zeros = val.nil? ? 0 : !val
+  # The hide_zero() method is used to hide any zero values that appear in
+  # cells.
+  #
+  #     worksheet.hide_zero
+  #
+  # In Excel this option is found under Tools->Options->View.
+  #
+  def hide_zero
+    @display_zeros = 1
   end
 
-  ###############################################################################
-  #
-  # print_across()
   #
   # Set the order in which pages are printed.
   #
-  def print_across(val = nil)
-    @page_order = val.nil? ? 1 : val
+  # The print_across method is used to change the default print direction.
+  # This is referred to by Excel as the sheet "page order".
+  #
+  #     worksheet.print_across
+  #
+  # The default page order is shown below for a worksheet that extends over 4
+  # pages. The order is called "down then across":
+  #
+  #     [1] [3]
+  #     [2] [4]
+  #
+  # However, by using the print_across method the print order will be changed
+  # to "across then down":
+  #
+  #     [1] [2]
+  #     [3] [4]
+  #
+  def print_across
+    @page_order = 1
   end
 
-  ###############################################################################
-  #
-  # set_start_page()
   #
   # Set the start page number.
   #
-  def set_start_page(start_page = nil)
-    return if start_page.nil?
-
+  # The set_start_page() method is used to set the number of the starting page
+  # when the worksheet is printed out. The default value is 1.
+  #
+  #     worksheet.set_start_page(2)
+  #
+  def set_start_page(start_page = 1)
     @page_start    = start_page
     @custom_start  = 1
   end
@@ -1275,11 +2191,97 @@ attr_reader :compatibility
     @first_col = col
   end
 
-  ###############################################################################
-  #
-  # add_write_handler($re, $code_ref)
   #
   # Allow the user to add their own matches and handlers to the write() method.
+  #
+  # This method is used to extend the WriteExcel write() method to handle user
+  # defined data.
+  #
+  # If you refer to the section on write() above you will see that it acts as an
+  # alias for several more specific write_* methods. However, it doesn't always
+  # act in exactly the way that you would like it to.
+  #
+  # One solution is to filter the input data yourself and call the appropriate
+  # write_* method. Another approach is to use the add_write_handler() method
+  # to add your own automated behaviour to write().
+  #
+  # The add_write_handler() method take two arguments, _re_, a regular
+  # expression to match incoming data and _code_ a callback function to handle
+  # the matched data:
+  #
+  #     worksheet.add_write_handler(qr/^\d\d\d\d$/, \&my_write)
+  #
+  # (In the these examples the qr operator is used to quote the regular expression
+  # strings, see perlop for more details).
+  #
+  # The method is used as follows. say you wished to write 7 digit ID numbers as
+  # a string so that any leading zeros were preserved*, you could do something
+  # like the following:
+  #
+  #     worksheet.add_write_handler(qr/^\d{7}$/, \&write_my_id)
+  #
+  #     sub write_my_id {
+  #         my $worksheet = shift;
+  #         return $worksheet->write_string(@_);
+  #     }
+  #
+  # * You could also use the keep_leading_zeros() method for this.
+  #
+  # Then if you call write() with an appropriate string it will be handled automatically:
+  #
+  #     # Writes 0000000. It would normally be written as a number; 0.
+  #     $worksheet->write('A1', '0000000');
+  #
+  # The callback function will receive a reference to the calling worksheet
+  # and all of the other arguments that were passed to write(). The callback
+  # will see an @_ argument list that looks like the following:
+  #
+  #     $_[0]   A ref to the calling worksheet. *
+  #     $_[1]   Zero based row number.
+  #     $_[2]   Zero based column number.
+  #     $_[3]   A number or string or token.
+  #     $_[4]   A format ref if any.
+  #     $_[5]   Any other arguments.
+  #     ...
+  #
+  #     *  It is good style to shift this off the list so the @_ is the same
+  #        as the argument list seen by write().
+  #
+  # Your callback should return() the return value of the write_* method that
+  # was called or undef to indicate that you rejected the match and want
+  # write() to continue as normal.
+  #
+  # So for example if you wished to apply the previous filter only to ID
+  # values that occur in the first column you could modify your callback
+  # function as follows:
+  #
+  #     sub write_my_id {
+  #         my $worksheet = shift;
+  #         my $col       = $_[1];
+  #
+  #         if ($col == 0) {
+  #             return $worksheet->write_string(@_);
+  #         }
+  #         else {
+  #             # Reject the match and return control to write()
+  #             return undef;
+  #         }
+  #     }
+  #
+  # Now, you will get different behaviour for the first column and other
+  # columns:
+  #
+  #     $worksheet->write('A1', '0000000'); # Writes 0000000
+  #     $worksheet->write('B1', '0000000'); # Writes 0
+  #
+  # You may add more than one handler in which case they will be called in the
+  # order that they were added.
+  #
+  # Note, the add_write_handler() method is particularly suited for handling
+  # dates.
+  #
+  # See the write_handler 1-4 programs in the examples directory for further
+  # examples.
   #
   def add_write_handler(regexp, code_ref)
     #       return unless ref $_[1] eq 'CODE';
@@ -1288,8 +2290,9 @@ attr_reader :compatibility
   end
 
   #
-  #  write(row, col,    token, format)
-  #  write(A1_notation, token, format)
+  # :call-seq:
+  #   write(row, col,    token, format)
+  #   write(A1_notation, token, format)
   #
   # Parse token and call appropriate write method. row and column are zero
   # indexed. format is optional.
@@ -1332,7 +2335,70 @@ attr_reader :compatibility
   #    worksheet.write('A13', '=SIN(PI()/4)'             )  # write_formula()
   #    worksheet.write('A14', ['name', 'company']        )  # write_row()
   #    worksheet.write('A15', [ ['name', 'company'] ]    )  # write_col()
-
+  #
+  # And if the keep_leading_zeros property is set:
+  #  $worksheet.write('A16,  2                     ); # write_number()
+  #    $worksheet.write('A17,  02                    ); # write_string()
+  #    $worksheet.write('A18,  00002                 ); # write_string()
+  #
+  # The "looks like" rule is defined by regular expressions:
+  #
+  # write_number() if _token_ is a number based on the following regex:
+  # token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/.
+  #
+  # write_string() if keep_leading_zeros() is set and _token_ is an integer
+  # with leading zeros based on the following regex: token =~ /^0\d+$/.
+  #
+  # write_blank() if _token_ is undef or a blank string: undef, "" or ''.
+  #
+  # write_url() if _token_ is a http, https, ftp or mailto URL based on the
+  # following regexes: token =~ m|^[fh]tt?ps?://| or $token =~ m|^mailto:|.
+  #
+  # write_url() if _token_ is an internal or external sheet reference based
+  # on the following regex: token =~ m[^(in|ex)ternal:].
+  #
+  # write_formula() if the first character of _token_ is "=".
+  #
+  # write_row() if _token_ is an array.
+  #
+  # write_col() if _token+ is an array of array.
+  #
+  # write_string() if none of the previous conditions apply.
+  #
+  # The format parameter is optional. It should be a valid Format object, see
+  # "CELL FORMATTING":
+  #
+  #    format = workbook.add_format
+  #    format.set_bold
+  #    format.set_color('red')
+  #    format.set_align('center')
+  #
+  #    worksheet.write(4, 0, 'Hello', format)   # Formatted string
+  #
+  # The write() method will ignore empty strings or undef tokens unless a
+  # format is also supplied. As such you needn't worry about special
+  # handling for empty or undef values in your data. See also the
+  # write_blank() method.
+  #
+  # One problem with the write() method is that occasionally data looks like a
+  # number but you don't want it treated as a number. For example, zip codes or
+  # ID numbers often start with a leading zero. If you write this data as a
+  # number then the leading zero(s) will be stripped. You can change this
+  # default behaviour by using the keep_leading_zeros() method. While this
+  # property is in place any integers with leading zeros will be treated as
+  # strings and the zeros will be preserved. See the keep_leading_zeros()
+  # section for a full discussion of this issue.
+  #
+  # You can also add your own data handlers to the write() method using
+  # add_write_handler().
+  #
+  # The write methods return:
+  #
+  #    0 for success.
+  #   -1 for insufficient number of arguments.
+  #   -2 for row or column out of bounds.
+  #   -3 for string too long.
+  #
   def write(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/
@@ -1342,7 +2408,7 @@ attr_reader :compatibility
     token = args[2]
 
     # Handle undefs as blanks
-    token = '' if token.nil?
+    token ||= ''
 
     # First try user defined matches.
     @write_match.each do |aref|
@@ -1381,16 +2447,423 @@ attr_reader :compatibility
     end
   end
 
+  #
+  # :call-seq:
+  #   write_number(row, col,    token[, format])
+  #   write_number(A1_notation, token[, format])
+  #
+  # Write a double to the specified row and column (zero indexed).
+  # An integer can be written as a double. Excel will display an
+  # integer. $format is optional.
+  #
+  # Returns  0 : normal termination
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #
+  # Write an integer or a float to the cell specified by row and column
+  #
+  #    worksheet.write_number(0, 0,  123456)
+  #    worksheet.write_number('A2',  2.3451)
+  #
+  # See the note about "Cell notation". The format parameter is optional.
+  #
+  # In general it is sufficient to use the write() method.
+  #
+  def write_number(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    if args[0] =~ /^\D/
+      args = substitute_cellref(*args)
+    end
 
-  ###############################################################################
+    return -1 if args.size < 3                # Check the number of args
+
+    record  = 0x0203                          # Record identifier
+    length  = 0x000E                          # Number of bytes to follow
+
+    row     = args[0]                         # Zero indexed row
+    col     = args[1]                         # Zero indexed column
+    num     = args[2]
+    xf      = xf_record_index(row, col, args[3]) # The cell format
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    header = [record, length].pack('vv')
+    data   = [row, col, xf].pack('vvv')
+    xl_double = [num].pack("d")
+
+    xl_double.reverse! if @byte_order != 0 && @byte_order != ''
+
+    # Store the data or write immediately depending on the compatibility mode.
+    if @compatibility != 0
+      tmp = []
+      tmp[col] = header + data + xl_double
+      @table[row] = tmp
+    else
+      append(header, data, xl_double)
+    end
+
+    return 0
+  end
+
   #
-  # write_row($row, $col, $array_ref, $format)
+  # :call-seq:
+  #   write_string(row, col,    token[, format])
+  #   write_string(A1_notation, token[, format])
   #
-  # Write a row of data starting from ($row, $col). Call write_col() if any of
-  # the elements of the array ref are in turn array refs. This allows the writing
-  # of 1D or 2D arrays of data in one go.
+  # Write a string to the specified row and column (zero indexed).
+  #
+  # The format parameter is optional.
+  #
+  # Returns  0 : normal termination
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #         -3 : long string truncated to 255 chars
+  #
+  #
+  #    worksheet.write_string(0, 0, 'Your text here')
+  #    worksheet.write_string('A2', 'or here')
+  #
+  # The maximum string size is 32767 characters. However the maximum string
+  # segment that Excel can display in a cell is 1000. All 32767 characters can
+  # be displayed in the formula bar.
+  #
+  # The write() method will also handle strings in UTF-8 format.
+  # You can also write Unicode in UTF16 format via the
+  # write_utf16be_string() method.
+  #
+  # In general it is sufficient to use the write() method. However, you may
+  # sometimes wish to use the write_string() method to write data that looks
+  # like a number but that you don't want treated as a number. For example,
+  # zip codes or phone numbers:
+  #
+  #    # Write as a plain string
+  #    worksheet.write_string('A1', '01209')
+  #
+  # However, if the user edits this string Excel may convert it back to a
+  # number. To get around this you can use the Excel text format @:
+  #
+  #    # Format as a string. Doesn't change to a number when edited
+  #    format1 = workbook.add_format(num_format => '@')
+  #    worksheet.write_string('A2', '01209', format1)
+  #
+  def write_string(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    if args[0] =~ /^\D/
+      args = substitute_cellref(*args)
+    end
+
+    return -1 if (args.size < 3)                # Check the number of args
+
+    record      = 0x00FD                        # Record identifier
+    length      = 0x000A                        # Bytes to follow
+
+    row         = args[0]                       # Zero indexed row
+    col         = args[1]                       # Zero indexed column
+    str         = args[2].to_s
+    strlen      = str.length
+    xf          = xf_record_index(row, col, args[3])   # The cell format
+    encoding    = 0x0
+    str_error   = 0
+
+    # Handle utf8 strings
+    if str =~ NonAscii
+      return write_utf16le_string(row, col, NKF.nkf('-w16L0 -m0 -W', str), args[3])
+    end
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    # Limit the string to the max number of chars.
+    if (strlen > 32767)
+      str       = substr(str, 0, 32767)
+      str_error = -3
+    end
+
+    # Prepend the string with the type.
+    str_header  = [str.length, encoding].pack('vC')
+    str         = str_header + str
+
+    if @str_table[str].nil?
+      @str_table[str] = str_unique
+      add_str_unique(1)
+    end
+
+    add_str_total(1)
+
+    header = [record, length].pack('vv')
+    data   = [row, col, xf, @str_table[str]].pack('vvvV')
+
+    # Store the data or write immediately depending on the compatibility mode.
+    if @compatibility != 0
+      tmp = []
+      tmp[col] = header + data
+      @table[row] = tmp
+    else
+      append(header, data)
+    end
+
+    return str_error
+  end
+
+  #
+  # :call-seq:
+  #   write_blank(row, col   , format)  -> Fixnum
+  #   write_blank(A1_notation, format)  -> Fixnum
+  #
+  # Write a blank cell to the specified row and column (zero indexed).
+  # A blank cell is used to specify formatting without adding a string
+  # or a number.
+  #
+  # A blank cell without a format serves no purpose. Therefore, we don't write
+  # a BLANK record unless a format is specified. This is mainly an optimisation
+  # for the write_row() and write_col() methods.
+  #
+  # Returns  0 : normal termination (including no format)
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #
+  #This method is used to add formatting to a cell which doesn't contain a
+  # string or number value.
+  #
+  # Excel differentiates between an "Empty" cell and a "Blank" cell. An
+  # "Empty" cell is a cell which doesn't contain data whilst a "Blank" cell
+  # is a cell which doesn't contain data but does contain formatting. Excel
+  # stores "Blank" cells but ignores "Empty" cells.
+  #
+  # As such, if you write an empty cell without formatting it is ignored:
+  #
+  #    worksheet.write('A1',  nil, format)  # write_blank()
+  #    worksheet.write('A2',  nil        )  # Ignored
+  #
+  # This seemingly uninteresting fact means that you can write arrays of data
+  # without special treatment for undef or empty string values.
+  #
+  # See the note about "Cell notation".
+  #
+  def write_blank(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    if args[0] =~ /^\D/
+      args = substitute_cellref(*args)
+    end
+
+    # Check the number of args
+    return -1 if args.size < 2
+
+    # Don't write a blank cell unless it has a format
+    return 0 if args[2].nil?
+
+    record  = 0x0201                        # Record identifier
+    length  = 0x0006                        # Number of bytes to follow
+
+    row     = args[0]                       # Zero indexed row
+    col     = args[1]                       # Zero indexed column
+    xf      = xf_record_index(row, col, args[2])   # The cell format
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    header    = [record, length].pack('vv')
+    data      = [row, col, xf].pack('vvv')
+
+    # Store the data or write immediately depending    on the compatibility mode.
+    if @compatibility != 0
+      tmp = []
+      tmp[col] = header + data
+      @table[row] = tmp
+    else
+      append(header, data)
+    end
+
+    return 0
+  end
+
+  #
+  # :call-seq:
+  #   write_formula(row, col   , formula[, format, value])  -> Fixnum
+  #   write_formula(A1_notation, formula[, format, value])  -> Fixnum
+  #
+  # Write a formula to the specified row and column (zero indexed).
+  #
+  # format is optional.
+  # value is an optional result of the formula that can be supplied by the
+  # user.
+  #
+  # Returns  0 : normal termination
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #
+  # Write a formula or function to the cell specified by row and column:
+  #
+  #     worksheet.write_formula(0, 0, '=$B$3 + B4'  )
+  #     worksheet.write_formula(1, 0, '=SIN(PI()/4)')
+  #     worksheet.write_formula(2, 0, '=SUM(B1:B5)' )
+  #     worksheet.write_formula('A4', '=IF(A3>1,"Yes", "No")'   )
+  #     worksheet.write_formula('A5', '=AVERAGE(1, 2, 3, 4)'    )
+  #     worksheet.write_formula('A6', '=DATEVALUE("1-Jan-2001")')
+  #
+  # See the note about "Cell notation". For more information about writing
+  # Excel formulas see "FORMULAS AND FUNCTIONS IN EXCEL"
+  #
+  # See also the section "Improving performance when working with formulas"
+  # and the store_formula() and repeat_formula() methods.
+  #
+  # If required, it is also possible to specify the calculated value of the
+  # formula. This is occasionally necessary when working with non-Excel
+  # applications that don't calculated the value of the formula. The
+  # calculated value is added at the end of the argument list:
+  #
+  #     worksheet.write('A1', '=2+2', format, 4);
+  #
+  # However, this probably isn't something that will ever need to do. If you
+  # do use this feature then do so with care.
+  #
+  def write_formula(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    if (args[0] =~ /^\D/)
+      args = substitute_cellref(args)
+    end
+
+    return -1 if args.size < 3   # Check the number of args
+
+    record    = 0x0006     # Record identifier
+    # length               # Bytes to follow
+
+    row       = args[0]      # Zero indexed row
+    col       = args[1]      # Zero indexed column
+    formula   = args[2].dup  # The formula text string
+    value     = args[4]      # The formula text string
+
+
+    xf        = xf_record_index(row, col, args[3])  # The cell format
+    chn       = 0x0000                         # Must be zero
+    is_string = 0                              # Formula evaluates to str
+    # num                                      # Current value of formula
+    # grbi                                     # Option flags
+
+    # Excel normally stores the last calculated value of the formula in num.
+    # Clearly we are not in a position to calculate this "a priori". Instead
+    # we set num to zero and set the option flags in grbit to ensure
+    # automatic calculation of the formula when the file is opened.
+    # As a workaround for some non-Excel apps we also allow the user to
+    # specify the result of the formula.
+    #
+    num, grbit, is_string = encode_formula_result(value)
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    # Strip the = sign at the beginning of the formula string
+    formula.sub!(/^=/, '')
+
+    # Parse the formula using the parser in Formula.pm
+    # nakamura add:  to get byte_stream, set second arg TRUE
+    # because ruby doesn't have Perl's "wantarray"
+    formula = @parser.parse_formula(formula, true)
+
+    #       if ($@) {
+    #           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
+    #           croak $@       # Re-raise the error
+    #       }
+
+    formlen = formula.length     # Length of the binary string
+    length  = 0x16 + formlen     # Length of the record data
+
+    header  = [record, length].pack("vv")
+    data    = [row, col, xf].pack("vvv") +
+    num +
+    [grbit, chn, formlen].pack('vVv')
+
+    # The STRING record if the formula evaluates to a string.
+    string  = ''
+    string  = get_formula_string(value) if is_string != 0
+
+    # Store the data or write immediately depending on the compatibility mode.
+    if @compatibility != 0
+      tmp = []
+      tmp[col] = header + data + formula + string
+      @table[row] = tmp
+    else
+      append(header, data, formula, string)
+    end
+
+    return 0
+  end
+
+  #
+  # :call-seq:
+  #   write_row(row, col   , array[, format])
+  #   write_row(A1_notation, array[, format])
+  #
+  # Write a row of data starting from (row, col). Call write_col() if any of
+  # the elements of the array are in turn array. This allows the writing of
+  # 1D or 2D arrays of data in one go.
   #
   # Returns: the first encountered error value or zero for no errors
+  #
+  #
+  # The write_row() method can be used to write a 1D or 2D array of data in
+  # one go. This is useful for converting the results of a database query into
+  # an Excel worksheet. You must pass a reference to the array of data rather
+  # than the array itself. The write() method is then called for each element
+  # of the data. For example:
+  #
+  #    array      = ['awk', 'gawk', 'mawk']
+  #
+  #    worksheet.write_row(0, 0, array_ref)
+  #
+  #    # The above example is equivalent to:
+  #    worksheet.write(0, 0, array[0])
+  #    worksheet.write(0, 1, array[1])
+  #    worksheet.write(0, 2, array[2])
+  #
+  # Note: For convenience the write() method behaves in the same way as
+  # write_row() if it is passed an array. Therefore the following two method
+  # calls are equivalent:
+  #
+  #    worksheet.write_row('A1', array) # Write a row of data
+  #    worksheet.write(    'A1', array) # Same thing
+  #
+  # As with all of the write methods the format parameter is optional. If a
+  # format is specified it is applied to all the elements of the data array.
+  #
+  # Array references within the data will be treated as columns. This allows you
+  # to write 2D arrays of data in one go. For example:
+  #
+  #    eec =  [
+  #                ['maggie', 'milly', 'molly', 'may'  ],
+  #                [13,       14,      15,      16     ],
+  #                ['shell',  'star',  'crab',  'stone']
+  #           ]
+  #
+  #    worksheet.write_row('A1', eec)
+  #
+  # Would produce a worksheet as follows:
+  #
+  #     -----------------------------------------------------------
+  #    |   |    A    |    B    |    C    |    D    |    E    | ...
+  #     -----------------------------------------------------------
+  #    | 1 | maggie  | 13      | shell   | ...     |  ...    | ...
+  #    | 2 | milly   | 14      | star    | ...     |  ...    | ...
+  #    | 3 | molly   | 15      | crab    | ...     |  ...    | ...
+  #    | 4 | may     | 16      | stone   | ...     |  ...    | ...
+  #    | 5 | ...     | ...     | ...     | ...     |  ...    | ...
+  #    | 6 | ...     | ...     | ...     | ...     |  ...    | ...
+  #
+  # To write the data in a row-column order refer to the write_col() method
+  # below.
+  #
+  # Any +nil+ values in the data will be ignored unless a format is applied
+  # to the data, in which case a formatted blank cell will be written. In
+  # either case the appropriate row or column value will still be
+  # incremented.
+  #
+  # The write_row() method returns the first error encountered when
+  # writing the elements of the data or zero if no errors were encountered.
+  # See the return values described for the write() method above.
+  #
+  # See also the write_arrays.rb program in the examples directory of the
+  # distro.
   #
   def write_row(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -1423,15 +2896,78 @@ attr_reader :compatibility
   end
 
 
-  ###############################################################################
   #
-  # write_col($row, $col, $array_ref, $format)
+  # :call-seq:
+  #   write_column(row, col   , array[, format])
+  #   write_column(A1_notation, array[, format])
   #
-  # Write a column of data starting from ($row, $col). Call write_row() if any of
-  # the elements of the array ref are in turn array refs. This allows the writing
+  # Write a column of data starting from (row, col). Call write_row() if any of
+  # the elements of the array are in turn array. This allows the writing
   # of 1D or 2D arrays of data in one go.
   #
   # Returns: the first encountered error value or zero for no errors
+  #
+  #
+  # The write_col() method can be used to write a 1D or 2D array of data in one
+  # go. This is useful for converting the results of a database query into an
+  # Excel worksheet. The write() method is then called for each element of the
+  # data. For example:
+  #
+  #    array      = ['awk', 'gawk', 'mawk']
+  #
+  #    worksheet.write_col(0, 0, array)
+  #
+  #    # The above example is equivalent to:
+  #    worksheet.write(0, 0, array[0])
+  #    worksheet.write(1, 0, array[1])
+  #    worksheet.write(2, 0, array[2])
+  #
+  # As with all of the write methods the format parameter is optional. If a
+  # format is specified it is applied to all the elements of the data array.
+  #
+  # Array within the data will be treated as rows. This allows you to write
+  # 2D arrays of data in one go. For example:
+  #
+  #    eec =  [
+  #                ['maggie', 'milly', 'molly', 'may'  ],
+  #                [13,       14,      15,      16     ],
+  #                ['shell',  'star',  'crab',  'stone']
+  #            ]
+  #
+  #    worksheet.write_col('A1', eec)
+  #
+  # Would produce a worksheet as follows:
+  #
+  #     -----------------------------------------------------------
+  #    |   |    A    |    B    |    C    |    D    |    E    | ...
+  #     -----------------------------------------------------------
+  #    | 1 | maggie  | milly   | molly   | may     |  ...    | ...
+  #    | 2 | 13      | 14      | 15      | 16      |  ...    | ...
+  #    | 3 | shell   | star    | crab    | stone   |  ...    | ...
+  #    | 4 | ...     | ...     | ...     | ...     |  ...    | ...
+  #    | 5 | ...     | ...     | ...     | ...     |  ...    | ...
+  #    | 6 | ...     | ...     | ...     | ...     |  ...    | ...
+  #
+  # To write the data in a column-row order refer to the write_row() method
+  # above.
+  #
+  # Any +nil+ values in the data will be ignored unless a format is applied to
+  # the data, in which case a formatted blank cell will be written. In either
+  # case the appropriate row or column value will still be incremented.
+  #
+  # As noted above the write() method can be used as a synonym for write_row()
+  # and write_row() handles nested array as columns. Therefore, the following
+  # two method calls are equivalent although the more explicit call to
+  # write_col() would be preferable for maintainability:
+  #
+  #    worksheet.write_col('A1', array)     # Write a column of data
+  #    worksheet.write(    'A1', [ array ]) # Same thing
+  #
+  # The write_col() method returns the first error encountered when writing
+  # the elements of the data or zero if no errors were encountered. See the
+  # return values described for the write() method above.
+  #
+  # See also the write_arrays.pl program in the examples directory of the distro.
   #
   def write_col(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -1459,17 +2995,192 @@ attr_reader :compatibility
     return error
   end
 
-
-  ###############################################################################
   #
-  # write_comment($row,   $col,   $comment[, optionhash(es)])
-  # write_comment($A1_notation,   $comment[, optionhash(es)])
+  # :call-seq:
+  #   write_comment(row, col,    comment[, optionhash(es)])  -> Fixnum
+  #   write_comment(A1_notation, comment[, optionhash(es)])  -> Fixnum
   #
   # Write a comment to the specified row and column (zero indexed).
   #
   # Returns  0 : normal termination
   #         -1 : insufficient number of arguments
   #         -2 : row or column out of range
+  #
+  # The write_comment() method is used to add a comment to a cell. A cell
+  # comment is indicated in Excel by a small red triangle in the upper
+  # right-hand corner of the cell. Moving the cursor over the red triangle
+  # will reveal the comment.
+  #
+  # The following example shows how to add a comment to a cell:
+  #
+  #     worksheet.write        (2, 2, 'Hello')
+  #     worksheet.write_comment(2, 2, 'This is a comment.')
+  #
+  # As usual you can replace the row and column parameters with an A1 cell
+  # reference. See the note about "Cell notation".
+  #
+  #     worksheet.write        ('C3', 'Hello')
+  #     worksheet.write_comment('C3', 'This is a comment.')
+  #
+  # On systems with perl 5.8 and later the write_comment() method will also
+  # handle strings in UTF-8 format.
+  #
+  #     worksheet.write_comment('C3', "\x{263a}")       # Smiley
+  #     worksheet.write_comment('C4', 'Comment ca va?')
+  #
+  # In addition to the basic 3 argument form of write_comment() you can pass in
+  # several optional key/value pairs to control the format of the comment.
+  # For example:
+  #
+  #     worksheet.write_comment('C3', 'Hello', visible => 1, author => 'Ruby')
+  #
+  # Most of these options are quite specific and in general the default comment
+  # behaviour will be all that you need. However, should you need greater
+  # control over the format of the cell comment the following options are
+  # available:
+  #
+  #     encoding
+  #     author
+  #     author_encoding
+  #     visible
+  #     x_scale
+  #     width
+  #     y_scale
+  #     height
+  #     color
+  #     start_cell
+  #     start_row
+  #     start_col
+  #     x_offset
+  #     y_offset
+  #
+  # Option: encoding
+  #
+  #   This option is used to indicate that the comment string is encoded as
+  #   UTF-16BE.
+  #
+  #     comment = [0x263a].pack('n')     # UTF-16BE Smiley symbol
+  #
+  #     worksheet.write_comment('C3', comment, :encoding => 1)
+  #
+  # Option: author
+  #
+  #   This option is used to indicate who the author of the comment is. Excel
+  #   displays the author of the comment in the status bar at the bottom of
+  #   the worksheet. This is usually of interest in corporate environments
+  #   where several people might review and provide comments to a workbook.
+  #
+  #     worksheet.write_comment('C3', 'Atonement', :author => 'Ian McEwan')
+  #
+  # Option: author_encoding
+  #
+  #   This option is used to indicate that the author string is encoded as UTF-16BE.
+  #
+  # Option: visible
+  #
+  #   This option is used to make a cell comment visible when the worksheet
+  #   is opened. The default behaviour in Excel is that comments are initially
+  #   hidden. However, it is also possible in Excel to make individual or all
+  #   comments visible. In WriteExcel individual comments can be made visible
+  #   as follows:
+  #
+  #     worksheet.write_comment('C3', 'Hello', :visible => 1)
+  #
+  #   It is possible to make all comments in a worksheet visible using the show
+  #   comments() worksheet method (see below). Alternatively, if all of the cell
+  #   comments have been made visible you can hide individual comments:
+  #
+  #     worksheet.write_comment('C3', 'Hello', :visible => 0)
+  #
+  # Option: x_scale
+  #
+  #   This option is used to set the width of the cell comment box as a factor
+  #   of the default width.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :x_scale => 2)
+  #     worksheet.write_comment('C4', 'Hello', :x_scale => 4.2)
+  #
+  # Option: width
+  #
+  #   This option is used to set the width of the cell comment box
+  #   explicitly in pixels.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :width => 200)
+  #
+  # Option: y_scale
+  #
+  #   This option is used to set the height of the cell comment box as a
+  #   factor of the default height.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :y_scale => 2)
+  #     worksheet.write_comment('C4', 'Hello', :y_scale => 4.2)
+  #
+  # Option: height
+  #
+  #   This option is used to set the height of the cell comment box
+  #   explicitly in pixels.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :height => 200)
+  #
+  # Option: color
+  #
+  #   This option is used to set the background colour of cell comment box.
+  #   You can use one of the named colours recognised by WriteExcel or a colour
+  #   index. See "COLOURS IN EXCEL".
+  #
+  #     worksheet.write_comment('C3', 'Hello', :color => 'green')
+  #     worksheet.write_comment('C4', 'Hello', :color => 0x35)    # Orange
+  #
+  # Option: start_cell
+  #
+  #   This option is used to set the cell in which the comment will appear.
+  #   By default Excel displays comments one cell to the right and one cell
+  #   above the cell to which the comment relates. However, you can change
+  #   this behaviour if you wish. In the following example the comment which
+  #   would appear by default in cell D2 is moved to E2.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :start_cell => 'E2')
+  #
+  # Option: start_row
+  #
+  #   This option is used to set the row in which the comment will appear.
+  #   See the start_cell option above. The row is zero indexed.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :start_row => 0)
+  #
+  # Option: start_col
+  #
+  #   This option is used to set the column in which the comment will appear.
+  #   See the start_cell option above. The column is zero indexed.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :start_col => 4)
+  #
+  # Option: x_offset
+  #
+  #   This option is used to change the x offset, in pixels, of a comment
+  #   within a cell:
+  #
+  #     worksheet.write_comment('C3', comment, :x_offset => 30)
+  #
+  # Option: y_offset
+  #
+  #   This option is used to change the y offset, in pixels, of a comment
+  #   within a cell:
+  #
+  #     worksheet.write_comment('C3', comment, :x_offset => 30)
+  #
+  # You can apply as many of these options as you require.
+  #
+  # ==Note about row height and comments.
+  #
+  # If you specify the height of a row that contains a comment then WriteExcel
+  # will adjust the height of the comment to maintain the default or user
+  # specified dimensions. However, the height of a row can also be adjusted
+  # automatically by Excel if the text wrap property is set or large fonts are
+  # used in the cell. This means that the height of the row is unknown to
+  # WriteExcel at run time and thus the comment box is stretched with the row.
+  # Use the set_row() method to specify the row height explicitly and avoid
+  # this problem.
   #
   def write_comment(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -1557,7 +3268,7 @@ attr_reader :compatibility
 
     raise("Unknown cell reference #{cell}")
   end
-#  private :substitute_cellref
+  private :substitute_cellref
 
   ###############################################################################
   #
@@ -1641,12 +3352,44 @@ attr_reader :compatibility
     encoded_password ^= 0xCE4B
   end
 
-  ###############################################################################
   #
-  # outline_settings($visible, $symbols_below, $symbols_right, $auto_style)
+  # :call-seq:
+  #   outline_settings(visible, symbols_below, symbols_right, auto_style)
   #
   # This method sets the properties for outlining and grouping. The defaults
   # correspond to Excel's defaults.
+  #
+  # The outline_settings() method is used to control the appearance of
+  # outlines in Excel. Outlines are described in
+  # "OUTLINES AND GROUPING IN EXCEL".
+  #
+  # The _visible_ parameter is used to control whether or not outlines are
+  # visible. Setting this parameter to 0 will cause all outlines on the
+  # worksheet to be hidden. They can be unhidden in Excel by means of the
+  # "Show Outline Symbols" command button. The default setting is 1 for
+  # visible outlines.
+  #
+  #     worksheet.outline_settings(0)
+  #
+  # The _symbols__below parameter is used to control whether the row outline
+  # symbol will appear above or below the outline level bar. The default
+  # setting is 1 for symbols to appear below the outline level bar.
+  #
+  # The symbols_right parameter is used to control whether the column outline
+  # symbol will appear to the left or the right of the outline level bar. The
+  # default setting is 1 for symbols to appear to the right of the outline
+  # level bar.
+  #
+  # The _auto_style_ parameter is used to control whether the automatic outline
+  # generator in Excel uses automatic styles when creating an outline. This has
+  # no effect on a file generated by WriteExcel but it does have an effect on
+  # how the worksheet behaves after it is created. The default setting is 0 for
+  # "Automatic Styles" to be turned off.
+  #
+  # The default settings for all of these parameters correspond to Excel's
+  # default parameters.
+  #
+  # The worksheet parameters controlled by outline_settings() are rarely used.
   #
   def outline_settings(*args)
     @outline_on    = args[0] || 1
@@ -1656,273 +3399,6 @@ attr_reader :compatibility
 
     # Ensure this is a boolean vale for Window2
     @outline_on    = 1 if @outline_on == 0
-  end
-
-  ###############################################################################
-  ###############################################################################
-  #
-  # BIFF RECORDS
-  #
-
-  ###############################################################################
-  #
-  # write_number($row, $col, $num, $format)
-  #
-  # Write a double to the specified row and column (zero indexed).
-  # An integer can be written as a double. Excel will display an
-  # integer. $format is optional.
-  #
-  # Returns  0 : normal termination
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #
-  def write_number(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
-
-    return -1 if (args.size < 3)                # Check the number of args
-
-    record  = 0x0203                        # Record identifier
-    length  = 0x000E                        # Number of bytes to follow
-
-    row     = args[0]                         # Zero indexed row
-    col     = args[1]                         # Zero indexed column
-    num     = args[2]
-    xf      = xf_record_index(row, col, args[3]) # The cell format
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
-    header = [record, length].pack('vv')
-    data   = [row, col, xf].pack('vvv')
-    xl_double = [num].pack("d")
-
-    xl_double.reverse! if @byte_order != 0 && @byte_order != ''
-
-    # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data + xl_double
-      @table[row] = tmp
-    else
-      append(header, data, xl_double)
-    end
-
-    return 0
-  end
-
-  ###############################################################################
-  #
-  # write_string ($row, $col, $string, $format)
-  #
-  # Write a string to the specified row and column (zero indexed).
-  # NOTE: there is an Excel 5 defined limit of 255 characters.
-  # $format is optional.
-  # Returns  0 : normal termination
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #         -3 : long string truncated to 255 chars
-  #
-  def write_string(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
-
-    return -1 if (args.size < 3)                # Check the number of args
-
-    record      = 0x00FD                        # Record identifier
-    length      = 0x000A                        # Bytes to follow
-
-    row         = args[0]                       # Zero indexed row
-    col         = args[1]                       # Zero indexed column
-    str         = args[2].to_s
-    strlen      = str.length
-    xf          = xf_record_index(row, col, args[3])   # The cell format
-    encoding    = 0x0
-    str_error   = 0
-
-    # Handle utf8 strings
-    if str =~ NonAscii
-      return write_utf16le_string(row, col, NKF.nkf('-w16L0 -m0 -W', str), args[3])
-    end
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
-    # Limit the string to the max number of chars.
-    if (strlen > 32767)
-      str       = substr(str, 0, 32767)
-      str_error = -3
-    end
-
-    # Prepend the string with the type.
-    str_header  = [str.length, encoding].pack('vC')
-    str         = str_header + str
-
-    if @str_table[str].nil?
-      @str_table[str] = str_unique
-      add_str_unique(1)
-    end
-
-    add_str_total(1)
-
-    header = [record, length].pack('vv')
-    data   = [row, col, xf, @str_table[str]].pack('vvvV')
-
-    # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data
-      @table[row] = tmp
-    else
-      append(header, data)
-    end
-
-    return str_error
-  end
-
-  ###############################################################################
-  #
-  # write_blank($row, $col, $format)
-  #
-  # Write a blank cell to the specified row and column (zero indexed).
-  # A blank cell is used to specify formatting without adding a string
-  # or a number.
-  #
-  # A blank cell without a format serves no purpose. Therefore, we don't write
-  # a BLANK record unless a format is specified. This is mainly an optimisation
-  # for the write_row() and write_col() methods.
-  #
-  # Returns  0 : normal termination (including no format)
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #
-  def write_blank(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
-
-    # Check the number of args
-    return -1 if args.size < 2
-
-    # Don't write a blank cell unless it has a format
-    return 0 if args[2].nil?
-
-    record  = 0x0201                        # Record identifier
-    length  = 0x0006                        # Number of bytes to follow
-
-    row     = args[0]                       # Zero indexed row
-    col     = args[1]                       # Zero indexed column
-    xf      = xf_record_index(row, col, args[2])   # The cell format
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
-    header    = [record, length].pack('vv')
-    data      = [row, col, xf].pack('vvv')
-
-    # Store the data or write immediately depending    on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data
-      @table[row] = tmp
-    else
-      append(header, data)
-    end
-
-    return 0
-  end
-
-  ###############################################################################
-  #
-  # write_formula($row, $col, $formula, $format, $value)
-  #
-  # Write a formula to the specified row and column (zero indexed).
-  # The textual representation of the formula is passed to the parser in
-  # Formula.pm which returns a packed binary string.
-  #
-  # $format is optional.
-  #
-  # $value is an optional result of the formula that can be supplied by the user.
-  #
-  # Returns  0 : normal termination
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #
-  def write_formula(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    if (args[0] =~ /^\D/)
-      args = substitute_cellref(args)
-    end
-
-    return -1 if args.size < 3   # Check the number of args
-
-    record    = 0x0006     # Record identifier
-    # length               # Bytes to follow
-
-    row       = args[0]      # Zero indexed row
-    col       = args[1]      # Zero indexed column
-    formula   = args[2].dup  # The formula text string
-    value     = args[4]      # The formula text string
-
-
-    xf        = xf_record_index(row, col, args[3])  # The cell format
-    chn       = 0x0000                         # Must be zero
-    is_string = 0                              # Formula evaluates to str
-    # num                                      # Current value of formula
-    # grbi                                     # Option flags
-
-    # Excel normally stores the last calculated value of the formula in $num.
-    # Clearly we are not in a position to calculate this "a priori". Instead
-    # we set $num to zero and set the option flags in $grbit to ensure
-    # automatic calculation of the formula when the file is opened.
-    # As a workaround for some non-Excel apps we also allow the user to
-    # specify the result of the formula.
-    #
-    num, grbit, is_string = encode_formula_result(value)
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
-    # Strip the = sign at the beginning of the formula string
-    formula.sub!(/^=/, '')
-
-    # Parse the formula using the parser in Formula.pm
-    # nakamura add:  to get byte_stream, set second arg TRUE
-    # because ruby doesn't have Perl's "wantarray"
-    formula = @parser.parse_formula(formula, true)
-
-    #       if ($@) {
-    #           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
-    #           croak $@       # Re-raise the error
-    #       }
-
-    formlen = formula.length     # Length of the binary string
-    length  = 0x16 + formlen     # Length of the record data
-
-    header  = [record, length].pack("vv")
-    data    = [row, col, xf].pack("vvv") +
-    num +
-    [grbit, chn, formlen].pack('vVv')
-
-    # The STRING record if the formula evaluates to a string.
-    string  = ''
-    string  = get_formula_string(value) if is_string != 0
-
-    # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data + formula + string
-      @table[row] = tmp
-    else
-      append(header, data, formula, string)
-    end
-
-    return 0
   end
 
   ###############################################################################
@@ -2005,13 +3481,42 @@ attr_reader :compatibility
   end
   private :get_formula_string
 
-  ###############################################################################
   #
-  # store_formula($formula)
-  #       my $formula = $_[0];      # The formula text string
+  # :call-seq:
+  #   store_formula(formula)  # formula : text string of formula
   #
   # Pre-parse a formula. This is used in conjunction with repeat_formula()
   # to repetitively rewrite a formula without re-parsing it.
+  #
+  # The store_formula() method is used in conjunction with repeat_formula()
+  #  to speed up the generation of repeated formulas. See
+  # "Improving performance when working with formulas" in
+  # "FORMULAS AND FUNCTIONS IN EXCEL".
+  #
+  # The store_formula() method pre-parses a textual representation of a
+  # formula and stores it for use at a later stage by the repeat_formula()
+  # method.
+  #
+  # store_formula() carries the same speed penalty as write_formula(). However,
+  # in practice it will be used less frequently.
+  #
+  # The return value of this method is a scalar that can be thought of as a
+  # reference to a formula.
+  #
+  #     sin = worksheet.store_formula('=SIN(A1)')
+  #     cos = worksheet.store_formula('=COS(A1)')
+  #
+  #     worksheet.repeat_formula('B1', sin, format, 'A1', 'A2')
+  #     worksheet.repeat_formula('C1', cos, format, 'A1', 'A2')
+  #
+  # Although store_formula() is a worksheet method the return value can be used
+  # in any worksheet:
+  #
+  #     now = worksheet.store_formula('=NOW()')
+  #
+  #     worksheet1.repeat_formula('B1', now)
+  #     worksheet2.repeat_formula('B1', now)
+  #     worksheet3.repeat_formula('B1', now)
   #
   def store_formula(formula)
     # Strip the = sign at the beginning of the formula string
@@ -2031,18 +3536,130 @@ attr_reader :compatibility
     return [*tokens]
   end
 
-  ###############################################################################
   #
-  # repeat_formula($row, $col, $formula, $format, ($pattern => $replacement,...))
+  # :call-seq:
+  #    repeat_formula(row, col,    formula, format, ([pattern => replace, ...]) -> Fixnum
+  #    repeat_formula(A1_notation, formula, format, ([pattern => replace, ...]) -> Fixnum
   #
   # Write a formula to the specified row and column (zero indexed) by
-  # substituting $pattern $replacement pairs in the $formula created via
+  # substituting _pattern_ _replacement_ pairs in the formula created via
   # store_formula(). This allows the user to repetitively rewrite a formula
   # without the significant overhead of parsing.
   #
   # Returns  0 : normal termination
   #         -1 : insufficient number of arguments
   #         -2 : row or column out of range
+  #
+  # The repeat_formula() method is used in conjunction with store_formula() to
+  # speed up the generation of repeated formulas. See
+  # "Improving performance when working with formulas" in
+  # "FORMULAS AND FUNCTIONS IN EXCEL".
+  #
+  # In many respects repeat_formula() behaves like write_formula() except that
+  # it is significantly faster.
+  #
+  # The repeat_formula() method creates a new formula based on the pre-parsed
+  # tokens returned by store_formula(). The new formula is generated by
+  # substituting _pattern_, _replace_ pairs in the stored formula:
+  #
+  #     formula = worksheet.store_formula('=A1 * 3 + 50')
+  #
+  #     (0...100).each do |row|
+  #       worksheet.repeat_formula(row, 1, formula, format, 'A1', 'A'.(row +1))
+  #     end
+  #
+  # It should be noted that repeat_formula() doesn't modify the tokens. In the
+  # above example the substitution is always made against the original token,
+  # A1, which doesn't change.
+  #
+  # As usual, you can use undef if you don't wish to specify a format:
+  #
+  #     worksheet.repeat_formula('B2', formula, format, 'A1', 'A2')
+  #     worksheet.repeat_formula('B3', formula, nil,    'A1', 'A3')
+  #
+  # The substitutions are made from left to right and you can use as many
+  # pattern, replace pairs as you need. However, each substitution is made
+  # only once:
+  #
+  #     formula = worksheet.store_formula('=A1 + A1')
+  #
+  #     # Gives '=B1 + A1'
+  #     worksheet.repeat_formula('B1', formula, undef, 'A1', 'B1')
+  #
+  #     # Gives '=B1 + B1'
+  #     worksheet.repeat_formula('B2', formula, undef, ('A1', 'B1') x 2)
+  #
+  # Since the pattern is interpolated each time that it is used it is worth
+  # using the qr operator to quote the pattern. The qr operator is explained
+  # in the perlop man page.
+  #
+  #     worksheet.repeat_formula('B1', formula, format, qr/A1/, 'A2')
+  #
+  # Care should be taken with the values that are substituted. The formula
+  # returned by repeat_formula() contains several other tokens in addition to
+  # those in the formula and these might also match the pattern that you are
+  # trying to replace. In particular you should avoid substituting a single
+  # 0, 1, 2 or 3.
+  #
+  # You should also be careful to avoid false matches. For example the following
+  # snippet is meant to change the stored formula in steps
+  # from =A1 + SIN(A1) to =A10 + SIN(A10).
+  #
+  #     formula = worksheet.store_formula('=A1 + SIN(A1)')
+  #
+  #     (1..10).each do |row|
+  #       worksheet.repeat_formula(row -1, 1, formula, nil,
+  #                                     qw/A1/, 'A' . row,   #! Bad.
+  #                                     qw/A1/, 'A' . row    #! Bad.
+  #                               )
+  #     end
+  #
+  # However it contains a bug. In the last iteration of the loop when row is
+  # 10 the following substitutions will occur:
+  #
+  #     s/A1/A10/;    changes    =A1 + SIN(A1)     to    =A10 + SIN(A1)
+  #     s/A1/A10/;    changes    =A10 + SIN(A1)    to    =A100 + SIN(A1) # !!
+  #
+  # The solution in this case is to use a more explicit match such as qw/^A1$/:
+  #
+  #         worksheet.repeat_formula(row -1, 1, formula, nil,
+  #                                     qw/^A1$/, 'A' . row,
+  #                                     qw/^A1$/, 'A' . row
+  #                                   )
+  #
+  # Another similar problem occurs due to the fact that substitutions are made
+  # in order. For example the following snippet is meant to change the stored
+  # formula from =A10 + A11 to =A11 + A12:
+  #
+  #     formula = worksheet.store_formula('=A10 + A11')
+  #
+  #     worksheet.repeat_formula('A1', formula, nil,
+  #                                 qw/A10/, 'A11',   #! Bad.
+  #                                 qw/A11/, 'A12'    #! Bad.
+  #                               )
+  #
+  # However, the actual substitution yields =A12 + A11:
+  #
+  #     s/A10/A11/;    changes    =A10 + A11    to    =A11 + A11
+  #     s/A11/A12/;    changes    =A11 + A11    to    =A12 + A11 # !!
+  #
+  # The solution here would be to reverse the order of the substitutions or to
+  # start with a stored formula that won't yield a false match such as =X10 + Y11:
+  #
+  #     formula = worksheet.store_formula('=X10 + Y11')
+  #
+  #     worksheet.repeat_formula('A1', formula, nil,
+  #                                 qw/X10/, 'A11',
+  #                                 qw/Y11/, 'A12'
+  #                               )
+  #
+  # If you think that you have a problem related to a false match you can check
+  # the tokens that you are substituting against as follows.
+  #
+  #     formula = worksheet.store_formula('=A1*5+4')
+  #     print "#{formula}\n"
+  #
+  # See also the repeat.rb program in the examples directory of the distro.
   #
   def repeat_formula(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -2142,24 +3759,89 @@ attr_reader :compatibility
     return 0
   end
 
-  ###############################################################################
   #
-  # write_url($row, $col, $url, $string, $format)
+  # :call-seq:
+  #   write_url(row, col   , url[, label, , format]) -> int
+  #   write_url(A1_notation, url[, label, , format]) -> int
   #
-  # Write a hyperlink. This is comprised of two elements: the visible label and
-  # the invisible link. The visible label is the same as the link unless an
+  # Write a hyperlink. This is comprised of two elements: the visible _label_ and
+  # the invisible link. The visible _label_ is the same as the link unless an
   # alternative string is specified.
   #
-  # The parameters $string and $format are optional and their order is
-  # interchangeable for backward compatibility reasons.
+  # The parameters _label_ and _format_ are optional.
   #
-  # The hyperlink can be to a http, ftp, mail, internal sheet, or external
+  # The _url_ can be to a http, ftp, mail, internal sheet, or external
   # directory url.
   #
   # Returns  0 : normal termination
   #         -1 : insufficient number of arguments
   #         -2 : row or column out of range
   #         -3 : long string truncated to 255 chars
+  #
+  # Write a hyperlink to a URL in the cell specified by row and column. The
+  # hyperlink is comprised of two elements: the visible _label_ and the
+  # invisible link. The visible _label_ is the same as the link unless an
+  # alternative label is specified. The parameters _label_ and the _format_
+  # are optional.
+  #
+  # The _label_ is written using the write() method. Therefore it is possible
+  # to write strings, numbers or formulas as labels.
+  #
+  # There are four web style URI's supported: http://, https://, ftp:// and
+  # mailto::
+  #
+  #     worksheet.write_url(0, 0,  'ftp://www.ruby.org/'                  )
+  #     worksheet.write_url(1, 0,  'http://www.ruby.com/', 'Ruby home'    )
+  #     worksheet.write_url('A3',  'http://www.ruby.com/', format        )
+  #     worksheet.write_url('A4',  'http://www.ruby.com/', 'Perl', format)
+  #     worksheet.write_url('A5',  'mailto:bar@foo.com'            )
+  #
+  # There are two local URIs supported: internal: and external:. These are used
+  # for hyperlinks to internal worksheet references or external workbook and
+  # worksheet references:
+  #
+  #     worksheet.write_url('A6',  'internal:Sheet2!A1'                   )
+  #     worksheet.write_url('A7',  'internal:Sheet2!A1',   format         )
+  #     worksheet.write_url('A8',  'internal:Sheet2!A1:B2'                )
+  #     worksheet.write_url('A9',  q{internal:'Sales Data'!A1}            )
+  #     worksheet.write_url('A10', 'external:c:\temp\foo.xls'             )
+  #     worksheet.write_url('A11', 'external:c:\temp\foo.xls#Sheet2!A1'   )
+  #     worksheet.write_url('A12', 'external:..\..\..\foo.xls'            )
+  #     worksheet.write_url('A13', 'external:..\..\..\foo.xls#Sheet2!A1'  )
+  #     worksheet.write_url('A13', 'external:\\\\NETWORK\share\foo.xls'   )
+  #
+  # All of the these URI types are recognised by the write() method, see above.
+  #
+  # Worksheet references are typically of the form Sheet1!A1. You can also refer
+  # to a worksheet range using the standard Excel notation: Sheet1!A1:B2.
+  #
+  # In external links the workbook and worksheet name must be separated by the
+  # # character: external:Workbook.xls#Sheet1!A1'.
+  #
+  # You can also link to a named range in the target worksheet. For example say
+  # you have a named range called my_name in the workbook c:\temp\foo.xls you
+  # could link to it as follows:
+  #
+  #     worksheet.write_url('A14', 'external:c:\temp\foo.xls#my_name')
+  #
+  # Note, you cannot currently create named ranges with WriteExcel.
+  #
+  # Links to network files are also supported. MS/Novell Network files normally
+  # begin with two back slashes as follows \\NETWORK\etc. In order to generate
+  # this in a single or double quoted string you will have to escape the
+  # backslashes, '\\\\NETWORK\etc'.
+  #
+  # If you are using double quote strings then you should be careful to escape
+  # anything that looks like a metacharacter. Why can't I use "C:\temp\foo" in
+  # DOS paths?.
+  #
+  # Finally, you can avoid most of these quoting problems by using forward
+  # slashes. These are translated internally to backslashes:
+  #
+  #     worksheet.write_url('A14', "external:c:/temp/foo.xls"             )
+  #     worksheet.write_url('A15', 'external://NETWORK/share/foo.xls'     )
+  #
+  # See also, the note about "Cell notation".
   #
   def write_url(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -2174,9 +3856,10 @@ attr_reader :compatibility
     return write_url_range(args[0], args[1], *args)
   end
 
-  ###############################################################################
   #
-  # write_url_range($row1, $col1, $row2, $col2, $url, $string, $format)
+  # :call-seq:
+  #   write_url_range(row1, col1, row2, col2, url[, string, , format])  -> Fixnum
+  #   write_url_range('A1:D2',                url[, string, , format])  -> Fixnum
   #
   # This is the more general form of write_url(). It allows a hyperlink to be
   # written to a range of cells. This function also decides the type of hyperlink
@@ -2184,6 +3867,27 @@ attr_reader :compatibility
   # (Sheet1!A1) or external ('c:\temp\foo.xls#Sheet1!A1').
   #
   # See also write_url() above for a general description and return values.
+  #
+  # This method is essentially the same as the write_url() method described
+  # above. The main difference is that you can specify a link for a range of
+  # cells:
+  #
+  #     worksheet.write_url(0, 0, 0, 3, 'ftp://www.ruby.org/'              )
+  #     worksheet.write_url(1, 0, 0, 3, 'http://www.ruby.com/', 'Ruby home')
+  #     worksheet.write_url('A3:D3',    'internal:Sheet2!A1'               )
+  #     worksheet.write_url('A4:D4',    'external:c:\temp\foo.xls'         )
+  #
+  # This method is generally only required when used in conjunction with merged
+  # cells. See the merge_range() method and the merge property of a Format
+  # object, "CELL FORMATTING".
+  #
+  # There is no way to force this behaviour through the write() method.
+  #
+  # The parameters _string_ and the $format are optional and their position is
+  # interchangeable. However, they are applied only to the first cell in the
+  # range.
+  #
+  # See also, the note about "Cell notation".
   #
   def write_url_range(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -2194,7 +3898,7 @@ attr_reader :compatibility
     # Check the number of args
     return -1 if args.size < 5
 
-    # Reverse the order of $string and $format if necessary. We work on a copy
+    # Reverse the order of _string_ and $format if necessary. We work on a copy
     # in order to protect the callers args. We don't use "local @_" in case of
     # perl50005 threads.
     #
@@ -2528,17 +4232,54 @@ attr_reader :compatibility
   end
   private :write_url_external_net
 
-  ###############################################################################
   #
-  # write_date_time ($row, $col, $string, $format)
+  # :call-seq:
+  #   write_date_time(row, col   , date_string[, format])
+  #   write_date_time(A1_notation, date_string[, format])
   #
   # Write a datetime string in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format as a
-  # number representing an Excel date. $format is optional.
+  # number representing an Excel date. format is optional.
   #
   # Returns  0 : normal termination
   #         -1 : insufficient number of arguments
   #         -2 : row or column out of range
   #         -3 : Invalid date_time, written as string
+  #
+  # The write_date_time() method can be used to write a date or time to the
+  # cell specified by row and column:
+  #
+  #     worksheet.write_date_time('A1', '2004-05-13T23:20', date_format)
+  #
+  # The date_string should be in the following format:
+  #
+  #     yyyy-mm-ddThh:mm:ss.sss
+  #
+  # This conforms to an ISO8601 date but it should be noted that the full
+  # range of ISO8601 formats are not supported.
+  #
+  # The following variations on the date_string parameter are permitted:
+  #
+  #     yyyy-mm-ddThh:mm:ss.sss         # Standard format
+  #     yyyy-mm-ddT                     # No time
+  #               Thh:mm:ss.sss         # No date
+  #     yyyy-mm-ddThh:mm:ss.sssZ        # Additional Z (but not time zones)
+  #     yyyy-mm-ddThh:mm:ss             # No fractional seconds
+  #     yyyy-mm-ddThh:mm                # No seconds
+  #
+  # Note that the T is required in all cases.
+  #
+  # A date should always have a format, otherwise it will appear as a number,
+  # see "DATES AND TIME IN EXCEL" and "CELL FORMATTING". Here is a typical
+  # example:
+  #
+  #     date_format = workbook.add_format(:num_format => 'mm/dd/yy')
+  #     worksheet.write_date_time('A1', '2004-05-13T23:20', date_format)
+  #
+  # Valid dates should be in the range 1900-01-01 to 9999-12-31, for the 1900
+  # epoch and 1904-01-01 to 9999-12-31, for the 1904 epoch. As with Excel,
+  # dates outside these ranges will be written as a string.
+  #
+  # See also the date_time.rb program in the examples directory of the distro.
   #
   def write_date_time(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -2690,17 +4431,72 @@ attr_reader :compatibility
     return days + seconds
   end
 
-  ###############################################################################
   #
-  # set_row($row, $height, $format, $hidden, $level, collapsed)
   #          row       : Row Number
   #          height    : Format object
   #          format    : Format object
   #          hidden    : Hidden flag
   #          level     : Outline level
   #          collapsed : Collapsed row
+  #
   # This method is used to set the height and XF format for a row.
   # Writes the  BIFF record ROW.
+  #
+  # This method can be used to change the default properties of a row. All
+  # parameters apart from _row_ are optional.
+  #
+  # The most common use for this method is to change the height of a row:
+  #
+  #     worksheet.set_row(0, 20) # Row 1 height set to 20
+  #
+  # If you wish to set the _format_ without changing the _height_ you can pass
+  # nil as the _height_ parameter:
+  #
+  #     worksheet.set_row(0, nil, format)
+  #
+  # The _format_ parameter will be applied to any cells in the row that don't
+  # have a format. For example
+  #
+  #     worksheet.set_row(0, nil, format1)      # Set the format for row 1
+  #     worksheet.write('A1', 'Hello')          # Defaults to format1
+  #     worksheet.write('B1', 'Hello', format2) # Keeps format2
+  #
+  # If you wish to define a row format in this way you should call the method
+  # before any calls to write(). Calling it afterwards will overwrite any format
+  # that was previously specified.
+  #
+  # The hidden parameter should be set to 1 if you wish to hide a row. This can
+  # be used, for example, to hide intermediary steps in a complicated calculation:
+  #
+  #     worksheet.set_row(0, 20,    format, 1)
+  #     worksheet.set_row(1, undef, nil,    1)
+  #
+  # The level parameter is used to set the outline level of the row. Outlines
+  # are described in "OUTLINES AND GROUPING IN EXCEL". Adjacent rows with the
+  # same outline level are grouped together into a single outline.
+  #
+  # The following example sets an outline level of 1 for rows 1 and 2
+  # (zero-indexed):
+  #
+  #     worksheet.set_row(1, nil, nil, 0, 1)
+  #     worksheet.set_row(2, nil, nil, 0, 1)
+  #
+  # The hidden parameter can also be used to hide collapsed outlined rows when
+  # used in conjunction with the level parameter.
+  #
+  #     worksheet.set_row(1, nil, nil, 1, 1)
+  #     worksheet.set_row(2, nil, nil, 1, 1)
+  #
+  # For collapsed outlines you should also indicate which row has the
+  # collapsed + symbol using the optional collapsed parameter.
+  #
+  #     worksheet.set_row(3, nil, nil, 0, 0, 1)
+  #
+  # For a more complete example see the outline.pl and outline_collapsed.rb
+  # programs in the examples directory of the distro.
+  #
+  # Excel allows up to 7 outline levels. Therefore the level parameter should
+  # be in the range 0 <= level <= 7.
   #
   def set_row(row, height = nil, format = nil, hidden = 0, level = 0, collapsed = 0)
     record      = 0x0208               # Record identifier
@@ -3555,14 +5351,55 @@ attr_reader :compatibility
     append(header, data)
   end
 
-  ###############################################################################
   #
-  # merge_range($row1, $col1, $row2, $col2, $string, $format, $encoding)
+  # :call-seq:
+  #   merge_range(first_row, first_col, last_row, last_col, token, format, utf_16_be)
   #
-  # This is a wrapper to ensure correct use of the merge_cells method, i.e., write
-  # the first cell of the range, write the formatted blank cells in the range and
-  # then call the merge_cells record. Failing to do the steps in this order will
-  # cause Excel 97 to crash.
+  # This is a wrapper to ensure correct use of the merge_cells method, i.e.,
+  # write the first cell of the range, write the formatted blank cells in the
+  # range and then call the merge_cells record. Failing to do the steps in
+  # this order will cause Excel 97 to crash.
+  #
+  # Merging cells can be achieved by setting the merge property of a Format
+  # object, see "CELL FORMATTING". However, this only allows simple Excel5
+  # style horizontal merging which Excel refers to as "center across selection".
+  #
+  #
+  # The merge_range() method allows you to do Excel97+ style formatting where
+  # the cells can contain other types of alignment in addition to the merging:
+  #
+  #     format = workbook.add_format(
+  #                              :border  => 6,
+  #                              :valign  => 'vcenter',
+  #                              :align   => 'center'
+  #                            )
+  #
+  #     worksheet.merge_range('B3:D4', 'Vertical and horizontal', format)
+  #
+  # <em>WARNING.</em> The format object that is used with a merge_range()
+  # method call is marked internally as being associated with a merged range.
+  # It is a fatal error to use a merged format in a non-merged cell. Instead
+  # you should use separate formats for merged and non-merged cells. This
+  # restriction will be removed in a future release.
+  #
+  # The _utf_16_be_ parameter is optional, see below.
+  #
+  # merge_range() writes its _token_ argument using the worksheet write()
+  # method. Therefore it will handle numbers, strings, formulas or urls as
+  # required.
+  #
+  # Setting the merge property of the format isn't required when you are using
+  # merge_range(). In fact using it will exclude the use of any other horizontal
+  # alignment option.
+  #
+  # Your can specify UTF-16BE worksheet names using an additional optional
+  # parameter:
+  #
+  #     str = [0x263a].pack('n')
+  #     worksheet.merge_range('B3:D4', str, format, 1)   # Smiley
+  #
+  # The full possibilities of this method are shown in the merge3.rb to
+  # merge65.rb programs in the examples directory of the distribution.
   #
   def merge_range(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -4068,11 +5905,64 @@ attr_reader :compatibility
 
   end
 
-  ###############################################################################
   #
-  # insert_image($row, $col, $filename, $x, $y, $scale_x, $scale_y)
+  # :call-seq:
+  #   insert_image(row, col,    filename, x, y, scale_x, scale_y)
+  #   insert_image(A1_notation, filename, x, y, scale_x, scale_y)
   #
   # Insert an image into the worksheet.
+  #
+  # This method can be used to insert a image into a worksheet. The image can
+  # be in PNG, JPEG or BMP format. The _x_, _y_, _scale_x_ and _scale_y_
+  # parameters are optional.
+  #
+  #     worksheet1.insert_image('A1', 'ruby.bmp')
+  #     worksheet2.insert_image('A1', '../images/ruby.bmp')
+  #     worksheet3.insert_image('A1', '.c:\images\ruby.bmp')
+  #
+  # The parameters _x_ and _y_ can be used to specify an offset from the top
+  # left hand corner of the cell specified by _row_ and _col_. The offset
+  # values are in pixels.
+  #
+  #     worksheet1.insert_image('A1', 'ruby.bmp', 32, 10)
+  #
+  # The default width of a cell is 63 pixels. The default height of a cell is
+  # 17 pixels. The pixels offsets can be calculated using the following
+  # relationships:
+  #
+  #     Wp = int(12We)   if We <  1
+  #     Wp = int(7We +5) if We >= 1
+  #     Hp = int(4/3He)
+  #
+  #     where:
+  #     We is the cell width in Excels units
+  #     Wp is width in pixels
+  #     He is the cell height in Excels units
+  #     Hp is height in pixels
+  #
+  # The offsets can be greater than the width or height of the underlying cell.
+  # This can be occasionally useful if you wish to align two or more images
+  # relative to the same cell.
+  #
+  # The parameters _scale_x_ and _scale_y_ can be used to scale the inserted
+  # image horizontally and vertically:
+  #
+  #     # Scale the inserted image: width x 2.0, height x 0.8
+  #     worksheet.insert_image('A1', 'ruby.bmp', 0, 0, 2, 0.8)
+  #
+  # See also the images.rb program in the examples directory of the distro.
+  #
+  # Note:
+  #
+  # you must call set_row() or set_column() before insert_image() if you wish
+  # to change the default dimensions of any of the rows or columns that the
+  # image occupies. The height of a row can also change if you use a font that
+  # is larger than the default. This in turn will affect the scaling of your
+  # image. To avoid this you should explicitly set the height of the row using
+  # set_row() if it contains a font size that will change the row height.
+  #
+  # BMP images must be 24 bit, true colour, bitmaps. In general it is best to
+  # avoid BMP images since they aren't compressed.
   #
   def insert_image(*args)
     # Check for a cell reference in A1 notation and substitute row and column
@@ -5892,9 +7782,10 @@ attr_reader :compatibility
   # DATA VALIDATION
   #
 
-  ###############################################################################
   #
-  # data_validation($row, $col, {...})
+  # :call-seq:
+  #    data_validation(row, col, {...})
+  #    data_validation(first_row, first_col, last_row, last_col, {...})
   #
   # This method handles the interface to Excel data validation.
   # Somewhat ironically the this requires a lot of validation code since the
@@ -5902,13 +7793,32 @@ attr_reader :compatibility
   #
   # We allow data validation to be called on one cell or a range of cells. The
   # hashref contains the validation parameters and must be the last param:
-  #    data_validation($row, $col, {...})
-  #    data_validation($first_row, $first_col, $last_row, $last_col, {...})
   #
   # Returns  0 : normal termination
   #         -1 : insufficient number of arguments
   #         -2 : row or column out of range
   #         -3 : incorrect parameter.
+  #
+  # The data_validation() method is used to construct an Excel data validation
+  # or to limit the user input to a dropdown list of values.
+  #
+  #     worksheet.data_validation('B3',
+  #         {
+  #             :validate => 'integer',
+  #             :criteria => '>',
+  #             :value    => 100,
+  #         })
+  #
+  #     worksheet.data_validation('B5:B9',
+  #         {
+  #             :validate => 'list',
+  #             :value    => ['open', 'high', 'close'],
+  #         })
+  #
+  # This method contains a lot of parameters and is described in detail in a
+  # separate section "DATA VALIDATION IN EXCEL".
+  #
+  # See also the data_validate.rb program in the examples directory of the distro
   #
   def data_validation(*args)
     # Check for a cell reference in A1 notation and substitute row and column
