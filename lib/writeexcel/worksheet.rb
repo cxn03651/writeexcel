@@ -359,7 +359,7 @@ class Worksheet < BIFFWriter
   # Add data to the beginning of the workbook (note the reverse order)
   # and to the end of the workbook.
   #
-  def close(*sheetnames)
+  def close(*sheetnames) #:nodoc:
     num_sheets = sheetnames.size
 
     ################################################
@@ -2718,6 +2718,244 @@ class Worksheet < BIFFWriter
   # However, this probably isn't something that will ever need to do. If you
   # do use this feature then do so with care.
   #
+  # =FORMULAS AND FUNCTIONS IN EXCEL
+  #
+  # ==Caveats
+  #
+  # The first thing to note is that there are still some outstanding issues
+  # with the implementation of formulas and functions:
+  #
+  #     1. Writing a formula is much slower than writing the equivalent string.
+  #     2. You cannot use array constants, i.e. {1;2;3}, in functions.
+  #     3. Unary minus isn't supported.
+  #     4. Whitespace is not preserved around operators.
+  #     5. Named ranges are not supported.
+  #     6. Array formulas are not supported.
+  #
+  # However, these constraints will be removed in future versions. They are
+  # here because of a trade-off between features and time. Also, it is possible
+  # to work around issue 1 using the store_formula() and repeat_formula()
+  # methods as described later in this section.
+  #
+  # ==Introduction
+  #
+  # The following is a brief introduction to formulas and functions in Excel
+  # and WriteExcel.
+  #
+  # A formula is a string that begins with an equals sign:
+  #
+  #     '=A1+B1'
+  #     '=AVERAGE(1, 2, 3)'
+  #
+  # The formula can contain numbers, strings, boolean values, cell references,
+  # cell ranges and functions. Named ranges are not supported. Formulas should
+  # be written as they appear in Excel, that is cells and functions must be
+  # in uppercase.
+  #
+  # Cells in Excel are referenced using the A1 notation system where the column
+  # is designated by a letter and the row by a number. Columns range from A to
+  # IV i.e. 0 to 255, rows range from 1 to 65536.
+  #
+  # The Excel $ notation in cell references is also supported. This allows you
+  # to specify whether a row or column is relative or absolute. This only has
+  # an effect if the cell is copied. The following examples show relative and
+  # absolute values.
+  #
+  #     '=A1'   # Column and row are relative
+  #     '=$A1'  # Column is absolute and row is relative
+  #     '=A$1'  # Column is relative and row is absolute
+  #     '=$A$1' # Column and row are absolute
+  #
+  # Formulas can also refer to cells in other worksheets of the current
+  # workbook. For example:
+  #
+  #     '=Sheet2!A1'
+  #     '=Sheet2!A1:A5'
+  #     '=Sheet2:Sheet3!A1'
+  #     '=Sheet2:Sheet3!A1:A5'
+  #     %q{='Test Data'!A1}
+  #     %q{='Test Data1:Test Data2'!A1}
+  #
+  # The sheet reference and the cell reference are separated by ! the exclamation
+  # mark symbol. If worksheet names contain spaces, commas o parentheses then
+  # Excel requires that the name is enclosed in single quotes as shown in the
+  # last two examples above. In order to avoid using a lot of escape characters
+  # you can use the quote operator %q{} to protect the quotes. See perlop in
+  # the main Perl documentation. Only valid sheet names that have been added
+  # using the add_worksheet() method can be used in formulas. You cannot
+  # reference external workbooks.
+  #
+  # The following table lists the operators that are available in Excel's
+  # formulas. The majority of the operators are the same as Perl's,
+  # differences are indicated:
+  #
+  #     Arithmetic operators:
+  #     =====================
+  #     Operator  Meaning                   Example
+  #        +      Addition                  1+2
+  #        -      Subtraction               2-1
+  #        *      Multiplication            2*3
+  #        /      Division                  1/4
+  #        ^      Exponentiation            2^3      # Equivalent to **
+  #        -      Unary minus               -(1+2)   # Not yet supported
+  #        %      Percent (Not modulus)     13%      # Not supported, [1]
+  #
+  #
+  #     Comparison operators:
+  #     =====================
+  #     Operator  Meaning                   Example
+  #         =     Equal to                  A1 =  B1 # Equivalent to ==
+  #         <>    Not equal to              A1 <> B1 # Equivalent to !=
+  #         >     Greater than              A1 >  B1
+  #         <     Less than                 A1 <  B1
+  #         >=    Greater than or equal to  A1 >= B1
+  #         <=    Less than or equal to     A1 <= B1
+  #
+  #
+  #     String operator:
+  #     ================
+  #     Operator  Meaning                   Example
+  #         &     Concatenation             "Hello " & "World!" # [2]
+  #
+  #
+  #     Reference operators:
+  #     ====================
+  #     Operator  Meaning                   Example
+  #         :     Range operator            A1:A4               # [3]
+  #         ,     Union operator            SUM(1, 2+2, B3)     # [4]
+  #
+  #
+  #     Notes:
+  #     [1]: You can get a percentage with formatting and modulus with MOD().
+  #     [2]: Equivalent to ("Hello " . "World!") in Perl.
+  #     [3]: This range is equivalent to cells A1, A2, A3 and A4.
+  #     [4]: The comma behaves like the list separator in Perl.
+  #
+  # The range and comma operators can have different symbols in non-English
+  # versions of Excel. These will be supported in a later version of
+  # WriteExcel. European users of Excel take note:
+  #
+  #     worksheet.write('A1', '=SUM(1; 2; 3)')  # Wrong!!
+  #     worksheet.write('A1', '=SUM(1, 2, 3)')  # Okay
+  #
+  # The following table lists all of the core functions supported by Excel 5
+  # and WriteExcel. Any additional functions that are available through the
+  # "Analysis ToolPak" or other add-ins are not supported. These functions
+  # have all been tested to verify that they work.
+  #
+  #     ABS           DB            INDIRECT      NORMINV       SLN
+  #     ACOS          DCOUNT        INFO          NORMSDIST     SLOPE
+  #     ACOSH         DCOUNTA       INT           NORMSINV      SMALL
+  #     ADDRESS       DDB           INTERCEPT     NOT           SQRT
+  #     AND           DEGREES       IPMT          NOW           STANDARDIZE
+  #     AREAS         DEVSQ         IRR           NPER          STDEV
+  #     ASIN          DGET          ISBLANK       NPV           STDEVP
+  #     ASINH         DMAX          ISERR         ODD           STEYX
+  #     ATAN          DMIN          ISERROR       OFFSET        SUBSTITUTE
+  #     ATAN2         DOLLAR        ISLOGICAL     OR            SUBTOTAL
+  #     ATANH         DPRODUCT      ISNA          PEARSON       SUM
+  #     AVEDEV        DSTDEV        ISNONTEXT     PERCENTILE    SUMIF
+  #     AVERAGE       DSTDEVP       ISNUMBER      PERCENTRANK   SUMPRODUCT
+  #     BETADIST      DSUM          ISREF         PERMUT        SUMSQ
+  #     BETAINV       DVAR          ISTEXT        PI            SUMX2MY2
+  #     BINOMDIST     DVARP         KURT          PMT           SUMX2PY2
+  #     CALL          ERROR.TYPE    LARGE         POISSON       SUMXMY2
+  #     CEILING       EVEN          LEFT          POWER         SYD
+  #     CELL          EXACT         LEN           PPMT          T
+  #     CHAR          EXP           LINEST        PROB          TAN
+  #     CHIDIST       EXPONDIST     LN            PRODUCT       TANH
+  #     CHIINV        FACT          LOG           PROPER        TDIST
+  #     CHITEST       FALSE         LOG10         PV            TEXT
+  #     CHOOSE        FDIST         LOGEST        QUARTILE      TIME
+  #     CLEAN         FIND          LOGINV        RADIANS       TIMEVALUE
+  #     CODE          FINV          LOGNORMDIST   RAND          TINV
+  #     COLUMN        FISHER        LOOKUP        RANK          TODAY
+  #     COLUMNS       FISHERINV     LOWER         RATE          TRANSPOSE
+  #     COMBIN        FIXED         MATCH         REGISTER.ID   TREND
+  #     CONCATENATE   FLOOR         MAX           REPLACE       TRIM
+  #     CONFIDENCE    FORECAST      MDETERM       REPT          TRIMMEAN
+  #     CORREL        FREQUENCY     MEDIAN        RIGHT         TRUE
+  #     COS           FTEST         MID           ROMAN         TRUNC
+  #     COSH          FV            MIN           ROUND         TTEST
+  #     COUNT         GAMMADIST     MINUTE        ROUNDDOWN     TYPE
+  #     COUNTA        GAMMAINV      MINVERSE      ROUNDUP       UPPER
+  #     COUNTBLANK    GAMMALN       MIRR          ROW           VALUE
+  #     COUNTIF       GEOMEAN       MMULT         ROWS          VAR
+  #     COVAR         GROWTH        MOD           RSQ           VARP
+  #     CRITBINOM     HARMEAN       MODE          SEARCH        VDB
+  #     DATE          HLOOKUP       MONTH         SECOND        VLOOKUP
+  #     DATEVALUE     HOUR          N             SIGN          WEEKDAY
+  #     DAVERAGE      HYPGEOMDIST   NA            SIN           WEIBULL
+  #     DAY           IF            NEGBINOMDIST  SINH          YEAR
+  #     DAYS360       INDEX         NORMDIST      SKEW          ZTEST
+  #
+  # --
+  # You can also modify the module to support function names in the following
+  # languages: German, French, Spanish, Portuguese, Dutch, Finnish, Italian
+  # and Swedish. See the function_locale.pl program in the examples
+  # directory of the distro.
+  # ++
+  #
+  # For a general introduction to Excel's formulas and an explanation of
+  # the syntax of the function refer to the Excel help files or the
+  # following: http://office.microsoft.com/en-us/assistance/CH062528031033.aspx
+  #
+  # If your formula doesn't work in Spreadsheet::WriteExcel try the following:
+  #
+  #     1. Verify that the formula works in Excel (or Gnumeric or OpenOffice.org).
+  #     2. Ensure that it isn't on the Caveats list shown above.
+  #     3. Ensure that cell references and formula names are in uppercase.
+  #     4. Ensure that you are using ':' as the range operator, A1:A4.
+  #     5. Ensure that you are using ',' as the union operator, SUM(1,2,3).
+  #     6. Ensure that the function is in the above table.
+  #
+  # If you go through steps 1-6 and you still have a problem, mail me.
+  #
+  # ==Improving performance when working with formulas
+  #
+  # Writing a large number of formulas with Spreadsheet::WriteExcel can be
+  # slow. This is due to the fact that each formula has to be parsed and
+  # with the current implementation this is computationally expensive.
+  #
+  # However, in a lot of cases the formulas that you write will be quite
+  # similar, for example:
+  #
+  #     worksheet.write_formula('B1',    '=A1 * 3 + 50',    format)
+  #     worksheet.write_formula('B2',    '=A2 * 3 + 50',    format)
+  #     ...
+  #     ...
+  #     worksheet.write_formula('B99',   '=A999 * 3 + 50',  format)
+  #     worksheet.write_formula('B1000', '=A1000 * 3 + 50', format)
+  #
+  # In this example the cell reference changes in iterations from A1 to A1000.
+  # The parser treats this variable as a token and arranges it according to
+  # predefined rules. However, since the parser is oblivious to the value of
+  # the token, it is essentially performing the same calculation 1000 times.
+  # This is inefficient.
+  #
+  # The way to avoid this inefficiency and thereby speed up the writing of
+  # formulas is to parse the formula once and then repeatedly substitute
+  # similar tokens.
+  #
+  # A formula can be parsed and stored via the store_formula() worksheet
+  # method. You can then use the repeat_formula() method to substitute
+  # _pattern_, _replace_ pairs in the stored formula:
+  #
+  #     formula = worksheet.store_formula('=A1 * 3 + 50')
+  #
+  #     (0...1000).each do |row|
+  #        worksheet.repeat_formula(row, 1, formula, format, 'A1', 'A'.(row +1))
+  #     end
+  #
+  # On an arbitrary test machine this method was 10 times faster than the
+  # brute force method shown above.
+  # --
+  # For more information about how WriteExcel parses and stores formulas see
+  # the WriteExcel::Formula man page.
+  #
+  # It should be noted however that the overall speed of direct formula
+  # parsing will be improved in a future version.
+  # ++
   def write_formula(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     if (args[0] =~ /^\D/)
@@ -3351,6 +3589,7 @@ class Worksheet < BIFFWriter
     encoded_password ^= count
     encoded_password ^= 0xCE4B
   end
+  private :encode_password
 
   #
   # :call-seq:
@@ -4309,9 +4548,6 @@ class Worksheet < BIFFWriter
     return error
   end
 
-  ###############################################################################
-  #
-  # convert_date_time($date_time_string)
   #
   # The function takes a date and time in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format
   # and converts it to a decimal number representing a valid Excel date.
@@ -5323,7 +5559,7 @@ class Worksheet < BIFFWriter
   # This is an Excel97/2000 method. It is required to perform more complicated
   # merging than the normal align merge in Format.pm
   #
-  def merge_cells(*args)
+  def merge_cells(*args) #:nodoc:
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/
       args = substitute_cellref(*args)
@@ -5883,7 +6119,7 @@ class Worksheet < BIFFWriter
   #
   # Embed an extracted chart in a worksheet.
   #
-  def embed_chart(*args)
+  def embed_chart(*args) #:nodoc:
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/
       args = substitute_cellref(*args)
@@ -7819,6 +8055,448 @@ class Worksheet < BIFFWriter
   # separate section "DATA VALIDATION IN EXCEL".
   #
   # See also the data_validate.rb program in the examples directory of the distro
+  #
+  # The data_validation() method is used to construct an Excel data validation.
+  #
+  # It can be applied to a single cell or a range of cells. You can pass 3
+  # parameters such as (_row_, _col_, {...}) or 5 parameters such as
+  # (_first_row_, _first_col_, _last_row_, _last_col_, {...}). You can also
+  # use A1 style notation. For example:
+  #
+  #     worksheet.data_validation(0, 0,       {...})
+  #     worksheet.data_validation(0, 0, 4, 1, {...})
+  #
+  #     # Which are the same as:
+  #
+  #     $worksheet.data_validation('A1',       {...})
+  #     $worksheet.data_validation('A1:B5',    {...})
+  #
+  # See also the note about "Cell notation" for more information.
+  #
+  # The last parameter in data_validation() must be a hash ref containing the
+  # parameters that describe the type and style of the data validation. The
+  # allowable parameters are:
+  #
+  #     validate
+  #     criteria
+  #     value | minimum | source
+  #     maximum
+  #     ignore_blank
+  #     dropdown
+  #
+  #     input_title
+  #     input_message
+  #     show_input
+  #
+  #     error_title
+  #     error_message
+  #     error_type
+  #     show_error
+  #
+  # These parameters are explained in the following sections. Most of the
+  # parameters are optional, however, you will generally require the three main
+  # options validate, criteria and value.
+  #
+  #     worksheet.data_validation('B3',
+  #         {
+  #             :validate => 'integer',
+  #             :criteria => '>',
+  #             :value    => 100
+  #         })
+  #
+  # The data_validation method returns:
+  #
+  #      0 for success.
+  #     -1 for insufficient number of arguments.
+  #     -2 for row or column out of bounds.
+  #     -3 for incorrect parameter or value.
+  #
+  # ===validate
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The validate parameter is used to set the type of data that you wish to
+  # validate. It is always required and it has no default value. Allowable
+  # values are:
+  #
+  #     any
+  #     integer
+  #     decimal
+  #     list
+  #     date
+  #     time
+  #     length
+  #     custom
+  #
+  #     * any is used to specify that the type of data is unrestricted. This
+  # is the same as not applying a data validation. It is only provided for
+  # completeness and isn't used very often in the context of WriteExcel.
+  #
+  #     * integer restricts the cell to integer values. Excel refers to this
+  # as 'whole number'.
+  #
+  #           :validate => 'integer',
+  #           :criteria => '>',
+  #           :value    => 100,
+  #
+  #     * decimal restricts the cell to decimal values.
+  #
+  #           :validate => 'decimal',
+  #           :criteria => '>',
+  #           :value    => 38.6,
+  #
+  #     * list restricts the cell to a set of user specified values. These
+  # can be passed in an array ref or as a cell range (named ranges aren't
+  # currently supported):
+  #
+  #           :validate => 'list',
+  #           :value    => ['open', 'high', 'close'],
+  #           # Or like this:
+  #           :value    => 'B1:B3',
+  #
+  #       Excel requires that range references are only to cells on the
+  # same worksheet.
+  #     * date restricts the cell to date values. Dates in Excel are expressed
+  # as integer values but you can also pass an ISO860 style string as used in
+  # write_date_time(). See also "DATES AND TIME IN EXCEL" for more information
+  # about working with Excel's dates.
+  #
+  #           :validate => 'date',
+  #           :criteria => '>',
+  #           :value    => 39653, # 24 July 2008
+  #           # Or like this:
+  #           :value    => '2008-07-24T',
+  #
+  #     * time restricts the cell to time values. Times in Excel are expressed
+  # as decimal values but you can also pass an ISO860 style string as used in
+  # write_date_time(). See also "DATES AND TIME IN EXCEL" for more information
+  # about working with Excel's times.
+  #
+  #           :validate => 'time',
+  #           :criteria => '>',
+  #           :value    => 0.5, # Noon
+  #           # Or like this:
+  #           :value    => 'T12:00:00',
+  #
+  #     * length restricts the cell data based on an integer string length.
+  # Excel refers to this as 'Text length'.
+  #
+  #           :validate => 'length',
+  #           :criteria => '>',
+  #           :value    => 10,
+  #
+  #     * custom restricts the cell based on an external Excel formula that
+  # returns a TRUE/FALSE value.
+  #
+  #           :validate => 'custom',
+  #           :value    => '=IF(A10>B10,TRUE,FALSE)',
+  #
+  # criteria
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The criteria parameter is used to set the criteria by which the data in
+  # the cell is validated. It is almost always required except for the list and
+  # custom validate options. It has no default value. Allowable values are:
+  #
+  #     'between'
+  #     'not between'
+  #     'equal to'                  |  '=='  |  '='
+  #     'not equal to'              |  '!='  |  '<>'
+  #     'greater than'              |  '>'
+  #     'less than'                 |  '<'
+  #     'greater than or equal to'  |  '>='
+  #     'less than or equal to'     |  '<='
+  #
+  # You can either use Excel's textual description strings, in the first
+  # column above, or the more common operator alternatives. The following
+  # are equivalent:
+  #
+  #     :validate => 'integer',
+  #     :criteria => 'greater than',
+  #     :value    => 100,
+  #
+  #     :validate => 'integer',
+  #     :criteria => '>',
+  #     :value    => 100,
+  #
+  # The list and custom validate options don't require a criteria. If you
+  # specify one it will be ignored.
+  #
+  #     :validate => 'list',
+  #     :value    => ['open', 'high', 'close'],
+  #
+  #     :validate => 'custom',
+  #     :value    => '=IF(A10>B10,TRUE,FALSE)',
+  #
+  # ====value | minimum | source
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The value parameter is used to set the limiting value to which the criteria
+  # is applied. It is always required and it has no default value. You can also
+  # use the synonyms minimum or source to make the validation a little clearer
+  # and closer to Excel's description of the parameter:
+  #
+  #     # Use 'value'
+  #     :validate => 'integer',
+  #     :criteria => '>',
+  #     :value    => 100,
+  #
+  #     # Use 'minimum'
+  #     :validate => 'integer',
+  #     :criteria => 'between',
+  #     :minimum  => 1,
+  #     :maximum  => 100,
+  #
+  #     # Use 'source'
+  #     :validate => 'list',
+  #     :source   => 'B1:B3',
+  #
+  # ====maximum
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The maximum parameter is used to set the upper limiting value when the
+  # criteria is either 'between' or 'not between':
+  #
+  #     :validate => 'integer',
+  #     :criteria => 'between',
+  #     :minimum  => 1,
+  #     :maximum  => 100,
+  #
+  # ====ignore_blank
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The ignore_blank parameter is used to toggle on and off the
+  # 'Ignore blank' option in the Excel data validation dialog. When the option
+  # is on the data validation is not applied to blank data in the cell. It is
+  # on by default.
+  #
+  #     :ignore_blank => 0,  # Turn the option off
+  #
+  # ====dropdown
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The dropdown parameter is used to toggle on and off the 'In-cell dropdown'
+  # option in the Excel data validation dialog. When the option is on a
+  # dropdown list will be shown for list validations. It is on by default.
+  #
+  #     :dropdown => 0,      # Turn the option off
+  #
+  # ====input_title
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The input_title parameter is used to set the title of the input message
+  # that is displayed when a cell is entered. It has no default value and is
+  # only displayed if the input message is displayed. See the input_message
+  # parameter below.
+  #
+  #     :input_title   => 'This is the input title',
+  #
+  # The maximum title length is 32 characters. UTF8 strings are handled
+  # automatically.
+  #
+  # ====input_message
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The input_message parameter is used to set the input message that is
+  # displayed when a cell is entered. It has no default value.
+  #
+  #     :validate      => 'integer',
+  #     :criteria      => 'between',
+  #     :minimum       => 1,
+  #     :maximum       => 100,
+  #     :input_title   => 'Enter the applied discount:',
+  #     :input_message => 'between 1 and 100',
+  #
+  # The message can be split over several lines using newlines, "\n" in double
+  # quoted strings.
+  #
+  #     :input_message => "This is\na test.",
+  #
+  # The maximum message length is 255 characters. UTF8 strings are handled
+  # automatically.
+  #
+  # ====show_input
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The show_input parameter is used to toggle on and off the 'Show input
+  # message when cell is selected' option in the Excel data validation dialog.
+  # When the option is off an input message is not displayed even if it has
+  # been set using input_message. It is on by default.
+  #
+  #     :show_input => 0,      # Turn the option off
+  #
+  # ====error_title
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The error_title parameter is used to set the title of the error message
+  # that is displayed when the data validation criteria is not met. The default
+  # error title is 'Microsoft Excel'.
+  #
+  #     :error_title   => 'Input value is not valid',
+  #
+  # The maximum title length is 32 characters. UTF8 strings are handled
+  # automatically.
+  #
+  # ====error_message
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The error_message parameter is used to set the error message that is
+  # displayed when a cell is entered. The default error message is
+  # "The value you entered is not valid.\nA user has restricted values that can
+  # be entered into the cell.".
+  #
+  #     :validate      => 'integer',
+  #     :criteria      => 'between',
+  #     :minimum       => 1,
+  #     :maximum       => 100,
+  #     :error_title   => 'Input value is not valid',
+  #     :error_message => 'It should be an integer between 1 and 100',
+  #
+  # The message can be split over several lines using newlines, "\n" in double
+  # quoted strings.
+  #
+  #     :input_message => "This is\na test.",
+  #
+  # The maximum message length is 255 characters. UTF8 strings are handled
+  # automatically.
+  #
+  # ====error_type
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The error_type parameter is used to specify the type of error dialog that
+  # is displayed. There are 3 options:
+  #
+  #     'stop'
+  #     'warning'
+  #     'information'
+  #
+  # The default is 'stop'.
+  #
+  # ====show_error
+  #
+  # This parameter is passed in a hash ref to data_validation().
+  #
+  # The show_error parameter is used to toggle on and off the 'Show error alert
+  # after invalid data is entered' option in the Excel data validation dialog.
+  # When the option is off an error message is not displayed even if it has been
+  # set using error_message. It is on by default.
+  #
+  #     :show_error => 0,      # Turn the option off
+  #
+  # Examples
+  #
+  # Example 1. Limiting input to an integer greater than a fixed value.
+  #
+  #     worksheet.data_validation('A1',
+  #         {
+  #             :validate        => 'integer',
+  #             :criteria        => '>',
+  #             :value           => 0,
+  #         })
+  #
+  # Example 2. Limiting input to an integer greater than a fixed value where
+  # the value is referenced from a cell.
+  #
+  #     worksheet.data_validation('A2',
+  #         {
+  #             :validate        => 'integer',
+  #             :criteria        => '>',
+  #             :value           => '=E3',
+  #         })
+  #
+  # Example 3. Limiting input to a decimal in a fixed range.
+  #
+  #     worksheet.data_validation('A3',
+  #         {
+  #             :validate        => 'decimal',
+  #             :criteria        => 'between',
+  #             :minimum         => 0.1,
+  #             :maximum         => 0.5,
+  #         })
+  #
+  # Example 4. Limiting input to a value in a dropdown list.
+  #
+  #     worksheet.data_validation('A4',
+  #         {
+  #             :validate        => 'list',
+  #             :source          => ['open', 'high', 'close'],
+  #         })
+  #
+  # Example 5. Limiting input to a value in a dropdown list where the list
+  # is specified as a cell range.
+  #
+  #     worksheet.data_validation('A5',
+  #         {
+  #             :validate        => 'list',
+  #             :source          => '=E4:G4',
+  #         })
+  #
+  # Example 6. Limiting input to a date in a fixed range.
+  #
+  #     worksheet.data_validation('A6',
+  #         {
+  #             :validate        => 'date',
+  #             :criteria        => 'between',
+  #             :minimum         => '2008-01-01T',
+  #             :maximum         => '2008-12-12T',
+  #         })
+  #
+  # Example 7. Displaying a message when the cell is selected.
+  #
+  #     worksheet.data_validation('A7',
+  #         {
+  #             :validate      => 'integer',
+  #             :criteria      => 'between',
+  #             :minimum       => 1,
+  #             :maximum       => 100,
+  #             :input_title   => 'Enter an integer:',
+  #             :input_message => 'between 1 and 100',
+  #         })
+  #
+  # See also the data_validate.rb program in the examples directory of the distro.
+  #
+  # =DATA VALIDATION IN EXCEL
+  #
+  # Data validation is a feature of Excel which allows you to restrict the data
+  # that a users enters in a cell and to display help and warning messages. It
+  # also allows you to restrict input to values in a drop down list.
+  #
+  # A typical use case might be to restrict data in a cell to integer values in
+  # a certain range, to provide a help message to indicate the required value and
+  # to issue a warning if the input data doesn't meet the stated criteria.
+  # In WriteExcel we could do that as follows:
+  #
+  #     worksheet.data_validation('B3',
+  #         {
+  #             :validate        => 'integer',
+  #             :criteria        => 'between',
+  #             :minimum         => 1,
+  #             :maximum         => 100,
+  #             :input_title     => 'Input an integer:',
+  #             :input_message   => 'Between 1 and 100',
+  #             :error_message   => 'Sorry, try again.'
+  #         })
+  #
+  # The above example would look like this in Excel:
+  #    http://homepage.eircom.net/~jmcnamara/perl/data_validation.jpg.
+  #
+  # For more information on data validation see the following Microsoft
+  # support article "Description and examples of data validation in Excel":
+  #    http://support.microsoft.com/kb/211485.
+  #
+  # The following sections describe how to use the data_validation() method
+  # and its various options.
   #
   def data_validation(*args)
     # Check for a cell reference in A1 notation and substitute row and column
