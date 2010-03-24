@@ -862,8 +862,7 @@ end
     border2       |= @right_color   << 7
     border2       |= @diag_type     << 14
 
-    border3        = 0
-    border3       |= @top_color
+    border3        = @top_color
     border3       |= @bottom_color  << 7
     border3       |= @diag_color    << 14
     border3       |= @diag_border   << 21
