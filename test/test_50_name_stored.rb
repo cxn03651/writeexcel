@@ -13,10 +13,11 @@ $LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 require 'test/unit'
 require 'rubygems'
 require 'writeexcel'
+require 'stringio'
 
 class TC_Name_Stored < Test::Unit::TestCase
   def setup
-    @test_file = "temp_test_file.xls"
+    @test_file = StringIO.new
     @workbook   = WriteExcel.new(@test_file)
     @worksheet  = @workbook.add_worksheet
   end
