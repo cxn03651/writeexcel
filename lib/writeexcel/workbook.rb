@@ -56,6 +56,7 @@ class Workbook < BIFFWriter
     @sheetname             = "Sheet"
     @url_format            = ''
     @codepage              = 0x04E4
+    @country               = 1
     @worksheets            = []
     @sheetnames            = []
     @formats               = []
@@ -87,6 +88,8 @@ class Workbook < BIFFWriter
     @summary               = ''
     @doc_summary           = ''
     @localtime             = Time.now
+
+    @defined_names         = []
 
     # Add the in-built style formats and the default cell format.
     add_format(:type => 1)                        #  0 Normal
@@ -722,6 +725,72 @@ class Workbook < BIFFWriter
     else
       @codepage = 0x04E4
     end
+  end
+
+  #
+  #  store the country code.
+  #
+  # Some non-english versions of Excel may need this set to some value other
+  # than 1 = "United States". In general the country code is equal to the
+  # international dialling code.
+  #
+  def set_country(code = 1)
+    @country = code
+  end
+
+  #
+  # This method is used to defined a name that can be used to represent a
+  # value, a single cell or a range of cells in a workbook.
+  #
+  #     workbook.define_name('Exchange_rate', '=0.96')
+  #     workbook.define_name('Sales',         '=Sheet1!$G$1:$H$10')
+  #     workbook.define_name('Sheet2!Sales',  '=Sheet2!$G$1:$G$10')
+  #
+  # See the defined_name.rb program in the examples dir of the distro.
+  #
+  # Note: This currently a beta feature. More documentation and examples
+  # will be added.
+  #
+  def define_name(name, formula, encoding = 0)
+    sheet_index = 0
+    full_name   = name.downcase
+
+    if name =~ /^(.*)!(.*)$/
+      sheetname   = $1
+      name        = $2;
+      sheet_index = 1 + @parser.get_sheet_index(sheetname)
+    end
+
+    # Strip the = sign at the beginning of the formula string
+    formula = formula.sub(/^=/, '')
+
+    # Parse the formula using the parser in Formula.pm
+    parser  = @parser
+
+    # In order to raise formula errors from the point of view of the calling
+    # program we use an eval block and re-raise the error from here.
+    #
+    tokens = parser.parse_formula(formula)
+
+    # Force 2d ranges to be a reference class.
+    tokens.collect! { |t| t.gsub(/_ref3d/, '_ref3dR') }
+    tokens.collect! { |t| t.gsub(/_range3d/, '_range3dR') }
+
+    # Parse the tokens into a formula string.
+    formula = parser.parse_tokens(tokens)
+
+    @defined_names.push(
+       {
+         :name        => name,
+         :encoding    => encoding,
+         :sheet_index => sheet_index,
+         :formula     => formula
+       }
+     )
+
+    index = @defined_names.length
+
+    parser.set_ext_name(name, index)
   end
 
   #
@@ -1406,7 +1475,7 @@ class Workbook < BIFFWriter
       length  = data[offset+2, 2].unpack("n")
       length = length[0]
 
-      if marker == 0xFFC0
+      if marker == 0xFFC0 || marker == 0xFFC2
         height = data[offset+5, 2].unpack("n")
         height = height[0]
         width  = data[offset+7, 2].unpack("n")
@@ -1419,7 +1488,7 @@ class Workbook < BIFFWriter
     end
 
     if height.nil?
-      raise "#{filename}: no size data found in image.\n"
+      raise "#{filename}: no size data found in jpeg image.\n"
     end
 
     return [type, width, height]
@@ -1571,6 +1640,16 @@ class Workbook < BIFFWriter
   #
   def store_names
     index       = 0
+
+    # Create the user defined names.
+    @defined_names.each do |defined_name|
+      store_name(
+        defined_name.name,
+        defined_name.encoding,
+        defined_name.sheet_index,
+        defined_name.formula
+      )
+    end
 
     # Create the print area NAME records
     @worksheets.each do |worksheet|
@@ -1879,6 +1958,56 @@ class Workbook < BIFFWriter
   end
   private :store_externsheet
 
+  #
+  # Store the NAME record used for storing the print area, repeat rows, repeat
+  # columns, autofilters and defned names.
+  #
+  # TODO. This is a more generic version that will replace _store_name_short()
+  #       and _store_name_long().
+  #
+  def store_name(name, encoding, sheet_index, formula)  # :nodoc:
+    record          = 0x0018        # Record identifier
+
+    text_length     = name.length
+    formula_length  = formula.length
+
+    # UTF-16 string length is in characters not bytes.
+    text_length       /= 2 if encoding != 0
+
+    grbit           = 0x0000        # Option flags
+    shortcut        = 0x00          # Keyboard shortcut
+    ixals           = 0x0000        # Unused index.
+    menu_length     = 0x00          # Length of cust menu text
+    desc_length     = 0x00          # Length of description text
+    help_length     = 0x00          # Length of help topic text
+    status_length   = 0x00          # Length of status bar text
+
+    # Set grbit builtin flag and the hidden flag for autofilters.
+    if text_length == 1
+      grbit = 0x0020 if name[0] == 0x06  # Print area
+      grbit = 0x0020 if name[0] == 0x07  # Print titles
+      grbit = 0x0021 if name[0] == 0x0D  # Autofilter
+    end
+
+    data  = [grbit].pack("v")
+    data += [shortcut].pack("C")
+    data += [text_length].pack("C")
+    data += [formula_length].pack("v")
+    data += [ixals].pack("v")
+    data += [sheet_index].pack("v")
+    data += [menu_length].pack("C")
+    data += [desc_length].pack("C")
+    data += [help_length].pack("C")
+    data += [status_length].pack("C")
+    data += [encoding].pack("C")
+    data += name
+    data += formula
+
+    header = [record, data.length].pack("vv")
+
+    append(header, data)
+  end
+
   ###############################################################################
   #
   # _store_name_short()
@@ -2063,13 +2192,11 @@ class Workbook < BIFFWriter
   #
   # Stores the COUNTRY biff record.
   #
-  # Will add setter method for the country codes when/if required.
-  #
   def store_country
     record          = 0x008C               # Record identifier
     length          = 0x0004               # Number of bytes to follow
-    country_default = 1
-    country_win_ini = 1
+    country_default = @country
+    country_win_ini = @country
 
     header          = [record, length].pack("vv")
     data            = [country_default, country_win_ini].pack("vv")
@@ -2113,6 +2240,20 @@ class Workbook < BIFFWriter
     ext_ref_count   = ext_refs.keys.size
     length          = 0
     index           = 0
+
+    unless @defined_names.empty?
+      index   = 0
+      key     = "#{index}:#{index}"
+
+      unless ext_refs.has_key?(key)
+        ext_refs[key] = ext_ref_count
+        ext_ref_count += 1
+      end
+    end
+
+    @defined_names.each do |defined_name|
+      length += 19 + defined_name.name.length + defined_name.formula.length
+    end
 
     @worksheets.each do |worksheet|
 
