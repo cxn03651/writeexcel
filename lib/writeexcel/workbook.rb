@@ -1461,7 +1461,7 @@ class Workbook < BIFFWriter
   #
   # Extract width and height information from a JPEG file.
   #
-  def process_jpg(data, filename)
+  def process_jpg(data, filename) # :nodoc:
     type     = 5  # Excel Blip type (MSOBLIPTYPE).
 
     offset = 2;
@@ -1491,9 +1491,8 @@ class Workbook < BIFFWriter
       raise "#{filename}: no size data found in jpeg image.\n"
     end
 
-    return [type, width, height]
+    [type, width, height]
   end
-  private :process_jpg
 
   ###############################################################################
   #

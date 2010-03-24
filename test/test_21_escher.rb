@@ -365,7 +365,7 @@ class TC_escher < Test::Unit::TestCase
     # width, height
     data    = @worksheet.substitute_cellref(range)
     data    = @worksheet.comment_params(data[0], data[1], 'Test',
-    :width=>385, :height=>149)
+    :width=>384, :height=>148)
     data    = data[-1]
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00

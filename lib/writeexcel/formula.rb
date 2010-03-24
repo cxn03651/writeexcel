@@ -26,6 +26,7 @@ class Formula < ExcelFormulaParser
     @ext_sheets     = {}
     @ext_refs       = {}
     @ext_ref_count  = 0
+    @ext_names      = {}
     initialize_hashes
   end
 
@@ -129,6 +130,13 @@ class Formula < ExcelFormulaParser
         _class      = 1 if modifier == 'V'
         token      = args.shift
         parse_str = parse_str + convert_range3d(token, _class)
+      elsif (token =~ /^_name/)
+        modifier = token.sub(/_name/, '')
+        _class      = _classary[-1]
+        _class      = 0 if modifier == 'R'
+        _class      = 1 if modifier == 'V'
+        token      = args.shift
+        parse_str = parse_str + convert_name(token, _class)
       elsif (token == '_func')
         token = args.shift
         parse_str = parse_str + convert_function(token, num_args.to_i)
@@ -141,7 +149,6 @@ class Formula < ExcelFormulaParser
         return nil
       end
     end
-
 
     return parse_str
   end
@@ -204,30 +211,6 @@ class Formula < ExcelFormulaParser
   def reverse(expression)
     expression.flatten
   end
-
-  ###############################################################################
-  #
-  # get_ext_sheets()
-  #
-  # This semi-public method is used to update the hash of sheet names. It is
-  # updated by the add_worksheet() method of the Workbook class.
-  #
-  # TODO
-  #
-  def get_ext_sheets
-    # TODO
-    refs = @ext_refs
-    return refs
-
-    #my @refs = sort {$refs{$a} <=> $refs{$b}} keys %refs;
-
-    #foreach my $ref (@refs) {
-    #    $ref = [split /:/, $ref];
-    #}
-
-    #return @refs;
-  end
-
 
   ###############################################################################
 
@@ -517,6 +500,31 @@ class Formula < ExcelFormulaParser
 
   ###############################################################################
   #
+  # set_ext_sheets()
+  #
+  # This semi-public method is used to update the hash of sheet names. It is
+  # updated by the add_worksheet() method of the Workbook class.
+  #
+  def set_ext_sheets(worksheet, index)
+    # The _ext_sheets hash is used to translate between worksheet names
+    # and their index
+    @ext_sheets[worksheet] = index
+  end
+
+  ###############################################################################
+  #
+  # get_ext_sheets()
+  #
+  # This semi-public method is used to get the worksheet references that were
+  # used in formulas for inclusion in the EXTERNSHEET Workbook record.
+  #
+  def get_ext_sheets
+    @ext_refs
+  end
+  public :get_ext_sheets
+
+  ###############################################################################
+  #
   # get_ext_ref_count()
   #
   # TODO This semi-public method is used to update the hash of sheet names. It is
@@ -524,6 +532,32 @@ class Formula < ExcelFormulaParser
   #
   def get_ext_ref_count
     return @ext_ref_count
+  end
+
+  ###############################################################################
+  #
+  # _get_name_index()
+  #
+  # Look up the index that corresponds to an external defined name. The hash of
+  # defined names is updated by the define_name() method in the Workbook class.
+  #
+  def get_name_index(name)
+    if @ext_names.has_key?(name)
+      @ext_names[name]
+    else
+      raise "Unknown defined name $name in formula\n"
+    end
+  end
+  private :get_name_index
+
+  ###############################################################################
+  #
+  # set_ext_name()
+  #
+  # This semi-public method is used to update the hash of defined names.
+  #
+  def set_ext_name(name, index)
+    @ext_names[name] = index
   end
 
   ###############################################################################
@@ -553,6 +587,28 @@ class Formula < ExcelFormulaParser
       return [@ptg['ptgFuncVarV'], num_args, @functions[token][0]].pack("CCv")
     end
   end
+
+  ###############################################################################
+  #
+  # _convert_name()
+  #
+  # Convert a symbolic name into a name reference.
+  #
+  def convert_name(name, _class)
+    name_index = get_name_index(name)
+
+    # The ptg value depends on the class of the ptg.
+    if _class == 0
+      ptgName = ptg[ptgName]
+    elsif _class == 1
+      ptgName = ptg[ptgNameV]
+    elsif _class == 2
+      ptgName = ptg[ptgNameA]
+    end
+
+    [ptgName, name_index].pack('CV')
+  end
+  private :convert_name
 
   ###############################################################################
   #
