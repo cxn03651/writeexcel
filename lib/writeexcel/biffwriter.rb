@@ -257,4 +257,13 @@ class BIFFWriter
     return record
   end
 
+  def not_using_tmpfile  # :nodoc:
+    @filehandle.close(true) if @filehandle
+    @filehandle = nil
+    @using_tmpfile = nil
+  end
+
+  def clear_data_for_test # :nodoc:
+    @data = ''
+  end
 end

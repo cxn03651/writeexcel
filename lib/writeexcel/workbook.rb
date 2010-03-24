@@ -1638,7 +1638,7 @@ class Workbook < BIFFWriter
   #
   # Write the NAME record to define the print area and the repeat rows and cols.
   #
-  def store_names
+  def store_names  # :nodoc:
     index       = 0
 
     # Create the user defined names.
@@ -1673,7 +1673,7 @@ class Workbook < BIFFWriter
       end
 
       # Write a Name record if the print area has been defined
-      if !worksheet.print_rowmin.nil? && worksheet.print.rowmin != 0
+      if !worksheet.print_rowmin.nil?
         store_name_short(
           worksheet.index,
           0x06, # NAME type = Print_Area
@@ -1742,7 +1742,6 @@ class Workbook < BIFFWriter
       end
     end
   end
-  private :store_names
 
   ###############################################################################
   ###############################################################################
@@ -1933,7 +1932,7 @@ class Workbook < BIFFWriter
   # formulas. TODO NAME record is required to define the print area and the
   # repeat rows and columns.
   #
-  def store_externsheet
+  def store_externsheet  # :nodoc:
     record      = 0x0017                   # Record identifier
 
     # Get the external refs
@@ -1956,7 +1955,6 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_externsheet
 
   #
   # Store the NAME record used for storing the print area, repeat rows, repeat
@@ -2024,7 +2022,7 @@ class Workbook < BIFFWriter
   # Store the NAME record in the short format that is used for storing the print
   # area, repeat rows only and repeat columns only.
   #
-  def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden)
+  def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden = nil)
     record          = 0x0018       # Record identifier
     length          = 0x001b       # Number of bytes to follow
 
@@ -2235,7 +2233,7 @@ class Workbook < BIFFWriter
   # We need to calculate the space required by the SUPBOOK, EXTERNSHEET and NAME
   # records so that it can be added to the BOUNDSHEET offsets.
   #
-  def calculate_extern_sizes
+  def calculate_extern_sizes  # :nodoc:
     ext_refs        = @parser.get_ext_sheets
     ext_ref_count   = ext_refs.keys.size
     length          = 0
@@ -2265,7 +2263,7 @@ class Workbook < BIFFWriter
 
       # Add area NAME records
       #
-      if !worksheet.print_rowmin.nil? && worksheet.print_rowmin != 0
+      if !worksheet.print_rowmin.nil?
         if ext_refs[key].nil?
           ext_refs[key] = ext_ref_count
           ext_ref_count += 1
@@ -2320,7 +2318,6 @@ class Workbook < BIFFWriter
 
     return length
   end
-  private :calculate_extern_sizes
 
   ###############################################################################
   #
