@@ -4187,9 +4187,21 @@ class Worksheet < BIFFWriter
     # Pack the option flags
     options     = [0x03].pack("V")
 
-    # Convert URL to a null terminated wchar string
-    url         = url.split('').join("\0")
-    url         = url + "\0\0\0"
+    # URL encoding.
+    encoding    = 0
+
+    # Convert an Utf8 URL type and to a null terminated wchar string.
+    if url =~ NonAscii
+      url = NKF.nkf('-w16B0 -m0 -W', url)
+      url += "\0\0"   # URL is null terminated.
+      encoding = 1
+    end
+
+    # Convert an Ascii URL type and to a null terminated wchar string.
+    if encoding == 0
+      url += "\0"
+      url  = url.unpack('c*').pack('v*')
+    end
 
     # Pack the length of the URL
     url_len     = [url.length].pack("V")
@@ -6306,8 +6318,8 @@ class Worksheet < BIFFWriter
     col_end    = col_start
     row_end    = row_start
 
-    width      = width  + x1 -1
-    height     = height + y1 -1
+    width      = width  + x1
+    height     = height + y1
 
     # Subtract the underlying cell widths to find the end cell of the image
     while width >= size_col(col_end)
@@ -7869,6 +7881,9 @@ class Worksheet < BIFFWriter
   # well as calculating the comment object position and vertices.
   #
   def comment_params(row, col, string, options = {})   #:nodoc:
+    default_width   = 128
+    default_height  = 74
+
     params  = {
       :author          => '',
       :author_encoding => 0,
@@ -7878,8 +7893,8 @@ class Worksheet < BIFFWriter
       :start_col       => nil,
       :start_row       => nil,
       :visible         => nil,
-      :width           => 129,
-      :height          => 75,
+      :width           => default_width,
+      :height          => default_height,
       :x_offset        => nil,
       :x_scale         => 1,
       :y_offset        => nil,
@@ -7891,8 +7906,8 @@ class Worksheet < BIFFWriter
     params.update(options)
 
     # Ensure that a width and height have been set.
-    params[:width]  = 129 if params[:width].nil? || params[:width] == 0
-    params[:height] = 75  if params[:height].nil? || params[:height] == 0
+    params[:width]  = default_width  if params[:width].nil? || params[:width] == 0
+    params[:height] = default_height if params[:height].nil? || params[:height] == 0
 
     # Check that utf16 strings have an even number of bytes.
     if params[:encoding] != 0
@@ -7982,16 +7997,13 @@ class Worksheet < BIFFWriter
       end
     end
 
-    # Scale the size of the comment box if required. We scale the width and
-    # height using the relationship d2 =(d1 -1)*s +1, where d is dimension
-    # and s is scale. This gives values that match Excel's behaviour.
-    #
+    # Scale the size of the comment box if required.
     if params[:x_scale] != 0
-      params[:width]  = ((params[:width]  -1) * params[:x_scale]) +1
+      params[:width]  = params[:width] * params[:x_scale]
     end
 
     if params[:y_scale] != 0
-      params[:height] = ((params[:height] -1) * params[:y_scale]) +1
+      params[:height] = params[:height] * params[:y_scale]
     end
 
     # Calculate the positions of comment object.
@@ -8953,6 +8965,7 @@ class Worksheet < BIFFWriter
     # Force 2d ranges to be a reference class.
     tokens.each do |t|
       t.sub!(/_range2d/, "_range2dR")
+      t.sub!(/_name/, "_nameR")
     end
 
     # Parse the tokens into a formula string.
