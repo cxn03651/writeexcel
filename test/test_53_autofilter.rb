@@ -15,7 +15,7 @@ require 'rubygems'
 require 'writeexcel'
 require 'stringio'
 
-class TC_Name_Print_Titles < Test::Unit::TestCase
+class TC_autofilter < Test::Unit::TestCase
   def setup
     @test_file = StringIO.new
     @workbook   = WriteExcel.new(@test_file)
