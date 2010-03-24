@@ -1388,7 +1388,7 @@ class Worksheet < BIFFWriter
   #
   def repeat_columns(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args =~ /^\D/
+    if args[0] =~ /^\D/
       args = substitute_cellref(*args)
 
       # Returned values $row1 and $row2 aren't required here. Remove them.
