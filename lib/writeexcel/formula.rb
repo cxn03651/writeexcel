@@ -175,8 +175,6 @@ class Formula < ExcelFormulaParser
         q.push [:REF3D , s.matched]
       elsif s.scan(/'[^']+'!\$?[A-I]?[A-Z]\$?\d+/)
         q.push [:REF3D , s.matched]
-      elsif s.scan(/[A-Za-z_]\w+/)
-        q.push [:NAME , s.matched]
       elsif s.scan(/<=/)
         q.push [:LE , s.matched]
       elsif s.scan(/>=/)
@@ -187,12 +185,14 @@ class Formula < ExcelFormulaParser
         q.push [:LT , s.matched]
       elsif s.scan(/>/)
         q.push [:GT , s.matched]
+      elsif s.scan(/[A-Z0-9_.]+/)
+        q.push [:FUNC,   s.matched]
+      elsif s.scan(/[A-Za-z_]\w+/)
+        q.push [:NAME , s.matched]
       elsif s.scan(/TRUE/)
         q.push [:TRUE, s.matched]
       elsif s.scan(/FALSE/)
         q.push [:FALSE, s.matched]
-      elsif s.scan(/[A-Z0-9_.]+/)
-        q.push [:FUNC,   s.matched]
       elsif s.scan(/\s+/)
         ;
       elsif s.scan(/./)
