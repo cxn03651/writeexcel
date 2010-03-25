@@ -6148,10 +6148,10 @@ class Worksheet < BIFFWriter
     raise "Insufficient arguments in embed_chart()" unless args.size >= 3
     raise "Couldn't locate $chart: $!"              unless FileTest.exist?(chart)
 
-    @charts[row][col] =  [
-        row, col, chart, x_offset, y_offset, scale_x, scale_y
-      ]
-
+    @charts[row] = {  col => [
+          row, col, chart, x_offset, y_offset, scale_x, scale_y
+        ]
+      }
   end
 
   #
@@ -6970,7 +6970,7 @@ class Worksheet < BIFFWriter
       num_charts      = charts.size
 
       num_filters     = @filter_count
-      num_comments    = @comments_array
+      num_comments    = @comments_array.size
 
       # Number of objects written so far.
       num_objects     = @images_array.size
@@ -7001,7 +7001,7 @@ class Worksheet < BIFFWriter
                                       height
                                     )
 
-          if (i == 0 and num_objects != 0)
+          if (i == 0 and num_objects == 0)
               # Write the parent MSODRAWIING record.
               dg_length    = 192 + 120*(num_charts -1)
               spgr_length  = 168 + 120*(num_charts -1)
