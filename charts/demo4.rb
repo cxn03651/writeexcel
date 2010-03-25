@@ -43,11 +43,11 @@ date_format = workbook.add_format(:num_format => 'dd/mm/yyyy')
 # Adjust column widths and add some headers
 worksheet.set_column('A:A', 12)
 
-worksheet.write('A1', 'Date',  :bold)
-worksheet.write('B1', 'Open',  :bold)
-worksheet.write('C1', 'High',  :bold)
-worksheet.write('D1', 'Low',   :bold)
-worksheet.write('E1', 'Close', :bold)
+worksheet.write('A1', 'Date',  bold)
+worksheet.write('B1', 'Open',  bold)
+worksheet.write('C1', 'High',  bold)
+worksheet.write('D1', 'Low',   bold)
+worksheet.write('E1', 'Close', bold)
 
 
 # Add data to range that the chart refers to.
