@@ -11,13 +11,9 @@
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 
-require 'writeexcel/biffwriter'
+require 'writeexcel/worksheet'
 
-class Chart
-
-
-  attr_reader :name
-
+class Chart < Worksheet
 
   ###############################################################################
   #
@@ -25,7 +21,9 @@ class Chart
   #
   # Constructor. Creates a new Chart object from a BIFFwriter object
   #
-  def initialize(filename, name, index, encoding, activesheet, firstsheet)
+  def initialize(workbook, filename, name, index, encoding, activesheet, firstsheet)
+    super(workbook, name, index, encoding)
+
     @filename          = filename
     @name              = name
     @index             = index
@@ -34,11 +32,8 @@ class Chart
     @firstsheet        = firstsheet
 
     @type              = 0x0200
-    @ext_sheets        = []
     @using_tmpfile     = 1
-    @filehandle        = ""
-    @fileclosed        = false
-    @offset            = 0
+    @filehandle        = nil
     @xls_rowmax        = 0
     @xls_colmax        = 0
     @xls_strmax        = 0
@@ -47,66 +42,6 @@ class Chart
     @dim_colmin        = 0
     @dim_colmax        = 0
     @dim_changed       = 0
-    @colinfo           = []
-    @selection         = [0, 0]
-    @panes             = []
-    @active_pane       = 3
-    @frozen            = 0
-    @selected          = 0
-    @hidden            = 0
-
-    @paper_size        = 0x0
-    @orientation       = 0x1
-    @header            = ''
-    @footer            = ''
-    @hcenter           = 0
-    @vcenter           = 0
-    @margin_head       = 0.50
-    @margin_foot       = 0.50
-    @margin_left       = 0.75
-    @margin_right      = 0.75
-    @margin_top        = 1.00
-    @margin_bottom     = 1.00
-
-    @title_rowmin      = nil
-    @title_rowmax      = nil
-    @title_colmin      = nil
-    @title_colmax      = nil
-    @print_rowmin      = nil
-    @print_rowmax      = nil
-    @print_colmin      = nil
-    @print_colmax      = nil
-
-    @print_gridlines   = 1
-    @screen_gridlines  = 1
-    @print_headers     = 0
-
-    @fit_page          = 0
-    @fit_width         = 0
-    @fit_height        = 0
-
-    @hbreaks           = []
-    @vbreaks           = []
-
-    @protect           = 0
-    @password          = nil
-
-    @col_sizes         = {}
-    @row_sizes         = {}
-
-    @col_formats       = {}
-    @row_formats       = {}
-
-    @zoom              = 100
-    @print_scale       = 100
-
-    @leading_zeros     = 0
-
-    @outline_row_level = 0
-    @outline_style     = 0
-    @outline_below     = 1
-    @outline_right     = 1
-    @outline_on        = 1
 
     _initialize
   end
@@ -119,12 +54,9 @@ class Chart
   # sized chunks.
   #
   def get_data
-    buffer = 4096
+    length = 4096
 
-    return tmp if read(@filehandle, tmp, buffer)
-
-    # No data to return
-    return nil
+    @filehandle.read(length)
   end
 
 
@@ -162,7 +94,7 @@ class Chart
   # Hide this worksheet.
   #
   def hide
-    @hidd        = 1
+    @hidden      = 1
 
     # A hidden worksheet shouldn't be active or selected.
     @selecte     = 0
@@ -184,6 +116,15 @@ class Chart
     firstsheet  = index
   end
 
+  ###############################################################################
+  #
+  # _close()
+  #
+  # Add data to the beginning of the workbook (note the reverse order)
+  # and to the end of the workbook.
+  #
+  def close(*args)
+  end
 
 
   ###############################################################################
@@ -201,17 +142,7 @@ class Chart
     filehandle = open(@filename, "rb") or
     die "Couldn't open #{@filename} in add_chart_ext(): $!.\n"
     @filehandle = filehandle
-    @datasize   = File.Stat.size(@filename)
-  end
-
-  ###############################################################################
-  #
-  # _close()
-  #
-  # Add data to the beginning of the workbook (note the reverse order)
-  # and to the end of the workbook.
-  #
-  def _close
+    @datasize   = FileTest.size(@filename)
   end
 
 end

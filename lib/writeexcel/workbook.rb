@@ -16,6 +16,7 @@ require 'writeexcel/olewriter'
 require 'writeexcel/formula'
 require 'writeexcel/format'
 require 'writeexcel/worksheet'
+require 'writeexcel/chart'
 require 'writeexcel/properties'
 require 'digest/md5'
 require 'writeexcel/storage_lite'
@@ -266,10 +267,6 @@ class Workbook < BIFFWriter
     worksheet
   end
 
-=begin
-
- not converted yet.
-
   ###############################################################################
   #
   # add_chart_ext($filename, $name)
@@ -277,7 +274,7 @@ class Workbook < BIFFWriter
   # Add an externally created chart.
   #
   #
-  def add_chart_ext(filename, name, encoding = nil)
+  def add_chart_ext(filename, name, encoding = 0)
     index    = @worksheets.size
 
     name, encoding = check_sheetname(name, encoding)
@@ -291,13 +288,12 @@ class Workbook < BIFFWriter
       @firstsheet
     ]
 
-    worksheet = Chart.new(*init_data)
+    worksheet = Chart.new(self, *init_data)
     @worksheets[index] = worksheet      # Store ref for iterator
     @sheetnames[index] = name           # Store EXTERNSHEET names
     @parser.set_ext_sheets(name, index) # Store names in Formula.pm
-    return worksheet
+    worksheet
   end
-=end
 
   ###############################################################################
   #
@@ -1179,6 +1175,8 @@ class Workbook < BIFFWriter
     # required by each worksheet.
     #
     @worksheets.each do |sheet|
+      next unless sheet.class == Worksheet
+
       num_images     = sheet.num_images
       image_mso_size = sheet.image_mso_size
       num_comments   = sheet.prepare_comments
@@ -1253,6 +1251,7 @@ class Workbook < BIFFWriter
     images_size     = 0;
 
     @worksheets.each do |sheet|
+      next unless sheet.class == Worksheet
       next if sheet.prepare_images == 0
 
       num_images      = 0

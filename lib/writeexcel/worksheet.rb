@@ -6146,10 +6146,11 @@ class Worksheet < BIFFWriter
     scale_y     = args[6] || 1
 
     raise "Insufficient arguments in embed_chart()" unless args.size >= 3
-    #       raise "Couldn't locate $chart: $!"              unless -e $chart;
+    raise "Couldn't locate $chart: $!"              unless FileTest.exist?(chart)
 
-    @charts[row][col] =  [row, col, chart,
-    x_offset, y_offset, scale_x, scale_y, ]
+    @charts[row][col] =  [
+        row, col, chart, x_offset, y_offset, scale_x, scale_y
+      ]
 
   end
 
