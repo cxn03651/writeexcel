@@ -51,6 +51,7 @@ class Formula < ExcelFormulaParser
       # Parse formula to see if it throws any errors and then
       # return raw tokens to Worksheet::store_formula()
       #
+      parse_tokens(tokens)
       tokens
     else
       # Return byte stream to Worksheet::write_formula()
@@ -166,12 +167,16 @@ class Formula < ExcelFormulaParser
         q.push [:RANGE2D , s.matched]
       elsif s.scan(/[^!(,]+!\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
         q.push [:RANGE3D , s.matched]
+      elsif s.scan(/'[^']+'!\$?[A-I]?[A-Z]\$?(\d+)?:\$?[A-I]?[A-Z]\$?(\d+)?/)
+        q.push [:RANGE3D , s.matched]
       elsif s.scan(/\$?[A-I]?[A-Z]\$?\d+/)
         q.push [:REF2D,  s.matched]
       elsif s.scan(/[^!(,]+!\$?[A-I]?[A-Z]\$?\d+/)
         q.push [:REF3D , s.matched]
       elsif s.scan(/'[^']+'!\$?[A-I]?[A-Z]\$?\d+/)
         q.push [:REF3D , s.matched]
+      elsif s.scan(/[A-Za-z_]\w+/)
+        q.push [:NAME , s.matched]
       elsif s.scan(/<=/)
         q.push [:LE , s.matched]
       elsif s.scan(/>=/)
@@ -467,12 +472,12 @@ class Formula < ExcelFormulaParser
 
     key = "#{sheet1}:#{sheet2}"
 
-    unless @ext_refs[key]
-      index = @ext_refs[key]
-    else
-      index = @ext_ref_count
+    if @ext_refs[key].nil?
+      index = get_ext_ref_count
       @ext_refs[key] = index
       @ext_ref_count += 1
+    else
+      index = @ext_refs[key]
     end
 
     return [index].pack("v")
@@ -492,11 +497,12 @@ class Formula < ExcelFormulaParser
     end
 
     if @ext_sheets[sheet_name].nil?
-      exit "Unknown sheet name #{sheet_name} in formula\n"
+      raise "Unknown sheet name '#{sheet_name}' in formula\n"
     else
       return @ext_sheets[sheet_name]
     end
   end
+  public :get_sheet_index
 
   ###############################################################################
   #
@@ -510,6 +516,7 @@ class Formula < ExcelFormulaParser
     # and their index
     @ext_sheets[worksheet] = index
   end
+  public :set_ext_sheets
 
   ###############################################################################
   #
@@ -559,6 +566,7 @@ class Formula < ExcelFormulaParser
   def set_ext_name(name, index)
     @ext_names[name] = index
   end
+  public :set_ext_name
 
   ###############################################################################
   #
@@ -599,11 +607,11 @@ class Formula < ExcelFormulaParser
 
     # The ptg value depends on the class of the ptg.
     if _class == 0
-      ptgName = ptg[ptgName]
+      ptgName = @ptg['ptgName']
     elsif _class == 1
-      ptgName = ptg[ptgNameV]
+      ptgName = @ptg['ptgNameV']
     elsif _class == 2
-      ptgName = ptg[ptgNameA]
+      ptgName = @ptg['ptgNameA']
     end
 
     [ptgName, name_index].pack('CV')

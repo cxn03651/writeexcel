@@ -1,5 +1,5 @@
 #
-# copyright (c) 2009  Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+# copyright (c) 2009, 2010  Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 
 
 class ExcelFormulaParser
@@ -45,6 +45,7 @@ rule
                | REF3D                { result = [ '_ref3d',   val[0] ] }
                | RANGE2D              { result = [ '_range2d', val[0] ] }
                | RANGE3D              { result = [ '_range3d', val[0] ] }
+               | NAME                 { result = [ '_name',    val[0] ] }
                | TRUE                 { result = [ 'ptgBool',  '1'    ] }
                | FALSE                { result = [ 'ptgBool',  '0'    ] }
                | funcall

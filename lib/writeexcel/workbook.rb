@@ -262,7 +262,7 @@ class Workbook < BIFFWriter
     )
     @worksheets[index] = worksheet
     @sheetnames[index] = name          # Store EXTERNSHEET names
-    #       @parser->set_ext_sheets($name, $index) # Store names in Formula.pm
+    @parser.set_ext_sheets(name, index) # Store names in Formula.rb
     worksheet
   end
 
@@ -1643,10 +1643,10 @@ class Workbook < BIFFWriter
     # Create the user defined names.
     @defined_names.each do |defined_name|
       store_name(
-        defined_name.name,
-        defined_name.encoding,
-        defined_name.sheet_index,
-        defined_name.formula
+        defined_name[:name],
+        defined_name[:encoding],
+        defined_name[:sheet_index],
+        defined_name[:formula]
       )
     end
 
@@ -2249,7 +2249,7 @@ class Workbook < BIFFWriter
     end
 
     @defined_names.each do |defined_name|
-      length += 19 + defined_name.name.length + defined_name.formula.length
+      length += 19 + defined_name[:name].length + defined_name[:formula].length
     end
 
     @worksheets.each do |worksheet|
