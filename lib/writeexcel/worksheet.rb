@@ -2500,6 +2500,7 @@ class Worksheet < BIFFWriter
       tmp[col] = header + data + xl_double
       @table[row] = tmp
     else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data, xl_double)
     end
 
@@ -2600,6 +2601,7 @@ class Worksheet < BIFFWriter
       tmp[col] = header + data
       @table[row] = tmp
     else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data)
     end
 
@@ -2672,6 +2674,7 @@ class Worksheet < BIFFWriter
       tmp[col] = header + data
       @table[row] = tmp
     else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data)
     end
 
@@ -3022,6 +3025,7 @@ class Worksheet < BIFFWriter
       tmp[col] = header + data + formula + string
       @table[row] = tmp
     else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data, formula, string)
     end
 
@@ -3992,6 +3996,7 @@ class Worksheet < BIFFWriter
       tmp[col] = header + data + formula + string
       @table[row] = tmp
     else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data, formula, string)
     end
 
@@ -4214,6 +4219,7 @@ class Worksheet < BIFFWriter
     data        = [row1, row2, col1, col2].pack("vvvv")
 
     # Write the packed data
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append( header, data,unknown1,options,unknown2,url_len,url)
 
     return error
@@ -4284,6 +4290,7 @@ class Worksheet < BIFFWriter
     data        = [row1, row2, col1, col2].pack("vvvv")
 
     # Write the packed data
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append( header, data, unknown1, options, url_len, url)
 
     return error
@@ -4398,6 +4405,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
 
     # Write the packed data
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     return error
@@ -4477,6 +4485,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
 
     # Write the packed data
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     return error
@@ -4808,6 +4817,7 @@ class Worksheet < BIFFWriter
     if @compatibility != 0
       @row_data[row] = header + data
     else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data)
     end
 
@@ -4841,6 +4851,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :write_row_default
@@ -4920,7 +4931,8 @@ class Worksheet < BIFFWriter
     fields = [row_min, row_max, col_min, col_max, reserved]
     data   = fields.pack("VVvvv")
 
-    return prepend(header, data)
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
+    prepend(header, data)
   end
 #  private :store_dimensions
 
@@ -4974,6 +4986,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data    =[grbit, rwTop, colLeft, rgbHdr, wScaleSLV, wScaleNormal, reserved].pack("vvvVvvV")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_window2
@@ -4987,6 +5000,7 @@ class Worksheet < BIFFWriter
   def store_page_view   #:nodoc:
     return if @page_view == 0
     data    = ['C8081100C808000000000040000000000900000000'].pack("H*")
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(data)
   end
   private :store_page_view
@@ -5012,6 +5026,7 @@ class Worksheet < BIFFWriter
     data   = [record, zero, zero, zero, zero,
     zero, unknown, zero, color, zero].pack("vvvvvvvvvv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_tab_color
@@ -5032,6 +5047,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [grbit,  height].pack("vv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_defrow
@@ -5051,6 +5067,7 @@ class Worksheet < BIFFWriter
     header   = [record, length].pack("vv")
     data     = [colwidth].pack("v")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_defcol
@@ -5111,6 +5128,7 @@ class Worksheet < BIFFWriter
     data   = [firstcol, lastcol, coldx,
               ixfe, grbit, reserved].pack("vvvvvC")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
 #  private :store_colinfo
@@ -5131,6 +5149,7 @@ class Worksheet < BIFFWriter
 
     header = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header)
   end
 #  private :store_filtermode
@@ -5152,6 +5171,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [num_filters].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_autofilterinfo
@@ -5194,6 +5214,7 @@ class Worksheet < BIFFWriter
     data = [pnn, rwAct, colAct, irefAct, cref,
     rwFirst, rwLast, colFirst, colLast].pack('CvvvvvvCC')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_selection
@@ -5220,6 +5241,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [cxals].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_externcount
@@ -5258,6 +5280,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [cch, rgch].pack('CC')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data, sheetname)
   end
   private :store_externsheet
@@ -5317,6 +5340,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [x, y, rwtop, colleft, pnnAct].pack('vvvvv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_panes
@@ -5377,6 +5401,7 @@ class Worksheet < BIFFWriter
     data2  = numHdr + numFtr
     data3  = [iCopies].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data1, data2, data3)
 
   end
@@ -5408,6 +5433,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack('vv')
     data        = [cch, encoding].pack('vC')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data, str)
   end
   private :store_header
@@ -5438,6 +5464,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack('vv')
     data        =  [cch, encoding].pack('vC')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data, str)
   end
   private :store_footer
@@ -5457,6 +5484,7 @@ class Worksheet < BIFFWriter
     header   = [record, length].pack('vv')
     data     = [fHCenter].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_hcenter
@@ -5476,6 +5504,7 @@ class Worksheet < BIFFWriter
     header    = [record, length].pack('vv')
     data      = [mfVCenter].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_vcenter
@@ -5497,6 +5526,7 @@ class Worksheet < BIFFWriter
 
     data = data.reverse if @byte_order != 0 && @byte_order != ''
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_margin_left
@@ -5518,6 +5548,7 @@ class Worksheet < BIFFWriter
 
     data = data.reverse if @byte_order != 0 && @byte_order != ''
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_margin_right
@@ -5539,6 +5570,7 @@ class Worksheet < BIFFWriter
 
     data = data.reverse if @byte_order != 0 && @byte_order != ''
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_margin_top
@@ -5560,6 +5592,7 @@ class Worksheet < BIFFWriter
 
     data = data.reverse if @byte_order != 0 && @byte_order != ''
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_margin_bottom
@@ -5596,6 +5629,7 @@ class Worksheet < BIFFWriter
     header   = [record, length].pack("vv")
     data     = [cref, rwFirst, rwLast, colFirst, colLast].pack("vvvvv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -5719,6 +5753,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
     data        = [fPrintRwCol].pack("v")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_print_headers
@@ -5739,6 +5774,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
     data        = [fPrintGrid].pack("v")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_print_gridlines
@@ -5759,6 +5795,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
     data        = [fGridSet].pack("v")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_gridset
@@ -5804,6 +5841,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [dxRwGut, dxColGut, row_level, col_level].pack("vvvv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_guts
@@ -5832,6 +5870,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [grbit].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_wsbool
@@ -5861,6 +5900,7 @@ class Worksheet < BIFFWriter
       data = data + [brk, 0x0000, 0x00ff].pack("vvv")
     end
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_hbreak
@@ -5890,6 +5930,7 @@ class Worksheet < BIFFWriter
       data = data + [brk, 0x0000, 0x00ff].pack("vvv")
     end
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_vbreak
@@ -5912,6 +5953,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [fLock].pack("v")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_protect
@@ -5934,6 +5976,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [fLock].pack("v")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_obj_protect
@@ -5956,6 +5999,7 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
     data        = [wPassword].pack("v")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_password
@@ -6023,6 +6067,7 @@ class Worksheet < BIFFWriter
         # Rewrite the min and max cols for user defined row record.
         packed_row = @row_data[row]
         packed_row[6..9] = [col_min, col_max].pack('vv')
+        print "sheet #{@name} : #{__FILE__}(#{__LINE__}) packed_row\n" if defined?($debug)
         append(packed_row)
       else
         # Write a default Row record if there isn't a  user defined ROW.
@@ -6046,6 +6091,7 @@ class Worksheet < BIFFWriter
           if @table[row]
             @table[row].each do |col|
               next unless col
+              print "sheet #{@name} : #{__FILE__}(#{__LINE__}) cell_data\n" if defined?($debug)
               append(col)
               length = col.length
               row_offset  += length
@@ -6091,6 +6137,7 @@ class Worksheet < BIFFWriter
       data = data + [co].pack('v')
     end
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
   private :store_dbcell
@@ -6121,6 +6168,7 @@ class Worksheet < BIFFWriter
       data = data + [index + @offset + 20 + length + 4].pack('V')
     end
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_index
@@ -6428,6 +6476,7 @@ class Worksheet < BIFFWriter
     header      = [record, header].pack("vv")
     data        = [@zoom, 100].pack("vv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
   private :store_zoom
@@ -6500,6 +6549,7 @@ class Worksheet < BIFFWriter
       tmp[col] = header + data
       @table[row] = tmp
     else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
     end
 
@@ -6659,6 +6709,7 @@ class Worksheet < BIFFWriter
     length  = data.length
     header  = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
 #  private :store_autofilter
@@ -6944,6 +6995,7 @@ class Worksheet < BIFFWriter
       end
       length      = data.length
       header      = [record, length].pack("vv")
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
 
       store_obj_image(i+1)
@@ -7037,6 +7089,7 @@ class Worksheet < BIFFWriter
           end
           length      = data.length
           header      = [record, length].pack("vv")
+          print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
           append(header, data)
 
           store_obj_chart(num_objects+i+1)
@@ -7067,6 +7120,7 @@ class Worksheet < BIFFWriter
     #                        die "Couldn't open $filename in add_chart_ext(): $!.\n";
 
     while tmp = filehandle.read(4096)
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(tmp)
     end
   end
@@ -7135,6 +7189,7 @@ class Worksheet < BIFFWriter
       end
       length      = data.length
       header      = [record, length].pack("vv")
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
 
       store_obj_filter(num_objects+i+1, col1 +i)
@@ -7219,6 +7274,7 @@ class Worksheet < BIFFWriter
       end
       length      = data.length
       header      = [record, length].pack("vv")
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(eader, data)
 
       store_obj_comment(num_objects + i + 1)
@@ -7550,6 +7606,7 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header      = [record, length].pack("vv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
 
   end
@@ -7601,6 +7658,7 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header  = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
 
   end
@@ -7640,6 +7698,7 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header  = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
 
   end
@@ -7700,6 +7759,7 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header  = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
 #  private :store_obj_filter
@@ -7717,6 +7777,7 @@ class Worksheet < BIFFWriter
     data        = store_mso_client_text_box()
     header  = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
 #  private :store_mso_drawing_text_box
@@ -7759,6 +7820,7 @@ class Worksheet < BIFFWriter
     data    = [grbit, rotation, reserved, reserved,
     string_len, format_len, reserved].pack("vvVvvvV")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_txo
@@ -7790,6 +7852,7 @@ class Worksheet < BIFFWriter
       length  = data.length
       header  = [record, length].pack('vv')
 
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data)
     end
 
@@ -7798,6 +7861,7 @@ class Worksheet < BIFFWriter
     length  = data.length
     header  = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_txo_continue_1
@@ -7824,6 +7888,7 @@ class Worksheet < BIFFWriter
     length  = data.length
     header  = [record, length].pack("vv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_txo_continue_2
@@ -7870,6 +7935,7 @@ class Worksheet < BIFFWriter
     length  = data.length + author.length
     header  = [record, length].pack("vv")
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, author)
   end
 #  private :store_note
@@ -8792,6 +8858,7 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [flags, x_coord, y_coord, obj_id, dv_count].pack('vVVVV')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_dval
@@ -8877,6 +8944,7 @@ class Worksheet < BIFFWriter
 
     header = [record, data.length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_dv

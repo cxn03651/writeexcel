@@ -82,8 +82,8 @@ class BIFFWriter
     @datasize += d.length
     @data      = d + @data
 
-#print "prepend\n"
-#print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
+    print "prepend\n" if defined?($debug)
+    print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n" if defined?($debug)
     return d
   end
 
@@ -104,8 +104,9 @@ class BIFFWriter
       @datasize += d.length
       @data      = @data + d
     end
-#print "apend\n"
-#print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n"
+
+    print "append\n" if defined?($debug)
+    print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n" if defined?($debug)
     return d
   end
 
@@ -165,6 +166,7 @@ class BIFFWriter
     header  = [record,length].pack("vv")
     data    = [BIFF_Version,type,build,year,bfh,sfo].pack("vvvvVV")
 
+    print "store_bof in #{__FILE__}\n" if defined?($debug)
     prepend(header, data)
   end
 
@@ -179,6 +181,7 @@ class BIFFWriter
     length = 0x0000
     header = [record,length].pack("vv")
 
+    print "store_eof in #{__FILE__}\n" if defined?($debug)
     append(header)
   end
 

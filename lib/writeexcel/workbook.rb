@@ -1061,11 +1061,13 @@ class Workbook < BIFFWriter
       workbook.set_file   # use tempfile
 
       while tmp = get_data
+        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         workbook.append(tmp)
       end
 
       @worksheets.each do |worksheet|
         while tmp = worksheet.get_data
+        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           workbook.append(tmp)
         end
       end
@@ -1505,12 +1507,14 @@ class Workbook < BIFFWriter
 
     # Fonts are 0-indexed. According to the SDK there is no index 4,
     (0..3).each do
+      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(font)
     end
 
     # Add the font for comments. This isn't connected to any XF format.
     tmp    = Format.new(nil, :font => 'Tahoma', :size => 8)
     font   = tmp.get_font
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(font)
 
     # Iterate through the XF objects and write a FONT record if it isn't the
@@ -1540,6 +1544,7 @@ class Workbook < BIFFWriter
         format.font_index = index
         index += 1
         font = format.get_font
+        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         append(font)
       end
     end
@@ -1594,6 +1599,7 @@ class Workbook < BIFFWriter
   def store_all_xfs
     @formats.each do |format|
       xf = format.get_xf
+      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(xf)
     end
   end
@@ -1778,6 +1784,7 @@ class Workbook < BIFFWriter
                   ctabsel, wTabRatio
                 ].pack("vvvvvvvvv")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_window1
@@ -1810,6 +1817,7 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [offset, grbit, cch, encoding].pack("VvCC")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, sheetname)
   end
   private :store_boundsheet
@@ -1833,6 +1841,7 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [xf_index, type, level].pack("vCC")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_style
@@ -1878,6 +1887,7 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [ifmt, cch, encoding].pack("vvC")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, format)
   end
   private :store_num_format
@@ -1897,6 +1907,7 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [f1904].pack("v")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_1904
@@ -1918,6 +1929,7 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [ctabs, stVirtPath].pack("vv")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_supbook
@@ -1951,6 +1963,7 @@ class Workbook < BIFFWriter
     data        = [cxti].pack("v") + rgxti
     header    = [record, data.length].pack("vv")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2001,6 +2014,7 @@ class Workbook < BIFFWriter
 
     header = [record, data.length].pack("vv")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2061,6 +2075,7 @@ class Workbook < BIFFWriter
     data            = data + [colmin].pack("v")
     data            = data + [colmax].pack("v")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_name_short
@@ -2137,6 +2152,7 @@ class Workbook < BIFFWriter
     # End of data
     data            = data + [0x10].pack("C")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_name_long
@@ -2160,6 +2176,7 @@ class Workbook < BIFFWriter
 
     header = [record, length, ccv].pack("vvv")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_palette
@@ -2178,6 +2195,7 @@ class Workbook < BIFFWriter
     header          = [record, length].pack("vv")
     data            = [cv].pack("v")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_codepage
@@ -2196,6 +2214,7 @@ class Workbook < BIFFWriter
 
     header          = [record, length].pack("vv")
     data            = [country_default, country_win_ini].pack("vv")
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_country
@@ -2214,6 +2233,7 @@ class Workbook < BIFFWriter
     header          = [record, length].pack("vv")
     data            = [hide].pack("v")
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_hideobj
@@ -2524,6 +2544,7 @@ class Workbook < BIFFWriter
     # Write the SST block header information
     header      = [record, length].pack("vv")
     data        = [@str_total, @str_unique].pack("VV")
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     # Iterate through the strings and write them out
@@ -2558,6 +2579,7 @@ class Workbook < BIFFWriter
           bucket_string = 0
         end
 
+        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         append(string)
         written += string_length
         next
@@ -2614,6 +2636,7 @@ class Workbook < BIFFWriter
             bucket_string = 0
           end
 
+          print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           append(tmp)
 
 
@@ -2648,6 +2671,7 @@ class Workbook < BIFFWriter
           header         = [record, length].pack("vv")
           header         = header + [encoding].pack("C") if continue != 0
 
+          print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           append(header)
         end
 
@@ -2666,6 +2690,7 @@ class Workbook < BIFFWriter
 
             bucket_string = 0
           end
+          print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           append(string)
 
           written = block_length
@@ -2725,6 +2750,7 @@ class Workbook < BIFFWriter
       data = data + [offset[0], offset[1], 0].pack('Vvv')
     end
 
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_extsst
@@ -2790,6 +2816,7 @@ class Workbook < BIFFWriter
 
     # Case 1 above. Just return the data as it is.
     if data.length <= limit
+      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(data)
       return
     end
@@ -2798,6 +2825,7 @@ class Workbook < BIFFWriter
     tmp = data.dup
     tmp[0, limit + 4] = ""
     tmp[2, 2] = [limit].pack('v')
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp)
 
     # Add MSODRAWINGGROUP and CONTINUE blocks for Case 3 above.
@@ -2813,11 +2841,13 @@ class Workbook < BIFFWriter
 
       tmp = data.dup
       tmp[0, limit] = ''
+      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, tmp)
     end
 
     # Last CONTINUE block for remaining data. Case 2 and 3 above.
     header = [continue, data.length].pack("vv")
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     # Turn the base class _add_continue() method back on.

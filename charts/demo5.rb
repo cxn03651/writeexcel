@@ -31,7 +31,7 @@ worksheet.store_formula('=Sheet1!A1')
 
 # Add some extra formats to cover formats used in the charts.
 chart_font_1 = workbook.add_format(:font_only => 1)
-chart_font_2 = workbook.add_format(:font_only => 1, :bold => 1)
+chart_font_2 = workbook.add_format(:font_only => 1)
 
 # Add all other formats.
 
