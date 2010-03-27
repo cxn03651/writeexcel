@@ -9,6 +9,337 @@ class OLEStorageLite
   LONG_INT_SIZE   = 4
   PPS_SIZE        = 0x80
 
+  attr_reader :file
+
+  def initialize(file = nil)
+    @file = file
+  end
+
+  def getPpsTree(data)
+    info = _initParse(file)
+    info ? _getPpsTree(0, info, data) : nil
+  end
+
+  def getPpsSearch(name, data, icase)
+    info = _initParse(file)
+    info ? _getPpsSearch(0, info, name, data, icase) : nil
+  end
+
+  def getNthPps(no, data)
+    info = _initParse(file)
+    info ? _getNthPps(no, info, data) : nil
+  end
+
+  def _initParse(file)
+    io = file.kind_of?(String) ? open(file, 'rb') : file
+    _getHeaderInfo(io)
+  end
+  private :_initParse
+
+  def _getPpsTree(no, info, data, done)
+    if done
+      return [] if done.include?(no)
+    else
+      done = []
+    end
+    done << no
+
+    rootblock = info[:root_start]
+
+    #1. Get Information about itself
+    pps = _getNthPps(no, info, data)
+
+    #2. Child
+    if pps.dir_pps !=  0xFFFFFFFF
+      pps.child = _getPpsTree(pps.dir_pps, info, data, done)
+    else
+      pps.child = nil
+    end
+
+    #3. Previous,Next PPSs
+    list = []
+    list << _getPpsTree(pps.prev_pps, info, data, done) if pps.prev_pps != 0xFFFFFFFF
+    list << pps
+    list << _getPpsTree(pps.next_pps, info, data, done) if pps.next_pps != 0xFFFFFFFF
+  end
+  private :_getPpsTree
+
+  def _getPpsSearch(no, info, name, data, icase, done = nil)
+    rootblock = info[:root_start]
+    #1. Check it self
+    if done
+      return [] if done.include?(no)
+    else
+      done = []
+    end
+    done << no
+    pps  = _getNthPps(no, info, nil)
+
+    re = Regexp.new("^\Q#{pps.name}\E$", Regexp::IGNORECASE)
+    if (icase && !name.select { |v| v =~ re }.empty?) || name.include?(pps.name)
+      pps = _getNthPps(no, info, data) if data
+      res = [pps]
+    else
+      res = []
+    end
+
+    #2. Check Child, Previous, Next PPSs
+    res +=
+      _getPpsSearch(pps.dir_pps, info, name, data, icase, done) if pps.dir_pps !=  0xFFFFFFFF
+    res +=
+      _getPpsSearch(pps.prev_pps, info, name, data, icase, done) if pps.prev_pps != 0xFFFFFFFF
+    res +=
+      _getPpsSearch(pps.next_pps, info, name, data, icase, done) if pps.next_pps != 0xFFFFFFFF
+    res
+  end
+  private :_getPpsSearch
+
+  def _getHeaderInfo(io)
+    info = { :fileh => io }
+
+    #0. Check ID
+    info[:fileh].seek(0, 0)
+    return nil unless info[:fileh].read(8) == "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"
+
+    # BIG BLOCK SIZE
+    val = _getInfoFromFile(info[:fileh], 0x1E, 2, "v")
+    return nil if val.nil?
+    info[:big_block_size] = 2 ** val
+
+    # SMALL BLOCK SIZE
+    val = _getInfoFromFile(info[:fileh], 0x20, 2, "v")
+    return nil if val.nil?
+    info[:small_block_size] = 2 ** val
+
+    # BDB Count
+    val = _getInfoFromFile(info[:fileh], 0x2C, 4, "V")
+    return nil if val.nil?
+    info[:bdb_count] = val
+
+    # START BLOCK
+    val = _getInfoFromFile(info[:fileh], 0x30, 4, "V")
+    return nil if val.nil?
+    info[:root_start] = val
+
+    # SMALL BD START
+    val = _getInfoFromFile(info[:fileh], 0x3C, 4, "V")
+    return nil if val.nil?
+    info[:sbd_start] = val
+
+    # SMALL BD COUNT
+    val = _getInfoFromFile(info[:fileh], 0x40, 4, "V")
+    return nil if val.nil?
+    info[:sbd_count] = val
+
+    # EXTRA BBD START
+    val = _getInfoFromFile(info[:fileh], 0x44, 4, "V")
+    return nil if val.nil?
+    info[:extra_bbd_start] = val
+
+    # EXTRA BBD COUNT
+    val = _getInfoFromFile(info[:fileh], 0x48, 4, "V")
+    return nil if val.nil?
+    info[:extra_bbd_count] = val
+
+    #GET BBD INFO
+    info[:bbd_info] = _getBbdInfo(info)
+
+    # GET ROOT PPS
+    root = _getNthPps(0, info, nil)
+    info[:sb_start] = root.start_block
+    info[:sb_size]  = root.size
+    info
+  end
+  private :_getHeaderInfo
+
+  def _getInfoFromFile(io, pos, len, fmt)
+    io.seek(pos, 0)
+    str = io.read(len)
+    if str.length != len
+      nil
+    else
+      str.unpack(fmt)[0]
+    end
+  end
+  private :_getInfoFromFile
+
+  def _getBbdInfo(info)
+    bdlist = []
+    iBdbCnt = info[:bdb_count]
+    i1stCnt = (info[:big_block_size] - 0x4C) / LONG_INT_SIZE
+    iBdlCnt = info[:big_block_size] / LONG_INT_SIZE - 1
+
+    #1. 1st BDlist
+    info[:fileh].seek(0x4C, 0)
+    iGetCnt = iBdbCnt < i1stCnt ? iBdbCnt : i1stCnt
+    str = info[:fileh].read(LONG_INT_SIZE * iGetCnt)
+    bdlist += str.unpack("V#{iGetCnt}")
+    iBdbCnt -= iGetCnt
+
+    #2. Extra BDList
+    iBlock = info[:extra_bbd_start]
+    while iBdbCnt> 0 && _isNormalBlock(iBlock)
+      _setFilePos(iBlock, 0, info)
+      iGetCnt = iBdbCnt < iBdlCnt ? iBdbCnt : iBdlCnt
+      str = info[:fileh].read(LONG_INT_SIZE * iGetCnt)
+      bdlist += str.unpack("V#{iGetCnt}")
+      iBdbCnt -= iGetCnt
+      str = info[:fileh].read(LONG_INT_SIZE)
+      iBlock = str.unpack("V")
+    end
+
+    #3.Get BDs
+    hBd = Hash.new
+    iBlkNo = 0
+    iBdCnt = info[:big_block_size] / LONG_INT_SIZE
+    bdlist.each do |iBdL|
+      _setFilePos(iBdL, 0, info)
+      str = info[:fileh].read(info[:big_block_size])
+      arr = str.unpack("V#{iBdCnt}")
+      (0...iBdCnt).each do |i|
+        hBd[iBlkNo] = arr[i] if arr[i] != iBlkNo + 1
+        iBlkNo += 1
+      end
+    end
+    hBd
+  end
+  private :_getBbdInfo
+
+  def _getNthPps(pos, info, data)
+    ppsstart = info[:root_start]
+
+    basecnt = info[:big_block_size] / PPS_SIZE
+    ppsblock = pos / basecnt
+    ppspos   = pos % basecnt
+
+    block = _getNthBlockNo(ppsstart, ppsblock, info)
+    return nil if block.nil?
+
+    _setFilePos(block, PPS_SIZE * ppspos, info)
+    str = info[:fileh].read(PPS_SIZE)
+    return nil if str.nil? || str == ''
+    nmsize = str[0x40, 2].unpack('v')[0]
+    nmsize -= 2 if nmsize > 2
+    nm = str[0, nmsize]
+    type = str[0x42, 2].unpack('C')[0]
+    ppsprev = str[0x44, LONG_INT_SIZE].unpack('V')[0]
+    ppsnext = str[0x48, LONG_INT_SIZE].unpack('V')[0]
+    dirpps  = str[0x4C, LONG_INT_SIZE].unpack('V')[0]
+    time1st =
+      (type == PPS_TYPE_ROOT || type == PPS_TYPE_DIR) ? oleData2Local(str[0x64, 8]) : nil
+    time2nd =
+      (type == PPS_TYPE_ROOT || type == PPS_TYPE_DIR) ? oleData2Local(str[0x6C, 8]) : nil
+    start, size = str[0x74, 8].unpack('VV')
+    if data
+      sdata = _getData(type, start, size, info)
+      OLEStorageLitePPS.new(pos, nm, type, ppsprev, ppsnext, dirpps,
+                            time1st, time2nd, start, size, sdata, nil)
+    else
+      OLEStorageLitePPS.new(pos, nm, type, ppsprev, ppsnext, dirpps,
+                            time1st, time2nd, start, size, nil, nil)
+    end
+  end
+  private :_getNthPps
+
+  def _setFilePos(iBlock, iPos, info)
+    info[:fileh].seek((iBlock + 1) * info[:big_block_size] + iPos, 0)
+  end
+  private :_setFilePos
+
+  def _getNthBlockNo(stblock, nth, info)
+    inext = stblock
+    (0...nth).each do |i|
+      sv = inext
+      inext = _getNextBlockNo(sv, info)
+      return nil unless _isNormalBlock(inext)
+    end
+    inext
+  end
+  private :_getNthBlockNo
+
+  def _getData(iType, iBlock, iSize, info)
+    if iType == PPS_TYPE_FILE
+      if iSize < DATA_SIZE_SMALL
+        return _getSmallData(iBlock, iSize, info)
+      else
+        return _getBigData(iBlock, iSize, info)
+      end
+    elsif iType == PPS_TYPE_ROOT  # Root
+      return _getBigData(iBlock, iSize, info)
+    elsif iType == PPS_TYPE_DIR   # Directory
+      return nil
+    end
+  end
+  private :_getData
+
+  def _getBigData(iBlock, iSize, info)
+    return '' unless _isNormalBlock(iBlock)
+    iRest = iSize
+    sRes  = ''
+    aKeys = info[:bbd_info].keys.sort
+
+    while iRest > 0
+      aRes = aKeys.select { |key| key >= iBlock }
+      iNKey = aRes[0]
+      i = iNKey - iBlock
+      iNext = info[:bbd_info][iNKey]
+      _setFilePos(iBlock, 0, info)
+      iGetSize = info[:big_block_size] * (i + 1)
+      iGetSize = iRest if iRest < iGetSize
+      sRes += info[:fileh].read(iGetSize)
+      iRest -= iGetSize
+      iBlock = iNext
+    end
+    return sRes
+  end
+  private :_getBigData
+
+  def _getNextBlockNo(iBlockNo, info)
+    iRes = info[:bbd_info][iBlockNo]
+    iRes ? iRes : iBlockNo + 1
+  end
+  private :_getNextBlockNo
+
+  def _isNormalBlock(iBlock)
+    iBlock < 0xFFFFFFFC ? 1 : nil
+  end
+  private :_isNormalBlock
+
+  def _getSmallData(iSmBlock, iSize, info)
+    iRest = iSize
+    sRes = ''
+    while iRest > 0
+      _setFilePosSmall(iSmBlock, info)
+      sRes += info[:fileh].read(
+          iRest >= info[:small_block_size] ? info[:small_block_size] : iRest)
+      iRest -= info[:small_block_size]
+      iSmBlock = _getNextSmallBlockNo(iSmBlock, info)
+    end
+    sRes
+  end
+  private :_getSmallData
+
+  def _setFilePosSmall(iSmBlock, info)
+    iSmStart = info[:sb_start]
+    iBaseCnt = info[:big_block_size] / info[:small_block_size]
+    iNth = iSmBlock / iBaseCnt
+    iPos = iSmBlock % iBaseCnt
+
+    iBlk = _getNthBlockNo(iSmStart, iNth, info)
+    _setFilePos(iBlk, iPos * info[:small_block_size], info)
+  end
+  private :_setFilePosSmall
+
+  def _getNextSmallBlockNo(iSmBlock, info)
+    iBaseCnt = info[:big_block_size] / LONG_INT_SIZE
+    iNth = iSmBlock / iBaseCnt
+    iPos = iSmBlock % iBaseCnt
+    iBlk = _getNthBlockNo(info[:sbd_start], iNth, info)
+    _setFilePos(iBlk, iPos * LONG_INT_SIZE, info)
+    info[:fileh].read(LONG_INT_SIZE).unpack('V')
+  end
+  private :_getNextSmallBlockNo
+
   def asc2ucs(str)
     str.split(//).join("\0") + "\0"
   end
@@ -18,6 +349,54 @@ class OLEStorageLite
     ary.join('')
   end
 
+  #------------------------------------------------------------------------------
+  # OLEDate2Local()
+  #
+  # Convert from a Window FILETIME structure to a localtime array. FILETIME is
+  # a 64-bit value representing the number of 100-nanosecond intervals since
+  # January 1 1601.
+  #
+  # We first convert the FILETIME to seconds and then subtract the difference
+  # between the 1601 epoch and the 1970 Unix epoch.
+  #
+  def oleData2Local(oletime)
+    # Unpack the FILETIME into high and low longs.
+    lo, hi = oletime.unpack('V2')
+
+    # Convert the longs to a double.
+    nanoseconds = hi * 2 ** 32 +  lo
+
+    # Convert the 100 nanosecond units into seconds.
+    time = nanoseconds / 1e7
+
+    # Subtract the number of seconds between the 1601 and 1970 epochs.
+    time -= 11644473600
+
+    # Convert to a localtime (actually gmtime) structure.
+    if time >= 1
+      ltime = Time.at(time).getgm.to_a[0, 9]
+      ltime[4] -= 1    # month
+      ltime[5] -= 1900 # year
+      ltime[7] -= 1    # past from 1, Jan
+      ltime[8] = ltime[8] ? 1 : 0
+      ltime
+    else
+      []
+    end
+  end
+
+  #------------------------------------------------------------------------------
+  # LocalDate2OLE()
+  #
+  # Convert from a a localtime array to a Window FILETIME structure. FILETIME is
+  # a 64-bit value representing the number of 100-nanosecond intervals since
+  # January 1 1601.
+  #
+  # We first convert the localtime (actually gmtime) to seconds and then add the
+  # difference between the 1601 epoch and the 1970 Unix epoch. We convert that to
+  # 100 nanosecond units, divide it into high and low longs and return it as a
+  # packed 64bit structure.
+  #
   def localDate2OLE(localtime)
     return "\x00" * 8 unless localtime
 
@@ -36,8 +415,7 @@ class OLEStorageLite
     # Pack the total nanoseconds into 64 bits...
     hi, lo = nanoseconds.divmod 1 << 32
 
-    oletime = [lo, hi].pack("VV")
-    return oletime
+    [lo, hi].pack("VV")  # oletime
   end
 end
 

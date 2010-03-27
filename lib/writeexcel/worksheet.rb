@@ -2577,7 +2577,7 @@ class Worksheet < BIFFWriter
 
     # Limit the string to the max number of chars.
     if (strlen > 32767)
-      str       = substr(str, 0, 32767)
+      str       = str[0, 32767]
       str_error = -3
     end
 
@@ -4268,7 +4268,7 @@ class Worksheet < BIFFWriter
     # Convert an Utf8 URL type and to a null terminated wchar string.
     if str =~ NonAscii
       # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
-      url.substr!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
+      url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
       url      = NKF.nkf('-w16L0 -m0 -W', url) + "\0\0"  # URL is null terminated.
       encoding = 1
     end
