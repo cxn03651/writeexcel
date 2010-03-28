@@ -269,6 +269,34 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
+  # add_chart($filename, $name)
+  #
+  # Add a chart sheet.
+  #
+  def add_chart(name, encoding = 0)
+    index    = @worksheets.size
+
+    name, encoding = check_sheetname(name, encoding)
+
+    init_data = [
+      '',
+      name,
+      index,
+      encoding,
+      @activesheet,
+      @firstsheet,
+      1    # External binary
+    ]
+
+    worksheet = Chart.new(self, *init_data)
+    @worksheets[index] = worksheet      # Store ref for iterator
+    @sheetnames[index] = name           # Store EXTERNSHEET names
+    @parser.set_ext_sheets(name, index) # Store names in Formula.pm
+    worksheet
+  end
+
+  ###############################################################################
+  #
   # add_chart_ext($filename, $name)
   #
   # Add an externally created chart.
@@ -285,7 +313,8 @@ class Workbook < BIFFWriter
       index,
       encoding,
       @activesheet,
-      @firstsheet
+      @firstsheet,
+      1    # External binary
     ]
 
     worksheet = Chart.new(self, *init_data)
@@ -1177,7 +1206,7 @@ class Workbook < BIFFWriter
     # required by each worksheet.
     #
     @worksheets.each do |sheet|
-      next unless sheet.class == Worksheet
+      next unless sheet.type == 0x0000
 
       num_images     = sheet.num_images
       image_mso_size = sheet.image_mso_size
@@ -1253,7 +1282,7 @@ class Workbook < BIFFWriter
     images_size     = 0;
 
     @worksheets.each do |sheet|
-      next unless sheet.class == Worksheet
+      next unless sheet.type == 0x0000
       next if sheet.prepare_images == 0
 
       num_images      = 0

@@ -227,7 +227,7 @@ class Chart < Worksheet
   #
   # Constructor. Creates a new Chart object from a BIFFwriter object
   #
-  def initialize(workbook, filename, name, index, encoding, activesheet, firstsheet)
+  def initialize(workbook, filename, name, index, encoding, activesheet, firstsheet, external_bin = nil)
     super(workbook, name, index, encoding)
 
     @filename          = filename
@@ -236,9 +236,10 @@ class Chart < Worksheet
     @encoding          = encoding
     @activesheet       = activesheet
     @firstsheet        = firstsheet
+    @external_bin      = external_bin
 
     @type              = 0x0200
-    @using_tmpfile     = 1
+    @using_tmpfile     = false
     @filehandle        = nil
     @xls_rowmax        = 0
     @xls_colmax        = 0
@@ -254,76 +255,6 @@ class Chart < Worksheet
 
   ###############################################################################
   #
-  # get_data().
-  #
-  # Retrieves data from memory in one chunk, or from disk in $buffer
-  # sized chunks.
-  #
-  def get_data
-    length = 4096
-
-    @filehandle.read(length)
-  end
-
-
-  ###############################################################################
-  #
-  # select()
-  #
-  # Set this worksheet as a selected worksheet, i.e. the worksheet has its tab
-  # highlighted.
-  #
-  def select
-    @hidden         = 0 # Selected worksheet can't be hidden.
-    @selected       = 1
-  end
-
-
-  ###############################################################################
-  #
-  # activate()
-  #
-  # Set this worksheet as the active worksheet, i.e. the worksheet that is
-  # displayed when the workbook is opened. Also set it as selected.
-  #
-  def activate
-    @hidden      = 0 # Active worksheet can't be hidden.
-    @selected    = 1
-    @activesheet = @index
-  end
-
-
-  ###############################################################################
-  #
-  # hide()
-  #
-  # Hide this worksheet.
-  #
-  def hide
-    @hidden      = 1
-
-    # A hidden worksheet shouldn't be active or selected.
-    @selecte     = 0
-    @activesheet = 0
-    @firstsheet  = 0
-  end
-
-
-  ###############################################################################
-  #
-  # set_first_sheet()
-  #
-  # Set this worksheet as the first visible sheet. This is necessary
-  # when there are a large number of worksheets and the activated
-  # worksheet is not visible on the screen.
-  #
-  def set_first_sheet
-    hidden      = 0 # Active worksheet can't be hidden.
-    firstsheet  = index
-  end
-
-  ###############################################################################
-  #
   # _close()
   #
   # Add data to the beginning of the workbook (note the reverse order)
@@ -332,23 +263,73 @@ class Chart < Worksheet
   def close(*args)
   end
 
-
-  ###############################################################################
-
-  private
-
-  ###############################################################################
-
-
   ###############################################################################
   #
   # _initialize()
   #
   def _initialize
-    filehandle = open(@filename, "rb") or
-    die "Couldn't open #{@filename} in add_chart_ext(): $!.\n"
-    @filehandle = filehandle
-    @datasize   = FileTest.size(@filename)
+    if @external_bin
+      filehandle = open(@filename, "rb") or
+        die "Couldn't open #{@filename} in add_chart_ext(): $!.\n"
+      @filehandle = filehandle
+      @datasize   = FileTest.size(@filename)
+      @using_tmpfile = false
+
+      # Read the entire external chart binary into the the data buffer.
+      # This will be retrieved by _get_data() when the chart is closed().
+      @data = @filehandle.read(@datasize)
+    end
+  end
+  private :_initialize
+
+  ###############################################################################
+  #
+  # _store_fbi()
+  #
+  # Write the FBI chart BIFF record. Specifies the font information at the time
+  # it was applied to the chart.
+  #
+  def store_fbi(index)
+    record       = 0x1060    # Record identifier.
+    length       = 0x000A    # Number of bytes to follow.
+    # index                  # Font index.
+    height       = 0x00C8    # Default font height in twips.
+    width_basis  = 0x38B8    # Width basis, in twips.
+    height_basis = 0x22A1    # Height basis, in twips.
+    scale_basis  = 0x0000    # Scale by chart area or plot area.
+
+    header = [record, length].pack('vv')
+    data   = [width_basis].pack('v')
+    data  += [height_basis].pack('v')
+    data  += [height].pack('v')
+    data  += [scale_basis].pack('v')
+    data  += [index].pack('v')
+
+    append(header, data)
   end
 
+  ###############################################################################
+  #
+  # _store_chart()
+  #
+  # Write the CHART BIFF record. This indicates the start of the chart sub-stream
+  # and contains dimensions of the chart on the display. Units are in 1/72 inch
+  # and are 2 byte integer with 2 byte fraction.
+  #
+  def store_chart
+    record = 0x1002        # Record identifier.
+    length = 0x0010        # Number of bytes to follow.
+    x_pos  = 0x00000000    # X pos of top left corner.
+    y_pos  = 0x00000000    # Y pos of top left corner.
+    dx     = 0x02DD51E0    # X size.
+    dy     = 0x01C2B838    # Y size.
+
+    header = [record, length].pack('vv')
+    data   = [x_pos].pack('V')
+    data  += [y_pos].pack('V')
+    data  += [dx].pack('V')
+    data  += [dy].pack('V')
+
+    append(header, data)
+  end
 end
