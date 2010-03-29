@@ -17,6 +17,11 @@ require 'writeexcel/formula'
 require 'writeexcel/format'
 require 'writeexcel/worksheet'
 require 'writeexcel/chart'
+require 'writeexcel/charts/area'
+require 'writeexcel/charts/bar'
+require 'writeexcel/charts/column'
+require 'writeexcel/charts/external'
+require 'writeexcel/charts/line'
 require 'writeexcel/properties'
 require 'digest/md5'
 require 'writeexcel/storage_lite'
@@ -269,14 +274,26 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
-  # add_chart($filename, $name)
+  # add_chart(params)
   #
   # Add a chart sheet.
   #
-  def add_chart(name, encoding = 0)
+  def add_chart(params)
+    name     = ''
+    encoding = 0
     index    = @worksheets.size
 
-    name, encoding = check_sheetname(name, encoding)
+    # Type must be specified so we can create the required chart instance.
+    type = params[:type]
+    raise "Must define chart type in add_chart()" if type.nil?
+
+    # Ensure that the chart defaults to non embedded.
+    embedded = params[:embedded] ||= 0
+
+    # Check the worksheet name for non-embedded charts.
+    if embedded == 0
+      name, encoding = check_sheetname(params[:name], params[:name_encoding], 1)
+    end
 
     init_data = [
       '',
@@ -285,14 +302,21 @@ class Workbook < BIFFWriter
       encoding,
       @activesheet,
       @firstsheet,
-      1    # External binary
+      1,     # External binary
+      @url_format,
+      @parser,
+      @tmpdir,
+      @str_total,
+      @str_unique,
+      @str_table,
+      @date_1904,
+      @compatibility
     ]
 
-    worksheet = Chart.new(self, *init_data)
-    @worksheets[index] = worksheet      # Store ref for iterator
+    chart = Chart.factory(type, self, init_data)
+    @worksheets[index] = chart          # Store ref for iterator
     @sheetnames[index] = name           # Store EXTERNSHEET names
-    @parser.set_ext_sheets(name, index) # Store names in Formula.pm
-    worksheet
+    chart
   end
 
   ###############################################################################
@@ -304,6 +328,7 @@ class Workbook < BIFFWriter
   #
   def add_chart_ext(filename, name, encoding = 0)
     index    = @worksheets.size
+    type = 'extarnal'
 
     name, encoding = check_sheetname(name, encoding)
 
@@ -314,14 +339,13 @@ class Workbook < BIFFWriter
       encoding,
       @activesheet,
       @firstsheet,
-      1    # External binary
+      1
     ]
 
-    worksheet = Chart.new(self, *init_data)
-    @worksheets[index] = worksheet      # Store ref for iterator
+    chart = Chart.factory(self, type, init_data)
+    @worksheets[index] = chart      # Store ref for iterator
     @sheetnames[index] = name           # Store EXTERNSHEET names
-    @parser.set_ext_sheets(name, index) # Store names in Formula.pm
-    worksheet
+    chart
   end
 
   ###############################################################################
@@ -332,7 +356,6 @@ class Workbook < BIFFWriter
   # invalid characters and if the name is unique in the workbook.
   #
   def check_sheetname(name, encoding = 0)
-    name = '' if name.nil?
     limit           = encoding != 0 ? 62 : 31
     invalid_char    = %r![\[\]:*?/\\]!
 
@@ -341,22 +364,22 @@ class Workbook < BIFFWriter
     sheetname = @sheetname
 
     if name == ""
-      name     = sheetname + (index+1).to_s
+      name     = sheetname + (index + 1).to_s
       encoding = 0
     end
 
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
-    raise "Sheetname #{name} must be <= 31 chars" if name.length > limit
+    raise "Sheetname $name must be <= 31 chars" if name.length > limit
 
     # Check that Unicode sheetname has an even number of bytes
-    if encoding == 1 and name.length % 2
-      raise 'Odd number of bytes in Unicode worksheet name:' + name
+    if encoding == 1 && (name.length % 2 != 0)
+      raise "Odd number of bytes in Unicode worksheet name: #{name}"
     end
 
     # Check that sheetname doesn't contain any invalid characters
-    if encoding != 1 and name =~ invalid_char
+    if encoding != 1 && name =~ invalid_char
       # Check ASCII names
-      raise 'Invalid character []:*?/\\ in worksheet name: ' + name
+      raise "Invalid character []:*?/\\ in worksheet name: #{name}"
     else
       # Extract any 8bit clean chars from the UTF16 name and validate them.
       str = name.dup
@@ -1020,7 +1043,7 @@ class Workbook < BIFFWriter
       store_boundsheet(
           sheet.name,
           sheet.offset,
-          sheet.type,
+          sheet.sheet_type,
           sheet.hidden,
           sheet.encoding
         )
@@ -1206,7 +1229,7 @@ class Workbook < BIFFWriter
     # required by each worksheet.
     #
     @worksheets.each do |sheet|
-      next unless sheet.type == 0x0000
+      next unless sheet.sheet_type == 0x0000
 
       num_images     = sheet.num_images
       image_mso_size = sheet.image_mso_size
@@ -1282,7 +1305,7 @@ class Workbook < BIFFWriter
     images_size     = 0;
 
     @worksheets.each do |sheet|
-      next unless sheet.type == 0x0000
+      next unless sheet.sheet_type == 0x0000
       next if sheet.prepare_images == 0
 
       num_images      = 0
@@ -1540,17 +1563,55 @@ class Workbook < BIFFWriter
       append(font)
     end
 
-    # Add the font for comments. This isn't connected to any XF format.
-    tmp    = Format.new(nil, :font => 'Tahoma', :size => 8)
-    font   = tmp.get_font
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-    append(font)
+    # Add the default fonts for charts and comments. This aren't connected
+    # to XF formats. Note, the font size, and some other properties of
+    # chart fonts are set in the FBI record of the chart.
+
+    # Index 5. Axis numbers.
+    tmp_format = Format.new(
+        nil,
+        :font_only => 1
+    )
+    append(tmp_format.get_font)
+
+    # Index 6. Series names.
+    tmp_format = Format.new(
+        nil,
+        :font_only => 1,
+        :bold      => 1
+    )
+    append(tmp_format.get_font)
+
+    # Index 7. Title.
+    tmp_format = Format.new(
+        nil,
+        :font_only => 1,
+        :bold      => 1
+    )
+    append(tmp_format.get_font)
+
+    # Index 8. Axes.
+    tmp_format = Format.new(
+        nil,
+        :font_only => 1,
+        :bold      => 1
+    )
+    append(tmp_format.get_font)
+
+    # Index 9. Comments.
+    tmp_format = Format.new(
+        nil,
+        :font_only => 1,
+        :font      => 'Tahoma',
+        :size      => 8
+    )
+    append(tmp_format.get_font)
 
     # Iterate through the XF objects and write a FONT record if it isn't the
     # same as the default FONT and if it hasn't already been used.
     #
     fonts = {}
-    index = 6                    # The first user defined FONT
+    index = 10                   # The first user defined FONT
 
     key = format.get_font_key    # The default font for cell formats.
     fonts[key] = 0               # Index of the default font

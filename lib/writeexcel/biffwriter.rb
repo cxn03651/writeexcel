@@ -146,6 +146,7 @@ class BIFFWriter
   #
   # $type = 0x0005, Workbook
   # $type = 0x0010, Worksheet
+  # $type = 0x0020, Chart
   #
   # Writes Excel BOF record to indicate the beginning of a stream or
   # sub-stream in the BIFF file.

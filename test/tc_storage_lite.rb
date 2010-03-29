@@ -4,10 +4,7 @@ require "test/unit"
 require "writeexcel/storage_lite"
 require 'stringio'
 
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
+=begin
   def compare_file(expected, target)
     fh_e = File.open(expected, "r")
     fh_t = File.open(target, "r")
@@ -27,6 +24,7 @@ require 'stringio'
     fh_e.close
     fh_t.close
   end
+=end
 
 class TC_OLEStorageLite < Test::Unit::TestCase
   TEST_DIR    = File.expand_path(File.dirname(__FILE__))
@@ -72,6 +70,11 @@ class TC_OLEStorageLite < Test::Unit::TestCase
       assert_equal(str, result)
     end
   end
+
+  def unpack_record(data)
+    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
+  end
+
 end
 
 class TC_OLEStorageLitePPSFile < Test::Unit::TestCase
@@ -138,4 +141,9 @@ class TC_OLEStorageLitePPSFile < Test::Unit::TestCase
       assert_equal(d, pps_file.read)
     end
   end
+
+  def unpack_record(data)
+    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
+  end
+
 end

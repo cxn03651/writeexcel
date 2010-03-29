@@ -13,6 +13,37 @@
 
 require 'writeexcel/worksheet'
 
+###############################################################################
+#
+# Formatting information.
+#
+# perltidy with options: -mbl=2 -pt=0 -nola
+#
+# Any camel case Hungarian notation style variable names in the BIFF record
+# writing sub-routines below are for similarity with names used in the Excel
+# documentation. Otherwise lowercase underscore style names are used.
+#
+
+
+###############################################################################
+#
+# The chart class hierarchy is as follows. Chart.pm acts as a factory for the
+# sub-classes.
+#
+#
+#     Spreadsheet::WriteExcel::BIFFwriter
+#                     ^
+#                     |
+#     Spreadsheet::WriteExcel::Worksheet
+#                     ^
+#                     |
+#     Spreadsheet::WriteExcel::Chart
+#                     ^
+#                     |
+#     Spreadsheet::WriteExcel::Chart::* (sub-types)
+#
+
+
 # = Chart
 # Charts and WriteExcel - A short introduction on how include externally
 # generated charts into a WriteExcel file.
@@ -220,71 +251,684 @@ require 'writeexcel/worksheet'
 #
 #
 class Chart < Worksheet
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
   ###############################################################################
   #
-  # new()
+  # factory()
   #
-  # Constructor. Creates a new Chart object from a BIFFwriter object
+  # Factory method for returning chart objects based on their class type.
   #
-  def initialize(workbook, filename, name, index, encoding, activesheet, firstsheet, external_bin = nil)
-    super(workbook, name, index, encoding)
+  def self.factory(klass, *args)
+    klass.new(*args)
+  end
 
-    @filename          = filename
-    @name              = name
-    @index             = index
-    @encoding          = encoding
-    @activesheet       = activesheet
-    @firstsheet        = firstsheet
-    @external_bin      = external_bin
+  def require_chart_subclass(subclass)
+    dir = 'writeexcel/charts/'
+    require dir + subclass
+  end
+  private :require_chart_subclass
 
-    @type              = 0x0200
-    @embedded          = 0
-    @using_tmpfile     = false
-    @filehandle        = nil
-    @xls_rowmax        = 0
-    @xls_colmax        = 0
-    @xls_strmax        = 0
-    @dim_rowmin        = 0
-    @dim_rowmax        = 0
-    @dim_colmin        = 0
-    @dim_colmax        = 0
-    @dim_changed       = 0
+  ###############################################################################
+  #
+  # :call-seq:
+  #   new(workbook, filename, name, index, encoding, activesheet, firstsheet, external_bin = nil)
+  #
+  # Default constructor for sub-classes.
+  #
+  def initialize(*args)
+    super(args[0], args[2], args[3], args[4])
 
-    _initialize
+    @sheet_type  = 0x0200
+    @orientation = 0x0
+    @series      = []
+    self
   end
 
   ###############################################################################
   #
-  # _close()
+  # add_series()
   #
-  # Add data to the beginning of the workbook (note the reverse order)
-  # and to the end of the workbook.
+  # Add a series and it's properties to a chart.
   #
-  def close(*args)
+  def add_series(params)
+    raise "Must specify 'values' in add_series()" if params[:values].nil?
+
+    # Parse the ranges to validate them and extract salient information.
+    value_data    = parse_series_formula(params[:values])
+    category_data = parse_series_formula(params[:categories])
+    name_formula  = parse_series_formula(params[:name_formula])
+
+    # Default category count to the same as the value count if not defined.
+    category_data[1] = value_data[1] if category_data[1].nil?
+
+    # Add the parsed data to the user supplied data.
+    params[:values]       = value_data
+    params[:categories]   = category_data
+    params[:name_formula] = name_formula
+
+    # Encode the Series name.
+    name, encoding = encode_utf16(params[:name], params[:name_encoding])
+
+    params[:name]          = name
+    params[:name_encoding] = encoding
+
+    @series << params
   end
 
   ###############################################################################
   #
-  # _initialize()
+  # set_x_axis()
   #
-  def _initialize
-    if @external_bin
-      filehandle = open(@filename, "rb") or
-        die "Couldn't open #{@filename} in add_chart_ext(): $!.\n"
-      @filehandle = filehandle
-      @datasize   = FileTest.size(@filename)
-      @using_tmpfile = false
+  # Set the properties of the X-axis.
+  #
+  def set_x_axis(params)
+    name, encoding = encode_utf16(params[:name], params[:name_encoding])
 
-      # Read the entire external chart binary into the the data buffer.
-      # This will be retrieved by _get_data() when the chart is closed().
-      @data = @filehandle.read(@datasize)
+    formula = parse_series_formula(params[:name_formula])
+
+    @x_axis_name     = name
+    @x_axis_encoding = encoding
+    @x_axis_formula  = formula
+  end
+
+  ###############################################################################
+  #
+  # set_y_axis()
+  #
+  # Set the properties of the Y-axis.
+  #
+  def set_y_axis(params)
+    name, encoding = encode_utf16(params[:name], params[:name_encoding])
+
+    formula = parse_series_formula(params[:name_formula])
+
+    @y_axis_name     = name
+    @y_axis_encoding = encoding
+    @y_axis_formula  = formula
+  end
+
+  ###############################################################################
+  #
+  # set_title()
+  #
+  # TODO
+  #
+  def set_title(params)
+    name, encoding = encode_utf16( params[:name], params[:name_encoding])
+
+    formula = parse_series_formula(params[:name_formula])
+
+    @title_name     = name
+    @title_encoding = encoding
+    @title_formula  = formula
+  end
+
+  ###############################################################################
+  #
+  # _prepend(), overridden.
+  #
+  # The parent Worksheet class needs to store some data in memory and some in
+  # temporary files for efficiency. The Chart* classes don't need to do this
+  # since they are dealing with smaller amounts of data so we override
+  # _prepend() to turn it into an _append() method. This allows for a more
+  # natural method calling order.
+  #
+  def prepend(*args)
+    @using_tmpfile = false
+    append(*args)
+  end
+
+  ###############################################################################
+  #
+  # _close(), overridden.
+  #
+  # Create and store the Chart data structures.
+  #
+  def close
+    # TODO
+    return nil if @external_bin != 0
+
+    # Ignore any data that has been written so far since it is probably
+    # from unwanted Worksheet method calls.
+    @data = ''
+
+    # TODO. Check for charts without a series?
+
+    # Store the chart BOF.
+    store_bof(0x0020)
+
+    # Store the tab color.
+    store_tab_color
+
+    # Store the page header
+    store_header
+
+    # Store the page footer
+    store_footer
+
+    # Store the page horizontal centering
+    store_hcenter
+
+    # Store the page vertical centering
+    store_vcenter
+
+    # Store the left margin
+    store_margin_left
+
+    # Store the right margin
+    store_margin_right
+
+    # Store the top margin
+    store_margin_top
+
+    # Store the bottom margin
+    store_margin_bottom
+
+    # Store the page setup
+    store_setup
+
+    # Store the sheet password
+    store_password
+
+    # Start of Chart specific records.
+
+    # Store the FBI font records.
+    store_fbi(@config[:font_numbers])
+    store_fbi(@config[:font_series])
+    store_fbi(@config[:font_title])
+    store_fbi(@config[:font_axes])
+
+    # Ignore UNITS record.
+
+    # Store the Chart sub-stream.
+    store_chart_stream
+
+    # Append the sheet dimensions
+    store_dimensions
+
+    # TODO add SINDEX and NUMBER records.
+
+    store_window2 if @embedded == 0
+
+    # Store the sheet SCL record.
+    store_zoom if @embedded == 0
+
+    store_eof
+  end
+
+  #
+  # TODO temp debug code
+  #
+  def store_tmp_records
+    data = [
+
+           ].pack('C*')
+
+    append(data)
+  end
+
+  ###############################################################################
+  #
+  # _parse_series_formula()
+  #
+  # Parse the formula used to define a series. We also extract some range
+  # information required for _store_series() and the SERIES record.
+  #
+  def parse_series_formula(formula)
+    encoding = 0
+    length   = 0
+    count    = 0
+    tokens = []
+
+    return '' if formula.nil?
+
+    # Strip the = sign at the beginning of the formula string
+    formula = formula.sub(/^=/, '')
+
+    # Parse the formula using the parser in Formula.pm
+    parser = @parser
+
+    # In order to raise formula errors from the point of view of the calling
+    # program we use an eval block and re-raise the error from here.
+    #
+    tokens = parser.parse_formula(formula)
+
+    # Force ranges to be a reference class.
+    tokens.collect! { |t| t.gsub(/_ref3d/, '_ref3dR') }
+    tokens.collect! { |t| t.gsub(/_range3d/, '_range3dR') }
+    tokens.collect! { |t| t.gsub(/_name/, '_nameR') }
+
+    # Parse the tokens into a formula string.
+    formula = parser.parse_tokens(tokens)
+
+    # Return formula for a single cell as used by title and series name.
+    return formula if formula[0] == 0x3A
+
+    # Extract the range from the parse formula.
+    if formula[0] == 0x3B
+        ptg, ext_ref, row_1, row_2, col_1, col_2 = formula.unpack('Cv5')
+
+        # TODO. Remove high bit on relative references.
+        count = row_2 - row_1 + 1
     end
+
+    [formula, count]
   end
-  private :_initialize
 
+  ###############################################################################
+  #
+  # _encode_utf16()
+  #
+  # Convert UTF8 strings used in the chart to UTF16.
+  #
+  def encode_utf16(str, encoding = 0)
+    # Exit if the $string isn't defined, i.e., hasn't been set by user.
+    return [nil, nil] if str.nil?
 
+    # Return if encoding is set, i.e., string has been manually encoded.
+    #return ( undef, undef ) if $string == 1;
 
+    # Handle utf8 strings in perl 5.8.
+    if string =~ NonAscii
+      string = NKF.nkf('-w16B0 -m0 -W', string)
+      encoding = 1
+    end
+
+    # Chart strings are limited to 255 characters.
+    limit = encoding != 0 ? 255 * 2 : 255
+
+    if str.length >= limit
+      # truncate the string and raise a warning.
+      str = string[0, limit]
+    end
+
+    [str, encoding]
+  end
+
+  ###############################################################################
+  #
+  # _store_chart_stream()
+  #
+  # Store the CHART record and it's substreams.
+  #
+  def store_chart_stream # :nodoc:
+    store_chart(@config[:chart])
+    store_begin
+
+    # Store the chart SCL record.
+    if @embedded != 0
+      store_zoom
+    end
+    store_plotgrowth
+
+    if @chartarea[:visible] != 0
+      store_chartarea_frame_stream
+    end
+
+    # Store SERIES stream for each series.
+    index = 0
+    @series.each do |series|
+      store_series_stream(
+          :index            => index,
+          :value_formula    => series[:values][0],
+          :value_count      => series[:values][1],
+          :category_count   => series[:categories][1],
+          :category_formula => series[:categories][0],
+          :name             => series[:name],
+          :name_encoding    => series[:name_encoding],
+          :name_formula     => series[:name_formula]
+        )
+        index += 1
+    end
+
+    store_shtprops
+
+    # Write the TEXT streams.
+    [5, 6].each do |font_index|
+      store_defaulttext
+      store_series_text_stream(font_index)
+    end
+
+    store_axesused(1)
+    store_axisparent_stream
+
+    if !@title_name.nil? || !@title_formula.nil?
+      store_title_text_stream
+    end
+
+    store_end
+
+  end
+
+  ###############################################################################
+  #
+  # _store_series_stream()
+  #
+  # Write the SERIES chart substream.
+  #
+  def store_series_stream(params)
+    name_type     = params[:name_formula] != 0     ? 2 : 1
+    value_type    = params[:value_formula] != 0    ? 2 : 0
+    category_type = params[:category_formula] != 0 ? 2 : 0
+
+    store_series(params[:value_count], params[:category_count])
+
+    store_begin
+
+    # Store the Series name AI record.
+    store_ai(0, name_type, params[:name_formula])
+    unless params[:name].nil?
+      store_seriestext(params[:name], params[:name_encoding])
+    end
+
+    store_ai(1, value_type,    params[:value_formula])
+    store_ai(2, category_type, params[:category_formula])
+    store_ai(3, 1,             '' )
+
+    store_dataformat_stream(params[:index], params[:index], 0xFFFF)
+    store_sertocrt(0)
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_dataformat_stream()
+  #
+  # Write the DATAFORMAT chart substream.
+  #
+  def store_dataformat_stream(series_index)
+    store_dataformat(series_index, series_index, 0xFFFF)
+
+    store_begin
+    store_3dbarshape
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_series_text_stream()
+  #
+  # Write the series TEXT substream.
+  #
+  def store_series_text_stream(font_index)
+    store_text(@config[:series_text])
+
+    store_begin
+    store_pos(@config[:series_text_pos])
+    store_fontx(font_index)
+    store_ai(0, 1, '' )
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_x_axis_text_stream()
+  #
+  # Write the X-axis TEXT substream.
+  #
+  def store_x_axis_text_stream
+    formula = @x_axis_formula
+    ai_type = formula != 0 ? 2 : 1
+
+    store_text(@config[:x_axis_text])
+
+    store_begin
+    store_pos(@config[:x_axis_text_pos])
+    store_fontx(8)
+    store_ai(0, ai_type, formula)
+
+    unless @x_axis_name.nil?
+      store_seriestext(@x_axis_name, @x_axis_encoding)
+    end
+
+    store_objectlink(3)
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_y_axis_text_stream()
+  #
+  # Write the Y-axis TEXT substream.
+  #
+  def store_y_axis_text_stream
+    formula = @y_axis_formula
+    ai_type = formula != 0 ? 2 : 1
+
+    store_text(@config[:y_axis_text])
+
+    store_begin
+    store_pos(@config[:y_axis_text_pos])
+    store_fontx(8)
+    store_ai(0, ai_type, formula)
+
+    unless @y_axis_name.nil?
+      store_seriestext(@y_axis_name, @y_axis_encoding)
+    end
+
+    store_objectlink(2)
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_legend_text_stream()
+  #
+  # Write the legend TEXT substream.
+  #
+  def store_legend_text_stream
+    store_text(@config[:legend_text])
+
+    store_begin
+    store_pos(@config[:legend_text_pos])
+    store_ai(0, 1, '')
+
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_title_text_stream()
+  #
+  # Write the title TEXT substream.
+  #
+  def store_title_text_stream
+    formula = @title_formula
+    ai_type = formula != 0 ? 2 : 1
+
+    store_text(@config[:title_text])
+
+    store_begin
+    store_pos(@config[:title_text_pos])
+    store_fontx(7)
+    store_ai(0, ai_type, formula)
+
+    unless @title_name.nil?
+      store_seriestext(@title_name, @title_encoding)
+    end
+
+    store_objectlink(1)
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_axisparent_stream()
+  #
+  # Write the AXISPARENT chart substream.
+  #
+  def store_axisparent_stream
+    store_axisparent(@config[:axisparent])
+
+    store_begin
+    store_pos(@config[:axisparent_pos])
+    store_axis_category_stream
+    store_axis_values_stream
+
+    if !@x_axis_name.nil? || !@x_axis_formula.nil?
+      store_x_axis_text_stream
+    end
+
+    if !@y_axis_name.nil? || !@y_axis_formula.nil?
+      store_y_axis_text_stream();
+    end
+
+    if !@plotarea[:visible]
+        store_plotarea
+        store_plotarea_frame_stream
+    end
+
+    store_chartformat_stream
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_axis_category_stream()
+  #
+  # Write the AXIS chart substream for the chart category.
+  #
+  def store_axis_category_stream
+    store_axis(0)
+
+    store_begin
+    store_catserrange
+    store_axcext
+    store_tick
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_axis_values_stream()
+  #
+  # Write the AXIS chart substream for the chart values.
+  #
+  def store_axis_values_stream
+    store_axis(1)
+
+    store_begin
+    store_valuerange
+    store_tick
+    store_axislineformat
+    store_lineformat(0x00000000, 0x0000, 0xFFFF, 0x0009, 0x004D)
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_plotarea_frame_stream()
+  #
+  # Write the FRAME chart substream for the plotarea.
+  #
+  def store_plotarea_frame_stream
+    area = @plotarea
+
+    store_frame(0x00, 0x03)
+    store_begin
+
+    store_lineformat(
+        area[:line_color_rgb], area[:line_pattern],
+        area[:line_weight],    area[:line_options],
+        area[:line_color_index]
+    )
+
+    store_areaformat(
+        area[:fg_color_rgb],   area[:bg_color_rgb],
+        area[:area_pattern],   area[:area_options],
+        area[:fg_color_index], area[:bg_color_index]
+    )
+
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_chartarea_frame_stream()
+  #
+  # Write the FRAME chart substream for the chartarea.
+  #
+  def store_chartarea_frame_stream
+    area = @chartarea
+
+    store_frame(0x00, 0x02)
+    store_begin
+
+    store_lineformat(
+        area[:line_color_rgb], area[:line_pattern],
+        area[:line_weight],    area[:line_options],
+        area[:line_color_index]
+    )
+
+    store_areaformat(
+        area[:fg_color_rgb],   area[:bg_color_rgb],
+        area[:area_pattern],   area[:area_options],
+        area[:fg_color_index], area[:bg_color_index]
+    )
+
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_chartformat_stream()
+  #
+  # Write the CHARTFORMAT chart substream.
+  #
+  def store_chartformat_stream
+    # The _vary_data_color is set by classes that need it, like Pie.
+    store_chartformat(@vary_data_color)
+
+    store_begin
+
+    # Store the BIFF record that will define the chart type.
+    store_chart_type
+
+    # Note, the CHARTFORMATLINK record is only written by Excel.
+
+    store_legend_stream if @legend[:visible] != 0
+
+    store_marker_dataformat_stream
+    store_end
+  end
+
+  ###############################################################################
+  #
+  # _store_chart_type()
+  #
+  # This is an abstract method that is overridden by the sub-classes to define
+  # the chart types such as Column, Line, Pie, etc.
+  #
+  def store_chart_type
+
+  end
+
+  ###############################################################################
+  #
+  # _store_marker_dataformat_stream()
+  #
+  # This is an abstract method that is overridden by the sub-classes to define
+  # properties of markers, linetypes, pie formats and other.
+  #
+  def store_marker_dataformat_stream
+
+  end
+
+  ###############################################################################
+  #
+  # _store_legend_stream()
+  #
+  # Write the LEGEND chart substream.
+  #
+  def store_legend_stream
+    store_legend(@config[:legend])
+
+    store_begin
+    store_pos(@config[:legend_pos])
+    store_legend_text_stream
+    store_end
+  end
 
   ###############################################################################
   #
@@ -317,13 +961,13 @@ class Chart < Worksheet
   #
   # Write the AI chart BIFF record.
   #
-  def store_ai(id, type, format_index, formula)
+  def store_ai(id, type, formula, format_index = 0)
     record       = 0x1051     # Record identifier.
     length       = 0x0008     # Number of bytes to follow.
     # id                      # Link index.
     # type                    # Reference type.
-    # format_index            # Num format index.
     # formula                 # Pre-parsed formula.
+    # format_index            # Num format index.
     grbit        = 0x0000     # Option flags.
 
     formula_length  = formula.length
@@ -712,11 +1356,11 @@ class Chart < Worksheet
   # Write the FBI chart BIFF record. Specifies the font information at the time
   # it was applied to the chart.
   #
-  def store_fbi(index)
+  def store_fbi(index, height)
     record       = 0x1060    # Record identifier.
     length       = 0x000A    # Number of bytes to follow.
     # index                  # Font index.
-    height       = 0x00C8    # Default font height in twips.
+    height       = height * 20    # Default font height in twips.
     width_basis  = 0x38B8    # Width basis, in twips.
     height_basis = 0x22A1    # Height basis, in twips.
     scale_basis  = 0x0000    # Scale by chart area or plot area.
@@ -1089,8 +1733,6 @@ class Chart < Worksheet
     length      = 0x0004     # Number of bytes to follow.
     grbit       = 0x000E     # Option flags.
     empty_cells = 0x0000     # Empty cell handling.
-
-    grbit = 0x000A if @embedded != 0
 
     header = [record, length].pack('vv')
     data  = [grbit].pack('v')

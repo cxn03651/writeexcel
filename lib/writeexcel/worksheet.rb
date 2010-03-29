@@ -149,7 +149,7 @@ class Worksheet < BIFFWriter
   Buffer   = 4096
   NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
-  attr_reader :encoding, :xf_index, :index, :type, :images_array
+  attr_reader :encoding, :xf_index, :index, :sheet_type, :images_array
   attr_reader :filter_area, :filter_count
   attr_reader :title_rowmin, :title_rowmax, :title_colmin, :title_colmax
   attr_reader :print_rowmin, :print_rowmax, :print_colmin, :print_colmax
@@ -182,7 +182,7 @@ class Worksheet < BIFFWriter
     @table               = []
     @row_data            = {}
 
-    @type                = 0x0000
+    @sheet_type          = 0x0000
     @ext_sheets          = []
     @fileclosed          = false
     @offset              = 0
@@ -7242,7 +7242,7 @@ class Worksheet < BIFFWriter
       vertices    = comments[i][8]
       str_len     = str.length
       str_len     = str_len / 2 if encoding != 0 # Num of chars not bytes.
-      formats     = [[0, 5], [str_len, 0]]
+      formats     = [[0, 9], [str_len, 0]]
 
       if i == 0 and num_objects != 0
         # Write the parent MSODRAWIING record.

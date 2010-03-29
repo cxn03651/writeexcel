@@ -4,10 +4,6 @@ require "test/unit"
 require 'writeexcel'
 require 'stringio'
 
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
 ###############################################################################
 #
 # A test for Chart.
@@ -35,13 +31,13 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         60 10 0A 00 B8 38 A1 22 C8 00 00 00 05 00
       ).join(' ')
-    got = unpack_record(@chart.store_fbi(5))
+    got = unpack_record(@chart.store_fbi(5, 10))
     assert_equal(expected, got, caption)
 
     expected = %w(
         60 10 0A 00 B8 38 A1 22 C8 00 00 00 06 00
       ).join(' ')
-    got = unpack_record(@chart.store_fbi(6))
+    got = unpack_record(@chart.store_fbi(6, 10))
     assert_equal(expected, got, caption)
   end
 
@@ -105,14 +101,14 @@ class TC_ChartGeneric < Test::Unit::TestCase
   #
   def test_store_ai
     caption = " \tChart: _store_ai()"
-    values = [0, 1, 0, '']
+    values = [0, 1, '']
     expected = %w(
         51 10 08 00 00 01 00 00 00 00 00 00
       ).join(' ')
     got = unpack_record(@chart.store_ai(*values))
     assert_equal(expected, got, caption)
 
-    values = [1, 2, 0, ['3B00000000070000000000'].pack('H*')]
+    values = [1, 2, ['3B00000000070000000000'].pack('H*')]
     expected = %w(
         51 10 13 00 01 02 00 00 00 00 0B 00 3B 00 00 00
         00 07 00 00 00 00 00
@@ -566,5 +562,9 @@ class TC_ChartGeneric < Test::Unit::TestCase
     values = [0x00, 0x01, 0x00, 0x00]
     got = unpack_record(@chart.store_serauxtrend(*values))
     assert_equal(expected, got, caption)
+  end
+
+  def unpack_record(data)
+    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
 end
