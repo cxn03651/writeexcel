@@ -154,7 +154,6 @@ class Worksheet < BIFFWriter
   attr_reader :title_rowmin, :title_rowmax, :title_colmin, :title_colmax
   attr_reader :print_rowmin, :print_rowmax, :print_colmin, :print_colmax
   attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
-  attr_accessor :activesheet, :firstsheet, :str_total, :str_unique, :str_table
   attr_accessor :object_ids, :num_images, :image_mso_size
   attr_writer :date_1904
   attr_reader :compatibility
@@ -165,25 +164,21 @@ class Worksheet < BIFFWriter
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
-  def initialize(name, index, encoding, activesheet, firstsheet,
-                 url_format, parser, tempdir, str_total, str_unique,
-                 str_table, date_1904, compatibility)
+  def initialize(name, index, encoding, url_format, parser, tempdir,
+                 date_1904, compatibility, sinfo)
     super()
 
     @name                = name
     @index               = index
     @encoding            = encoding
-    @activesheet         = activesheet
-    @firstsheet          = firstsheet
     @url_format          = url_format
     @parser              = parser
     @tempdir             = tempdir
 
-    @str_total           = str_total
-    @str_unique          = str_unique
-    @str_table           = str_table
     @date_1904           = date_1904
     @compatibility       = compatibility
+    @sinfo               = sinfo
+    # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
 
     @sheet_type          = 0x0000
     @ext_sheets          = []
@@ -501,7 +496,7 @@ class Worksheet < BIFFWriter
   def activate
     @hidden      = 0  # Active worksheet can't be hidden.
     @selected    = 1
-    @activesheet = @index
+    @sinfo[:activesheet] = @index
   end
 
 
@@ -528,8 +523,8 @@ class Worksheet < BIFFWriter
 
     # A hidden worksheet shouldn't be active or selected.
     @selected    = 0
-    @activesheet = 0
-    @firstsheet  = 0
+    @sinfo[:activesheet] = 0
+    @sinfo[:firstsheet]  = 0
   end
 
 
@@ -2542,15 +2537,15 @@ class Worksheet < BIFFWriter
     str_header  = [str.length, encoding].pack('vC')
     str         = str_header + str
 
-    if @str_table[str].nil?
-      @str_table[str] = str_unique
-      @str_unique += 1
+    if @sinfo[:str_table][str].nil?
+      @sinfo[:str_table][str] = @sinfo[:str_unique]
+      @sinfo[:str_unique] += 1
     end
 
-    @str_total += 1
+    @sinfo[:str_total] += 1
 
     header = [record, length].pack('vv')
-    data   = [row, col, xf, @str_table[str]].pack('vvvV')
+    data   = [row, col, xf, @sinfo[:str_table][str]].pack('vvvV')
 
     # Store the data or write immediately depending on the compatibility mode.
     if @compatibility != 0
@@ -6490,15 +6485,15 @@ class Worksheet < BIFFWriter
     str_header  = [num_chars, encoding].pack("vC")
     str         = str_header + str
 
-    unless @str_table[str]
-      @str_table[str] = str_unique
-      @str_unique += 1
+    unless @sinfo[:str_table][str]
+      @sinfo[:str_table][str] = @sinfo[:str_unique]
+      @sinfo[:str_unique] += 1
     end
 
-    @str_total += 1
+    @sinfo[:str_total] += 1
 
     header = [record, length].pack("vv")
-    data   = [row, col, xf, @str_table[str]].pack("vvvV")
+    data   = [row, col, xf, @sinfo[:str_table][str]].pack("vvvV")
 
     # Store the data or write immediately depending on the compatibility mode.
     if @compatibility != 0

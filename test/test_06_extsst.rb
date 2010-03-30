@@ -68,7 +68,6 @@ class TC_extsst < Test::Unit::TestCase
   end
 
   def teardown
-    @workbook.str_unique = 0
     @workbook.close
     File.unlink(@test_file) if FileTest.exist?(@test_file)
   end

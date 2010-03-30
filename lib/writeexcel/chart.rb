@@ -374,6 +374,7 @@ class Chart < Worksheet
   #
   def prepend(*args)
     @using_tmpfile = false
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(*args)
   end
 
@@ -453,6 +454,7 @@ class Chart < Worksheet
 
            ].pack('C*')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(data)
   end
 
@@ -584,6 +586,14 @@ class Chart < Worksheet
     store_end
   end
 
+  def _formula_type(params, key, t, f)
+    if params.has_key?(key)
+      v = params[key]
+      (v.nil? || v == [""] || v == '' || v == 0) ? f : t
+    end
+  end
+  private :_formula_type
+
   ###############################################################################
   #
   # _store_series_stream()
@@ -591,9 +601,9 @@ class Chart < Worksheet
   # Write the SERIES chart substream.
   #
   def store_series_stream(params)
-    name_type     = params.has_key?(:name_formula) && params[:name_formula] != 0     ? 2 : 1
-    value_type    = params.has_key?(:value_formula) && params[:value_formula] != 0    ? 2 : 0
-    category_type = params.has_key?(:category_formula) && params[:category_formula] != 0 ? 2 : 0
+    name_type     = _formula_type(params, :name_formula, 2, 1)
+    value_type    = _formula_type(params, :value_formula, 2, 0)
+    category_type = _formula_type(params, :category_formula, 2, 0)
 
     store_series(params[:value_count], params[:category_count])
 
@@ -635,21 +645,12 @@ class Chart < Worksheet
   # Write the series TEXT substream.
   #
   def store_series_text_stream(font_index)
-    formula = @x_axis_formula.nil? ? '' : @x_axis_formula
-    ai_type = formula != 0 ? 2 : 1
-
-    store_text(0x07E1, 0x0DFC, 0xB2, 0x9C, 0x0081, 0x0000)
+    store_text( 0xFFFFFF46, 0xFFFFFF06, 0, 0, 0x00B1, 0x1020 )
 
     store_begin
-    store_pos(2, 2, 0, 0, 0x2B, 0x17)
-    store_fontx(8)
-    store_ai(0, ai_type, formula )
-
-    unless @x_axis_name.nil?
-      store_seriestext(@x_axis_name, @x_axis_encoding)
-    end
-
-    store_objectlink(3)
+    store_pos( 2, 2, 0, 0, 0, 0 )
+    store_fontx( font_index )
+    store_ai( 0, 1, '' )
     store_end
   end
 
@@ -898,6 +899,7 @@ class Chart < Worksheet
     data   = [riser].pack('C')
     data  += [taper].pack('C')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -908,6 +910,8 @@ class Chart < Worksheet
   # Write the AI chart BIFF record.
   #
   def store_ai(id, type, formula, format_index = 0)
+    formula = '' if formula == [""]
+
     record       = 0x1051     # Record identifier.
     length       = 0x0008     # Number of bytes to follow.
     # id                      # Link index.
@@ -927,6 +931,7 @@ class Chart < Worksheet
     data  += [formula_length].pack('v')
     data  += formula[0].kind_of?(String) ? formula[0] : formula
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -955,6 +960,7 @@ class Chart < Worksheet
     data += [indexFore].pack('v')
     data += [indexBack].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -988,6 +994,7 @@ class Chart < Worksheet
     data += [catCrossDate].pack('v')
     data += [grbit].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1005,6 +1012,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [num_axes].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1030,6 +1038,7 @@ class Chart < Worksheet
     data += [reserved3].pack('V')
     data += [reserved4].pack('V')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1047,6 +1056,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [line_format].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1072,6 +1082,7 @@ class Chart < Worksheet
     data  += [dx].pack('V')
     data  += [dy].pack('V')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1087,6 +1098,7 @@ class Chart < Worksheet
 
     header = [record, length].pack('vv')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header)
   end
 
@@ -1110,6 +1122,7 @@ class Chart < Worksheet
     data  += [catMark].pack('v')
     data  += [grbit].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1135,6 +1148,7 @@ class Chart < Worksheet
     data  += [dx].pack('V')
     data  += [dy].pack('V')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1163,6 +1177,7 @@ class Chart < Worksheet
     data  += [grbit].pack('v')
     data  += [icrt].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1180,6 +1195,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data   = [type].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1219,6 +1235,7 @@ class Chart < Worksheet
     data += [grbit2].pack('v')
     data += [rotation].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1243,6 +1260,7 @@ class Chart < Worksheet
     data += [series_number].pack('v')
     data += [grbit].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1261,6 +1279,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data  = [type].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1278,6 +1297,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data  = [percent_gap].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1293,7 +1313,8 @@ class Chart < Worksheet
 
     header = [record, length].pack('vv')
 
-    append(header, data)
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
+    append(header)
   end
 
   ###############################################################################
@@ -1318,6 +1339,7 @@ class Chart < Worksheet
     data  += [scale_basis].pack('v')
     data  += [index].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1336,6 +1358,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data   = [index].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1355,6 +1378,7 @@ class Chart < Worksheet
     data  = [frame_type].pack('v')
     data += [grbit].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1384,6 +1408,7 @@ class Chart < Worksheet
     data += [wSpacing].pack('C')
     data += [grbit].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1409,6 +1434,7 @@ class Chart < Worksheet
     data += [grbit].pack('v')
     data += [index].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
  end
 
@@ -1438,6 +1464,7 @@ class Chart < Worksheet
     data += [icvBack].pack('v')
     data += [miSize].pack('V')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1459,6 +1486,7 @@ class Chart < Worksheet
     data += [link_index1].pack('v')
     data += [link_index2].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1476,6 +1504,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data   = [percent].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1492,7 +1521,8 @@ class Chart < Worksheet
 
     header = [record, length].pack('vv')
 
-    append(header, data)
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
+    append(header)
   end
 
   ###############################################################################
@@ -1511,6 +1541,7 @@ class Chart < Worksheet
     data  = [dx_plot].pack('V')
     data += [dy_plot].pack('V')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1539,6 +1570,7 @@ class Chart < Worksheet
     data += [x2].pack('V')
     data += [y2].pack('V')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1574,6 +1606,7 @@ class Chart < Worksheet
     data += forecast
     data += backcast
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1601,6 +1634,7 @@ class Chart < Worksheet
     data += [bubble_type].pack('v')
     data += [bubble_count].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1633,6 +1667,7 @@ class Chart < Worksheet
     data += [cch].pack('C')
     data += [encoding].pack('C')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, str)
   end
 
@@ -1650,6 +1685,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [series].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1667,6 +1703,7 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [chartgroup].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1686,6 +1723,7 @@ class Chart < Worksheet
     data  = [grbit].pack('v')
     data += [empty_cells].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1725,6 +1763,7 @@ class Chart < Worksheet
     data += [grbit2].pack('v')
     data += [rotation].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1764,6 +1803,7 @@ class Chart < Worksheet
     data += [index].pack('v')
     data += [reserved5].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1793,6 +1833,7 @@ class Chart < Worksheet
     data += [numCross].pack('d')
     data += [grbit].pack('v')
 
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 end

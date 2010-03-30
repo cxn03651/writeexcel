@@ -32,10 +32,9 @@ class Workbook < BIFFWriter
   SheetName = "Sheet"
   NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 
-  attr_accessor :date_system, :str_unique, :biff_only
+  attr_accessor :date_system, :biff_only
   attr_reader :encoding, :url_format, :parser, :tempdir, :date_1904, :compatibility
   attr_reader :summary
-  attr_accessor :activesheet, :firstsheet, :str_total, :str_unique, :str_table
   attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
   attr_reader :data
   attr_writer :mso_size
@@ -53,8 +52,6 @@ class Workbook < BIFFWriter
     @date_1904             = false
     @sheet                 =
 
-    @activesheet           = 0
-    @firstsheet            = 0
     @selected              = 0
     @xf_index              = 0
     @fileclosed            = false
@@ -72,9 +69,13 @@ class Workbook < BIFFWriter
     @internal_fh           = 0
     @fh_out                = ""
 
-    @str_total             = 0
-    @str_unique            = 0
-    @str_table             = {}
+    @sinfo = {
+      :activesheet         => 0,
+      :firstsheet          => 0,
+      :str_total           => 0,
+      :str_unique          => 0,
+      :str_table           => {}
+    }
     @str_array             = []
     @str_block_sizes       = []
     @extsst_offsets        = []
@@ -270,16 +271,12 @@ class Workbook < BIFFWriter
                   name,
                   index,
                   encoding,
-                  @activesheet,
-                  @firstsheet,
                   @url_format,
                   @parser,
                   @tempdir,
-                  @str_total,
-                  @str_unique,
-                  @str_table,
                   @date_1904,
-                  @compatibility
+                  @compatibility,
+                  @sinfo,
     ]
     worksheet = Worksheet.new(*init_data)
     @worksheets[index] = worksheet      # Store ref for iterator
@@ -305,16 +302,12 @@ class Workbook < BIFFWriter
       name,
       index,
       encoding,
-      @activesheet,
-      @firstsheet,
       @url_format,
       @parser,
       @tempdir,
-      @str_total,
-      @str_unique,
-      @str_table,
       @date_1904 ? 1 : 0,
-      @compatibility
+      @compatibility,
+      @sinfo
     ]
 
     chart = Chart.factory(type, *init_data)
@@ -341,9 +334,7 @@ class Workbook < BIFFWriter
       name,
       index,
       encoding,
-      @activesheet,
-      @firstsheet,
-      1
+      @sinfo
     ]
 
     chart = Chart.factory(self, type, init_data)
@@ -1019,13 +1010,13 @@ class Workbook < BIFFWriter
     calc_mso_sizes
 
     # Ensure that at least one worksheet has been selected.
-    @worksheets[0].select if @activesheet == 0
+    @worksheets[0].select if @sinfo[:activesheet] == 0
 
     # Calculate the number of selected worksheet tabs and call the finalization
     # methods for each worksheet
     @worksheets.each do |sheet|
       @selected    += 1 if sheet.selected != 0
-      sheet.active  = 1 if sheet.index == @activesheet
+      sheet.active  = 1 if sheet.index == @sinfo[:activesheet]
     end
 
     # Add Workbook globals
@@ -1868,8 +1859,8 @@ class Workbook < BIFFWriter
     ctabsel   = @selected              # Number of workbook tabs selected
     wTabRatio = 0x0258                 # Tab to scrollbar ratio
 
-    itabFirst = @firstsheet            # 1st displayed worksheet
-    itabCur   = @activesheet           # Active worksheet
+    itabFirst = @sinfo[:firstsheet]    # 1st displayed worksheet
+    itabCur   = @sinfo[:activesheet]   # Active worksheet
 
     header    = [record, length].pack("vv")
     data      = [
@@ -1902,8 +1893,6 @@ class Workbook < BIFFWriter
     cch       = sheetname.length          # Length of sheet name
 
     grbit     = type | hidden
-
-    encoding ||= 0
 
     # Character length is num of chars not num of bytes
     cch /= 2 if encoding != 0
@@ -2451,13 +2440,13 @@ class Workbook < BIFFWriter
   # downside of this is that the same algorithm repeated in _store_shared_strings.
   #
   def calculate_shared_string_sizes
-    strings = Array.new(@str_unique)
+    strings = Array.new(@sinfo[:str_unique])
 
-    @str_table.each_key do |key|
-      strings[@str_table[key]] = key
+    @sinfo[:str_table].each_key do |key|
+      strings[@sinfo[:str_table][key]] = key
     end
     # The SST data could be very large, free some memory (maybe).
-    @str_table = nil
+    @sinfo[:str_table] = nil
     @str_array = strings
 
     # Iterate through the strings to calculate the CONTINUE block sizes.
@@ -2640,7 +2629,7 @@ class Workbook < BIFFWriter
 
     # Write the SST block header information
     header      = [record, length].pack("vv")
-    data        = [@str_total, @str_unique].pack("VV")
+    data        = [@sinfo[:str_total], @sinfo[:str_unique]].pack("VV")
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
@@ -2810,7 +2799,7 @@ class Workbook < BIFFWriter
   # as Excel.
   #
   def calculate_extsst_size
-    unique_strings  = @str_unique
+    unique_strings  = @sinfo[:str_unique]
 
     if unique_strings < 1024
       bucket_size = 8
