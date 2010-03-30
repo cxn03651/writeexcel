@@ -263,26 +263,26 @@ class Chart < Worksheet
     klass.new(*args)
   end
 
-  def require_chart_subclass(subclass)
-    dir = 'writeexcel/charts/'
-    require dir + subclass
-  end
-  private :require_chart_subclass
-
   ###############################################################################
   #
   # :call-seq:
-  #   new(workbook, filename, name, index, encoding, activesheet, firstsheet, external_bin = nil)
+  #   new(filename, name, index, encoding, activesheet, firstsheet, external_bin = nil)
   #
   # Default constructor for sub-classes.
   #
   def initialize(*args)
-    super(args[0], args[2], args[3], args[4])
+    super
 
     @sheet_type  = 0x0200
     @orientation = 0x0
     @series      = []
-    self
+    @external_bin = false
+    @x_axis_formula = nil
+    @x_axis_name = nil
+    @y_axis_formula = nil
+    @y_axis_name = nil
+    @title_name = nil
+    @title_formula = nil
   end
 
   ###############################################################################
@@ -300,7 +300,7 @@ class Chart < Worksheet
     name_formula  = parse_series_formula(params[:name_formula])
 
     # Default category count to the same as the value count if not defined.
-    category_data[1] = value_data[1] if category_data[1].nil?
+    category_data[1] = value_data[1] if category_data.size < 2
 
     # Add the parsed data to the user supplied data.
     params[:values]       = value_data
@@ -324,7 +324,6 @@ class Chart < Worksheet
   #
   def set_x_axis(params)
     name, encoding = encode_utf16(params[:name], params[:name_encoding])
-
     formula = parse_series_formula(params[:name_formula])
 
     @x_axis_name     = name
@@ -340,7 +339,6 @@ class Chart < Worksheet
   #
   def set_y_axis(params)
     name, encoding = encode_utf16(params[:name], params[:name_encoding])
-
     formula = parse_series_formula(params[:name_formula])
 
     @y_axis_name     = name
@@ -387,7 +385,7 @@ class Chart < Worksheet
   #
   def close
     # TODO
-    return nil if @external_bin != 0
+    return nil if @external_bin
 
     # Ignore any data that has been written so far since it is probably
     # from unwanted Worksheet method calls.
@@ -397,9 +395,6 @@ class Chart < Worksheet
 
     # Store the chart BOF.
     store_bof(0x0020)
-
-    # Store the tab color.
-    store_tab_color
 
     # Store the page header
     store_header
@@ -434,10 +429,10 @@ class Chart < Worksheet
     # Start of Chart specific records.
 
     # Store the FBI font records.
-    store_fbi(@config[:font_numbers])
-    store_fbi(@config[:font_series])
-    store_fbi(@config[:font_title])
-    store_fbi(@config[:font_axes])
+    store_fbi(5, 10)
+    store_fbi(6, 10)
+    store_fbi(7, 12)
+    store_fbi(8, 10)
 
     # Ignore UNITS record.
 
@@ -446,13 +441,6 @@ class Chart < Worksheet
 
     # Append the sheet dimensions
     store_dimensions
-
-    # TODO add SINDEX and NUMBER records.
-
-    store_window2 if @embedded == 0
-
-    # Store the sheet SCL record.
-    store_zoom if @embedded == 0
 
     store_eof
   end
@@ -481,7 +469,7 @@ class Chart < Worksheet
     count    = 0
     tokens = []
 
-    return '' if formula.nil?
+    return [''] if formula.nil?
 
     # Strip the = sign at the beginning of the formula string
     formula = formula.sub(/^=/, '')
@@ -526,6 +514,7 @@ class Chart < Worksheet
     # Exit if the $string isn't defined, i.e., hasn't been set by user.
     return [nil, nil] if str.nil?
 
+    string = str.dup
     # Return if encoding is set, i.e., string has been manually encoded.
     #return ( undef, undef ) if $string == 1;
 
@@ -538,12 +527,12 @@ class Chart < Worksheet
     # Chart strings are limited to 255 characters.
     limit = encoding != 0 ? 255 * 2 : 255
 
-    if str.length >= limit
+    if string.length >= limit
       # truncate the string and raise a warning.
-      str = string[0, limit]
+      string = string[0, limit]
     end
 
-    [str, encoding]
+    [string, encoding]
   end
 
   ###############################################################################
@@ -553,18 +542,11 @@ class Chart < Worksheet
   # Store the CHART record and it's substreams.
   #
   def store_chart_stream # :nodoc:
-    store_chart(@config[:chart])
+    store_chart
     store_begin
 
     # Store the chart SCL record.
-    if @embedded != 0
-      store_zoom
-    end
     store_plotgrowth
-
-    if @chartarea[:visible] != 0
-      store_chartarea_frame_stream
-    end
 
     # Store SERIES stream for each series.
     index = 0
@@ -584,10 +566,12 @@ class Chart < Worksheet
 
     store_shtprops
 
-    # Write the TEXT streams.
-    [5, 6].each do |font_index|
+    # Write the TEXT stream for each series.
+    font_index = 5
+    (0...@series.size).each do |i|
       store_defaulttext
       store_series_text_stream(font_index)
+      font_index += 1
     end
 
     store_axesused(1)
@@ -598,7 +582,6 @@ class Chart < Worksheet
     end
 
     store_end
-
   end
 
   ###############################################################################
@@ -608,9 +591,9 @@ class Chart < Worksheet
   # Write the SERIES chart substream.
   #
   def store_series_stream(params)
-    name_type     = params[:name_formula] != 0     ? 2 : 1
-    value_type    = params[:value_formula] != 0    ? 2 : 0
-    category_type = params[:category_formula] != 0 ? 2 : 0
+    name_type     = params.has_key?(:name_formula) && params[:name_formula] != 0     ? 2 : 1
+    value_type    = params.has_key?(:value_formula) && params[:value_formula] != 0    ? 2 : 0
+    category_type = params.has_key?(:category_formula) && params[:category_formula] != 0 ? 2 : 0
 
     store_series(params[:value_count], params[:category_count])
 
@@ -626,8 +609,8 @@ class Chart < Worksheet
     store_ai(2, category_type, params[:category_formula])
     store_ai(3, 1,             '' )
 
-    store_dataformat_stream(params[:index], params[:index], 0xFFFF)
-    store_sertocrt(0)
+    store_dataformat_stream(params[:index])
+    store_sertocrt
     store_end
   end
 
@@ -652,12 +635,21 @@ class Chart < Worksheet
   # Write the series TEXT substream.
   #
   def store_series_text_stream(font_index)
-    store_text(@config[:series_text])
+    formula = @x_axis_formula.nil? ? '' : @x_axis_formula
+    ai_type = formula != 0 ? 2 : 1
+
+    store_text(0x07E1, 0x0DFC, 0xB2, 0x9C, 0x0081, 0x0000)
 
     store_begin
-    store_pos(@config[:series_text_pos])
-    store_fontx(font_index)
-    store_ai(0, 1, '' )
+    store_pos(2, 2, 0, 0, 0x2B, 0x17)
+    store_fontx(8)
+    store_ai(0, ai_type, formula )
+
+    unless @x_axis_name.nil?
+      store_seriestext(@x_axis_name, @x_axis_encoding)
+    end
+
+    store_objectlink(3)
     store_end
   end
 
@@ -668,13 +660,13 @@ class Chart < Worksheet
   # Write the X-axis TEXT substream.
   #
   def store_x_axis_text_stream
-    formula = @x_axis_formula
+    formula = @x_axis_formula.nil? ? '' : @x_axis_formula
     ai_type = formula != 0 ? 2 : 1
 
-    store_text(@config[:x_axis_text])
+    store_text(0x07E1, 0x0DFC, 0xB2, 0x9C, 0x0081, 0x0000)
 
     store_begin
-    store_pos(@config[:x_axis_text_pos])
+    store_pos(2, 2, 0, 0, 0x2B, 0x17)
     store_fontx(8)
     store_ai(0, ai_type, formula)
 
@@ -696,10 +688,10 @@ class Chart < Worksheet
     formula = @y_axis_formula
     ai_type = formula != 0 ? 2 : 1
 
-    store_text(@config[:y_axis_text])
+    store_text(0x002D, 0x06AA, 0x5F, 0x1CC, 0x0281, 0x00, 90)
 
     store_begin
-    store_pos(@config[:y_axis_text_pos])
+    store_pos(2, 2, 0, 0, 0x17, 0x44)
     store_fontx(8)
     store_ai(0, ai_type, formula)
 
@@ -718,10 +710,10 @@ class Chart < Worksheet
   # Write the legend TEXT substream.
   #
   def store_legend_text_stream
-    store_text(@config[:legend_text])
+    store_text(0xFFFFFF46, 0xFFFFFF06, 0, 0, 0x00B1, 0x0000)
 
     store_begin
-    store_pos(@config[:legend_text_pos])
+    store_pos(2, 2, 0, 0, 0x00, 0x00)
     store_ai(0, 1, '')
 
     store_end
@@ -737,10 +729,10 @@ class Chart < Worksheet
     formula = @title_formula
     ai_type = formula != 0 ? 2 : 1
 
-    store_text(@config[:title_text])
+    store_text(0x06E4, 0x0051, 0x01DB, 0x00C4, 0x0081, 0x1030)
 
     store_begin
-    store_pos(@config[:title_text_pos])
+    store_pos(2, 2, 0, 0, 0x73, 0x1D)
     store_fontx(7)
     store_ai(0, ai_type, formula)
 
@@ -759,10 +751,10 @@ class Chart < Worksheet
   # Write the AXISPARENT chart substream.
   #
   def store_axisparent_stream
-    store_axisparent(@config[:axisparent])
+    store_axisparent(0)
 
     store_begin
-    store_pos(@config[:axisparent_pos])
+    store_pos(2, 2, 0x008C, 0x01AA, 0x0EEA, 0x0C52)
     store_axis_category_stream
     store_axis_values_stream
 
@@ -774,11 +766,8 @@ class Chart < Worksheet
       store_y_axis_text_stream();
     end
 
-    if !@plotarea[:visible]
-        store_plotarea
-        store_plotarea_frame_stream
-    end
-
+    store_plotarea
+    store_frame_stream
     store_chartformat_stream
     store_end
   end
@@ -812,61 +801,22 @@ class Chart < Worksheet
     store_valuerange
     store_tick
     store_axislineformat
-    store_lineformat(0x00000000, 0x0000, 0xFFFF, 0x0009, 0x004D)
+    store_lineformat
     store_end
   end
 
   ###############################################################################
   #
-  # _store_plotarea_frame_stream()
+  # _store_frame_stream()
   #
-  # Write the FRAME chart substream for the plotarea.
+  # Write the FRAME chart substream.
   #
-  def store_plotarea_frame_stream
-    area = @plotarea
+  def store_frame_stream
+    store_frame
 
-    store_frame(0x00, 0x03)
     store_begin
-
-    store_lineformat(
-        area[:line_color_rgb], area[:line_pattern],
-        area[:line_weight],    area[:line_options],
-        area[:line_color_index]
-    )
-
-    store_areaformat(
-        area[:fg_color_rgb],   area[:bg_color_rgb],
-        area[:area_pattern],   area[:area_options],
-        area[:fg_color_index], area[:bg_color_index]
-    )
-
-    store_end
-  end
-
-  ###############################################################################
-  #
-  # _store_chartarea_frame_stream()
-  #
-  # Write the FRAME chart substream for the chartarea.
-  #
-  def store_chartarea_frame_stream
-    area = @chartarea
-
-    store_frame(0x00, 0x02)
-    store_begin
-
-    store_lineformat(
-        area[:line_color_rgb], area[:line_pattern],
-        area[:line_weight],    area[:line_options],
-        area[:line_color_index]
-    )
-
-    store_areaformat(
-        area[:fg_color_rgb],   area[:bg_color_rgb],
-        area[:area_pattern],   area[:area_options],
-        area[:fg_color_index], area[:bg_color_index]
-    )
-
+    store_lineformat
+    store_areaformat
     store_end
   end
 
@@ -877,19 +827,15 @@ class Chart < Worksheet
   # Write the CHARTFORMAT chart substream.
   #
   def store_chartformat_stream
-    # The _vary_data_color is set by classes that need it, like Pie.
-    store_chartformat(@vary_data_color)
+    store_chartformat
 
     store_begin
 
     # Store the BIFF record that will define the chart type.
     store_chart_type
 
-    # Note, the CHARTFORMATLINK record is only written by Excel.
-
-    store_legend_stream if @legend[:visible] != 0
-
-    store_marker_dataformat_stream
+    # CHARTFORMATLINK is not used.
+    store_legend_stream
     store_end
   end
 
@@ -922,10 +868,10 @@ class Chart < Worksheet
   # Write the LEGEND chart substream.
   #
   def store_legend_stream
-    store_legend(@config[:legend])
+    store_legend
 
     store_begin
-    store_pos(@config[:legend_pos])
+    store_pos(5, 2, 0x05F9, 0x0EE9, 0, 0)
     store_legend_text_stream
     store_end
   end
@@ -979,7 +925,7 @@ class Chart < Worksheet
     data  += [grbit].pack('v')
     data  += [format_index].pack('v')
     data  += [formula_length].pack('v')
-    data  += formula
+    data  += formula[0].kind_of?(String) ? formula[0] : formula
 
     append(header, data)
   end
@@ -991,15 +937,15 @@ class Chart < Worksheet
   # Write the AREAFORMAT chart BIFF record. Contains the patterns and colours
   # of a chart area.
   #
-  def store_areaformat(rgbFore, rgbBack, pattern, grbit, indexFore, indexBack)
+  def store_areaformat
     record    = 0x100A     # Record identifier.
     length    = 0x0010     # Number of bytes to follow.
-    # rgbFore              # Foreground RGB colour.
-    # rgbBack              # Background RGB colour.
-    # pattern              # Pattern.
-    # grbit                # Option flags.
-    # indexFore            # Index to Foreground colour.
-    # indexBack            # Index to Background colour.
+    rgbFore   = 0x00C0C0C0     # Foreground RGB colour.
+    rgbBack   = 0x00000000     # Background RGB colour.
+    pattern   = 0x0001         # Pattern.
+    grbit     = 0x0000         # Option flags.
+    indexFore = 0x0016         # Index to Foreground colour.
+    indexBack = 0x004F         # Index to Background colour.
 
     header = [record, length].pack('vv')
     data  = [rgbFore].pack('V')
@@ -1069,13 +1015,13 @@ class Chart < Worksheet
   # Write the AXIS chart BIFF record to define the axis type.
   #
   def store_axis(type)
-    record    = 0x101D;        # Record identifier.
-    length    = 0x0012;        # Number of bytes to follow.
+    record    = 0x101D         # Record identifier.
+    length    = 0x0012         # Number of bytes to follow.
     # type                     # Axis type.
-    reserved1 = 0x00000000;    # Reserved.
-    reserved2 = 0x00000000;    # Reserved.
-    reserved3 = 0x00000000;    # Reserved.
-    reserved4 = 0x00000000;    # Reserved.
+    reserved1 = 0x00000000     # Reserved.
+    reserved2 = 0x00000000     # Reserved.
+    reserved3 = 0x00000000     # Reserved.
+    reserved4 = 0x00000000     # Reserved.
 
     header = [record, length].pack('vv')
     data  = [type].pack('v')
@@ -1114,10 +1060,10 @@ class Chart < Worksheet
     record = 0x1041         # Record identifier.
     length = 0x0012         # Number of bytes to follow.
     iax    = args[0]        # Axis index.
-    x      = args[1]        # X-coord.
-    y      = args[2]        # Y-coord.
-    dx     = args[3]        # Length of x axis.
-    dy     = args[4]        # Length of y axis.
+    x      = 0x000000F8     # X-coord.
+    y      = 0x000001F5     # Y-coord.
+    dx     = 0x00000E7F     # Length of x axis.
+    dy     = 0x00000B36     # Length of y axis.
 
     header = [record, length].pack('vv')
     data   = [iax].pack('v')
@@ -1175,13 +1121,13 @@ class Chart < Worksheet
   # and contains dimensions of the chart on the display. Units are in 1/72 inch
   # and are 2 byte integer with 2 byte fraction.
   #
-  def store_chart(x_pos, y_pos, dx, dy)
+  def store_chart
     record   = 0x1002     # Record identifier.
     length   = 0x0010     # Number of bytes to follow.
-    # x_pos               # X pos of top left corner.
-    # y_pos               # Y pos of top left corner.
-    # dx                  # X size.
-    # dy                  # Y size.
+    x_pos  = 0x00000000     # X pos of top left corner.
+    y_pos  = 0x00000000     # Y pos of top left corner.
+    dx     = 0x02DD51E0     # X size.
+    dy     = 0x01C2B838     # Y size.
 
     header = [record, length].pack('vv')
     data   = [x_pos].pack('V')
@@ -1199,14 +1145,14 @@ class Chart < Worksheet
   # Write the CHARTFORMAT chart BIFF record. The parent record for formatting
   # of a chart group.
   #
-  def store_chartformat(grbit = 0)
+  def store_chartformat
     record    = 0x1014         # Record identifier.
     length    = 0x0014         # Number of bytes to follow.
     reserved1 = 0x00000000     # Reserved.
     reserved2 = 0x00000000     # Reserved.
     reserved3 = 0x00000000     # Reserved.
     reserved4 = 0x00000000     # Reserved.
-    # grbit                    # Option flags.
+    grbit     = 0x0000         # Option flags.
     icrt      = 0x0000         # Drawing order.
 
     header = [record, length].pack('vv')
@@ -1308,9 +1254,9 @@ class Chart < Worksheet
   # record.
   #
   def store_defaulttext
-    record = 0x1024;    # Record identifier.
-    length = 0x0002;    # Number of bytes to follow.
-    type   = 0x0002;    # Type.
+    record = 0x1024     # Record identifier.
+    length = 0x0002     # Number of bytes to follow.
+    type   = 0x0002     # Type.
 
     header = [record, length].pack('vv')
     data  = [type].pack('v')
@@ -1399,11 +1345,11 @@ class Chart < Worksheet
   #
   # Write the FRAME chart BIFF record.
   #
-  def store_frame(frame_type, grbit)
+  def store_frame
     record     = 0x1032     # Record identifier.
     length     = 0x0004     # Number of bytes to follow.
-    # frame_type            # Frame type.
-    # grbit                 # Option flags.
+    frame_type = 0x0000     # Frame type.
+    grbit      = 0x0003     # Option flags.
 
     header = [record, length].pack('vv')
     data  = [frame_type].pack('v')
@@ -1418,16 +1364,16 @@ class Chart < Worksheet
   #
   # Write the LEGEND chart BIFF record. The Marcus Horan method.
   #
-  def store_legend(x, y, width, height, wType, wSpacing, grbit)
+  def store_legend
     record   = 0x1015     # Record identifier.
     length   = 0x0014     # Number of bytes to follow.
-    # x                   # X-position.
-    # y                   # Y-position.
-    # width               # Width.
-    # height              # Height.
-    # wType               # Type.
-    # wSpacing            # Spacing.
-    # grbit               # Option flags.
+    x        = 0x000005F9     # X-position.
+    y        = 0x00000EE9     # Y-position.
+    width    = 0x0000047D     # Width.
+    height   = 0x0000009C     # Height.
+    wType    = 0x00           # Type.
+    wSpacing = 0x01           # Spacing.
+    grbit    = 0x000F         # Option flags.
 
     header = [record, length].pack('vv')
     data  = [x].pack('V')
@@ -1447,14 +1393,14 @@ class Chart < Worksheet
   #
   # Write the LINEFORMAT chart BIFF record.
   #
-  def store_lineformat(rgb, lns, we, grbit, index)
+  def store_lineformat
     record = 0x1007     # Record identifier.
     length = 0x000C     # Number of bytes to follow.
-    # rgb               # Line RGB colour.
-    # lns               # Line pattern.
-    # we                # Line weight.
-    # grbit             # Option flags.
-    # index             # Index to colour of line.
+    rgb    = 0x00000000     # Line RGB colour.
+    lns    = 0x0000         # Line pattern.
+    we     = 0xFFFF         # Line weight.
+    grbit  = 0x0009         # Option flags.
+    index  = 0x004D         # Index to colour of line.
 
     header = [record, length].pack('vv')
     data  = [rgb].pack('V')
@@ -1672,6 +1618,8 @@ class Chart < Worksheet
     # encoding                 # String encoding.
     cch      = str.length      # String length.
 
+    encoding ||= 0
+
     # Character length is num of chars not num of bytes
     cch /= 2 if encoding != 0
 
@@ -1748,18 +1696,18 @@ class Chart < Worksheet
   # Write the TEXT chart BIFF record.
   #
   def store_text(x, y, dx, dy, grbit1, grbit2, rotation = 0x00)
-    record   = 0x1025;           # Record identifier.
-    length   = 0x0020;           # Number of bytes to follow.
-    at       = 0x02;             # Horizontal alignment.
-    vat      = 0x02;             # Vertical alignment.
-    wBkgMode = 0x0001;           # Background display.
-    rgbText  = 0x0000;           # Text RGB colour.
+    record   = 0x1025            # Record identifier.
+    length   = 0x0020            # Number of bytes to follow.
+    at       = 0x02              # Horizontal alignment.
+    vat      = 0x02              # Vertical alignment.
+    wBkgMode = 0x0001            # Background display.
+    rgbText  = 0x0000            # Text RGB colour.
     # x                          # Text x-pos.
     # y                          # Text y-pos.
     # dx                         # Width.
     # dy                         # Height.
     # grbit1                     # Option flags.
-    icvText  = 0x004D;           # Auto Colour.
+    icvText  = 0x004D            # Auto Colour.
     # grbit2                     # Show legend.
     # rotation                   # Show value.
 

@@ -23,7 +23,7 @@ class External < Chart
     super(*args)
 
     @filename     = external_filename
-    @external_bin = 1
+    @external_bin = true
 
     _initialize    # Requires overridden initialize().
     self

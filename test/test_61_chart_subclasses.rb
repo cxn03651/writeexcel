@@ -22,7 +22,8 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_column
-    chart = Chart.factory(Chart::Column, @workbook, '', 'chart', 0, 0, 0, 0)
+    chart = Chart.factory(Chart::Column, nil, nil, nil, nil, nil, nil,
+                                         nil, nil, nil, nil, nil, nil, nil)
     expected = %w(
         17 10 06 00 00 00 96 00 00 00
       ).join(' ')
@@ -31,7 +32,8 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_bar
-    chart = Chart.factory(Chart::Bar, @workbook, '', 'chart', 0, 0, 0, 0)
+    chart = Chart.factory(Chart::Bar, nil, nil, nil, nil, nil, nil,
+                                      nil, nil, nil, nil, nil, nil, nil)
     expected = %w(
         17 10 06 00 00 00 96 00 01 00
       ).join(' ')
@@ -40,7 +42,8 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_line
-    chart = Chart.factory(Chart::Line, @workbook, '', 'chart', 0, 0, 0, 0)
+    chart = Chart.factory(Chart::Line, nil, nil, nil, nil, nil, nil,
+                                         nil, nil, nil, nil, nil, nil, nil)
     expected = %w(
         18 10 02 00 00 00
       ).join(' ')
@@ -49,7 +52,8 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_area
-    chart = Chart.factory(Chart::Area, @workbook, '', 'chart', 0, 0, 0, 0)
+    chart = Chart.factory(Chart::Area, nil, nil, nil, nil, nil, nil,
+                                         nil, nil, nil, nil, nil, nil, nil)
     expected = %w(
         1A 10 02 00 01 00
       ).join(' ')

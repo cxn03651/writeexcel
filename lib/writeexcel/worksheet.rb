@@ -154,6 +154,7 @@ class Worksheet < BIFFWriter
   attr_reader :title_rowmin, :title_rowmax, :title_colmin, :title_colmax
   attr_reader :print_rowmin, :print_rowmax, :print_colmin, :print_colmax
   attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
+  attr_accessor :activesheet, :firstsheet, :str_total, :str_unique, :str_table
   attr_accessor :object_ids, :num_images, :image_mso_size
   attr_writer :date_1904
   attr_reader :compatibility
@@ -164,26 +165,29 @@ class Worksheet < BIFFWriter
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
-  def initialize(workbook, name, index, encoding)
+  def initialize(name, index, encoding, activesheet, firstsheet,
+                 url_format, parser, tempdir, str_total, str_unique,
+                 str_table, date_1904, compatibility)
     super()
 
-    @workbook            = workbook
     @name                = name
     @index               = index
     @encoding            = encoding
+    @activesheet         = activesheet
+    @firstsheet          = firstsheet
+    @url_format          = url_format
+    @parser              = parser
+    @tempdir             = tempdir
 
-    @url_format          = @workbook.url_format
-    @parser              = @workbook.parser
-    @tempdir             = @workbook.tempdir
-    @date_1904           = @workbook.date_1904
-    @compatibility       = @workbook.compatibility
-    @str_table           = @workbook.str_table
-
-    @table               = []
-    @row_data            = {}
+    @str_total           = str_total
+    @str_unique          = str_unique
+    @str_table           = str_table
+    @date_1904           = date_1904
+    @compatibility       = compatibility
 
     @sheet_type          = 0x0000
     @ext_sheets          = []
+    @using_tmpfile       = true
     @fileclosed          = false
     @offset              = 0
     @xls_rowmax          = RowMax
@@ -300,57 +304,10 @@ class Worksheet < BIFFWriter
     @db_indices          = []
 
     @validations         = []
-  end
 
-  def activesheet  #:nodoc:
-    @workbook.activesheet
+    @table               = []
+    @row_data            = {}
   end
-  private :activesheet
-
-  def set_activesheet(val)  #:nodoc:
-    @workbook.activesheet = val
-  end
-  private :set_activesheet
-
-  def firstsheet  #:nodoc:
-    @workbook.firstsheet
-  end
-  private :firstsheet
-
-  def set_firstsheet(val)  #:nodoc:
-    @workbook.firstsheet = val
-  end
-  private :set_firstsheet
-
-  def str_total  #:nodoc:
-    @workbook.str_total
-  end
-  private :str_total
-
-  def set_str_total(val)  #:nodoc:
-    @workbook.str_total = val
-  end
-  private :set_str_total
-
-  def str_unique  #:nodoc:
-    @workbook.str_unique
-  end
-  private :str_unique
-
-  def set_str_unique(val)  #:nodoc:
-    @workbook.str_unique = val
-  end
-  private :set_str_unique
-
-  def add_str_total(val)  #:nodoc:
-    @workbook.str_total += val
-  end
-  private :add_str_total
-
-  def add_str_unique(val)  #:nodoc:
-    @workbook.str_unique += val
-  end
-  private :add_str_unique
 
   ###############################################################################
   #
@@ -544,7 +501,7 @@ class Worksheet < BIFFWriter
   def activate
     @hidden      = 0  # Active worksheet can't be hidden.
     @selected    = 1
-    set_activesheet(@index)
+    @activesheet = @index
   end
 
 
@@ -570,9 +527,9 @@ class Worksheet < BIFFWriter
     @hidden         = 1
 
     # A hidden worksheet shouldn't be active or selected.
-    @selected       = 0
-    set_activesheet(0)
-    set_firstsheet(0)
+    @selected    = 0
+    @activesheet = 0
+    @firstsheet  = 0
   end
 
 
@@ -2587,10 +2544,10 @@ class Worksheet < BIFFWriter
 
     if @str_table[str].nil?
       @str_table[str] = str_unique
-      add_str_unique(1)
+      @str_unique += 1
     end
 
-    add_str_total(1)
+    @str_total += 1
 
     header = [record, length].pack('vv')
     data   = [row, col, xf, @str_table[str]].pack('vvvV')
@@ -6535,10 +6492,10 @@ class Worksheet < BIFFWriter
 
     unless @str_table[str]
       @str_table[str] = str_unique
-      add_str_unique(1)
+      @str_unique += 1
     end
 
-    add_str_total(1)
+    @str_total += 1
 
     header = [record, length].pack("vv")
     data   = [row, col, xf, @str_table[str]].pack("vvvV")

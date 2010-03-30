@@ -256,18 +256,34 @@ class Workbook < BIFFWriter
   #     worksheet = workbook.add_worksheet(name, 1)   # Smiley
   #
   def add_worksheet(sheetname = '', encoding = 0)
-    name, encoding = check_sheetname(sheetname, encoding)
-
     index = @worksheets.size
 
-    worksheet = Worksheet.new(
-      self,
-      name,
-      index,
-      encoding
-    )
-    @worksheets[index] = worksheet
-    @sheetnames[index] = name          # Store EXTERNSHEET names
+    name, encoding = check_sheetname(sheetname, encoding)
+
+    # Porters take note, the following scheme of passing references to Workbook
+    # data (in the \$self->{_foo} cases) instead of a reference to the Workbook
+    # itself is a workaround to avoid circular references between Workbook and
+    # Worksheet objects. Feel free to implement this in any way the suits your
+    # language.
+    #
+    init_data = [
+                  name,
+                  index,
+                  encoding,
+                  @activesheet,
+                  @firstsheet,
+                  @url_format,
+                  @parser,
+                  @tempdir,
+                  @str_total,
+                  @str_unique,
+                  @str_table,
+                  @date_1904,
+                  @compatibility
+    ]
+    worksheet = Worksheet.new(*init_data)
+    @worksheets[index] = worksheet      # Store ref for iterator
+    @sheetnames[index] = name           # Store EXTERNSHEET names
     @parser.set_ext_sheets(name, index) # Store names in Formula.rb
     worksheet
   end
@@ -279,41 +295,29 @@ class Workbook < BIFFWriter
   # Add a chart sheet.
   #
   def add_chart(params)
-    name     = ''
-    encoding = 0
     index    = @worksheets.size
 
-    # Type must be specified so we can create the required chart instance.
+    name, encoding = check_sheetname(params[:name], params[:name_encoding])
+
     type = params[:type]
-    raise "Must define chart type in add_chart()" if type.nil?
-
-    # Ensure that the chart defaults to non embedded.
-    embedded = params[:embedded] ||= 0
-
-    # Check the worksheet name for non-embedded charts.
-    if embedded == 0
-      name, encoding = check_sheetname(params[:name], params[:name_encoding], 1)
-    end
 
     init_data = [
-      '',
       name,
       index,
       encoding,
       @activesheet,
       @firstsheet,
-      1,     # External binary
       @url_format,
       @parser,
-      @tmpdir,
+      @tempdir,
       @str_total,
       @str_unique,
       @str_table,
-      @date_1904,
+      @date_1904 ? 1 : 0,
       @compatibility
     ]
 
-    chart = Chart.factory(type, self, init_data)
+    chart = Chart.factory(type, *init_data)
     @worksheets[index] = chart          # Store ref for iterator
     @sheetnames[index] = name           # Store EXTERNSHEET names
     chart
@@ -356,6 +360,7 @@ class Workbook < BIFFWriter
   # invalid characters and if the name is unique in the workbook.
   #
   def check_sheetname(name, encoding = 0)
+    encoding ||= 0
     limit           = encoding != 0 ? 62 : 31
     invalid_char    = %r![\[\]:*?/\\]!
 
@@ -1193,7 +1198,7 @@ class Workbook < BIFFWriter
     offset += _eof
     @worksheets.each do |sheet|
       sheet.offset = offset
-      sheet.close(*@sheetnames)
+      sheet.close
       offset += sheet.datasize
     end
 
@@ -1897,6 +1902,8 @@ class Workbook < BIFFWriter
     cch       = sheetname.length          # Length of sheet name
 
     grbit     = type | hidden
+
+    encoding ||= 0
 
     # Character length is num of chars not num of bytes
     cch /= 2 if encoding != 0
