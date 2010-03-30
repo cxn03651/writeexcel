@@ -586,13 +586,13 @@ class Chart < Worksheet
     store_end
   end
 
-  def _formula_type(params, key, t, f)
+  def _formula_type_from_param(t, f, params, key)
     if params.has_key?(key)
       v = params[key]
       (v.nil? || v == [""] || v == '' || v == 0) ? f : t
     end
   end
-  private :_formula_type
+  private :_formula_type_from_param
 
   ###############################################################################
   #
@@ -601,9 +601,9 @@ class Chart < Worksheet
   # Write the SERIES chart substream.
   #
   def store_series_stream(params)
-    name_type     = _formula_type(params, :name_formula, 2, 1)
-    value_type    = _formula_type(params, :value_formula, 2, 0)
-    category_type = _formula_type(params, :category_formula, 2, 0)
+    name_type     = _formula_type_from_param(2, 1, params, :name_formula)
+    value_type    = _formula_type_from_param(2, 0, params, :value_formula)
+    category_type = _formula_type_from_param(2, 0, params, :category_formula)
 
     store_series(params[:value_count], params[:category_count])
 
@@ -654,6 +654,11 @@ class Chart < Worksheet
     store_end
   end
 
+  def _formula_type(t, f, formula)
+    (formula.nil? || formula == [""] || formula == '' || formula == 0) ? f : t
+  end
+  private :_formula_type
+
   ###############################################################################
   #
   # _store_x_axis_text_stream()
@@ -662,7 +667,7 @@ class Chart < Worksheet
   #
   def store_x_axis_text_stream
     formula = @x_axis_formula.nil? ? '' : @x_axis_formula
-    ai_type = formula != 0 ? 2 : 1
+    ai_type = _formula_type(2, 1, formula)
 
     store_text(0x07E1, 0x0DFC, 0xB2, 0x9C, 0x0081, 0x0000)
 
@@ -687,7 +692,7 @@ class Chart < Worksheet
   #
   def store_y_axis_text_stream
     formula = @y_axis_formula
-    ai_type = formula != 0 ? 2 : 1
+    ai_type = _formula_type(2, 1, formula)
 
     store_text(0x002D, 0x06AA, 0x5F, 0x1CC, 0x0281, 0x00, 90)
 
@@ -728,7 +733,7 @@ class Chart < Worksheet
   #
   def store_title_text_stream
     formula = @title_formula
-    ai_type = formula != 0 ? 2 : 1
+    ai_type = _formula_type(2, 1, formula)
 
     store_text(0x06E4, 0x0051, 0x01DB, 0x00C4, 0x0081, 0x1030)
 
