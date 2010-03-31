@@ -15,6 +15,8 @@
 require 'rubygems'
 require 'writeexcel'
 
+# $debug = true
+
 workbook   = WriteExcel.new("demo.xls")
 worksheet  = workbook.add_worksheet('Demo')
 worksheet2 = workbook.add_worksheet('Another sheet')
@@ -38,7 +40,7 @@ heading  = workbook.add_format(
                                 :align  => 'vcenter'
                               )
 
-headings = ['Features of WriteExcel', '']
+headings = ['Features of Spreadsheet::WriteExcel', '']
 worksheet.write_row('A1', headings, heading)
 
 

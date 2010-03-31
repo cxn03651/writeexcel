@@ -21,6 +21,11 @@ class TC_example_match < Test::Unit::TestCase
     File.delete(@filename2) if File.exist?(@filename2)
   end
 
+  def test_compare_file
+    expected = target = __FILE__
+    compare_file(expected, target)
+  end
+
   def test_a_simple
     workbook  = WriteExcel.new(@filename);
     worksheet = workbook.add_worksheet
@@ -96,6 +101,7 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/regions.xls", @filename)
   end
 
+=begin
   def test_stats
     workbook = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet('Test data')
@@ -174,6 +180,7 @@ class TC_example_match < Test::Unit::TestCase
     # do assertion
     compare_file("#{PERL_OUTDIR}/hidden.xls", @filename)
   end
+=end
 
   def test_hyperlink1
     # Create a new workbook and add a worksheet
@@ -253,6 +260,7 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/workbook2.xls", @filename2)
   end
 
+=begin
   def test_data_validate
     workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
@@ -520,6 +528,7 @@ class TC_example_match < Test::Unit::TestCase
     # do assertion
     compare_file("#{PERL_OUTDIR}/data_validate.xls", @filename)
   end
+=end
 
   def test_merge1
     workbook  = WriteExcel.new(@filename)
@@ -697,6 +706,7 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/merge4.xls", @filename)
   end
 
+=begin
   def test_merge5
     # Create a new workbook and add a worksheet
     workbook  = WriteExcel.new(@filename)
@@ -764,6 +774,7 @@ class TC_example_match < Test::Unit::TestCase
     # do assertion
     compare_file("#{PERL_OUTDIR}/merge5.xls", @filename)
   end
+=end
 
   def test_images
     # Create a new workbook called simple.xls and add a worksheet
@@ -1003,6 +1014,7 @@ class TC_example_match < Test::Unit::TestCase
     # do assertion
     compare_file("#{PERL_OUTDIR}/date_time.xls", @filename)
   end
+
   def test_diag_border
     workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
@@ -1027,7 +1039,7 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/diag_border.xls", @filename)
   end
 
-  def test_header
+  def test_headers
     workbook  = WriteExcel.new(@filename)
     preview   = "Select Print Preview to see the header and footer"
 
@@ -1129,106 +1141,106 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_demo
     workbook   = WriteExcel.new(@filename)
-    worksheet  = workbook.add_worksheet('Demo')
-    worksheet2 = workbook.add_worksheet('Another sheet')
-    worksheet3 = workbook.add_worksheet('And another')
+worksheet  = workbook.add_worksheet('Demo')
+worksheet2 = workbook.add_worksheet('Another sheet')
+worksheet3 = workbook.add_worksheet('And another')
 
-    bold       = workbook.add_format(:bold => 1)
+bold       = workbook.add_format(:bold => 1)
 
-    #######################################################################
-    #
-    # Write a general heading
-    #
-    worksheet.set_column('A:A', 36, bold)
-    worksheet.set_column('B:B', 20       )
-    worksheet.set_row(0,     40       )
+#######################################################################
+#
+# Write a general heading
+#
+worksheet.set_column('A:A', 36, bold)
+worksheet.set_column('B:B', 20       )
+worksheet.set_row(0,     40       )
 
-    heading  = workbook.add_format(
+heading  = workbook.add_format(
+                                :bold    => 1,
+                                :color   => 'blue',
+                                :size    => 16,
+                                :merge   => 1,
+                                :align  => 'vcenter'
+                              )
+
+headings = ['Features of Spreadsheet::WriteExcel', '']
+worksheet.write_row('A1', headings, heading)
+
+
+#######################################################################
+#
+# Some text examples
+#
+text_format  = workbook.add_format(
                                     :bold    => 1,
-                                    :color   => 'blue',
-                                    :size    => 16,
-                                    :merge   => 1,
-                                    :align  => 'vcenter'
+                                    :italic  => 1,
+                                    :color   => 'red',
+                                    :size    => 18,
+                                    :font    =>'Lucida Calligraphy'
                                   )
 
-    headings = ['Features of WriteExcel', '']
-    worksheet.write_row('A1', headings, heading)
+# A phrase in Cyrillic
+unicode = [
+            "042d0442043e002004440440043004370430002004"+
+            "3d043000200440044304410441043a043e043c0021"
+          ].pack('H*')
+
+worksheet.write('A2', "Text")
+worksheet.write('B2', "Hello Excel")
+worksheet.write('A3', "Formatted text")
+worksheet.write('B3', "Hello Excel", text_format)
+worksheet.write('A4', "Unicode text")
+worksheet.write_utf16be_string('B4', unicode)
 
 
-    #######################################################################
-    #
-    # Some text examples
-    #
-    text_format  = workbook.add_format(
-                                        :bold    => 1,
-                                        :italic  => 1,
-                                        :color   => 'red',
-                                        :size    => 18,
-                                        :font    =>'Lucida Calligraphy'
-                                      )
+#######################################################################
+#
+# Some numeric examples
+#
+num1_format  = workbook.add_format(:num_format => '$#,##0.00')
+num2_format  = workbook.add_format(:num_format => ' d mmmm yyy')
 
-    # A phrase in Cyrillic
-    unicode = [
-                "042d0442043e002004440440043004370430002004"+
-                "3d043000200440044304410441043a043e043c0021"
-              ].pack('H*')
-
-    worksheet.write('A2', "Text")
-    worksheet.write('B2', "Hello Excel")
-    worksheet.write('A3', "Formatted text")
-    worksheet.write('B3', "Hello Excel", text_format)
-    worksheet.write('A4', "Unicode text")
-    worksheet.write_utf16be_string('B4', unicode)
+worksheet.write('A5', "Numbers")
+worksheet.write('B5', 1234.56)
+worksheet.write('A6', "Formatted numbers")
+worksheet.write('B6', 1234.56, num1_format)
+worksheet.write('A7', "Formatted numbers")
+worksheet.write('B7', 37257, num2_format)
 
 
-    #######################################################################
-    #
-    # Some numeric examples
-    #
-    num1_format  = workbook.add_format(:num_format => '$#,##0.00')
-    num2_format  = workbook.add_format(:num_format => ' d mmmm yyy')
-
-    worksheet.write('A5', "Numbers")
-    worksheet.write('B5', 1234.56)
-    worksheet.write('A6', "Formatted numbers")
-    worksheet.write('B6', 1234.56, num1_format)
-    worksheet.write('A7', "Formatted numbers")
-    worksheet.write('B7', 37257, num2_format)
+#######################################################################
+#
+# Formulae
+#
+worksheet.set_selection('B8')
+worksheet.write('A8', 'Formulas and functions, "=SIN(PI()/4)"')
+worksheet.write('B8', '=SIN(PI()/4)')
 
 
-    #######################################################################
-    #
-    # Formulae
-    #
-    worksheet.set_selection('B8')
-    worksheet.write('A8', 'Formulas and functions, "=SIN(PI()/4)"')
-    worksheet.write('B8', '=SIN(PI()/4)')
+#######################################################################
+#
+# Hyperlinks
+#
+worksheet.write('A9', "Hyperlinks")
+worksheet.write('B9',  'http://www.perl.com/' )
 
 
-    #######################################################################
-    #
-    # Hyperlinks
-    #
-    worksheet.write('A9', "Hyperlinks")
-    worksheet.write('B9',  'http://www.perl.com/' )
+#######################################################################
+#
+# Images
+#
+worksheet.write('A10', "Images")
+worksheet.insert_image('B10', 'republic.png', 16, 8)
 
 
-    #######################################################################
-    #
-    # Images
-    #
-    worksheet.write('A10', "Images")
-    worksheet.insert_image('B10', File.join(TEST_DIR,'republic.png'), 16, 8)
+#######################################################################
+#
+# Misc
+#
+worksheet.write('A18', "Page/printer setup")
+worksheet.write('A19', "Multiple worksheets")
 
-
-    #######################################################################
-    #
-    # Misc
-    #
-    worksheet.write('A18', "Page/printer setup")
-    worksheet.write('A19', "Multiple worksheets")
-
-    workbook.close
+workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/demo.xls", @filename)
@@ -1257,372 +1269,453 @@ class TC_example_match < Test::Unit::TestCase
   end
 
   def test_chart_area
-    workbook  = WriteExcel.new(@filename)
-    worksheet = workbook.add_worksheet
+workbook  = WriteExcel.new(@filename)
+worksheet = workbook.add_worksheet
+bold      = workbook.add_format(:bold => 1)
 
-    # Add data to the worksheet that the charts willrefer to.
-    data = [
-        [ 'Category', 2, 3, 4, 5, 6, 7 ],
-        [ 'Values 1', 1, 4, 5, 2, 1, 5 ],
-        [ 'Values 2', 3, 6, 7, 5, 4, 3 ]
-    ]
+# Add the data to the worksheet that the charts will refer to.
+headings = [ 'Category', 'Values 1', 'Values 2' ]
+data = [
+    [ 2, 3, 4, 5, 6, 7 ],
+    [ 1, 4, 5, 2, 1, 5 ],
+    [ 3, 6, 7, 5, 4, 3 ]
+]
 
-    worksheet.write('A1', data)
+worksheet.write('A1', headings, bold)
+worksheet.write('A2', data)
 
 
-    ###############################################################################
-    #
-    # Example 1. A minimal chart.
-    #
-    chart1 = workbook.add_chart(:name => 'Chart1', :type => Chart::Area)
+###############################################################################
+#
+# Example 1. A minimal chart.
+#
+chart1 = workbook.add_chart(:type => Chart::Area)
 
-    # Add values only. Use the default categories.
-    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+# Add values only. Use the default categories.
+chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-    ###############################################################################
-    #
-    # Example 2. A minimal chart with user specified categories (X axis)
-    #            and a series name.
-    #
-    chart2 = workbook.add_chart( :name => 'Chart2', :type => Chart::Area )
+###############################################################################
+#
+# Example 2. A minimal chart with user specified categories (X axis)
+#            and a series name.
+#
+chart2 = workbook.add_chart(:type => Chart::Area)
 
-    # Configure the series.
-    chart2.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart2.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    ###############################################################################
-    #
-    # Example 3. Same as previous chart but with added title and axes labels.
-    #
-    chart3 = workbook.add_chart( :name => 'Chart3', :type => Chart::Area )
+###############################################################################
+#
+# Example 3. Same as previous chart but with added title and axes labels.
+#
+chart3 = workbook.add_chart(:type => Chart::Area)
 
-    # Configure the series.
-    chart3.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart3.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add some labels.
-    chart3.set_title( :name => 'Results of sample analysis' )
-    chart3.set_x_axis( :name => 'Sample number' )
-    chart3.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart3.set_title( :name => 'Results of sample analysis' )
+chart3.set_x_axis( :name => 'Sample number' )
+chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-    ###############################################################################
-    #
-    # Example 4. Same as previous chart but with an added series
-    #
-    chart4 = workbook.add_chart( :name => 'Chart4', :type => Chart::Area )
+###############################################################################
+#
+# Example 4. Same as previous chart but with an added series
+#
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Area)
 
-    # Configure the series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add another series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$C$2:$C$7',
-        :name       => 'Test data series 2'
-    )
+# Add another series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$C$2:$C$7',
+    :name       => 'Test data series 2'
+)
 
-    # Add some labels.
-    chart4.set_title( :name => 'Results of sample analysis' )
-    chart4.set_x_axis( :name => 'Sample number' )
-    chart4.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart4.set_title( :name => 'Results of sample analysis' )
+chart4.set_x_axis( :name => 'Sample number' )
+chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-    # File save
-    workbook.close
+###############################################################################
+#
+# Example 5. Same as Example 3 but as an embedded chart.
+#
+chart5 = workbook.add_chart(:type => Chart::Area, :embedded => 1)
+
+# Configure the series.
+chart5.add_series(
+  :categories => '=Sheet1!$A$2:$A$7',
+  :values     => '=Sheet1!$B$2:$B$7',
+  :name       => 'Test data series 1'
+)
+
+# Add some labels.
+chart5.set_title(:name => 'Results of sample analysis' )
+chart5.set_x_axis(:name => 'Sample number')
+chart5.set_y_axis(:name => 'Sample length (cm)')
+
+# Insert the chart into the main worksheet.
+worksheet.insert_chart('E2', chart5)
+
+# File save
+workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_area.xls", @filename)
   end
 
   def test_chart_bar
-    workbook  = WriteExcel.new(@filename)
-    worksheet = workbook.add_worksheet
+workbook  = WriteExcel.new(@filename)
+worksheet = workbook.add_worksheet
+bold      = workbook.add_format(:bold => 1)
 
-    # Add data to the worksheet that the charts willrefer to.
-    data = [
-        [ 'Category', 2, 3, 4, 5, 6, 7 ],
-        [ 'Values 1', 1, 4, 5, 2, 1, 5 ],
-        [ 'Values 2', 3, 6, 7, 5, 4, 3 ]
-    ]
+# Add the data to the worksheet that the charts will refer to.
+headings = [ 'Category', 'Values 1', 'Values 2' ]
+data = [
+    [ 2, 3, 4, 5, 6, 7 ],
+    [ 1, 4, 5, 2, 1, 5 ],
+    [ 3, 6, 7, 5, 4, 3 ]
+]
 
-    worksheet.write('A1', data)
+worksheet.write('A1', headings, bold)
+worksheet.write('A2', data)
 
 
-    ###############################################################################
-    #
-    # Example 1. A minimal chart.
-    #
-    chart1 = workbook.add_chart(:name => 'Chart1', :type => Chart::Bar)
+###############################################################################
+#
+# Example 1. A minimal chart.
+#
+chart1 = workbook.add_chart(:type => Chart::Bar)
 
-    # Add values only. Use the default categories.
-    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+# Add values only. Use the default categories.
+chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-    ###############################################################################
-    #
-    # Example 2. A minimal chart with user specified categories (X axis)
-    #            and a series name.
-    #
-    chart2 = workbook.add_chart( :name => 'Chart2', :type => Chart::Bar )
+###############################################################################
+#
+# Example 2. A minimal chart with user specified categories (X axis)
+#            and a series name.
+#
+chart2 = workbook.add_chart(:type => Chart::Bar)
 
-    # Configure the series.
-    chart2.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart2.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    ###############################################################################
-    #
-    # Example 3. Same as previous chart but with added title and axes labels.
-    #
-    chart3 = workbook.add_chart( :name => 'Chart3', :type => Chart::Bar )
+###############################################################################
+#
+# Example 3. Same as previous chart but with added title and axes labels.
+#
+chart3 = workbook.add_chart(:type => Chart::Bar)
 
-    # Configure the series.
-    chart3.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart3.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add some labels.
-    chart3.set_title( :name => 'Results of sample analysis' )
-    chart3.set_x_axis( :name => 'Sample number' )
-    chart3.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart3.set_title( :name => 'Results of sample analysis' )
+chart3.set_x_axis( :name => 'Sample number' )
+chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-    ###############################################################################
-    #
-    # Example 4. Same as previous chart but with an added series
-    #
-    chart4 = workbook.add_chart( :name => 'Chart4', :type => Chart::Bar )
+###############################################################################
+#
+# Example 4. Same as previous chart but with an added series
+#
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Bar)
 
-    # Configure the series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add another series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$C$2:$C$7',
-        :name       => 'Test data series 2'
-    )
+# Add another series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$C$2:$C$7',
+    :name       => 'Test data series 2'
+)
 
-    # Add some labels.
-    chart4.set_title( :name => 'Results of sample analysis' )
-    chart4.set_x_axis( :name => 'Sample number' )
-    chart4.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart4.set_title( :name => 'Results of sample analysis' )
+chart4.set_x_axis( :name => 'Sample number' )
+chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-    # File save
-    workbook.close
+###############################################################################
+#
+# Example 5. Same as Example 3 but as an embedded chart.
+#
+chart5 = workbook.add_chart(:type => Chart::Bar, :embedded => 1)
+
+# Configure the series.
+chart5.add_series(
+  :categories => '=Sheet1!$A$2:$A$7',
+  :values     => '=Sheet1!$B$2:$B$7',
+  :name       => 'Test data series 1'
+)
+
+# Add some labels.
+chart5.set_title(:name => 'Results of sample analysis' )
+chart5.set_x_axis(:name => 'Sample number')
+chart5.set_y_axis(:name => 'Sample length (cm)')
+
+# Insert the chart into the main worksheet.
+worksheet.insert_chart('E2', chart5)
+
+# File save
+workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_bar.xls", @filename)
   end
 
   def test_chart_column
-    workbook  = WriteExcel.new(@filename)
-    worksheet = workbook.add_worksheet
+workbook  = WriteExcel.new(@filename)
+worksheet = workbook.add_worksheet
+bold      = workbook.add_format(:bold => 1)
 
-    # Add data to the worksheet that the charts willrefer to.
-    data = [
-        [ 'Category', 2, 3, 4, 5, 6, 7 ],
-        [ 'Values 1', 1, 4, 5, 2, 1, 5 ],
-        [ 'Values 2', 3, 6, 7, 5, 4, 3 ]
-    ]
+# Add the data to the worksheet that the charts will refer to.
+headings = [ 'Category', 'Values 1', 'Values 2' ]
+data = [
+    [ 2, 3, 4, 5, 6, 7 ],
+    [ 1, 4, 5, 2, 1, 5 ],
+    [ 3, 6, 7, 5, 4, 3 ]
+]
 
-    worksheet.write('A1', data)
+worksheet.write('A1', headings, bold)
+worksheet.write('A2', data)
 
 
-    ###############################################################################
-    #
-    # Example 1. A minimal chart.
-    #
-    chart1 = workbook.add_chart(:name => 'Chart1', :type => Chart::Column)
+###############################################################################
+#
+# Example 1. A minimal chart.
+#
+chart1 = workbook.add_chart(:type => Chart::Column)
 
-    # Add values only. Use the default categories.
-    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+# Add values only. Use the default categories.
+chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-    ###############################################################################
-    #
-    # Example 2. A minimal chart with user specified categories (X axis)
-    #            and a series name.
-    #
-    chart2 = workbook.add_chart( :name => 'Chart2', :type => Chart::Column )
+###############################################################################
+#
+# Example 2. A minimal chart with user specified categories (X axis)
+#            and a series name.
+#
+chart2 = workbook.add_chart(:type => Chart::Column)
 
-    # Configure the series.
-    chart2.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart2.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    ###############################################################################
-    #
-    # Example 3. Same as previous chart but with added title and axes labels.
-    #
-    chart3 = workbook.add_chart( :name => 'Chart3', :type => Chart::Column )
+###############################################################################
+#
+# Example 3. Same as previous chart but with added title and axes labels.
+#
+chart3 = workbook.add_chart(:type => Chart::Column)
 
-    # Configure the series.
-    chart3.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart3.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add some labels.
-    chart3.set_title( :name => 'Results of sample analysis' )
-    chart3.set_x_axis( :name => 'Sample number' )
-    chart3.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart3.set_title( :name => 'Results of sample analysis' )
+chart3.set_x_axis( :name => 'Sample number' )
+chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-    ###############################################################################
-    #
-    # Example 4. Same as previous chart but with an added series
-    #
-    chart4 = workbook.add_chart( :name => 'Chart4', :type => Chart::Column )
+###############################################################################
+#
+# Example 4. Same as previous chart but with an added series
+#
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Column)
 
-    # Configure the series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add another series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$C$2:$C$7',
-        :name       => 'Test data series 2'
-    )
+# Add another series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$C$2:$C$7',
+    :name       => 'Test data series 2'
+)
 
-    # Add some labels.
-    chart4.set_title( :name => 'Results of sample analysis' )
-    chart4.set_x_axis( :name => 'Sample number' )
-    chart4.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart4.set_title( :name => 'Results of sample analysis' )
+chart4.set_x_axis( :name => 'Sample number' )
+chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-    # File save
-    workbook.close
+###############################################################################
+#
+# Example 5. Same as Example 3 but as an embedded chart.
+#
+chart5 = workbook.add_chart(:type => Chart::Column, :embedded => 1)
+
+# Configure the series.
+chart5.add_series(
+  :categories => '=Sheet1!$A$2:$A$7',
+  :values     => '=Sheet1!$B$2:$B$7',
+  :name       => 'Test data series 1'
+)
+
+# Add some labels.
+chart5.set_title(:name => 'Results of sample analysis' )
+chart5.set_x_axis(:name => 'Sample number')
+chart5.set_y_axis(:name => 'Sample length (cm)')
+
+# Insert the chart into the main worksheet.
+worksheet.insert_chart('E2', chart5)
+
+# File save
+workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_column.xls", @filename)
   end
 
   def test_chart_line
-    workbook  = WriteExcel.new(@filename)
-    worksheet = workbook.add_worksheet
+workbook  = WriteExcel.new(@filename)
+worksheet = workbook.add_worksheet
+bold      = workbook.add_format(:bold => 1)
 
-    # Add data to the worksheet that the charts willrefer to.
-    data = [
-        [ 'Category', 2, 3, 4, 5, 6, 7 ],
-        [ 'Values 1', 1, 4, 5, 2, 1, 5 ],
-        [ 'Values 2', 3, 6, 7, 5, 4, 3 ]
-    ]
+# Add the data to the worksheet that the charts will refer to.
+headings = [ 'Category', 'Values 1', 'Values 2' ]
+data = [
+    [ 2, 3, 4, 5, 6, 7 ],
+    [ 1, 4, 5, 2, 1, 5 ],
+    [ 3, 6, 7, 5, 4, 3 ]
+]
 
-    worksheet.write('A1', data)
+worksheet.write('A1', headings, bold)
+worksheet.write('A2', data)
 
 
-    ###############################################################################
-    #
-    # Example 1. A minimal chart.
-    #
-    chart1 = workbook.add_chart(:name => 'Chart1', :type => Chart::Line)
+###############################################################################
+#
+# Example 1. A minimal chart.
+#
+chart1 = workbook.add_chart(:type => Chart::Line)
 
-    # Add values only. Use the default categories.
-    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+# Add values only. Use the default categories.
+chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-    ###############################################################################
-    #
-    # Example 2. A minimal chart with user specified categories (X axis)
-    #            and a series name.
-    #
-    chart2 = workbook.add_chart( :name => 'Chart2', :type => Chart::Line )
+###############################################################################
+#
+# Example 2. A minimal chart with user specified categories (X axis)
+#            and a series name.
+#
+chart2 = workbook.add_chart(:type => Chart::Line)
 
-    # Configure the series.
-    chart2.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart2.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    ###############################################################################
-    #
-    # Example 3. Same as previous chart but with added title and axes labels.
-    #
-    chart3 = workbook.add_chart( :name => 'Chart3', :type => Chart::Line )
+###############################################################################
+#
+# Example 3. Same as previous chart but with added title and axes labels.
+#
+chart3 = workbook.add_chart(:type => Chart::Line)
 
-    # Configure the series.
-    chart3.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart3.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add some labels.
-    chart3.set_title( :name => 'Results of sample analysis' )
-    chart3.set_x_axis( :name => 'Sample number' )
-    chart3.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart3.set_title( :name => 'Results of sample analysis' )
+chart3.set_x_axis( :name => 'Sample number' )
+chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-    ###############################################################################
-    #
-    # Example 4. Same as previous chart but with an added series
-    #
-    chart4 = workbook.add_chart( :name => 'Chart4', :type => Chart::Line )
+###############################################################################
+#
+# Example 4. Same as previous chart but with an added series
+#
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Line)
 
-    # Configure the series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$B$2:$B$7',
-        :name       => 'Test data series 1'
-    )
+# Configure the series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$B$2:$B$7',
+    :name       => 'Test data series 1'
+)
 
-    # Add another series.
-    chart4.add_series(
-        :categories => '=Sheet1!$A$2:$A$7',
-        :values     => '=Sheet1!$C$2:$C$7',
-        :name       => 'Test data series 2'
-    )
+# Add another series.
+chart4.add_series(
+    :categories => '=Sheet1!$A$2:$A$7',
+    :values     => '=Sheet1!$C$2:$C$7',
+    :name       => 'Test data series 2'
+)
 
-    # Add some labels.
-    chart4.set_title( :name => 'Results of sample analysis' )
-    chart4.set_x_axis( :name => 'Sample number' )
-    chart4.set_y_axis( :name => 'Sample length (cm)' )
+# Add some labels.
+chart4.set_title( :name => 'Results of sample analysis' )
+chart4.set_x_axis( :name => 'Sample number' )
+chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-    # File save
-    workbook.close
+###############################################################################
+#
+# Example 5. Same as Example 3 but as an embedded chart.
+#
+chart5 = workbook.add_chart(:type => Chart::Line, :embedded => 1)
+
+# Configure the series.
+chart5.add_series(
+  :categories => '=Sheet1!$A$2:$A$7',
+  :values     => '=Sheet1!$B$2:$B$7',
+  :name       => 'Test data series 1'
+)
+
+# Add some labels.
+chart5.set_title(:name => 'Results of sample analysis' )
+chart5.set_x_axis(:name => 'Sample number')
+chart5.set_y_axis(:name => 'Sample length (cm)')
+
+# Insert the chart into the main worksheet.
+worksheet.insert_chart('E2', chart5)
+
+# File save
+workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_line.xls", @filename)
   end
 
   def compare_file(expected, target)
-    fh_e = File.open(expected, "r")
-    fh_t = File.open(target, "r")
-    while true do
-      e1 = fh_e.read(1)
-      t1 = fh_t.read(1)
-      if e1.nil?
-        assert( t1.nil?, "#{expexted} is EOF but #{target} is NOT EOF.")
-        break
-      elsif t1.nil?
-        assert( e1.nil?, '#{target} is EOF but #{expected} is NOT EOF.')
-        break
-      end
-      assert_equal(e1, t1, sprintf(" #{expected} = '%s' but #{target} = '%s'", e1, t1))
-      break
-    end
-    fh_e.close
-    fh_t.close
+    assert_equal(
+      open(expected, 'rb') { |f| f.read },
+      open(target,   'rb') { |f| f.read }
+    )
   end
-
-
 end

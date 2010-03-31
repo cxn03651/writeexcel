@@ -31,13 +31,13 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         60 10 0A 00 B8 38 A1 22 C8 00 00 00 05 00
       ).join(' ')
-    got = unpack_record(@chart.store_fbi(5, 10))
+    got = unpack_record(@chart.store_fbi(5, 10, 0x38B8, 0x22A1, 0x0000))
     assert_equal(expected, got, caption)
 
     expected = %w(
         60 10 0A 00 B8 38 A1 22 C8 00 00 00 06 00
       ).join(' ')
-    got = unpack_record(@chart.store_fbi(6, 10))
+    got = unpack_record(@chart.store_fbi(6, 10, 0x38B8, 0x22A1, 0x0000))
     assert_equal(expected, got, caption)
   end
 
@@ -51,8 +51,8 @@ class TC_ChartGeneric < Test::Unit::TestCase
         02 10 10 00 00 00 00 00 00 00 00 00 E0 51 DD 02
         38 B8 C2 01
       ).join(' ')
-#    values = [0x0000, 0x0000, 0x02DD51E0, 0x01C2B838]
-    got = unpack_record(@chart.store_chart)
+    values = [0x0000, 0x0000, 0x02DD51E0, 0x01C2B838]
+    got = unpack_record(@chart.store_chart(*values))
     assert_equal(expected, got, caption)
  end
 
@@ -331,8 +331,8 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         07 10 0C 00 00 00 00 00 00 00 FF FF 09 00 4D 00
       ).join(' ')
-#    values = [0x00000000, 0x0000, 0xFFFF, 0x0009, 0x004D]
-    got = unpack_record(@chart.store_lineformat)
+    values = [0x00000000, 0x0000, 0xFFFF, 0x0009, 0x004D]
+    got = unpack_record(@chart.store_lineformat(*values))
     assert_equal(expected, got, caption)
   end
 
@@ -345,7 +345,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         32 10 04 00 00 00 03 00
       ).join(' ')
-    got = unpack_record(@chart.store_frame)
+    got = unpack_record(@chart.store_frame(0x00, 0x03))
     assert_equal(expected, got, caption)
   end
 
@@ -359,8 +359,8 @@ class TC_ChartGeneric < Test::Unit::TestCase
         0A 10 10 00 C0 C0 C0 00 00 00 00 00 01 00 00 00
         16 00 4F 00
       ).join(' ')
-#    values = [0x00C0C0C0, 0x00, 0x01, 0x00, 0x16, 0x4F]
-    got = unpack_record(@chart.store_areaformat)
+    values = [0x00C0C0C0, 0x00, 0x01, 0x00, 0x16, 0x4F]
+    got = unpack_record(@chart.store_areaformat(*values))
     assert_equal(expected, got, caption)
   end
 
@@ -388,8 +388,8 @@ class TC_ChartGeneric < Test::Unit::TestCase
         15 10 14 00 F9 05 00 00 E9 0E 00 00 7D 04 00 00
         9C 00 00 00 00 01 0F 00
       ).join(' ')
-#    values = [0x05F9, 0x0EE9, 0x047D, 0x009C, 0x00, 0x01, 0x000F]
-    got = unpack_record(@chart.store_legend)
+    values = [0x05F9, 0x0EE9, 0x047D, 0x009C, 0x00, 0x01, 0x000F]
+    got = unpack_record(@chart.store_legend(*values))
     assert_equal(expected, got, caption)
   end
 
