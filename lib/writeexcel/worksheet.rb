@@ -6014,7 +6014,7 @@ class Worksheet < BIFFWriter
       col_min = @dim_colmin
       col_max = @dim_colmax
 
-      # Write a user specifed ROW record (modified by set_row()).
+      # Write a user specified ROW record (modified by set_row()).
       if @row_data[row]
         # Rewrite the min and max cols for user defined row record.
         packed_row = @row_data[row]
@@ -6127,11 +6127,14 @@ class Worksheet < BIFFWriter
 
   ###############################################################################
   #
-  # embed_chart($row, $col, $filename, $x, $y, $scale_x, $scale_y)
+  # insert_chart($row, $col,   $chart, $x, $y, $scale_x, $scale_y)
+  # insert_chart($A1_notation, $chart, $x, $y, $scale_x, $scale_y)
   #
-  # Embed an extracted chart in a worksheet.
+  # Insert a chart into a worksheet. The $chart argument should be a Chart
+  # object or else it is assumed to be a filename of an external binary file.
+  # The latter is for backwards compatibility.
   #
-  def embed_chart(*args) #:nodoc:
+  def insert_chart(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/
       args = substitute_cellref(*args)
@@ -6145,13 +6148,16 @@ class Worksheet < BIFFWriter
     scale_x     = args[5] || 1
     scale_y     = args[6] || 1
 
-    raise "Insufficient arguments in embed_chart()" unless args.size >= 3
-    raise "Couldn't locate $chart: $!"              unless FileTest.exist?(chart)
+    if chart.kind_of?(Chart)
+      print "Not a embedded style Chart object in insert_chart()" unless chart.embedded
+    else
+      # Assume an external bin filename.
+        print "Couldn't locate #{chart} in insert_chart()" unless FileTest.exist?(chart)
+    end
 
-    @charts[row] = {  col => [
-          row, col, chart, x_offset, y_offset, scale_x, scale_y
-        ]
-      }
+    @charts[row] = {
+      col => [row, col, chart, x_offset, y_offset, scale_x, scale_y]
+    }
   end
 
   #
@@ -6985,7 +6991,7 @@ class Worksheet < BIFFWriter
       (0 .. num_charts-1 ).each do |i|
           row         =   charts[i][0]
           col         =   charts[i][1]
-          name        =   charts[i][2]
+          chart       =   charts[i][2]
           x_offset    =   charts[i][3]
           y_offset    =   charts[i][4]
           scale_x     =   charts[i][5]
@@ -7045,7 +7051,7 @@ class Worksheet < BIFFWriter
           append(header, data)
 
           store_obj_chart(num_objects+i+1)
-          store_chart_binary(name)
+          store_chart_binary(chart)
       end
 
 
@@ -7065,15 +7071,22 @@ class Worksheet < BIFFWriter
   #
   # _store_chart_binary
   #
-  # Add a binary chart object extracted from an Excel file.
+  # Add the binary data for a chart. This could either be from a Chart object
+  # or from an external binary file (for backwards compatibility).
   #
-  def store_chart_binary(filename)   #:nodoc:
-    filehandle = File.open(filename, "rb")
-    #                        die "Couldn't open $filename in add_chart_ext(): $!.\n";
-
-    while tmp = filehandle.read(4096)
+  def store_chart_binary(chart)   #:nodoc:
+    if chart.kind_of?(Chart)
+      chart.close
+      tmp = chart.get_data
       print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(tmp)
+    else
+      filehandle = File.open(chart, "rb")
+      #      die "Couldn't open $filename in add_chart_ext(): $!.\n";
+      while tmp = filehandle.read(4096)
+        print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
+        append(tmp)
+      end
     end
   end
   private :store_chart_binary
@@ -8590,7 +8603,7 @@ class Worksheet < BIFFWriter
     param[:value] = param[:source]  unless param[:source].nil?
     param[:value] = param[:minimum] unless param[:minimum].nil?
 
-    # 'validate' is a required paramter.
+    # 'validate' is a required parameter.
     unless param.has_key?(:validate)
       #           carp "Parameter 'validate' is required in data_validation()";
       return -3
@@ -8621,7 +8634,7 @@ class Worksheet < BIFFWriter
       param[:validate] = valid_type[param[:validate].downcase]
     end
 
-    # No action is requied for validation type 'any'.
+    # No action is required for validation type 'any'.
     # TODO: we should perhaps store 'any' for message only validations.
     return 0 if param[:validate] == 0
 
@@ -8667,7 +8680,7 @@ class Worksheet < BIFFWriter
       param[:criteria] = criteria_type[param[:criteria].downcase]
     end
 
-    # 'Between' and 'Not between' criterias require 2 values.
+    # 'Between' and 'Not between' criteria require 2 values.
     if param[:criteria] == 0 || param[:criteria] == 1
       unless param.has_key?(:maximum)
         #               carp "Parameter 'maximum' is required in data_validation() " .
@@ -8696,7 +8709,7 @@ class Worksheet < BIFFWriter
       param[:error_type] = error_type[param[:error_type].downcase]
     end
 
-    # Convert date/times value sif required.
+    # Convert date/times value if required.
     if param[:validate] == 4 || param[:validate] == 5
       if param[:value] =~ /T/
         date_time = convert_date_time(param[:value])
@@ -8944,7 +8957,7 @@ class Worksheet < BIFFWriter
   # Pack the formula used in the DV record. This is the same as an cell formula
   # with some additional header information. Note, DV formulas in Excel use
   # relative addressing (R1C1 and ptgXxxN) however we use the Formula.pm's
-  # default absoulute addressing (A1 and ptgXxx).
+  # default absolute addressing (A1 and ptgXxx).
   #
   def pack_dv_formula(formula = nil)   #:nodoc:
     encoding    = 0

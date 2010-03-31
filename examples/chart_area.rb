@@ -15,22 +15,25 @@ require 'writeexcel'
 # Create a new workbook called simple.xls and add a worksheet
 workbook  = WriteExcel.new('chart_area.xls')
 worksheet = workbook.add_worksheet
+bold      = workbook.add_format(:bold => 1)
 
-# Add data to the worksheet that the charts willrefer to.
+# Add the data to the worksheet that the charts will refer to.
+headings = [ 'Category', 'Values 1', 'Values 2' ]
 data = [
-    [ 'Category', 2, 3, 4, 5, 6, 7 ],
-    [ 'Values 1', 1, 4, 5, 2, 1, 5 ],
-    [ 'Values 2', 3, 6, 7, 5, 4, 3 ]
+    [ 2, 3, 4, 5, 6, 7 ],
+    [ 1, 4, 5, 2, 1, 5 ],
+    [ 3, 6, 7, 5, 4, 3 ]
 ]
 
-worksheet.write('A1', data)
+worksheet.write('A1', headings, bold)
+worksheet.write('A2', data)
 
 
 ###############################################################################
 #
 # Example 1. A minimal chart.
 #
-chart1 = workbook.add_chart(:name => 'Chart1', :type => Chart::Area)
+chart1 = workbook.add_chart(:type => Chart::Area)
 
 # Add values only. Use the default categories.
 chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
@@ -40,7 +43,7 @@ chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 # Example 2. A minimal chart with user specified categories (X axis)
 #            and a series name.
 #
-chart2 = workbook.add_chart( :name => 'Chart2', :type => Chart::Area )
+chart2 = workbook.add_chart(:type => Chart::Area)
 
 # Configure the series.
 chart2.add_series(
@@ -53,7 +56,7 @@ chart2.add_series(
 #
 # Example 3. Same as previous chart but with added title and axes labels.
 #
-chart3 = workbook.add_chart( :name => 'Chart3', :type => Chart::Area )
+chart3 = workbook.add_chart(:type => Chart::Area)
 
 # Configure the series.
 chart3.add_series(
@@ -71,7 +74,7 @@ chart3.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 4. Same as previous chart but with an added series
 #
-chart4 = workbook.add_chart( :name => 'Chart4', :type => Chart::Area )
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Area)
 
 # Configure the series.
 chart4.add_series(
@@ -91,6 +94,27 @@ chart4.add_series(
 chart4.set_title( :name => 'Results of sample analysis' )
 chart4.set_x_axis( :name => 'Sample number' )
 chart4.set_y_axis( :name => 'Sample length (cm)' )
+
+###############################################################################
+#
+# Example 5. Same as Example 3 but as an embedded chart.
+#
+chart5 = workbook.add_chart(:type => Chart::Area, :embedded => 1)
+
+# Configure the series.
+chart5.add_series(
+  :categories => '=Sheet1!$A$2:$A$7',
+  :values     => '=Sheet1!$B$2:$B$7',
+  :name       => 'Test data series 1'
+)
+
+# Add some labels.
+chart5.set_title(:name => 'Results of sample analysis' )
+chart5.set_x_axis(:name => 'Sample number')
+chart5.set_y_axis(:name => 'Sample length (cm)')
+
+# Insert the chart into the main worksheet.
+worksheet.insert_chart('E2', chart5)
 
 # File save
 workbook.close

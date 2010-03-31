@@ -56,7 +56,10 @@ class Workbook < BIFFWriter
     @xf_index              = 0
     @fileclosed            = false
     @biffsize              = 0
-    @sheetname             = "Sheet"
+    @sheet_name            = "Sheet"
+    @chart_name            = "Chart"
+    @sheet_count           = 0
+    @chart_count           = 0
     @url_format            = ''
     @codepage              = 0x04E4
     @country               = 1
@@ -289,14 +292,24 @@ class Workbook < BIFFWriter
   #
   # add_chart(params)
   #
-  # Add a chart sheet.
+  # Create a chart for embedding or as as new sheet.
   #
   def add_chart(params)
+    name = ''
+    encoding = 0
     index    = @worksheets.size
 
-    name, encoding = check_sheetname(params[:name], params[:name_encoding])
-
+    # Type must be specified so we can create the required chart instance.
     type = params[:type]
+    print "Must define chart type in add_chart()" if type.nil?
+
+    # Ensure that the chart defaults to non embedded.
+    embedded = params[:embedded]
+
+    # Check the worksheet name for non-embedded charts.
+    unless embedded
+      name, encoding = check_sheetname(params[:name], params[:name_encoding], 1)
+    end
 
     init_data = [
       name,
@@ -311,8 +324,13 @@ class Workbook < BIFFWriter
     ]
 
     chart = Chart.factory(type, *init_data)
-    @worksheets[index] = chart          # Store ref for iterator
-    @sheetnames[index] = name           # Store EXTERNSHEET names
+    # If the chart isn't embedded let the workbook control it.
+    if !embedded
+      @worksheets[index] = chart          # Store ref for iterator
+      @sheetnames[index] = name           # Store EXTERNSHEET names
+    else
+      chart.set_embedded_config_data
+    end
     chart
   end
 
@@ -350,18 +368,26 @@ class Workbook < BIFFWriter
   # Check for valid worksheet names. We check the length, if it contains any
   # invalid characters and if the name is unique in the workbook.
   #
-  def check_sheetname(name, encoding = 0)
+  def check_sheetname(name, encoding = 0, chart = 0)
     encoding ||= 0
     limit           = encoding != 0 ? 62 : 31
     invalid_char    = %r![\[\]:*?/\\]!
 
-    # Supply default "Sheet" name if none has been defined.
-    index     = @worksheets.size
-    sheetname = @sheetname
+    # Increment the Sheet/Chart number used for default sheet names below.
+    if chart != 0
+      @chart_count += 1
+    else
+      @sheet_count += 1
+    end
 
-    if name == ""
-      name     = sheetname + (index + 1).to_s
+    # Supply default Sheet/Chart name if none has been defined.
+    if name.nil? || name == ""
       encoding = 0
+      if chart != 0
+        name = @chart_name + @chart_count.to_s
+      else
+        name = @sheet_name + @sheet_count.to_s
+      end
     end
 
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
@@ -1568,14 +1594,15 @@ class Workbook < BIFFWriter
         nil,
         :font_only => 1
     )
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 6. Series names.
     tmp_format = Format.new(
         nil,
-        :font_only => 1,
-        :bold      => 1
+        :font_only => 1
     )
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 7. Title.
@@ -1584,6 +1611,7 @@ class Workbook < BIFFWriter
         :font_only => 1,
         :bold      => 1
     )
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 8. Axes.
@@ -1592,6 +1620,7 @@ class Workbook < BIFFWriter
         :font_only => 1,
         :bold      => 1
     )
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 9. Comments.
@@ -1601,6 +1630,7 @@ class Workbook < BIFFWriter
         :font      => 'Tahoma',
         :size      => 8
     )
+    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Iterate through the XF objects and write a FONT record if it isn't the
@@ -2055,7 +2085,7 @@ class Workbook < BIFFWriter
 
   #
   # Store the NAME record used for storing the print area, repeat rows, repeat
-  # columns, autofilters and defned names.
+  # columns, autofilters and defined names.
   #
   # TODO. This is a more generic version that will replace _store_name_short()
   #       and _store_name_long().
@@ -2077,7 +2107,7 @@ class Workbook < BIFFWriter
     help_length     = 0x00          # Length of help topic text
     status_length   = 0x00          # Length of status bar text
 
-    # Set grbit builtin flag and the hidden flag for autofilters.
+    # Set grbit built-in flag and the hidden flag for autofilters.
     if text_length == 1
       grbit = 0x0020 if name[0] == 0x06  # Print area
       grbit = 0x0020 if name[0] == 0x07  # Print titles
