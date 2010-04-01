@@ -2,7 +2,7 @@
 #
 # External - A writer class for Excel external charts.
 #
-# Used in conjunction with Spreadsheet::WriteExcel
+# Used in conjunction with WriteExcel
 #
 # perltidy with options: -mbl=2 -pt=0 -nola
 #
@@ -14,7 +14,7 @@
 
 require 'writeexcel/chart'
 
-class External < Chart
+class External < Chart # :nodoc:
   ###############################################################################
   #
   # new()

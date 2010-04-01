@@ -10,7 +10,6 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'rubygems'
 require 'writeexcel/biffwriter'
 require 'writeexcel/olewriter'
 require 'writeexcel/formula'
@@ -26,6 +25,25 @@ require 'writeexcel/properties'
 require 'digest/md5'
 require 'writeexcel/storage_lite'
 
+# The Spreadsheet::WriteExcel module provides an object oriented interface
+# to a new Excel workbook. The following methods are available through
+# a new workbook.
+#
+#     new()
+#     add_worksheet()
+#     add_format()
+#     add_chart()
+#     add_chart_ext()
+#     close()
+#     compatibility_mode()
+#     set_properties()
+#     define_name()
+#     set_tempdir()
+#     set_custom_color()
+#     sheets()
+#     set_1904()
+#     set_codepage()
+#
 class Workbook < BIFFWriter
   BOF = 11
   EOF = 4
@@ -43,6 +61,38 @@ class Workbook < BIFFWriter
   #
   # file is a filename (as string) or io object where to out spreadsheet data.
   # you can set default format of workbook using default_formats.
+  #
+  # A new Excel workbook is created using the new() constructor which accepts
+  # either a filename or a filehandle as a parameter. The following example
+  # creates a new Excel file based on a filename:
+  #
+  #     workbook  = WriteExcel.new('filename.xls')
+  #     worksheet = workbook.add_worksheet
+  #     worksheet.write(0, 0, 'Hi Excel!')
+  #
+  # Here are some other examples of using new() with filenames:
+  #
+  #     workbook1 = WriteExcel.new(filename)
+  #     workbook2 = WriteExcel.new('/tmp/filename.xls')
+  #     workbook3 = WriteExcel.new("c:\\tmp\\filename.xls")
+  #     workbook4 = WriteExcel.new('c:\tmp\filename.xls')
+  #
+  # The last two examples demonstrates how to create a file on DOS or
+  # Windows where it is necessary to either escape the directory
+  # separator \ or to use single quotes to ensure that it isn't interpolated.
+  #
+  # The new() constructor returns a WriteExcel object that you can use to add
+  # worksheets and store data.
+  #
+  # If the file cannot be created, due to file permissions or some other reason,
+  # new will return undef. Therefore, it is good practice to check the return
+  # value of new before proceeding.
+  #
+  #     workbook  = WriteExcel.new('protected.xls')
+  #     die "Problems creating new Excel file:" if workbook.nil?
+  #
+  # You can also pass a valid IO object to the new() constructor.
+  #
   def initialize(file, default_formats = {})
     super()
     @file                  = file
@@ -176,7 +226,7 @@ class Workbook < BIFFWriter
   # closes the file created by new(). This allows you to handle error conditions
   # in the usual way:
   #
-  #     $workbook->close() or die "Error closing file: $!";
+  #     $workbook.close() or die "Error closing file: $!";
   #
   def close
     return if @fileclosed  # Prevent close() from being called twice.
@@ -252,7 +302,7 @@ class Workbook < BIFFWriter
   #
   # This method will also handle strings in UTF-8 format.
   #
-  #     worksheet = workbook.add_worksheet("シート名");
+  #     worksheet = workbook.add_worksheet("シート名")
   #
   # UTF-16BE worksheet names using an additional optional parameter:
   #
@@ -293,6 +343,62 @@ class Workbook < BIFFWriter
   # add_chart(params)
   #
   # Create a chart for embedding or as as new sheet.
+  #
+  # This method is use to create a new chart either as a standalone worksheet
+  # (the default) or as an embeddable object that can be inserted into a
+  # worksheet via the insert_chart() Worksheet method.
+  #
+  #     chart = workbook.add_chart(:type => Chart::Column)
+  #
+  # The properties that can be set are:
+  #
+  #     :type     (required)
+  #     :name     (optional)
+  #     :embedded (optional)
+  #
+  #     * type
+  #
+  #       This is a required parameter. It defines the type of chart that will be created.
+  #
+  #           chart = workbook.add_chart(:type => Chart::Line)
+  #
+  #       The available types are:
+  #
+  #           Chart::Column
+  #           Chart::Bar
+  #           Chart::Line
+  #           Chart::Area
+  #
+  #     * :name
+  #
+  #       Set the name for the chart sheet. The name property is optional and
+  #       if it isn't supplied will default to Chart1 .. n. The name must be
+  #        a valid Excel worksheet name. See add_worksheet() for more details
+  #        on valid sheet names. The name property can be omitted for embedded
+  #        charts.
+  #
+  #           chart = workbook.add_chart(
+  #                           :type => Chart::Line,
+  #                           :name => 'Results Chart'
+  #                   )
+  #
+  #     * :embedded
+  #
+  #       Specifies that the Chart object will be inserted in a worksheet via
+  #       the insert_chart() Worksheet method. It is an error to try insert a
+  #       Chart that doesn't have this flag set.
+  #
+  #           chart = workbook.add_chart(:type => Chart::Line, :embedded => 1)
+  #
+  #           # Configure the chart.
+  #           ...
+  #
+  #           # Insert the chart into the a worksheet.
+  #           worksheet.insert_chart('E2', chart)
+  #
+  # See Spreadsheet::WriteExcel::Chart for details on how to configure the
+  # chart object once it is created. See also the chart_*.pl programs in the
+  # examples directory of the distro.
   #
   def add_chart(params)
     name = ''
@@ -340,6 +446,14 @@ class Workbook < BIFFWriter
   #
   # Add an externally created chart.
   #
+  # This method is use to include externally generated charts in a WriteExcel
+  # file.
+  #
+  #     chart = workbook.add_chart_ext('chart01.bin', 'Chart1')
+  #
+  # This feature is semi-deprecated in favour of the "native" charts created
+  # using add_chart(). Read external_charts.txt in the external_charts
+  # directory of the distro for a full explanation.
   #
   def add_chart_ext(filename, name, encoding = 0)
     index    = @worksheets.size

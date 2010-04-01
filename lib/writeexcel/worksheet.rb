@@ -6134,6 +6134,50 @@ class Worksheet < BIFFWriter
   # object or else it is assumed to be a filename of an external binary file.
   # The latter is for backwards compatibility.
   #
+  # This method can be used to insert a Chart object into a worksheet.
+  # The Chart must be created by the add_chart() Workbook method and it must
+  # have the embedded option set.
+  #
+  #     chart = workbook.add_chart(:type => Chart::Line, :embedded => 1 )
+  #
+  #     # Configure the chart.
+  #     ...
+  #
+  #     # Insert the chart into the a worksheet.
+  #     worksheet.insert_chart('E2', chart)
+  #
+  # See add_chart() for details on how to create the Chart object and
+  # WriteExcel::Chart for details on how to configure it. See also the
+  # chart_*.pl programs in the examples directory of the distro.
+  #
+  # The _x_, _y_, _scale_x_ and _scale_y_ parameters are optional.
+  #
+  # The parameters _x_ and _y_ can be used to specify an offset from the top
+  # left hand corner of the cell specified by _row_ and _col_. The offset values
+  # are in pixels. See the insert_image method above for more information on sizes.
+  #
+  #     worksheet1.insert_chart('E2', chart, 3, 3)
+  #
+  # The parameters _scale_x_ and _scale_y_ can be used to scale the inserted
+  # image horizontally and vertically:
+  #
+  # Scale the width by 120% and the height by 150%
+  #     worksheet.insert_chart('E2', chart, 0, 0, 1.2, 1.5)
+  #
+  # The easiest way to calculate the required scaling is to create a test
+  # chart worksheet with WriteExcel. Then open the file, select the chart
+  # and drag the corner to get the required size. While holding down the
+  # mouse the scale of the resized chart is shown to the left of the formula
+  # bar.
+  #
+  # Note: you must call set_row() or set_column() before insert_chart()
+  # if you wish to change the default dimensions of any of the rows or columns
+  # that the chart occupies. The height of a row can also change if you use
+  # a font that is larger than the default. This in turn will affect the
+  # scaling of your chart. To avoid this you should explicitly set the height
+  # of the row using set_row() if it contains a font size that will change
+  # the row height.
+  #
   def insert_chart(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/

@@ -45,210 +45,110 @@ require 'writeexcel/worksheet'
 
 
 # = Chart
-# Charts and WriteExcel - A short introduction on how include externally
-# generated charts into a WriteExcel file.
+# Chart - A writer class for Excel Charts.
 #
-# = DESCRIPTION
-# This document explains how to import Excel charts into a WriteExcel file.
+# SYNOPSIS ^
 #
-# Please note that this feature is experimental. It may not work
-# in all cases and it is best to start with a simple Excel file
-# and gradually add complexity.
+# To create a simple Excel file with a chart using Spreadsheet::WriteExcel:
 #
-# = METHODOLOGY
-# The general methodology is to create a chart in Excel, extract
-# the chart from the binary file, import it into
-# 'WriteExcel' and add new data to the series that
-# the chart uses.
+#     #!/usr/bin/ruby -w
 #
-# The steps involved are as follows:
+#     require 'writeexcel'
 #
-# 1. Create a new workbook in Excel or with Spreadsheet::WriteExcel. The file
-# should be in Excel 97 or later format.
-# 2. Add one or more worksheets with sample data of the type and format that
-# you would like to have in the final version.
-# 3. Create a chart on a new chart sheet that refers to a data range in one
-# of the worksheets. Charts embedded in worksheets are also supported.
-# See the 'add_chart_ext()' section of the main WriteExcel documentation.
-# 4. Extend the chart data series to cover a sufficient range for any
-# additional data that might be added. For example, if you initially have
-# only 10 data points but you think that you may add up to 2000 at a later
-# stage then increase the chart data series to 2000 points. In this case you
-# should probably also leave the axes on automatic scaling.
-# 5. Format the chart as you would like it to appear in the final version.
-# 6. Save the workbook.
-# 7. Using the 'chartex'* or 'chartex.pl' utility extract the chart(s) from
-# the Excel file:
-#             chartex file.xls
+#     workbook  = WriteExcel.new('chart.xls')
+#     worksheet = workbook.add_worksheet
 #
-#             or
+#     chart     = workbook.add_chart(:type => Chart::Column)
 #
-#             perl chartex.pl file.xls
+#     # Configure the chart.
+#     chart.add_series(
+#       :categories => '=Sheet1!$A$2:$A$7',
+#       :values     => '=Sheet1!$B$2:$B$7'
+#     )
 #
-#         * If you performed a normal installation then the 'chartex'
-#         utility should be installed to your 'perl/bin' directory and
-#         should be available from the command line.
+#     # Add the data to the worksheet the chart refers to.
+#     data = [
+#        [ 'Category', 2, 3, 4, 5, 6, 7 ],
+#        [ 'Value',    1, 4, 5, 2, 1, 5 ]
+#     ]
 #
-# 8. Create a new 'Spreadsheet::WriteExcel' file with the same worksheets as
-# the original file.
-# 9. Add the external chart data to the 'Spreadsheet::WriteExcel' file:
-#             my $chart = $workbook->add_chart_ext('chart01.bin', 'Chart1');
+#     worksheet.write('A1', data)
 #
-# In this case the 'chart01.bin' file is the chart data that
-# was extracted in the Step 7.
+#     workbook.close
 #
-# 10. Create a link between the chart and the target worksheet using a dummy
-# formula, this is discussed in more detail below:
-#             $worksheet->store_formula('=Sheet1!A1');
+# DESCRIPTION ^
 #
-# 11. Add 3 or more additional formats to match any formats used in the chart,
-# for example in the axis labels or the title. You may also have to adjust
-# some of the font properties such as 'bold' or 'italic' to obtain the required
-# font formats in the final chart.
-#             $workbook->add_format(color => $_, bold => 1) for 1 ..5;
+# The Chart module is an abstract base class for modules that implement charts
+# in WriteExcel. The information below is applicable to all of the available
+# subclasses.
 #
-# If you do not supply enough additional formats then you may
-# see the following error when you open the file in Excel:
-# File error: data may have been lost. The file will still
-# load but some formatting will have been lost.
+# The Chart module isn't used directly, a chart object is created via the
+# Workbook add_chart() method where the chart type is specified:
 #
-# 12. Add new data to the data ranges defined in the chart using the standard
-# WriteExcel interface.
+#    chart = workbook.add_chart(:type => Chart::Column)
 #
-# EXAMPLE
-#     This following is a short example which uses line chart to
-#     display some X-Y data:
+# Currently the supported chart types are:
 #
-#         #!/usr/bin/perl -w
+#    * Chart::Column: Creates a column style (histogram) chart. See WriteExcel::Chart::Column.
+#    * Chart::Bar: Creates a Bar style (transposed histogram) chart. See WriteExcel::Chart::Bar.
+#    * Chart::Line: Creates a Line style chart. See WriteExcel::Chart::Line.
+#    * Chart::Area: Creates an Area (filled line) style chart. See WriteExcel::Chart::Area.
 #
-#         use strict;
-#         use Spreadsheet::WriteExcel;
+# More chart types will be supported in time. See the "TODO" section.
 #
-#         my $workbook  = Spreadsheet::WriteExcel->new("demo01.xls");
-#         my $worksheet = $workbook->add_worksheet();
+# == Chart names and links ^
 #
-#         my $chart     = $workbook->add_chart_ext('chart01.bin', 'Chart1');
+# The add_series()), set_x_axis(), set_y_axis() and set_title() methods all
+# support a name property. In general these names can be either a static
+# string or a link to a worksheet cell. If you choose to use the name_formula
+# property to specify a link then you should also the name property.
+# This isn't strictly required by Excel but some third party applications
+# expect it to be present.
 #
-#         $worksheet->store_formula('=Sheet1!A1');
+#     chartl.set_title(
+#       :name          => 'Year End Results',
+#       :name_formula  => '=Sheet1!$C$1'
+#     )
 #
-#         $workbook->add_format(color => 1);
-#         $workbook->add_format(color => 2, bold => 1);
-#         $workbook->add_format(color => 3);
+# These links should be used sparingly since they aren't commonly
+# used in Excel charts.
 #
-#         my @nums    = (0, 1, 2, 3, 4,  5,  6,  7,  8,  9,  10 );
-#         my @squares = (0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100);
+# == Chart names and Unicode ^
 #
-#         $worksheet->write_col('A1', \@nums   );
-#         $worksheet->write_col('B1', \@squares);
+# The add_series()), set_x_axis(), set_y_axis() and set_title() methods all
+# support a name property. These names can be UTF8 strings.
 #
-#     This can be viewed in terms of the steps outlined above:
+# This methodology is explained in the "UNICODE IN EXCEL" section of WriteExcel
+# but is semi-deprecated. If you are using Unicode the easiest option is to
+# just use UTF8.
 #
-#     Steps 1-6. Create a workbook with a chart based on data in the
-#     first worksheet. Otherwise use the 'Chart1.xls' file in the
-#     'charts' directory of the distro as a template.
+# == TODO ^
 #
-#     Step 7. Extract the chart data:
+# Charts in WriteExcel are a work in progress. More chart types and
+# features will be added in time. Please be patient. Even a small feature
+# can take a week or more to implement, test and document.
 #
-#         perl chartex.pl file.xls
+# Features that are on the TODO list and will be added are:
 #
-#         Extracting "Chart1" to chart01.bin
+#     * Additional chart types. Stock, Pie and Scatter charts are next in line.
+#       Send an email if you are interested in other types and they will be
+#       added to the queue.
+#     * Colours and formatting options. For now you will have to make do
+#       with the default Excel colours and formats.
+#     * Axis controls, gridlines.
+#     * Embedded data in charts for third party application support.
 #
-#         ============================================================
-#         Add the following near the start of your program.
-#         Change variable name $worksheet if required.
+# == KNOWN ISSUES ^
 #
-#             $worksheet->store_formula("=Sheet1!A1");
-#
-#     Step 8. Create the new 'Spreadsheet::WriteExcel' file with the
-#     same worksheets as the original file.
-#
-#         #!/usr/bin/perl -w
-#
-#         use strict;
-#         use Spreadsheet::WriteExcel;
-#
-#         my $workbook  = Spreadsheet::WriteExcel->new("demo01.xls");
-#         my $worksheet = $workbook->add_worksheet();
-#
-#     Step 9. Add the external chart data to the
-#     'Spreadsheet::WriteExcel' file:
-#
-#         my $chart     = $workbook->add_chart_ext('chart01.bin', 'Chart1');
-#
-#     Step 10. Create a link between the chart and the worksheet using
-#     a dummy formula:
-#
-#         $worksheet->store_formula('=Sheet1!A1');
-#
-#     Step 11. Add 3 or more additional formats to match any formats
-#     used in the chart.
-#
-#         $workbook->add_format(color => 1);
-#         $workbook->add_format(color => 2, bold => 1);
-#         $workbook->add_format(color => 3);
-#
-#     Step 12. Add new data to the data ranges defined in the chart.
-#
-#         my @nums    = (0, 1, 2, 3, 4,  5,  6,  7,  8,  9,  10 );
-#         my @squares = (0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100);
-#
-#         $worksheet->write_col('A1', \@nums   );
-#         $worksheet->write_col('B1', \@squares);
-#
-#     See also the 'demo1.pl', 'demo2.pl' and 'demo3.pl' example
-#     programs in the 'charts' directory of the distro.
-#
-# LINKING CHARTS AND DATA
-#     Excel maintains links between charts and their data using
-#     references. For example 'Sheet3' in the following chart series
-#     would be stored internally in a reference table using a zero-
-#     based integer.
-#
-#         =SERIES(,Sheet3!$A$2:$A$100,Sheet3!$B$2:$B$100,1)
-#
-#     These references are also shared with formulas that refer to
-#     sheetnames. For example the following would share the same
-#     reference as the previous chart series:
-#
-#         =Sheet3!A1
-#
-#     Therefore, we can simulate the link between the chart and the
-#     worksheet data using a dummy formula:
-#
-#         $worksheet->store_formula('=Sheet3!A1');
-#
-#     When you run the 'chartex' program it will suggest the required
-#     links:
-#
-#         ============================================================
-#         Add the following near the start of your program.
-#         Change variable name $worksheet if required.
-#
-#             $worksheet->store_formula("=Sheet3!A1");
-#
-#     This method is a workaround and will hopefully be made more
-#     transparent in a future release.
-#
-# SEE ALSO
-#     The Spreadsheet::WriteExcel documentation.
-#
-#     The 'demo1.pl', 'demo2.pl' and 'demo3.pl' example programs in
-#     the 'charts' directory of the distro.
-#
-# BUGS
-#     If you wish to submit a bug report run the 'bug_report.pl'
-#     program in the 'examples' directory of the distro.
-#
-# AUTHOR
-#     John McNamara jmcnamara@cpan.org
-#
-# COPYRIGHT
-#     MMV, John McNamara.
-#
-#     All Rights Reserved. This module is free software. It may be
-#     used, redistributed and/or modified under the same terms as Perl
-#     itself.
-#
+#     * Currently charts don't contain embedded data from which the charts
+#       can be rendered. Excel and most other third party applications ignore
+#       this and read the data via the links that have been specified. However,
+#       some applications may complain or not render charts correctly. The
+#       preview option in Mac OS X is an known example. This will be fixed
+#       in a later release.
+#     * When there are several charts with titles set in a workbook some of
+#       the titles may display at a font size of 10 instead of the default
+#       12 until another chart with the title set is viewed.
 #
 class Chart < Worksheet
   NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
@@ -296,6 +196,92 @@ class Chart < Worksheet
   #
   # Add a series and it's properties to a chart.
   #
+  # In an Excel chart a "series" is a collection of information such as values,
+  # x-axis labels and the name that define which data is plotted. These
+  # settings are displayed when you select the Chart -> Source Data... menu
+  # option.
+  #
+  # With a WriteExcel chart object the add_series() method is used to set the
+  # properties for a series:
+  #
+  #     chart.add_series(
+  #       :categories    => '=Sheet1!$A$2:$A$10',
+  #       :values        => '=Sheet1!$B$2:$B$10',
+  #       :name          => 'Series name',
+  #       :name_formula  => '=Sheet1!$B$1'
+  #     )
+  #
+  # The properties that can be set are:
+  #
+  #     :values        (required)
+  #     :categories    (optional for most chart types)
+  #     :name          (optional)
+  #     :name_formula  (optional)
+  #
+  #     * :values
+  #
+  #       This is the most important property of a series and must be set for
+  #       every chart object. It links the chart with the worksheet data that
+  #       it displays.
+  #
+  #           chart.add_series(:values => '=Sheet1!$B$2:$B$10')
+  #
+  #       Note the format that should be used for the formula. It is the same
+  #       as is used in Excel. You must also add the worksheet that you are
+  #       referring to before you link to it, via the workbook
+  #       add_worksheet() method.
+  #
+  #     * :categories
+  #
+  #       This sets the chart category labels. The category is more or less
+  #       the same as the X-axis. In most chart types the categories property
+  #       is optional and the chart will just assume a sequential series
+  #       from 1 .. n.
+  #
+  #           chart.add_series(
+  #             :categories    => '=Sheet1!$A$2:$A$10',
+  #             :values        => '=Sheet1!$B$2:$B$10'
+  #           )
+  #
+  #     * :name
+  #
+  #       Set the name for the series. The name is displayed in the chart
+  #       legend and in the formula bar. The name property is optional and
+  #       if it isn't supplied will default to Series 1 .. n.
+  #
+  #           chart.add_series(
+  #             ...
+  #             :name          => 'Series name'
+  #           )
+  #
+  #     * :name_formula
+  #
+  #       Optional, can be used to link the name to a worksheet cell.
+  #       See "Chart names and links".
+  #
+  #           chart.add_series(
+  #             ...
+  #             :name          => 'Series name',
+  #             :name_formula  => '=Sheet1!$B$1'
+  #           )
+  #
+  # You can add more than one series to a chart. The series numbering and
+  # order in the final chart is the same as the order in which that are added.
+  #
+  #     # Add the first series.
+  #     chart.add_series(
+  #       :categories => '=Sheet1!$A$2:$A$7',
+  #       :values     => '=Sheet1!$B$2:$B$7',
+  #       :name       => 'Test data series 1'
+  #     )
+  #
+  #     # Add another series. Category is the same but values are different.
+  #     chart.add_series(
+  #       :categories => '=Sheet1!$A$2:$A$7',
+  #       :values     => '=Sheet1!$C$2:$C$7',
+  #       :name       => 'Test data series 2'
+  #     )
+  #
   def add_series(params)
     raise "Must specify 'values' in add_series()" if params[:values].nil?
 
@@ -327,6 +313,35 @@ class Chart < Worksheet
   #
   # Set the properties of the X-axis.
   #
+  # The set_x_axis() method is used to set properties of the X axis.
+  #
+  #     chart.set_x_axis(:name => 'Sample length (m)' )
+  #
+  # The properties that can be set are:
+  #
+  #     :name          (optional)
+  #     :name_formula  (optional)
+  #
+  #     * :name
+  #
+  #       Set the name (title or caption) for the axis. The name is displayed
+  #       below the X axis. This property is optional. The default is to have
+  #       no axis name.
+  #
+  #           chart.set_x_axis( :name => 'Sample length (m)' )
+  #
+  #     * :name_formula
+  #
+  #       Optional, can be used to link the name to a worksheet cell.
+  #       See "Chart names and links".
+  #
+  #           chart.set_x_axis(
+  #             :name          => 'Sample length (m)',
+  #             :name_formula  => '=Sheet1!$A$1'
+  #           )
+  #
+  # Additional axis properties such as range, divisions and ticks will be made
+  # available in later releases.
   def set_x_axis(params)
     name, encoding = encode_utf16(params[:name], params[:name_encoding])
     formula = parse_series_formula(params[:name_formula])
@@ -342,6 +357,36 @@ class Chart < Worksheet
   #
   # Set the properties of the Y-axis.
   #
+  # The set_y_axis() method is used to set properties of the Y axis.
+  #
+  #     chart.set_y_axis(:name => 'Sample weight (kg)' )
+  #
+  # The properties that can be set are:
+  #
+  #     :name          (optional)
+  #     :name_formula  (optional)
+  #
+  #     * :name
+  #
+  #       Set the name (title or caption) for the axis. The name is displayed
+  #       to the left of the Y axis. This property is optional. The default
+  #       is to have no axis name.
+  #
+  #           chart.set_y_axis(:name => 'Sample weight (kg)' )
+  #
+  #     * :name_formula
+  #
+  #       Optional, can be used to link the name to a worksheet cell.
+  #       See "Chart names and links".
+  #
+  #           chart.set_y_axis(
+  #             :name          => 'Sample weight (kg)',
+  #             :name_formula  => '=Sheet1!$B$1'
+  #           )
+  #
+  # Additional axis properties such as range, divisions and ticks will be made
+  # available in later releases.
+  #
   def set_y_axis(params)
     name, encoding = encode_utf16(params[:name], params[:name_encoding])
     formula = parse_series_formula(params[:name_formula])
@@ -355,7 +400,32 @@ class Chart < Worksheet
   #
   # set_title()
   #
-  # TODO
+  # The set_title() method is used to set properties of the chart title.
+  #
+  #     chart.set_title(:name => 'Year End Results')
+  #
+  # The properties that can be set are:
+  #
+  #     :name          (optional)
+  #     :name_formula  (optional)
+  #
+  #     * :name
+  #
+  #       Set the name (title) for the chart. The name is displayed above the
+  #       chart. This property is optional. The default is to have no chart
+  #       title.
+  #
+  #           chart.set_title(:name => 'Year End Results')
+  #
+  #     * :name_formula
+  #
+  #       Optional, can be used to link the name to a worksheet cell.
+  #       See "Chart names and links".
+  #
+  #           chart.set_title(
+  #             :name          => 'Year End Results',
+  #             :name_formula  => '=Sheet1!$C$1'
+  #           )
   #
   def set_title(params)
     name, encoding = encode_utf16( params[:name], params[:name_encoding])
@@ -377,7 +447,7 @@ class Chart < Worksheet
   # _prepend() to turn it into an _append() method. This allows for a more
   # natural method calling order.
   #
-  def prepend(*args)
+  def prepend(*args)  # :nodoc:
     @using_tmpfile = false
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(*args)
@@ -389,7 +459,7 @@ class Chart < Worksheet
   #
   # Create and store the Chart data structures.
   #
-  def close
+  def close  # :nodoc:
     # Ignore any data that has been written so far since it is probably
     # from unwanted Worksheet method calls.
     @data = ''
@@ -455,7 +525,7 @@ class Chart < Worksheet
   # Parse the formula used to define a series. We also extract some range
   # information required for _store_series() and the SERIES record.
   #
-  def parse_series_formula(formula)
+  def parse_series_formula(formula)  # :nodoc:
     encoding = 0
     length   = 0
     count    = 0
@@ -502,7 +572,7 @@ class Chart < Worksheet
   #
   # Convert UTF8 strings used in the chart to UTF16.
   #
-  def encode_utf16(str, encoding = 0)
+  def encode_utf16(str, encoding = 0)  # :nodoc:
     # Exit if the $string isn't defined, i.e., hasn't been set by user.
     return [nil, nil] if str.nil?
 
@@ -580,7 +650,7 @@ class Chart < Worksheet
     store_end
   end
 
-  def _formula_type_from_param(t, f, params, key)
+  def _formula_type_from_param(t, f, params, key)  # :nodoc:
     if params.has_key?(key)
       v = params[key]
       (v.nil? || v == [""] || v == '' || v == 0) ? f : t
@@ -594,7 +664,7 @@ class Chart < Worksheet
   #
   # Write the SERIES chart substream.
   #
-  def store_series_stream(params)
+  def store_series_stream(params)   # :nodoc:
     name_type     = _formula_type_from_param(2, 1, params, :name_formula)
     value_type    = _formula_type_from_param(2, 0, params, :value_formula)
     category_type = _formula_type_from_param(2, 0, params, :category_formula)
@@ -624,7 +694,7 @@ class Chart < Worksheet
   #
   # Write the DATAFORMAT chart substream.
   #
-  def store_dataformat_stream(series_index)
+  def store_dataformat_stream(series_index)  # :nodoc:
     store_dataformat(series_index, series_index, 0xFFFF)
 
     store_begin
@@ -638,7 +708,7 @@ class Chart < Worksheet
   #
   # Write the series TEXT substream.
   #
-  def store_series_text_stream(font_index)
+  def store_series_text_stream(font_index)  # :nodoc:
     store_text(*@config[:series_text])
 
     store_begin
@@ -648,7 +718,7 @@ class Chart < Worksheet
     store_end
   end
 
-  def _formula_type(t, f, formula)
+  def _formula_type(t, f, formula)   # :nodoc:
     (formula.nil? || formula == [""] || formula == '' || formula == 0) ? f : t
   end
   private :_formula_type
@@ -659,7 +729,7 @@ class Chart < Worksheet
   #
   # Write the X-axis TEXT substream.
   #
-  def store_x_axis_text_stream
+  def store_x_axis_text_stream   # :nodoc:
     formula = @x_axis_formula.nil? ? '' : @x_axis_formula
     ai_type = _formula_type(2, 1, formula)
 
@@ -684,7 +754,7 @@ class Chart < Worksheet
   #
   # Write the Y-axis TEXT substream.
   #
-  def store_y_axis_text_stream
+  def store_y_axis_text_stream   # :nodoc:
     formula = @y_axis_formula
     ai_type = _formula_type(2, 1, formula)
 
@@ -709,7 +779,7 @@ class Chart < Worksheet
   #
   # Write the legend TEXT substream.
   #
-  def store_legend_text_stream
+  def store_legend_text_stream   # :nodoc:
     store_text(*@config[:legend_text])
 
     store_begin
@@ -725,7 +795,7 @@ class Chart < Worksheet
   #
   # Write the title TEXT substream.
   #
-  def store_title_text_stream
+  def store_title_text_stream   # :nodoc:
     formula = @title_formula
     ai_type = _formula_type(2, 1, formula)
 
@@ -750,7 +820,7 @@ class Chart < Worksheet
   #
   # Write the AXISPARENT chart substream.
   #
-  def store_axisparent_stream
+  def store_axisparent_stream   # :nodoc:
     store_axisparent(*@config[:axisparent])
 
     store_begin
@@ -778,7 +848,7 @@ class Chart < Worksheet
   #
   # Write the AXIS chart substream for the chart category.
   #
-  def store_axis_category_stream
+  def store_axis_category_stream   # :nodoc:
     store_axis(0)
 
     store_begin
@@ -794,7 +864,7 @@ class Chart < Worksheet
   #
   # Write the AXIS chart substream for the chart values.
   #
-  def store_axis_values_stream
+  def store_axis_values_stream   # :nodoc:
     store_axis(1)
 
     store_begin
@@ -811,7 +881,7 @@ class Chart < Worksheet
   #
   # Write the FRAME chart substream.
   #
-  def store_frame_stream
+  def store_frame_stream   # :nodoc:
     store_frame(0x00, 0x03)
     store_begin
     store_lineformat(0x00808080, 0x0000, 0x0000, 0x0000, 0x0017)
@@ -825,7 +895,7 @@ class Chart < Worksheet
   #
   # Write the FRAME chart substream for and embedded chart.
   #
-  def store_embedded_frame_stream
+  def store_embedded_frame_stream   # :nodoc:
     store_frame(0x00, 0x02)
     store_begin
     store_lineformat(0x00000000, 0x0000, 0x0000, 0x0009, 0x004D)
@@ -839,7 +909,7 @@ class Chart < Worksheet
   #
   # Write the CHARTFORMAT chart substream.
   #
-  def store_chartformat_stream
+  def store_chartformat_stream   # :nodoc:
     store_chartformat
 
     store_begin
@@ -859,7 +929,7 @@ class Chart < Worksheet
   # This is an abstract method that is overridden by the sub-classes to define
   # the chart types such as Column, Line, Pie, etc.
   #
-  def store_chart_type
+  def store_chart_type   # :nodoc:
 
   end
 
@@ -870,7 +940,7 @@ class Chart < Worksheet
   # This is an abstract method that is overridden by the sub-classes to define
   # properties of markers, linetypes, pie formats and other.
   #
-  def store_marker_dataformat_stream
+  def store_marker_dataformat_stream   # :nodoc:
 
   end
 
@@ -880,7 +950,7 @@ class Chart < Worksheet
   #
   # Write the LEGEND chart substream.
   #
-  def store_legend_stream
+  def store_legend_stream   # :nodoc:
     store_legend(*@config[:legend])
 
     store_begin
@@ -901,7 +971,7 @@ class Chart < Worksheet
   #
   # Write the 3DBARSHAPE chart BIFF record.
   #
-  def store_3dbarshape
+  def store_3dbarshape   # :nodoc:
     record = 0x105F    # Record identifier.
     length = 0x0002    # Number of bytes to follow.
     riser  = 0x00      # Shape of base.
@@ -921,7 +991,7 @@ class Chart < Worksheet
   #
   # Write the AI chart BIFF record.
   #
-  def store_ai(id, type, formula, format_index = 0)
+  def store_ai(id, type, formula, format_index = 0)   # :nodoc:
     formula = '' if formula == [""]
 
     record       = 0x1051     # Record identifier.
@@ -954,7 +1024,7 @@ class Chart < Worksheet
   # Write the AREAFORMAT chart BIFF record. Contains the patterns and colours
   # of a chart area.
   #
-  def store_areaformat(rgbFore, rgbBack, pattern, grbit, indexFore, indexBack)
+  def store_areaformat(rgbFore, rgbBack, pattern, grbit, indexFore, indexBack)  # :nodoc:
     record    = 0x100A     # Record identifier.
     length    = 0x0010     # Number of bytes to follow.
     # rgbFore              # Foreground RGB colour.
@@ -982,7 +1052,7 @@ class Chart < Worksheet
   #
   # Write the AXCEXT chart BIFF record.
   #
-  def store_axcext
+  def store_axcext  # :nodoc:
     record       = 0x1062     # Record identifier.
     length       = 0x0012     # Number of bytes to follow.
     catMin       = 0x0000     # Minimum category on axis.
@@ -1016,7 +1086,7 @@ class Chart < Worksheet
   #
   # Write the AXESUSED chart BIFF record.
   #
-  def store_axesused(num_axes)
+  def store_axesused(num_axes)   # :nodoc:
     record   = 0x1046     # Record identifier.
     length   = 0x0002     # Number of bytes to follow.
     # num_axes            # Number of axes used.
@@ -1034,7 +1104,7 @@ class Chart < Worksheet
   #
   # Write the AXIS chart BIFF record to define the axis type.
   #
-  def store_axis(type)
+  def store_axis(type)   # :nodoc:
     record    = 0x101D         # Record identifier.
     length    = 0x0012         # Number of bytes to follow.
     # type                     # Axis type.
@@ -1060,7 +1130,7 @@ class Chart < Worksheet
   #
   # Write the AXISLINEFORMAT chart BIFF record.
   #
-  def store_axislineformat
+  def store_axislineformat   # :nodoc:
     record      = 0x1021     # Record identifier.
     length      = 0x0002     # Number of bytes to follow.
     line_format = 0x0001     # Axis line format.
@@ -1078,7 +1148,7 @@ class Chart < Worksheet
   #
   # Write the AXISPARENT chart BIFF record.
   #
-  def store_axisparent(iax, x, y, dx, dy)
+  def store_axisparent(iax, x, y, dx, dy)  # :nodoc:
     record = 0x1041         # Record identifier.
     length = 0x0012         # Number of bytes to follow.
     # iax                   # Axis index.
@@ -1104,7 +1174,7 @@ class Chart < Worksheet
   #
   # Write the BEGIN chart BIFF record to indicate the start of a sub stream.
   #
-  def store_begin
+  def store_begin   # :nodoc:
     record = 0x1033     # Record identifier.
     length = 0x0000     # Number of bytes to follow.
 
@@ -1120,7 +1190,7 @@ class Chart < Worksheet
   #
   # Write the CATSERRANGE chart BIFF record.
   #
-  def store_catserrange
+  def store_catserrange   # :nodoc:
     record   = 0x1020     # Record identifier.
     length   = 0x0008     # Number of bytes to follow.
     catCross = 0x0001     # Value/category crossing.
@@ -1146,7 +1216,7 @@ class Chart < Worksheet
   # and contains dimensions of the chart on the display. Units are in 1/72 inch
   # and are 2 byte integer with 2 byte fraction.
   #
-  def store_chart(x_pos, y_pos, dx, dy)
+  def store_chart(x_pos, y_pos, dx, dy)   # :nodoc:
     record   = 0x1002     # Record identifier.
     length   = 0x0010     # Number of bytes to follow.
     # x_pos               # X pos of top left corner.
@@ -1171,7 +1241,7 @@ class Chart < Worksheet
   # Write the CHARTFORMAT chart BIFF record. The parent record for formatting
   # of a chart group.
   #
-  def store_chartformat
+  def store_chartformat   # :nodoc:
     record    = 0x1014         # Record identifier.
     length    = 0x0014         # Number of bytes to follow.
     reserved1 = 0x00000000     # Reserved.
@@ -1199,7 +1269,7 @@ class Chart < Worksheet
   #
   # Write the CHARTLINE chart BIFF record.
   #
-  def store_chartline
+  def store_chartline   # :nodoc:
     record = 0x101C     # Record identifier.
     length = 0x0002     # Number of bytes to follow.
     type   = 0x0001     # Drop/hi-lo line type.
@@ -1217,7 +1287,7 @@ class Chart < Worksheet
   #
   # Write the TEXT chart BIFF record.
   #
-  def store_charttext
+  def store_charttext   # :nodoc:
     record           = 0x1025         # Record identifier.
     length           = 0x0020         # Number of bytes to follow.
     horz_align       = 0x02           # Horizontal alignment.
@@ -1258,7 +1328,7 @@ class Chart < Worksheet
   # Write the DATAFORMAT chart BIFF record. This record specifies the series
   # that the subsequent sub stream refers to.
   #
-  def store_dataformat(series_index, series_number, point_number)
+  def store_dataformat(series_index, series_number, point_number)   # :nodoc:
     record        = 0x1006     # Record identifier.
     length        = 0x0008     # Number of bytes to follow.
     # series_index             # Series index.
@@ -1283,7 +1353,7 @@ class Chart < Worksheet
   # Write the DEFAULTTEXT chart BIFF record. Identifier for subsequent TEXT
   # record.
   #
-  def store_defaulttext
+  def store_defaulttext   # :nodoc:
     record = 0x1024     # Record identifier.
     length = 0x0002     # Number of bytes to follow.
     type   = 0x0002     # Type.
@@ -1301,7 +1371,7 @@ class Chart < Worksheet
   #
   # Write the DROPBAR chart BIFF record.
   #
-  def store_dropbar
+  def store_dropbar   # :nodoc:
     record      = 0x103D     # Record identifier.
     length      = 0x0002     # Number of bytes to follow.
     percent_gap = 0x0096     # Drop bar width gap (%).
@@ -1319,7 +1389,7 @@ class Chart < Worksheet
   #
   # Write the END chart BIFF record to indicate the end of a sub stream.
   #
-  def store_end
+  def store_end   # :nodoc:
     record = 0x1034     # Record identifier.
     length = 0x0000     # Number of bytes to follow.
 
@@ -1335,7 +1405,7 @@ class Chart < Worksheet
   # Write the FBI chart BIFF record. Specifies the font information at the time
   # it was applied to the chart.
   #
-  def store_fbi(index, height, width_basis, height_basis, scale_basis)
+  def store_fbi(index, height, width_basis, height_basis, scale_basis)  # :nodoc:
     record       = 0x1060    # Record identifier.
     length       = 0x000A    # Number of bytes to follow.
     # index                  # Font index.
@@ -1362,7 +1432,7 @@ class Chart < Worksheet
   # Write the FONTX chart BIFF record which contains the index of the FONT
   # record in the Workbook.
   #
-  def store_fontx(index)
+  def store_fontx(index)   # :nodoc:
     record = 0x1026     # Record identifier.
     length = 0x0002     # Number of bytes to follow.
     # index             # Font index.
@@ -1380,7 +1450,7 @@ class Chart < Worksheet
   #
   # Write the FRAME chart BIFF record.
   #
-  def store_frame(frame_type, grbit)
+  def store_frame(frame_type, grbit)   # :nodoc:
     record     = 0x1032     # Record identifier.
     length     = 0x0004     # Number of bytes to follow.
     # frame_type            # Frame type.
@@ -1400,7 +1470,7 @@ class Chart < Worksheet
   #
   # Write the LEGEND chart BIFF record. The Marcus Horan method.
   #
-  def store_legend(x, y, width, height, wType, wSpacing, grbit)
+  def store_legend(x, y, width, height, wType, wSpacing, grbit)  # :nodoc:
     record   = 0x1015     # Record identifier.
     length   = 0x0014     # Number of bytes to follow.
     # x                   # X-position.
@@ -1430,7 +1500,7 @@ class Chart < Worksheet
   #
   # Write the LINEFORMAT chart BIFF record.
   #
-  def store_lineformat(rgb, lns, we, grbit, index)
+  def store_lineformat(rgb, lns, we, grbit, index)  # :nodoc:
     record = 0x1007     # Record identifier.
     length = 0x000C     # Number of bytes to follow.
     # rgb               # Line RGB colour.
@@ -1456,7 +1526,7 @@ class Chart < Worksheet
   #
   # Write the MARKERFORMAT chart BIFF record.
   #
-  def store_markerformat(rgbFore, rgbBack, marker, grbit, icvFore, icvBack, miSize)
+  def store_markerformat(rgbFore, rgbBack, marker, grbit, icvFore, icvBack, miSize)# :nodoc:
     record  = 0x1009     # Record identifier.
     length  = 0x0014     # Number of bytes to follow.
     # rgbFore            # Foreground RGB color.
@@ -1486,7 +1556,7 @@ class Chart < Worksheet
   #
   # Write the OBJECTLINK chart BIFF record.
   #
-  def store_objectlink(link_type)
+  def store_objectlink(link_type)   # :nodoc:
     record      = 0x1027     # Record identifier.
     length      = 0x0006     # Number of bytes to follow.
     # link_type              # Object text link type.
@@ -1508,7 +1578,7 @@ class Chart < Worksheet
   #
   # Write the PIEFORMAT chart BIFF record.
   #
-  def store_pieformat
+  def store_pieformat   # :nodoc:
     record  = 0x100B     # Record identifier.
     length  = 0x0002     # Number of bytes to follow.
     percent = 0x0000     # Distance % from center.
@@ -1527,7 +1597,7 @@ class Chart < Worksheet
   # Write the PLOTAREA chart BIFF record. This indicates that the subsequent
   # FRAME record belongs to a plot area.
   #
-  def store_plotarea
+  def store_plotarea   # :nodoc:
     record = 0x1035     # Record identifier.
     length = 0x0000     # Number of bytes to follow.
 
@@ -1543,7 +1613,7 @@ class Chart < Worksheet
   #
   # Write the PLOTGROWTH chart BIFF record.
   #
-  def store_plotgrowth
+  def store_plotgrowth  # :nodoc:
     record  = 0x1064         # Record identifier.
     length  = 0x0008         # Number of bytes to follow.
     dx_plot = 0x00010000     # Horz growth for font scale.
@@ -1564,7 +1634,7 @@ class Chart < Worksheet
   # Write the POS chart BIFF record. Generally not required when using
   # automatic positioning.
   #
-  def store_pos(mdTopLt, mdBotRt, x1, y1, x2, y2)
+  def store_pos(mdTopLt, mdBotRt, x1, y1, x2, y2)  # :nodoc:
     record  = 0x104F     # Record identifier.
     length  = 0x0014     # Number of bytes to follow.
     # mdTopLt            # Top left.
@@ -1592,7 +1662,7 @@ class Chart < Worksheet
   #
   # Write the SERAUXTREND chart BIFF record.
   #
-  def store_serauxtrend(reg_type, poly_order, equation, r_squared)
+  def store_serauxtrend(reg_type, poly_order, equation, r_squared)  # :nodoc:
     record     = 0x104B     # Record identifier.
     length     = 0x001C     # Number of bytes to follow.
     # reg_type              # Regression type.
@@ -1628,7 +1698,7 @@ class Chart < Worksheet
   #
   # Write the SERIES chart BIFF record.
   #
-  def store_series(category_count, value_count)
+  def store_series(category_count, value_count)  # :nodoc:
     record         = 0x1003     # Record identifier.
     length         = 0x000C     # Number of bytes to follow.
     category_type  = 0x0001     # Type: category.
@@ -1656,7 +1726,7 @@ class Chart < Worksheet
   #
   # Write the SERIESTEXT chart BIFF record.
   #
-  def store_seriestext(str, encoding)
+  def store_seriestext(str, encoding)  # :nodoc:
     record   = 0x100D          # Record identifier.
     length   = 0x0000          # Number of bytes to follow.
     id       = 0x0000          # Text id.
@@ -1689,7 +1759,7 @@ class Chart < Worksheet
   #
   # Write the SERPARENT chart BIFF record.
   #
-  def store_serparent(series)
+  def store_serparent(series)  # :nodoc:
     record = 0x104A     # Record identifier.
     length = 0x0002     # Number of bytes to follow.
     # series            # Series parent.
@@ -1707,7 +1777,7 @@ class Chart < Worksheet
   #
   # Write the SERTOCRT chart BIFF record to indicate the chart group index.
   #
-  def store_sertocrt
+  def store_sertocrt   # :nodoc:
     record     = 0x1045     # Record identifier.
     length     = 0x0002     # Number of bytes to follow.
     chartgroup = 0x0000     # Chart group index.
@@ -1725,7 +1795,7 @@ class Chart < Worksheet
   #
   # Write the SHTPROPS chart BIFF record.
   #
-  def store_shtprops
+  def store_shtprops   # :nodoc:
     record      = 0x1044     # Record identifier.
     length      = 0x0004     # Number of bytes to follow.
     grbit       = 0x000E     # Option flags.
@@ -1747,7 +1817,7 @@ class Chart < Worksheet
   #
   # Write the TEXT chart BIFF record.
   #
-  def store_text(x, y, dx, dy, grbit1, grbit2, rotation = 0x00)
+  def store_text(x, y, dx, dy, grbit1, grbit2, rotation = 0x00)# :nodoc:
     record   = 0x1025            # Record identifier.
     length   = 0x0020            # Number of bytes to follow.
     at       = 0x02              # Horizontal alignment.
@@ -1787,7 +1857,7 @@ class Chart < Worksheet
   #
   # Write the TICK chart BIFF record.
   #
-  def store_tick
+  def store_tick   # :nodoc:
     record    = 0x101E         # Record identifier.
     length    = 0x001E         # Number of bytes to follow.
     tktMajor  = 0x02           # Type of major tick mark.
@@ -1827,7 +1897,7 @@ class Chart < Worksheet
   #
   # Write the VALUERANGE chart BIFF record.
   #
-  def store_valuerange
+  def store_valuerange   # :nodoc:
     record   = 0x101F         # Record identifier.
     length   = 0x002A         # Number of bytes to follow.
     numMin   = 0x00000000     # Minimum value on axis.
@@ -1865,7 +1935,7 @@ class Chart < Worksheet
   #
   # Setup the default configuration data for a chart.
   #
-  def set_default_config_data
+  def set_default_config_data   # :nodoc:
     #<<< Perltidy ignore this.
     @config = {
         :axisparent      => [ 0, 0x00F8, 0x01F5, 0x0E7F, 0x0B36              ],
@@ -1896,7 +1966,7 @@ class Chart < Worksheet
   #
   # Setup the default configuration data for an embedded chart.
   #
-  def set_embedded_config_data
+  def set_embedded_config_data   # :nodoc:
     @embedded = true
 
     #<<< Perltidy ignore this.
