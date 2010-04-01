@@ -9,7 +9,6 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'rubygems'
 require 'writeexcel'
 
 def get_data
@@ -72,10 +71,9 @@ end
 #  Main
 #
 
-xlsfile = 'autofilters.xls'
+xlsfile = 'autofilter.xls'
 
 workbook = WriteExcel.new(xlsfile)
-bp=1
 
 worksheet1 = workbook.add_worksheet
 worksheet2 = workbook.add_worksheet

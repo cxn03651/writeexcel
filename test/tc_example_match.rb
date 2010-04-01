@@ -60,6 +60,254 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/a_simple.xls", @filename)
   end
 
+  def test_autofilter
+    workbook = WriteExcel.new(@filename)
+
+    worksheet1 = workbook.add_worksheet
+    worksheet2 = workbook.add_worksheet
+    worksheet3 = workbook.add_worksheet
+    worksheet4 = workbook.add_worksheet
+    worksheet5 = workbook.add_worksheet
+    worksheet6 = workbook.add_worksheet
+
+    bold       = workbook.add_format(:bold => 1)
+
+    # Extract the data embedded at the end of this file.
+    headings = %w(Region    Item      Volume    Month)
+    data = get_data_for_autofilter
+
+    # Set up several sheets with the same data.
+    workbook.sheets.each do |worksheet|
+        worksheet.set_column('A:D', 12)
+        worksheet.set_row(0, 20, bold)
+        worksheet.write('A1', headings)
+    end
+
+    ###############################################################################
+    #
+    # Example 1. Autofilter without conditions.
+    #
+
+    worksheet1.autofilter('A1:D51')
+    worksheet1.write('A2', [data])
+
+    ###############################################################################
+    #
+    #
+    # Example 2. Autofilter with a filter condition in the first column.
+    #
+
+    # The range in this example is the same as above but in row-column notation.
+    worksheet2.autofilter(0, 0, 50, 3)
+
+    # The placeholder "Region" in the filter is ignored and can be any string
+    # that adds clarity to the expression.
+    #
+    worksheet2.filter_column(0, 'Region eq East')
+
+    #
+    # Hide the rows that don't match the filter criteria.
+    #
+    row = 1
+
+    data.each do |row_data|
+        region = row_data[0]
+
+        if region == 'East'
+            # Row is visible.
+        else
+            # Hide row.
+            worksheet2.set_row(row, nil, nil, 1)
+        end
+
+        worksheet2.write(row, 0, row_data)
+        row += 1
+    end
+
+
+    ###############################################################################
+    #
+    #
+    # Example 3. Autofilter with a dual filter condition in one of the columns.
+    #
+
+    worksheet3.autofilter('A1:D51')
+
+    worksheet3.filter_column('A', 'x eq East or x eq South')
+
+    #
+    # Hide the rows that don't match the filter criteria.
+    #
+    row = 1
+
+    data.each do |row_data|
+        region = row_data[0]
+
+        if region == 'East' || region == 'South'
+            # Row is visible.
+        else
+            # Hide row.
+            worksheet3.set_row(row, nil, nil, 1)
+        end
+
+        worksheet3.write(row, 0, row_data)
+        row += 1
+    end
+
+
+    ###############################################################################
+    #
+    #
+    # Example 4. Autofilter with filter conditions in two columns.
+    #
+
+    worksheet4.autofilter('A1:D51')
+
+    worksheet4.filter_column('A', 'x eq East')
+    worksheet4.filter_column('C', 'x > 3000 and x < 8000' )
+
+    #
+    # Hide the rows that don't match the filter criteria.
+    #
+    row = 1
+
+    data.each do |row_data|
+        region = row_data[0]
+        volume = row_data[2]
+
+        if region == 'East' && volume >  3000   && volume < 8000
+            # Row is visible.
+        else
+            # Hide row.
+            worksheet4.set_row(row, nil, nil, 1)
+        end
+
+        worksheet4.write(row, 0, row_data)
+        row += 1
+    end
+
+
+    ###############################################################################
+    #
+    #
+    # Example 5. Autofilter with filter for blanks.
+    #
+
+    # Create a blank cell in our test data.
+    data[5][0] = ''
+
+    worksheet5.autofilter('A1:D51')
+    worksheet5.filter_column('A', 'x == Blanks')
+
+    #
+    # Hide the rows that don't match the filter criteria.
+    #
+    row = 1
+
+    data.each do |row_data|
+        region = row_data[0]
+
+        if region == ''
+            # Row is visible.
+        else
+            # Hide row.
+            worksheet5.set_row(row, nil, nil, 1)
+        end
+
+        worksheet5.write(row, 0, row_data)
+        row += 1
+    end
+
+
+    ###############################################################################
+    #
+    #
+    # Example 6. Autofilter with filter for non-blanks.
+    #
+
+    worksheet6.autofilter('A1:D51')
+    worksheet6.filter_column('A', 'x == NonBlanks')
+
+    #
+    # Hide the rows that don't match the filter criteria.
+    #
+    row = 1
+
+    data.each do |row_data|
+        region = row_data[0]
+
+        if region != ''
+            # Row is visible.
+        else
+            # Hide row.
+            worksheet6.set_row(row, nil, nil, 1)
+        end
+
+        worksheet6.write(row, 0, row_data)
+        row += 1
+    end
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/autofilter.xls", @filename)
+  end
+
+  def get_data_for_autofilter
+    [
+      ['East',      'Apple',     9000,      'July'],
+      ['East',      'Apple',     5000,      'July'],
+      ['South',     'Orange',    9000,      'September'],
+      ['North',     'Apple',     2000,      'November'],
+      ['West',      'Apple',     9000,      'November'],
+      ['South',     'Pear',      7000,      'October'],
+      ['North',     'Pear',      9000,      'August'],
+      ['West',      'Orange',    1000,      'December'],
+      ['West',      'Grape',     1000,      'November'],
+      ['South',     'Pear',      10000,     'April'],
+      ['West',      'Grape',     6000,      'January'],
+      ['South',     'Orange',    3000,      'May'],
+      ['North',     'Apple',     3000,      'December'],
+      ['South',     'Apple',     7000,      'February'],
+      ['West',      'Grape',     1000,      'December'],
+      ['East',      'Grape',     8000,      'February'],
+      ['South',     'Grape',     10000,     'June'],
+      ['West',      'Pear',      7000,      'December'],
+      ['South',     'Apple',     2000,      'October'],
+      ['East',      'Grape',     7000,      'December'],
+      ['North',     'Grape',     6000,      'April'],
+      ['East',      'Pear',      8000,      'February'],
+      ['North',     'Apple',     7000,      'August'],
+      ['North',     'Orange',    7000,      'July'],
+      ['North',     'Apple',     6000,      'June'],
+      ['South',     'Grape',     8000,      'September'],
+      ['West',      'Apple',     3000,      'October'],
+      ['South',     'Orange',    10000,     'November'],
+      ['West',      'Grape',     4000,      'July'],
+      ['North',     'Orange',    5000,      'August'],
+      ['East',      'Orange',    1000,      'November'],
+      ['East',      'Orange',    4000,      'October'],
+      ['North',     'Grape',     5000,      'August'],
+      ['East',      'Apple',     1000,      'December'],
+      ['South',     'Apple',     10000,     'March'],
+      ['East',      'Grape',     7000,      'October'],
+      ['West',      'Grape',     1000,      'September'],
+      ['East',      'Grape',     10000,     'October'],
+      ['South',     'Orange',    8000,      'March'],
+      ['North',     'Apple',     4000,      'July'],
+      ['South',     'Orange',    5000,      'July'],
+      ['West',      'Apple',     4000,      'June'],
+      ['East',      'Apple',     5000,      'April'],
+      ['North',     'Pear',      3000,      'August'],
+      ['East',      'Grape',     9000,      'November'],
+      ['North',     'Orange',    8000,      'October'],
+      ['East',      'Apple',     10000,     'June'],
+      ['South',     'Pear',      1000,      'December'],
+      ['North',     'Grape',     10000,     'July'],
+      ['East',      'Grape',     6000,      'February'],
+    ]
+  end
+
   def test_regions
     workbook = WriteExcel.new(@filename)
 
@@ -101,7 +349,6 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/regions.xls", @filename)
   end
 
-=begin
   def test_stats
     workbook = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet('Test data')
@@ -159,28 +406,8 @@ class TC_example_match < Test::Unit::TestCase
     workbook.close
 
     # do assertion
-    compare_file("#{PERL_OUTDIR}/regions.xls", @filename)
+    compare_file("#{PERL_OUTDIR}/stats.xls", @filename)
   end
-
-  def test_hidden
-    workbook   = WriteExcel.new(@filename)
-    worksheet1 = workbook.add_worksheet
-    worksheet2 = workbook.add_worksheet
-    worksheet3 = workbook.add_worksheet
-
-    # Sheet2 won't be visible until it is unhidden in Excel.
-    worksheet2.hide
-
-    worksheet1.write(0, 0, 'Sheet2 is hidden')
-    worksheet2.write(0, 0, 'How did you find me?')
-    worksheet3.write(0, 0, 'Sheet2 is hidden')
-
-    workbook.close
-
-    # do assertion
-    compare_file("#{PERL_OUTDIR}/hidden.xls", @filename)
-  end
-=end
 
   def test_hyperlink1
     # Create a new workbook and add a worksheet
@@ -260,7 +487,6 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/workbook2.xls", @filename2)
   end
 
-=begin
   def test_data_validate
     workbook  = WriteExcel.new(@filename)
     worksheet = workbook.add_worksheet
@@ -528,7 +754,6 @@ class TC_example_match < Test::Unit::TestCase
     # do assertion
     compare_file("#{PERL_OUTDIR}/data_validate.xls", @filename)
   end
-=end
 
   def test_merge1
     workbook  = WriteExcel.new(@filename)
@@ -706,7 +931,6 @@ class TC_example_match < Test::Unit::TestCase
     compare_file("#{PERL_OUTDIR}/merge4.xls", @filename)
   end
 
-=begin
   def test_merge5
     # Create a new workbook and add a worksheet
     workbook  = WriteExcel.new(@filename)
@@ -749,7 +973,7 @@ class TC_example_match < Test::Unit::TestCase
                                       )
 
 
-    worksheet.merge_range('D4:D9', 'Rotation 90°', format2)
+    worksheet.merge_range('D4:D9', 'Rotation 90', format2)
 
 
 
@@ -767,14 +991,13 @@ class TC_example_match < Test::Unit::TestCase
                                       )
 
 
-    worksheet.merge_range('F4:F9', 'Rotation -90°', format3)
+    worksheet.merge_range('F4:F9', 'Rotation -90', format3)
 
     workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/merge5.xls", @filename)
   end
-=end
 
   def test_images
     # Create a new workbook called simple.xls and add a worksheet
