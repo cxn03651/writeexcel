@@ -1,6 +1,6 @@
 require 'rubygems'
 
-version = '0.2.2'
+version = '0.3.0'
 
 spec = Gem::Specification.new do |s|
   s.name      = 'writeexcel'
@@ -12,6 +12,7 @@ spec = Gem::Specification.new do |s|
                 Dir['[A-Z]*'] + Dir['test/**/*']
   s.require_path = 'lib'
   s.test_file    = 'test/ts_all.rb'
-  s.has_rdoc     = false
+  s.has_rdoc     = true
+  s.rdoc_options << 'README'
   s.required_ruby_version = '>=1.8'
 end

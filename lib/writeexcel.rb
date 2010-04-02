@@ -1125,5 +1125,5 @@ require "writeexcel/workbook"
 #       12 until another chart with the title set is viewed.
 #
 class WriteExcel < Workbook
-  VERSION = "0.2.2"
+  VERSION = "0.3.0"
 end
