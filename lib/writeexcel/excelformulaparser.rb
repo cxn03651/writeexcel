@@ -5,7 +5,7 @@
 #
 
 require 'racc/parser.rb'
-class ExcelFormulaParser < Racc::Parser
+class ExcelFormulaParser < Racc::Parser  # :nodoc:
 ##### State transition tables begin ###
 
 racc_action_table = [
@@ -508,9 +508,10 @@ module_eval(<<'.,.,', 'excelformula.y', 56)
 end   # class ExcelFormulaParser
 
 
-class ExcelFormulaParserError < StandardError; end
+class ExcelFormulaParserError < StandardError #:nodoc:
+end
 
-class Node
+class Node  # :nodoc:
 
    def exec_list(nodes)
       v = nil
@@ -525,7 +526,7 @@ class Node
 
 end
 
-class RootNode < Node
+class RootNode < Node  # :nodoc:
 
    def initialize(tree)
       @tree = tree
@@ -538,7 +539,7 @@ class RootNode < Node
 end
 
 
-class FuncallNode < Node
+class FuncallNode < Node  # :nodoc:
 
    def initialize(func, args)
       @func = func
@@ -555,7 +556,7 @@ class FuncallNode < Node
 
 end
 
-class NumberNode < Node
+class NumberNode < Node  # :nodoc:
 
    def initialize(val)
       @val = val
@@ -567,7 +568,7 @@ class NumberNode < Node
 
 end
 
-class OperateNode < Node
+class OperateNode < Node  # :nodoc:
 
    def initialize(op, left, right)
       @op = op

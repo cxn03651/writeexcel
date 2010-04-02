@@ -14,7 +14,7 @@ require 'nkf'
 require 'strscan'
 require 'writeexcel/excelformulaparser'
 
-class Formula < ExcelFormulaParser
+class Formula < ExcelFormulaParser       #:nodoc:
 
   NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
 

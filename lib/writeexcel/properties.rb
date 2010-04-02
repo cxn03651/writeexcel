@@ -21,7 +21,7 @@ require 'date'
 # Title, Subject, Author, Keywords, Comments, Last author keywords and the
 # creation date.
 #
-def create_summary_property_set(properties)
+def create_summary_property_set(properties)       #:nodoc:
     byte_order          = [0xFFFE].pack('v')
     version             = [0x0000].pack('v')
     system_id           = [0x00020105].pack('V')
@@ -66,7 +66,7 @@ end
 # The DocSummary also contains a stream for user defined properties. However
 # this is a little arcane and probably not worth the implementation effort.
 #
-def create_doc_summary_property_set(properties)
+def create_doc_summary_property_set(properties)       #:nodoc:
     byte_order          = [0xFFFE].pack('v')
     version             = [0x0000].pack('v')
     system_id           = [0x00020105].pack('V')
@@ -137,7 +137,7 @@ end
 # calling functions. Currently we only need to handle 4 property types:
 # VT_I2, VT_LPSTR, VT_FILETIME.
 #
-def pack_property_data(properties, offset = 0)
+def pack_property_data(properties, offset = 0)       #:nodoc:
     packed_property     = ''
     data                = ''
     offsets             = []
@@ -177,7 +177,7 @@ end
 #
 # Pack an OLE property type: VT_I2, 16-bit signed integer.
 #
-def pack_VT_I2(value)
+def pack_VT_I2(value)       #:nodoc:
     type    = 0x0002
     data = [type, value].pack('VV')
 end
@@ -189,7 +189,7 @@ end
 # Pack an OLE property type: VT_LPSTR, String in the Codepage encoding.
 # The strings are null terminated and padded to a 4 byte boundary.
 #
-def pack_VT_LPSTR(str, codepage)
+def pack_VT_LPSTR(str, codepage)       #:nodoc:
     type        = 0x001E
     string      = str + "\0"
 
@@ -230,7 +230,7 @@ end
 #
 # Pack an OLE property type: VT_FILETIME.
 #
-def pack_VT_FILETIME(localtime)
+def pack_VT_FILETIME(localtime)       #:nodoc:
   type        = 0x0040
 
   epoch = DateTime.new(1601, 1, 1)

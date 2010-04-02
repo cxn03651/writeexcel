@@ -13,7 +13,7 @@
 
 require 'tempfile'
 
-class BIFFWriter
+class BIFFWriter       #:nodoc:
 
   BIFF_Version = 0x0600
   BigEndian    = [1].pack("I") == [1].pack("N")
@@ -261,7 +261,7 @@ class BIFFWriter
     return record
   end
 
-  def not_using_tmpfile  # :nodoc:
+  def not_using_tmpfile
     @filehandle.close(true) if @filehandle
     @filehandle = nil
     @using_tmpfile = nil

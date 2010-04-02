@@ -10,9 +10,9 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-class MaxSizeError < StandardError; end
+class MaxSizeError < StandardError; end       #:nodoc:
 
-class OLEWriter
+class OLEWriter       #:nodoc:
 
   # Not meant for public consumption
   MaxSize    = 7087104 # Use WriteExcel::Big to exceed this

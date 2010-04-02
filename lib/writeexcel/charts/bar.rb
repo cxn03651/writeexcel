@@ -14,61 +14,8 @@
 
 require 'writeexcel/chart'
 
-#
-# == SYNOPSIS ^
-#
-# To create a simple Excel file with a Bar chart using WriteExcel:
-#
-#     #!/usr/bin/ruby -w
-#
-#     require 'writeexcel'
-#
-#     workbook  = WriteExcel.new('chart.xls')
-#     worksheet = workbook.add_worksheet
-#
-#     chart     = workbook.add_chart(:type => Chart::Bar)
-#
-#     # Configure the chart.
-#     chart.add_series(
-#       :categories => '=Sheet1!$A$2:$A$7',
-#       :values     => '=Sheet1!$B$2:$B$7'
-#     )
-#
-#     # Add the data to the worksheet the chart refers to.
-#     data = [
-#         [ 'Category', 2, 3, 4, 5, 6, 7 ],
-#         [ 'Value',    1, 4, 5, 2, 1, 5 ]
-#     ]
-#
-#     worksheet.write('A1', data)
-#
-#     workbook.close
-#
-# == DESCRIPTION ^
-#
-# This module implements Bar charts for WriteExcel. The chart object is
-# created via the Workbook add_chart method:
-#
-#     chart = workbook.add_chart(:type => Chart::Bar)
-#
-# Once the object is created it can be configured via the following methods
-# that are common to all chart classes:
-#
-#     chart.add_series
-#     chart.set_x_axis
-#     chart.set_y_axis
-#     chart.set_title
-#
-# These methods are explained in detail in Chart. Class specific methods or
-# settings, if any, are explained below.
-#
-# == Bar Chart Methods ^
-#
-# There aren't currently any bar chart specific methods.
-# See the TODO section of Spreadsheet::WriteExcel::Chart.
-#
 class Chart
-  class Bar < Chart
+  class Bar < Chart  # :nodoc:
     ###############################################################################
     #
     # new()
@@ -111,7 +58,7 @@ class Chart
     #
     # Override some of the default configuration data for an embedded chart.
     #
-    def set_embedded_config_data  # :nodoc:
+    def set_embedded_config_data
       # Set the parent configuration first.
       super
 

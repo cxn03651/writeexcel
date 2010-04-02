@@ -25,38 +25,11 @@ require 'writeexcel/properties'
 require 'digest/md5'
 require 'writeexcel/storage_lite'
 
-# The Spreadsheet::WriteExcel module provides an object oriented interface
-# to a new Excel workbook. The following methods are available through
-# a new workbook.
-#
-#     new()
-#     add_worksheet()
-#     add_format()
-#     add_chart()
-#     add_chart_ext()
-#     close()
-#     compatibility_mode()
-#     set_properties()
-#     define_name()
-#     set_tempdir()
-#     set_custom_color()
-#     sheets()
-#     set_1904()
-#     set_codepage()
-#
 class Workbook < BIFFWriter
-  BOF = 11
-  EOF = 4
-  SheetName = "Sheet"
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
-
-  attr_accessor :date_system, :biff_only
-  attr_reader :encoding, :url_format, :parser, :tempdir, :date_1904, :compatibility
-  attr_reader :summary
-  attr_reader :formats, :xf_index, :worksheets, :extsst_buckets, :extsst_bucket_size
-  attr_reader :data
-  attr_writer :mso_size
-  attr_accessor :localtime
+  BOF = 11  # :nodoc:
+  EOF = 4   # :nodoc:
+  SheetName = "Sheet"  # :nodoc:
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
 
   #
   # file is a filename (as string) or io object where to out spreadsheet data.
@@ -200,7 +173,7 @@ class Workbook < BIFFWriter
   # ------- cxn03651 add -------
   # md5 can use in ruby. so, @checksum_method is always 3.
 
-  def get_checksum_method
+  def get_checksum_method       #:nodoc:
     @checksum_method = 3
   end
   private :get_checksum_method
@@ -482,7 +455,7 @@ class Workbook < BIFFWriter
   # Check for valid worksheet names. We check the length, if it contains any
   # invalid characters and if the name is unique in the workbook.
   #
-  def check_sheetname(name, encoding = 0, chart = 0)
+  def check_sheetname(name, encoding = 0, chart = 0)       #:nodoc:
     encoding ||= 0
     limit           = encoding != 0 ? 62 : 31
     invalid_char    = %r![\[\]:*?/\\]!
@@ -688,7 +661,6 @@ class Workbook < BIFFWriter
     end
     @date_1904 = mode
   end
-  private :set_1904
 
   #
   # Change the RGB components of the elements in the colour palette.
@@ -775,7 +747,7 @@ class Workbook < BIFFWriter
   #
   # Sets the colour palette to the Excel 97+ default.
   #
-  def set_palette_xl97
+  def set_palette_xl97       #:nodoc:
     @palette = [
       [0x00, 0x00, 0x00, 0x00],   # 8
       [0xff, 0xff, 0xff, 0x00],   # 9
@@ -1121,7 +1093,7 @@ class Workbook < BIFFWriter
   # the strings used is utf8 then the codepage is marked as utf8. Otherwise
   # Latin 1 is used (although in our case this is limited to 7bit ASCII).
   #
-  def get_property_set_codepage(params, strings)
+  def get_property_set_codepage(params, strings)       #:nodoc:
     # Allow for manually marked utf8 strings.
     unless params[:utf8].nil?
       return 0xFDE9
@@ -1142,7 +1114,7 @@ class Workbook < BIFFWriter
   # Assemble worksheets into a workbook and send the BIFF data to an OLE
   # storage.
   #
-  def store_workbook
+  def store_workbook       #:nodoc:
     # Add a default worksheet if non have been added.
     add_worksheet if @worksheets.empty?
 
@@ -1205,6 +1177,18 @@ class Workbook < BIFFWriter
   end
   private :store_workbook
 
+  def biff_only=(val)  # :nodoc:
+    @biff_only = val
+  end
+
+  def summary  # :nodoc:
+    @summary
+  end
+
+  def localtime=(val)  # :nodoc:
+    @localtime = val
+  end
+
   ###############################################################################
   #
   # _store_OLE_file()
@@ -1212,7 +1196,7 @@ class Workbook < BIFFWriter
   # Store the workbook in an OLE container using the default handler or using
   # OLE::Storage_Lite if the workbook data is > ~ 7MB.
   #
-  def store_OLE_file
+  def store_OLE_file       #:nodoc:
     maxsize = 7_087_104
 #    maxsize = 1
 
@@ -1298,7 +1282,7 @@ class Workbook < BIFFWriter
   #
   # Calculate Worksheet BOF offsets records for use in the BOUNDSHEET records.
   #
-  def calc_sheet_offsets
+  def calc_sheet_offsets       #:nodoc:
     _bof     = 12
     _eof     = 4
 
@@ -1346,7 +1330,7 @@ class Workbook < BIFFWriter
   #
   # In the following SPID is shape id, according to Escher nomenclature.
   #
-  def calc_mso_sizes
+  def calc_mso_sizes       #:nodoc:
     mso_size        = 0    # Size of the MSODRAWINGGROUP record
     start_spid      = 1024 # Initial spid for each sheet
     max_spid        = 1024 # spidMax
@@ -1403,8 +1387,7 @@ class Workbook < BIFFWriter
       end
 
       # Pass calculated values back to the worksheet
-      sheet.object_ids = [start_spid, drawings_saved,
-      num_shapes, max_spid -1]
+      sheet.object_ids = [start_spid, drawings_saved, num_shapes, max_spid -1]
     end
 
 
@@ -1433,7 +1416,7 @@ class Workbook < BIFFWriter
   #            25 bytes for blip
   #          = 77 + image size.
   #
-  def process_images
+  def process_images       #:nodoc:
     images_seen     = {}
     image_data      = []
     previous_images = []
@@ -1563,7 +1546,7 @@ class Workbook < BIFFWriter
   # checksum but any other will do. In the event of no checksum module being
   # available we simulate a checksum using the image index.
   #
-  def image_checksum(data, index1, index2 = 0)
+  def image_checksum(data, index1, index2 = 0)       #:nodoc:
     if    @checksum_method == 1
       # Digest::MD4
       #           return Digest::MD4::md4_hex($data);
@@ -1586,7 +1569,7 @@ class Workbook < BIFFWriter
   #
   # Extract width and height information from a PNG file.
   #
-  def process_png(data)
+  def process_png(data)       #:nodoc:
     type    = 6 # Excel Blip type (MSOBLIPTYPE).
     width   = data[16, 4].unpack("N")[0]
     height  = data[20, 4].unpack("N")[0]
@@ -1603,7 +1586,7 @@ class Workbook < BIFFWriter
   #
   # Most of these checks came from the old Worksheet::_process_bitmap() method.
   #
-  def process_bmp(data, filename)
+  def process_bmp(data, filename)       #:nodoc:
     type     = 7   # Excel Blip type (MSOBLIPTYPE).
 
     # Check that the file is big enough to be a bitmap.
@@ -1689,7 +1672,7 @@ class Workbook < BIFFWriter
   #
   # Store the Excel FONT records.
   #
-  def store_all_fonts
+  def store_all_fonts       #:nodoc:
     format  = @formats[15]   # The default cell format.
     font    = format.get_font
 
@@ -1787,7 +1770,7 @@ class Workbook < BIFFWriter
   #
   # Store user defined numerical formats i.e. FORMAT records
   #
-  def store_all_num_formats
+  def store_all_num_formats       #:nodoc:
     num_formats = {}
     index = 164       # User defined FORMAT records start from 0xA4
 
@@ -1826,7 +1809,7 @@ class Workbook < BIFFWriter
   #
   # Write all XF records.
   #
-  def store_all_xfs
+  def store_all_xfs       #:nodoc:
     @formats.each do |format|
       xf = format.get_xf
       print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
@@ -1841,7 +1824,7 @@ class Workbook < BIFFWriter
   #
   # Write all STYLE records.
   #
-  def store_all_styles
+  def store_all_styles       #:nodoc:
     # Excel adds the built-in styles in alphabetical order.
     built_ins = [
       [0x03, 16], # Comma
@@ -1990,7 +1973,7 @@ class Workbook < BIFFWriter
   #
   # Write Excel BIFF WINDOW1 record.
   #
-  def store_window1
+  def store_window1       #:nodoc:
     record    = 0x003D                 # Record identifier
     length    = 0x0012                 # Number of bytes to follow
 
@@ -2030,7 +2013,7 @@ class Workbook < BIFFWriter
   #
   # Writes Excel BIFF BOUNDSHEET record.
   #
-  def store_boundsheet(sheetname, offset, type, hidden, encoding)
+  def store_boundsheet(sheetname, offset, type, hidden, encoding)       #:nodoc:
     record    = 0x0085                    # Record identifier
     length    = 0x08 + sheetname.length   # Number of bytes to follow
 
@@ -2060,7 +2043,7 @@ class Workbook < BIFFWriter
   #
   # Write Excel BIFF STYLE records.
   #
-  def store_style(type, xf_index)
+  def store_style(type, xf_index)       #:nodoc:
     record    = 0x0293    # Record identifier
     length    = 0x0004    # Bytes to follow
 
@@ -2085,7 +2068,7 @@ class Workbook < BIFFWriter
   #
   # Writes Excel FORMAT record for non "built-in" numerical formats.
   #
-  def store_num_format(format, ifmt, encoding)
+  def store_num_format(format, ifmt, encoding)       #:nodoc:
     format = format.to_s unless format.kind_of?(String)
     record    = 0x041E         # Record identifier
     # length                   # Number of bytes to follow
@@ -2128,7 +2111,7 @@ class Workbook < BIFFWriter
   #
   # Write Excel 1904 record to indicate the date system in use.
   #
-  def store_1904
+  def store_1904       #:nodoc:
     record    = 0x0022         # Record identifier
     length    = 0x0002         # Bytes to follow
 
@@ -2149,7 +2132,7 @@ class Workbook < BIFFWriter
   # Write BIFF record SUPBOOK to indicate that the workbook contains external
   # references, in our case, formula, print area and print title refs.
   #
-  def store_supbook
+  def store_supbook       #:nodoc:
     record      = 0x01AE                   # Record identifier
     length      = 0x0004                   # Number of bytes to follow
 
@@ -2264,7 +2247,7 @@ class Workbook < BIFFWriter
   # Store the NAME record in the short format that is used for storing the print
   # area, repeat rows only and repeat columns only.
   #
-  def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden = nil)
+  def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden = nil)       #:nodoc:
     record          = 0x0018       # Record identifier
     length          = 0x001b       # Number of bytes to follow
 
@@ -2327,7 +2310,7 @@ class Workbook < BIFFWriter
   # _store_name_short() but we use a separate method to keep the code clean.
   # Code abstraction for reuse can be carried too far, and I should know. ;-)
   #
-  def store_name_long(index, type, ext_ref, rowmin, rowmax, colmin, colmax)
+  def store_name_long(index, type, ext_ref, rowmin, rowmax, colmin, colmax)       #:nodoc:
     record          = 0x0018       # Record identifier
     length          = 0x002a       # Number of bytes to follow
 
@@ -2393,7 +2376,7 @@ class Workbook < BIFFWriter
   #
   # Stores the PALETTE biff record.
   #
-  def store_palette
+  def store_palette       #:nodoc:
     record          = 0x0092                 # Record identifier
     length          = 2 + 4 * @palette.size  # Number of bytes to follow
     ccv             =         @palette.size  # Number of RGB values to follow
@@ -2417,7 +2400,7 @@ class Workbook < BIFFWriter
   #
   # Stores the CODEPAGE biff record.
   #
-  def store_codepage
+  def store_codepage       #:nodoc:
     record          = 0x0042               # Record identifier
     length          = 0x0002               # Number of bytes to follow
     cv              = @codepage            # The code page
@@ -2436,7 +2419,7 @@ class Workbook < BIFFWriter
   #
   # Stores the COUNTRY biff record.
   #
-  def store_country
+  def store_country       #:nodoc:
     record          = 0x008C               # Record identifier
     length          = 0x0004               # Number of bytes to follow
     country_default = @country
@@ -2455,7 +2438,7 @@ class Workbook < BIFFWriter
   #
   # Stores the HIDEOBJ biff record.
   #
-  def store_hideobj
+  def store_hideobj       #:nodoc:
     record          = 0x008D               # Record identifier
     length          = 0x0002               # Number of bytes to follow
     hide            = @hideobj             # Option to hide objects
@@ -2583,7 +2566,7 @@ class Workbook < BIFFWriter
   # and CONTINUE records for use in setting the BOUNDSHEET record offsets. The
   # downside of this is that the same algorithm repeated in _store_shared_strings.
   #
-  def calculate_shared_string_sizes
+  def calculate_shared_string_sizes       #:nodoc:
     strings = Array.new(@sinfo[:str_unique])
 
     @sinfo[:str_table].each_key do |key|
@@ -2740,7 +2723,7 @@ class Workbook < BIFFWriter
   # and then store its global and local offset within the SST table. The offset
   # occurs wherever the start of the bucket string is written out via append().
   #
-  def store_shared_strings
+  def store_shared_strings       #:nodoc:
     strings = @str_array
 
     record              = 0x00FC   # Record identifier
@@ -2942,7 +2925,7 @@ class Workbook < BIFFWriter
   # size of 8. The following algorithm generates the same size/bucket ratio
   # as Excel.
   #
-  def calculate_extsst_size
+  def calculate_extsst_size       #:nodoc:
     unique_strings  = @sinfo[:str_unique]
 
     if unique_strings < 1024
@@ -2966,7 +2949,7 @@ class Workbook < BIFFWriter
   #
   # Write EXTSST table using the offsets calculated in _store_shared_strings().
   #
-  def store_extsst
+  def store_extsst       #:nodoc:
     offsets     = @extsst_offsets
     bucket_size = @extsst_bucket_size
 
@@ -3035,7 +3018,7 @@ class Workbook < BIFFWriter
   #     Case 2:  <= 2*8224 bytes      1 MSODRAWINGGROUP + 1 CONTINUE
   #     Case 3:  >  2*8224 bytes      2 MSODRAWINGGROUP + n CONTINUE
   #
-  def add_mso_drawing_group_continue(data)
+  def add_mso_drawing_group_continue(data)       #:nodoc:
     limit       = 8228 -4
     mso_group   = 0x00EB # Record identifier
     continue    = 0x003C # Record identifier
@@ -3091,7 +3074,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher DggContainer record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_dgg_container
+  def store_mso_dgg_container       #:nodoc:
     type        = 0xF000
     version     = 15
     instance    = 0
@@ -3113,7 +3096,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher Dgg record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_dgg(max_spid, num_clusters, shapes_saved, drawings_saved, clusters)
+  def store_mso_dgg(max_spid, num_clusters, shapes_saved, drawings_saved, clusters)       #:nodoc:
     type            = 0xF006
     version         = 0
     instance        = 0
@@ -3140,7 +3123,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_bstore_container
+  def store_mso_bstore_container       #:nodoc:
     return '' if @images_size == 0
 
     type        = 0xF001
@@ -3165,7 +3148,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_images(ref_count, image_type, image, size, checksum1, checksum2)
+  def store_mso_images(ref_count, image_type, image, size, checksum1, checksum2)       #:nodoc:
     blip_store_entry =  store_mso_blip_store_entry(
         ref_count,
         image_type,
@@ -3195,7 +3178,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher BlipStoreEntry record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_blip_store_entry(ref_count, image_type, size, checksum1)
+  def store_mso_blip_store_entry(ref_count, image_type, size, checksum1)       #:nodoc:
     type        = 0xF007
     version     = 2
     instance    = image_type
@@ -3227,7 +3210,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher Blip record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_blip(image_type, image_data, size, checksum1, checksum2)
+  def store_mso_blip(image_type, image_data, size, checksum1, checksum2)       #:nodoc:
     instance = 0x046A if image_type == 5 # JPG
     instance = 0x06E0 if image_type == 6 # PNG
     instance = 0x07A9 if image_type == 7 # BMP
@@ -3254,7 +3237,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher Opt record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_opt
+  def store_mso_opt       #:nodoc:
     type        = 0xF00B
     version     = 3
     instance    = 3
@@ -3273,7 +3256,7 @@ class Workbook < BIFFWriter
   #
   # Write the Escher SplitMenuColors record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_split_menu_colors
+  def store_mso_split_menu_colors       #:nodoc:
     type        = 0xF11E
     version     = 0
     instance    = 4

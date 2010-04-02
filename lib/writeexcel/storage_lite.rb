@@ -1,7 +1,7 @@
 require 'tempfile'
 require 'stringio'
 
-class OLEStorageLite
+class OLEStorageLite       #:nodoc:
   PPS_TYPE_ROOT   = 5
   PPS_TYPE_DIR    = 1
   PPS_TYPE_FILE   = 2
@@ -419,7 +419,7 @@ class OLEStorageLite
   end
 end
 
-class OLEStorageLitePPS < OLEStorageLite
+class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
   attr_accessor :no, :name, :type, :prev_pps, :next_pps, :dir_pps
   attr_accessor :time_1st, :time_2nd, :start_block, :size, :data, :child
   attr_reader   :pps_file
@@ -531,7 +531,7 @@ class OLEStorageLitePPS < OLEStorageLite
   protected :_savePpsWk
 end
 
-class OLEStorageLitePPSRoot < OLEStorageLitePPS
+class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
   def initialize(raTime1st, raTime2nd, raChild)
     super(
       nil,
@@ -922,7 +922,7 @@ bpp=1
   end
 end
 
-class OLEStorageLitePPSFile < OLEStorageLitePPS
+class OLEStorageLitePPSFile < OLEStorageLitePPS       #:nodoc:
   def initialize(sNm, data = '')
     super(
         nil,

@@ -14,89 +14,8 @@ require 'writeexcel/format'
 require 'writeexcel/formula'
 require 'writeexcel/workbook'
 
-#
-# = Worksheet
-# A new worksheet is created by calling the add_worksheet() method from
-# a workbook object:
-#
-# == Cell notation
-# WriteExcel supports two forms of notation to designate the position of cells:
-# Row-column notation and A1 notation.
-#
-# Row-column notation uses a zero based index for both row and column while A1
-# notation uses the standard Excel alphanumeric sequence of column letter and
-# 1-based row. For example:
-#
-#    (0, 0)      # The top left cell in row-column notation.
-#    ('A1')      # The top left cell in A1 notation.
-#
-#    (1999, 29)  # Row-column notation.
-#    ('AD2000')  # The same cell in A1 notation.
-#
-# Row-column notation is useful if you are referring to cells
-# programmatically:
-#
-#    (0 .. 10).each do |i|
-#        worksheet.write(i, 0, 'Hello')  # Cells A1 to A10
-#    end
-#
-# A1 notation is useful for setting up a worksheet manually and for working
-# with formulas:
-#
-#    worksheet.write('H1', 200)
-#    worksheet.write('H2', '=H1+1')
-#
-# In formulas and applicable methods you can also use the A:A column notation:
-#
-#    worksheet.write('A1', '=SUM(B:B)')
-#
-# For simplicity, the parameter lists for the worksheet method calls in the
-# following sections are given in terms of row-column notation. In all cases
-# it is also possible to use A1 notation.
-#
-# Note: in Excel it is also possible to use a R1C1 notation. This is not
-# supported by WriteExcel.
-#
-# ==PAGE SET-UP METHODS
-#
-# Page set-up methods affect the way that a worksheet looks when it is printed.
-# They control features such as page headers and footers and margins. These
-# methods are really just standard worksheet methods. They are documented
-# here in a separate section for the sake of clarity.
-#
-# The following methods are available for page set-up:
-#
-#     set_landscape()
-#     set_portrait()
-#     set_page_view()
-#     set_paper()
-#     center_horizontally()
-#     center_vertically()
-#     set_margins()
-#     set_header()
-#     set_footer()
-#     repeat_rows()
-#     repeat_columns()
-#     hide_gridlines()
-#     print_row_col_headers()
-#     print_area()
-#     print_across()
-#     fit_to_pages()
-#     set_start_page()
-#     set_print_scale()
-#     set_h_pagebreaks()
-#     set_v_pagebreaks()
-#
-# A common requirement when working with WriteExcel is to apply the same page
-# set-up features to all of the worksheets in a workbook. To do this you can use
-# the sheets() method of the workbook class to access the array of worksheets
-# in a workbook:
-#
-#     workbook.sheets.each do |worksheet|
-#        worksheet->set_landscape
-#     end
-#
-class MaxSizeError < StandardError; end
+class MaxSizeError < StandardError   #:nodoc:
+end
 
 #
 # = class Worksheet
@@ -109,54 +28,13 @@ class MaxSizeError < StandardError; end
 #  worksheet1 = workbook.add_worksheet
 #  worksheet2 = workbook.add_worksheet
 #
-# == Cell notation
-#
-# WriteExcel supports two forms of notation to designate
-# the position of cells: Row-column notation and A1 notation. Row-column
-# notation uses a zero based index for both row and column while A1
-# notation uses the standard Excel alphanumeric sequence of column
-# letter and 1-based row.
-# For example:
-#
-#  (0, 0)      # The top left cell in row-column notation.
-#  ('A1')      # The top left cell in A1 notation.
-#  (1999, 29)  # Row-Column notation.
-#  ('AD2000')  # The same cell in A1 notation.
-#
-# Row-column notation is useful if you are refferring to cells
-# programmatically.
-#
-#  0.upto(9) do |i|
-#    worksheet.write(i, 0, 'Hello')  # Cells A1 to A10
-#  end
-#
-# A1 notation is useful for setting up a worksheet manually and
-# for working with formulas.
-#
-#  worksheet.write('H1', 200)
-#  worksheet.write('H2', '=H1+1')
-#
-# In formulas and applicable methods you can also use the <tt>A:A</tt>
-# column notation.
-#
-#  worksheet.write('A1', '=SUM(B:B)')
-#
 class Worksheet < BIFFWriter
 
-  RowMax   = 65536
-  ColMax   = 256
-  StrMax   = 0
-  Buffer   = 4096
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
-
-  attr_reader :encoding, :xf_index, :index, :sheet_type, :images_array
-  attr_reader :filter_area, :filter_count
-  attr_reader :title_rowmin, :title_rowmax, :title_colmin, :title_colmax
-  attr_reader :print_rowmin, :print_rowmax, :print_colmin, :print_colmax
-  attr_accessor :index, :colinfo, :selection, :offset, :selected, :hidden, :active
-  attr_accessor :object_ids, :num_images, :image_mso_size
-  attr_writer :date_1904
-  attr_reader :compatibility
+  RowMax   = 65536  # :nodoc:
+  ColMax   = 256    # :nodoc:
+  StrMax   = 0      # :nodoc:
+  Buffer   = 4096   # :nodoc:
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/   # :nodoc:
 
   ###############################################################################
   #
@@ -165,7 +43,7 @@ class Worksheet < BIFFWriter
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
   def initialize(name, index, encoding, url_format, parser, tempdir,
-                 date_1904, compatibility, sinfo)
+                 date_1904, compatibility, sinfo)                     # :nodoc:
     super()
 
     @name                = name
@@ -432,7 +310,7 @@ class Worksheet < BIFFWriter
   # See the explanation in Workbook::compatibility_mode(). This private method
   # is mainly used for test purposes.
   #
-  def compatibility_mode(compatibility = 1)
+  def compatibility_mode(compatibility = 1)   # :nodoc:
     @compatibility = compatibility
   end
   private :compatibility_mode
@@ -609,6 +487,145 @@ class Worksheet < BIFFWriter
   end
 
   #
+  #          row       : Row Number
+  #          height    : Format object
+  #          format    : Format object
+  #          hidden    : Hidden flag
+  #          level     : Outline level
+  #          collapsed : Collapsed row
+  #
+  # This method is used to set the height and XF format for a row.
+  # Writes the  BIFF record ROW.
+  #
+  # This method can be used to change the default properties of a row. All
+  # parameters apart from _row_ are optional.
+  #
+  # The most common use for this method is to change the height of a row:
+  #
+  #     worksheet.set_row(0, 20) # Row 1 height set to 20
+  #
+  # If you wish to set the _format_ without changing the _height_ you can pass
+  # nil as the _height_ parameter:
+  #
+  #     worksheet.set_row(0, nil, format)
+  #
+  # The _format_ parameter will be applied to any cells in the row that don't
+  # have a format. For example
+  #
+  #     worksheet.set_row(0, nil, format1)      # Set the format for row 1
+  #     worksheet.write('A1', 'Hello')          # Defaults to format1
+  #     worksheet.write('B1', 'Hello', format2) # Keeps format2
+  #
+  # If you wish to define a row format in this way you should call the method
+  # before any calls to write(). Calling it afterwards will overwrite any format
+  # that was previously specified.
+  #
+  # The hidden parameter should be set to 1 if you wish to hide a row. This can
+  # be used, for example, to hide intermediary steps in a complicated calculation:
+  #
+  #     worksheet.set_row(0, 20,    format, 1)
+  #     worksheet.set_row(1, undef, nil,    1)
+  #
+  # The level parameter is used to set the outline level of the row. Outlines
+  # are described in "OUTLINES AND GROUPING IN EXCEL". Adjacent rows with the
+  # same outline level are grouped together into a single outline.
+  #
+  # The following example sets an outline level of 1 for rows 1 and 2
+  # (zero-indexed):
+  #
+  #     worksheet.set_row(1, nil, nil, 0, 1)
+  #     worksheet.set_row(2, nil, nil, 0, 1)
+  #
+  # The hidden parameter can also be used to hide collapsed outlined rows when
+  # used in conjunction with the level parameter.
+  #
+  #     worksheet.set_row(1, nil, nil, 1, 1)
+  #     worksheet.set_row(2, nil, nil, 1, 1)
+  #
+  # For collapsed outlines you should also indicate which row has the
+  # collapsed + symbol using the optional collapsed parameter.
+  #
+  #     worksheet.set_row(3, nil, nil, 0, 0, 1)
+  #
+  # For a more complete example see the outline.pl and outline_collapsed.rb
+  # programs in the examples directory of the distro.
+  #
+  # Excel allows up to 7 outline levels. Therefore the level parameter should
+  # be in the range 0 <= level <= 7.
+  #
+  def set_row(row, height = nil, format = nil, hidden = 0, level = 0, collapsed = 0)
+    record      = 0x0208               # Record identifier
+    length      = 0x0010               # Number of bytes to follow
+
+    colMic      = 0x0000               # First defined column
+    colMac      = 0x0000               # Last defined column
+    # miyRw;                           # Row height
+    irwMac      = 0x0000               # Used by Excel to optimise loading
+    reserved    = 0x0000               # Reserved
+    grbit       = 0x0000               # Option flags
+    # ixfe;                            # XF index
+
+    return if row.nil?
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, 0, 0, 1) != 0
+
+    # Check for a format object
+    if format.kind_of?(Format)
+      ixfe = format.get_xf_index
+    else
+      ixfe = 0x0F
+    end
+
+    # Set the row height in units of 1/20 of a point. Note, some heights may
+    # not be obtained exactly due to rounding in Excel.
+    #
+    unless height.nil?
+      miyRw = height *20
+    else
+      miyRw = 0xff # The default row height
+      height = 0
+    end
+
+    # Set the limits for the outline levels (0 <= x <= 7).
+    level = 0 if level < 0
+    level = 7 if level > 7
+
+    @outline_row_level = level if level > @outline_row_level
+
+    # Set the options flags.
+    # 0x10: The fCollapsed flag indicates that the row contains the "+"
+    #       when an outline group is collapsed.
+    # 0x20: The fDyZero height flag indicates a collapsed or hidden row.
+    # 0x40: The fUnsynced flag is used to show that the font and row heights
+    #       are not compatible. This is usually the case for WriteExcel.
+    # 0x80: The fGhostDirty flag indicates that the row has been formatted.
+    #
+    grbit |= level
+    grbit |= 0x0010 if collapsed != 0
+    grbit |= 0x0020 if hidden    != 0
+    grbit |= 0x0040
+    grbit |= 0x0080 unless format.nil?
+    grbit |= 0x0100
+
+    header = [record, length].pack("vv")
+    data   = [row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
+
+    # Store the data or write immediately depending on the compatibility mode.
+    if @compatibility != 0
+      @row_data[row] = header + data
+    else
+      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
+      append(header, data)
+    end
+
+    # Store the row sizes for use when calculating image vertices.
+    # Also store the column formats.
+    @row_sizes[row]   = height
+    @row_formats[row] = format unless format.nil?
+  end
+
+  #
   # :call-seq:
   #   set_column(first_col, last_col, width, format, hidden, level, collapsed)
   #   set_column(A1_notation,         width, format, hidden, level, collapsed)
@@ -778,6 +795,54 @@ class Worksheet < BIFFWriter
     @selection = args
   end
 
+  #
+  # :call-seq:
+  #   outline_settings(visible, symbols_below, symbols_right, auto_style)
+  #
+  # This method sets the properties for outlining and grouping. The defaults
+  # correspond to Excel's defaults.
+  #
+  # The outline_settings() method is used to control the appearance of
+  # outlines in Excel. Outlines are described in
+  # "OUTLINES AND GROUPING IN EXCEL".
+  #
+  # The _visible_ parameter is used to control whether or not outlines are
+  # visible. Setting this parameter to 0 will cause all outlines on the
+  # worksheet to be hidden. They can be unhidden in Excel by means of the
+  # "Show Outline Symbols" command button. The default setting is 1 for
+  # visible outlines.
+  #
+  #     worksheet.outline_settings(0)
+  #
+  # The _symbols__below parameter is used to control whether the row outline
+  # symbol will appear above or below the outline level bar. The default
+  # setting is 1 for symbols to appear below the outline level bar.
+  #
+  # The symbols_right parameter is used to control whether the column outline
+  # symbol will appear to the left or the right of the outline level bar. The
+  # default setting is 1 for symbols to appear to the right of the outline
+  # level bar.
+  #
+  # The _auto_style_ parameter is used to control whether the automatic outline
+  # generator in Excel uses automatic styles when creating an outline. This has
+  # no effect on a file generated by WriteExcel but it does have an effect on
+  # how the worksheet behaves after it is created. The default setting is 0 for
+  # "Automatic Styles" to be turned off.
+  #
+  # The default settings for all of these parameters correspond to Excel's
+  # default parameters.
+  #
+  # The worksheet parameters controlled by outline_settings() are rarely used.
+  #
+  def outline_settings(*args)
+    @outline_on    = args[0] || 1
+    @outline_below = args[1] || 1
+    @outline_right = args[2] || 1
+    @outline_style = args[3] || 0
+
+    # Ensure this is a boolean vale for Window2
+    @outline_on    = 1 if @outline_on == 0
+  end
 
   #
   # :call-seq:
@@ -886,6 +951,361 @@ class Worksheet < BIFFWriter
   # *thaw_panes = *split_panes;
 
   #
+  # :call-seq:
+  #   merge_range(first_row, first_col, last_row, last_col, token, format, utf_16_be)
+  #
+  # This is a wrapper to ensure correct use of the merge_cells method, i.e.,
+  # write the first cell of the range, write the formatted blank cells in the
+  # range and then call the merge_cells record. Failing to do the steps in
+  # this order will cause Excel 97 to crash.
+  #
+  # Merging cells can be achieved by setting the merge property of a Format
+  # object, see "CELL FORMATTING". However, this only allows simple Excel5
+  # style horizontal merging which Excel refers to as "center across selection".
+  #
+  #
+  # The merge_range() method allows you to do Excel97+ style formatting where
+  # the cells can contain other types of alignment in addition to the merging:
+  #
+  #     format = workbook.add_format(
+  #                              :border  => 6,
+  #                              :valign  => 'vcenter',
+  #                              :align   => 'center'
+  #                            )
+  #
+  #     worksheet.merge_range('B3:D4', 'Vertical and horizontal', format)
+  #
+  # <em>WARNING.</em> The format object that is used with a merge_range()
+  # method call is marked internally as being associated with a merged range.
+  # It is a fatal error to use a merged format in a non-merged cell. Instead
+  # you should use separate formats for merged and non-merged cells. This
+  # restriction will be removed in a future release.
+  #
+  # The _utf_16_be_ parameter is optional, see below.
+  #
+  # merge_range() writes its _token_ argument using the worksheet write()
+  # method. Therefore it will handle numbers, strings, formulas or urls as
+  # required.
+  #
+  # Setting the merge property of the format isn't required when you are using
+  # merge_range(). In fact using it will exclude the use of any other horizontal
+  # alignment option.
+  #
+  # Your can specify UTF-16BE worksheet names using an additional optional
+  # parameter:
+  #
+  #     str = [0x263a].pack('n')
+  #     worksheet.merge_range('B3:D4', str, format, 1)   # Smiley
+  #
+  # The full possibilities of this method are shown in the merge3.rb to
+  # merge65.rb programs in the examples directory of the distribution.
+  #
+  def merge_range(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    if args[0] =~ /^\D/
+      args = substitute_cellref(*args)
+    end
+    raise "Incorrect number of arguments" if args.size != 6 and args.size != 7
+    raise "Format argument is not a format object" unless args[5].kind_of?(Format)
+
+    rwFirst  = args[0]
+    colFirst = args[1]
+    rwLast   = args[2]
+    colLast  = args[3]
+    string   = args[4]
+    format   = args[5]
+    encoding = args[6] ? 1 : 0
+
+    # Temp code to prevent merged formats in non-merged cells.
+    error = "Error: refer to merge_range() in the documentation. " +
+    "Can't use previously non-merged format in merged cells"
+
+    raise error if format.used_merge == -1
+    format.used_merge = 0   # Until the end of this function.
+
+    # Set the merge_range property of the format object. For BIFF8+.
+    format.set_merge_range
+
+    # Excel doesn't allow a single cell to be merged
+    raise "Can't merge single cell" if rwFirst  == rwLast and
+    colFirst == colLast
+
+    # Swap last row/col with first row/col as necessary
+    rwFirst,  rwLast  = rwLast,  rwFirst  if rwFirst  > rwLast
+    colFirst, colLast = colLast, colFirst if colFirst > colLast
+
+    # Write the first cell
+    if encoding != 0
+      write_utf16be_string(rwFirst, colFirst, string, format)
+    else
+      write(rwFirst, colFirst, string, format)
+    end
+
+    # Pad out the rest of the area with formatted blank cells.
+    (rwFirst .. rwLast).each do |row|
+      (colFirst .. colLast).each do |col|
+        next if row == rwFirst and col == colFirst
+        write_blank(row, col, format)
+      end
+    end
+
+    merge_cells(rwFirst, colFirst, rwLast, colLast)
+
+    # Temp code to prevent merged formats in non-merged cells.
+    format.used_merge = 1
+  end
+
+  #
+  # Set the worksheet zoom factor in the range 10 <= $scale <= 400:
+  #
+  #     worksheet1.set_zoom(50)
+  #     worksheet2.set_zoom(75)
+  #     worksheet3.set_zoom(300)
+  #     worksheet4.set_zoom(400)
+  #
+  # The default zoom factor is 100. You cannot zoom to "Selection" because
+  # it is calculated by Excel at run-time.
+  #
+  # Note, set_zoom() does not affect the scale of the printed page. For that
+  # you should use set_print_scale().
+  #
+  def set_zoom(scale = 100)
+    # Confine the scale to Excel's range
+    if scale < 10 or scale > 400
+      #           carp "Zoom factor $scale outside range: 10 <= zoom <= 400";
+      scale = 100
+    end
+
+    @zoom = scale.to_i
+  end
+
+  #
+  # Display the worksheet right to left for some eastern versions of Excel.
+  #
+  # The right_to_left() method is used to change the default direction of the
+  # worksheet from left-to-right, with the A1 cell in the top left, to
+  # right-to-left, with the he A1 cell in the top right.
+  #
+  #     worksheet.right_to_left
+  #
+  # This is useful when creating Arabic, Hebrew or other near or far eastern
+  # worksheets that use right-to-left as the default direction.
+  #
+  def right_to_left
+    @display_arabic = 1
+  end
+
+  #
+  # Hide cell zero values.
+  #
+  # The hide_zero() method is used to hide any zero values that appear in
+  # cells.
+  #
+  #     worksheet.hide_zero
+  #
+  # In Excel this option is found under Tools->Options->View.
+  #
+  def hide_zero
+    @display_zeros = 1
+  end
+
+  #
+  # Set the colour of the worksheet colour.
+  #
+  # The set_tab_color() method is used to change the colour of the worksheet
+  # tab. This feature is only available in Excel 2002 and later. You can
+  # use one of the standard colour names provided by the Format object or a
+  # colour index. See "COLOURS IN EXCEL" and the set_custom_color() method.
+  #
+  #     worksheet1.set_tab_color('red')
+  #     worksheet2.set_tab_color(0x0C)
+  #
+  # See the tab_colors.rb program in the examples directory of the distro.
+  #
+  def set_tab_color(colour)
+    color = Format._get_color(colour)
+    color = 0 if color == 0x7FFF # Default color.
+    @tab_color = color
+  end
+
+  #
+  # :call-seq:
+  #    autofilter(first_row, first_col, last_row, last_col)
+  #    autofilter("A1:G10")
+  #
+  # Set the autofilter area in the worksheet.
+  #
+  #
+  # This method allows an autofilter to be added to a worksheet. An
+  # autofilter is a way of adding drop down lists to the headers of a 2D range
+  # of worksheet data. This is turn allow users to filter the data based on
+  # simple criteria so that some data is highlighted and some is hidden.
+  #
+  # To add an autofilter to a worksheet:
+  #
+  #     worksheet.autofilter(0, 0, 10, 3)
+  #     worksheet.autofilter('A1:D11')    # Same as above in A1 notation.
+  #
+  # Filter conditions can be applied using the filter_column() method.
+  #
+  # See the autofilter.rb program in the examples directory of the distro
+  # for a more detailed example.
+  #
+  def autofilter(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    if args[0] =~ /^\D/
+      args = substitute_cellref(*args)
+    end
+
+    return if args.size != 4 # Require 4 parameters
+
+    row1, col1, row2, col2 = args
+
+    # Reverse max and min values if necessary.
+    if row2 < row1
+      tmp  = row1
+      row1 = row2
+      row2 = tmp
+    end
+    if col2 < col1
+      tmp  = col1
+      col1 = col2
+      col2 = col1
+    end
+
+    # Store the Autofilter information
+    @filter_area = [row1, row2, col1, col2]
+    @filter_count = 1 + col2 -col1
+  end
+
+  #
+  # :call-seq:
+  #   filter_column(column, expression)
+  #
+  # Set the column filter criteria.
+  #
+  # The filter_column method can be used to filter columns in a autofilter
+  # range based on simple conditions.
+  #
+  # NOTE:
+  # It isn't sufficient to just specify the filter condition. You must also
+  # hide any rows that don't match the filter condition. Rows are hidden using
+  # the set_row() visible parameter. Spreadsheet::WriteExcel cannot do this
+  # automatically since it isn't part of the file format. See the autofilter.rb
+  # program in the examples directory of the distro for an example.
+  #
+  # The conditions for the filter are specified using simple expressions:
+  #
+  #     worksheet.filter_column('A', 'x > 2000')
+  #     worksheet.filter_column('B', 'x > 2000 and x < 5000')
+  #
+  # The _column_ parameter can either be a zero indexed column number or a
+  # string column name.
+  #
+  # The following operators are available:
+  #
+  #     Operator        Synonyms
+  #        ==           =   eq  =~
+  #        !=           <>  ne  !=
+  #        >
+  #        <
+  #        >=
+  #        <=
+  #
+  #        and          &&
+  #        or           ||
+  #
+  # The operator synonyms are just syntactic sugar to make you more comfortable
+  # using the expressions. It is important to remember that the expressions will
+  # be interpreted by Excel and not by ruby.
+  #
+  # An expression can comprise a single statement or two statements separated by
+  # the and and or operators. For example:
+  #
+  #     'x <  2000'
+  #     'x >  2000'
+  #     'x == 2000'
+  #     'x >  2000 and x <  5000'
+  #     'x == 2000 or  x == 5000'
+  #
+  # Filtering of blank or non-blank data can be achieved by using a value of
+  # Blanks or NonBlanks in the expression:
+  #
+  #     'x == Blanks'
+  #     'x == NonBlanks'
+  #
+  # Top 10 style filters can be specified using a expression like the
+  # following:
+  #
+  #     Top|Bottom 1-500 Items|%
+  #
+  # For example:
+  #
+  #     'Top    10 Items'
+  #     'Bottom  5 Items'
+  #     'Top    25 %'
+  #     'Bottom 50 %'
+  #
+  # Excel also allows some simple string matching operations:
+  #
+  #     'x =~ b*'   # begins with b
+  #     'x !~ b*'   # doesn't begin with b
+  #     'x =~ *b'   # ends with b
+  #     'x !~ *b'   # doesn't end with b
+  #     'x =~ *b*'  # contains b
+  #     'x !~ *b*'  # doesn't contains b
+  #
+  # You can also use * to match any character or number and ? to match any
+  # single character or number. No other regular expression quantifier is
+  # supported by Excel's filters. Excel's regular expression characters can
+  # be escaped using ~.
+  #
+  # The placeholder variable x in the above examples can be replaced by any
+  # simple string. The actual placeholder name is ignored internally so the
+  # following are all equivalent:
+  #
+  #     'x     < 2000'
+  #     'col   < 2000'
+  #     'Price < 2000'
+  #
+  # Also, note that a filter condition can only be applied to a column in a
+  # range specified by the autofilter() Worksheet method.
+  #
+  # See the autofilter.rb program in the examples directory of the distro
+  # for a more detailed example.
+  #
+  def filter_column(col, expression)
+    raise "Must call autofilter() before filter_column()" if @filter_count == 0
+    #      raise "Incorrect number of arguments to filter_column()" unless @_ == 2
+
+    # Check for a column reference in A1 notation and substitute.
+    if col =~ /^\D/
+      # Convert col ref to a cell ref and then to a col number.
+      no_use, col = substitute_cellref(col + '1')
+    end
+    col_first = @filter_area[2]
+    col_last  = @filter_area[3]
+
+    # Reject column if it is outside filter range.
+    if (col < col_first or col > col_last)
+      raise "Column '#{col}' outside autofilter() column range " +
+      "(#{col_first} .. #{col_last})";
+    end
+
+    tokens = extract_filter_tokens(expression)
+
+    unless (tokens.size == 3 or tokens.size == 7)
+      raise "Incorrect number of tokens in expression '#{expression}'"
+    end
+
+
+    tokens = parse_filter_expression(expression, tokens)
+
+    @filter_cols[col] = Array.new(tokens)
+    @filter_on        = 1
+  end
+
+  #
   # Set the page orientation as portrait.
   #
   # This method is used to set the orientation of a worksheet's printed page
@@ -912,25 +1332,6 @@ class Worksheet < BIFFWriter
     @page_view = 1
   end
 
-
-  #
-  # Set the colour of the worksheet colour.
-  #
-  # The set_tab_color() method is used to change the colour of the worksheet
-  # tab. This feature is only available in Excel 2002 and later. You can
-  # use one of the standard colour names provided by the Format object or a
-  # colour index. See "COLOURS IN EXCEL" and the set_custom_color() method.
-  #
-  #     worksheet1.set_tab_color('red')
-  #     worksheet2.set_tab_color(0x0C)
-  #
-  # See the tab_colors.rb program in the examples directory of the distro.
-  #
-  def set_tab_color(colour)
-    color = Format._get_color(colour)
-    color = 0 if color == 0x7FFF # Default color.
-    @tab_color = color
-  end
 
   #
   # set_paper()
@@ -997,6 +1398,110 @@ class Worksheet < BIFFWriter
   #
   def set_paper(paper_size = 0)
     @paper_size = paper_size
+  end
+
+  #
+  # Center the worksheet data horizontally between the margins on the printed page.
+  #
+  def center_horizontally
+    @hcenter = 1
+  end
+
+  #
+  # Center the worksheet data vertically between the margins on the printed page:
+  #
+  def center_vertically
+    @vcenter = 1
+  end
+
+  #
+  # Set all the page margins to the same value in inches.
+  #
+  # There are several methods available for setting the worksheet margins on
+  # the printed page:
+  #
+  #     set_margins()        # Set all margins to the same value
+  #     set_margins_LR()     # Set left and right margins to the same value
+  #     set_margins_TB()     # Set top and bottom margins to the same value
+  #     set_margin_left();   # Set left margin
+  #     set_margin_right();  # Set right margin
+  #     set_margin_top();    # Set top margin
+  #     set_margin_bottom(); # Set bottom margin
+  #
+  # All of these methods take a distance in inches as a parameter.
+  #
+  # Note: 1 inch = 25.4mm. ;-) The default left and right margin is 0.75 inch.
+  # The default top and bottom margin is 1.00 inch.
+  #
+  def set_margins(margin)
+    set_margin_left(margin)
+    set_margin_right(margin)
+    set_margin_top(margin)
+    set_margin_bottom(margin)
+  end
+
+  ###############################################################################
+  #
+  # set_margins_LR()
+  #
+  # Set the left and right margins to the same value in inches.
+  #
+  def set_margins_LR(margin)
+    set_margin_left(margin)
+    set_margin_right(margin)
+  end
+
+  ###############################################################################
+  #
+  # set_margins_TB()
+  #
+  # Set the top and bottom margins to the same value in inches.
+  #
+  def set_margins_TB(margin)
+    set_margin_top(margin)
+    set_margin_bottom(margin)
+  end
+
+
+  ###############################################################################
+  #
+  # set_margin_left()
+  #
+  # Set the left margin in inches.
+  #
+  def set_margin_left(margin = 0.75)
+    @margin_left = margin
+  end
+
+
+  ###############################################################################
+  #
+  # set_margin_right()
+  #
+  # Set the right margin in inches.
+  #
+  def set_margin_right(margin = 0.75)
+    @margin_right = margin
+  end
+
+  ###############################################################################
+  #
+  # set_margin_top()
+  #
+  # Set the top margin in inches.
+  #
+  def set_margin_top(margin = 1.00)
+    @margin_top = margin
+  end
+
+  ###############################################################################
+  #
+  # set_margin_bottom()
+  #
+  # Set the bottom margin in inches.
+  #
+  def set_margin_bottom(margin = 1.00)
+    @margin_bottom = margin
   end
 
   #
@@ -1190,110 +1695,6 @@ class Worksheet < BIFFWriter
   end
 
   #
-  # Center the worksheet data horizontally between the margins on the printed page.
-  #
-  def center_horizontally
-    @hcenter = 1
-  end
-
-  #
-  # Center the worksheet data vertically between the margins on the printed page:
-  #
-  def center_vertically
-    @vcenter = 1
-  end
-
-  #
-  # Set all the page margins to the same value in inches.
-  #
-  # There are several methods available for setting the worksheet margins on
-  # the printed page:
-  #
-  #     set_margins()        # Set all margins to the same value
-  #     set_margins_LR()     # Set left and right margins to the same value
-  #     set_margins_TB()     # Set top and bottom margins to the same value
-  #     set_margin_left();   # Set left margin
-  #     set_margin_right();  # Set right margin
-  #     set_margin_top();    # Set top margin
-  #     set_margin_bottom(); # Set bottom margin
-  #
-  # All of these methods take a distance in inches as a parameter.
-  #
-  # Note: 1 inch = 25.4mm. ;-) The default left and right margin is 0.75 inch.
-  # The default top and bottom margin is 1.00 inch.
-  #
-  def set_margins(margin)
-    set_margin_left(margin)
-    set_margin_right(margin)
-    set_margin_top(margin)
-    set_margin_bottom(margin)
-  end
-
-  ###############################################################################
-  #
-  # set_margins_LR()
-  #
-  # Set the left and right margins to the same value in inches.
-  #
-  def set_margins_LR(margin)
-    set_margin_left(margin)
-    set_margin_right(margin)
-  end
-
-  ###############################################################################
-  #
-  # set_margins_TB()
-  #
-  # Set the top and bottom margins to the same value in inches.
-  #
-  def set_margins_TB(margin)
-    set_margin_top(margin)
-    set_margin_bottom(margin)
-  end
-
-
-  ###############################################################################
-  #
-  # set_margin_left()
-  #
-  # Set the left margin in inches.
-  #
-  def set_margin_left(margin = 0.75)
-    @margin_left = margin
-  end
-
-
-  ###############################################################################
-  #
-  # set_margin_right()
-  #
-  # Set the right margin in inches.
-  #
-  def set_margin_right(margin = 0.75)
-    @margin_right = margin
-  end
-
-  ###############################################################################
-  #
-  # set_margin_top()
-  #
-  # Set the top margin in inches.
-  #
-  def set_margin_top(margin = 1.00)
-    @margin_top = margin
-  end
-
-  ###############################################################################
-  #
-  # set_margin_bottom()
-  #
-  # Set the bottom margin in inches.
-  #
-  def set_margin_bottom(margin = 1.00)
-    @margin_bottom = margin
-  end
-
-  #
   # Set the rows to repeat at the top of each printed page.
   #--
   # See also the _store_name_xxxx() methods in Workbook.rb.
@@ -1354,6 +1755,83 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
+  #    hide_gridlines(option = 1)
+  #
+  # Set the option to hide gridlines on the screen and the printed page.
+  #--
+  # There are two ways of doing this in the Excel BIFF format: The first is by
+  # setting the DspGrid field of the WINDOW2 record, this turns off the screen
+  # and subsequently the print gridline. The second method is to via the
+  # PRINTGRIDLINES and GRIDSET records, this turns off the printed gridlines
+  # only. The first method is probably sufficient for most cases. The second
+  # method is supported for backwards compatibility. Porters take note.
+  #++
+  #
+  # This method is used to hide the gridlines on the screen and printed page.
+  # Gridlines are the lines that divide the cells on a worksheet. Screen and
+  # printed gridlines are turned on by default in an Excel worksheet. If you
+  # have defined your own cell borders you may wish to hide the default
+  # gridlines.
+  #
+  #     worksheet.hide_gridlines
+  #
+  # The following values of _option_ are valid:
+  #
+  #     0 : Don't hide gridlines
+  #     1 : Hide printed gridlines only
+  #     2 : Hide screen and printed gridlines
+  #
+  # If you don't supply an argument the default option is 1, i.e.
+  # only the printed gridlines are hidden.
+  #
+  def hide_gridlines(option = 1)
+    if option == 0
+      @print_gridlines  = 1  # 1 = display, 0 = hide
+      @screen_gridlines = 1
+    elsif option == 1
+      @print_gridlines  = 0
+      @screen_gridlines = 1
+    else
+      @print_gridlines  = 0
+      @screen_gridlines = 0
+    end
+  end
+
+  #
+  # Set the option to print the row and column headers on the printed page.
+  # See also the _store_print_headers() method.
+  #
+  # An Excel worksheet looks something like the following;
+  #
+  #      ------------------------------------------
+  #     |   |   A   |   B   |   C   |   D   |  ...
+  #      ------------------------------------------
+  #     | 1 |       |       |       |       |  ...
+  #     | 2 |       |       |       |       |  ...
+  #     | 3 |       |       |       |       |  ...
+  #     | 4 |       |       |       |       |  ...
+  #     |...|  ...  |  ...  |  ...  |  ...  |  ...
+  #
+  # The headers are the letters and numbers at the top and the left of the
+  # worksheet. Since these headers serve mainly as a indication of position on
+  # the worksheet they generally do not appear on the printed page. If you wish
+  # to have them printed you can use the print_row_col_headers() method :
+  #
+  #     worksheet.print_row_col_headers
+  #
+  # Do not confuse these headers with page headers as described in the
+  # set_header() section.
+  #
+  def print_row_col_headers(option = nil)
+    if option.nil?
+      @print_headers = 1
+    else
+      @print_headers = option
+    end
+  end
+
+  #
+  # :call-seq:
   #   print_area(first_row, first_col, last_row, last_col)
   #   print_area(A1_notation)
   #
@@ -1382,180 +1860,150 @@ class Worksheet < BIFFWriter
   end
 
   #
-  # :call-seq:
-  #    autofilter(first_row, first_col, last_row, last_col)
-  #    autofilter("A1:G10")
+  # Set the order in which pages are printed.
   #
-  # Set the autofilter area in the worksheet.
+  # The print_across method is used to change the default print direction.
+  # This is referred to by Excel as the sheet "page order".
   #
+  #     worksheet.print_across
   #
-  # This method allows an autofilter to be added to a worksheet. An
-  # autofilter is a way of adding drop down lists to the headers of a 2D range
-  # of worksheet data. This is turn allow users to filter the data based on
-  # simple criteria so that some data is highlighted and some is hidden.
+  # The default page order is shown below for a worksheet that extends over 4
+  # pages. The order is called "down then across":
   #
-  # To add an autofilter to a worksheet:
+  #     [1] [3]
+  #     [2] [4]
   #
-  #     worksheet.autofilter(0, 0, 10, 3)
-  #     worksheet.autofilter('A1:D11')    # Same as above in A1 notation.
+  # However, by using the print_across method the print order will be changed
+  # to "across then down":
   #
-  # Filter conditions can be applied using the filter_column() method.
+  #     [1] [2]
+  #     [3] [4]
   #
-  # See the autofilter.rb program in the examples directory of the distro
-  # for a more detailed example.
-  #
-  def autofilter(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
-
-    return if args.size != 4 # Require 4 parameters
-
-    row1, col1, row2, col2 = args
-
-    # Reverse max and min values if necessary.
-    if row2 < row1
-      tmp  = row1
-      row1 = row2
-      row2 = tmp
-    end
-    if col2 < col1
-      tmp  = col1
-      col1 = col2
-      col2 = col1
-    end
-
-    # Store the Autofilter information
-    @filter_area = [row1, row2, col1, col2]
-    @filter_count = 1 + col2 -col1
+  def print_across
+    @page_order = 1
   end
 
   #
-  # :call-seq:
-  #   filter_column(column, expression)
+  # Store the vertical and horizontal number of pages that will define the
+  # maximum area printed.
+  #--
+  # See also _store_setup() and _store_wsbool() below.
+  #++
   #
-  # Set the column filter criteria.
+  # The fit_to_pages() method is used to fit the printed area to a specific
+  # number of pages both vertically and horizontally. If the printed area
+  # exceeds the specified number of pages it will be scaled down to fit.
+  # This guarantees that the printed area will always appear on the
+  # specified number of pages even if the page size or margins change.
   #
-  # The filter_column method can be used to filter columns in a autofilter
-  # range based on simple conditions.
+  #     worksheet1.fit_to_pages(1, 1)  # Fit to 1x1 pages
+  #     worksheet2.fit_to_pages(2, 1)  # Fit to 2x1 pages
+  #     worksheet3.fit_to_pages(1, 2)  # Fit to 1x2 pages
   #
-  # NOTE:
-  # It isn't sufficient to just specify the filter condition. You must also
-  # hide any rows that don't match the filter condition. Rows are hidden using
-  # the set_row() visible parameter. Spreadsheet::WriteExcel cannot do this
-  # automatically since it isn't part of the file format. See the autofilter.rb
-  # program in the examples directory of the distro for an example.
+  # The print area can be defined using the print_area() method.
   #
-  # The conditions for the filter are specified using simple expressions:
+  # A common requirement is to fit the printed output to n pages wide but
+  # have the height be as long as necessary. To achieve this set the _height_
+  # to zero or leave it blank:
   #
-  #     worksheet.filter_column('A', 'x > 2000')
-  #     worksheet.filter_column('B', 'x > 2000 and x < 5000')
+  #     worksheet1.fit_to_pages(1, 0)  # 1 page wide and as long as necessary
+  #     worksheet2.fit_to_pages(1)     # The same
   #
-  # The _column_ parameter can either be a zero indexed column number or a
-  # string column name.
+  # Note that although it is valid to use both fit_to_pages() and set_print
+  #_scale() on the same worksheet only one of these options can be active at
+  # a time. The last method call made will set the active option.
   #
-  # The following operators are available:
+  # Note that fit_to_pages() will override any manual page breaks that are
+  # defined in the worksheet.
   #
-  #     Operator        Synonyms
-  #        ==           =   eq  =~
-  #        !=           <>  ne  !=
-  #        >
-  #        <
-  #        >=
-  #        <=
-  #
-  #        and          &&
-  #        or           ||
-  #
-  # The operator synonyms are just syntactic sugar to make you more comfortable
-  # using the expressions. It is important to remember that the expressions will
-  # be interpreted by Excel and not by ruby.
-  #
-  # An expression can comprise a single statement or two statements separated by
-  # the and and or operators. For example:
-  #
-  #     'x <  2000'
-  #     'x >  2000'
-  #     'x == 2000'
-  #     'x >  2000 and x <  5000'
-  #     'x == 2000 or  x == 5000'
-  #
-  # Filtering of blank or non-blank data can be achieved by using a value of
-  # Blanks or NonBlanks in the expression:
-  #
-  #     'x == Blanks'
-  #     'x == NonBlanks'
-  #
-  # Top 10 style filters can be specified using a expression like the
-  # following:
-  #
-  #     Top|Bottom 1-500 Items|%
-  #
-  # For example:
-  #
-  #     'Top    10 Items'
-  #     'Bottom  5 Items'
-  #     'Top    25 %'
-  #     'Bottom 50 %'
-  #
-  # Excel also allows some simple string matching operations:
-  #
-  #     'x =~ b*'   # begins with b
-  #     'x !~ b*'   # doesn't begin with b
-  #     'x =~ *b'   # ends with b
-  #     'x !~ *b'   # doesn't end with b
-  #     'x =~ *b*'  # contains b
-  #     'x !~ *b*'  # doesn't contains b
-  #
-  # You can also use * to match any character or number and ? to match any
-  # single character or number. No other regular expression quantifier is
-  # supported by Excel's filters. Excel's regular expression characters can
-  # be escaped using ~.
-  #
-  # The placeholder variable x in the above examples can be replaced by any
-  # simple string. The actual placeholder name is ignored internally so the
-  # following are all equivalent:
-  #
-  #     'x     < 2000'
-  #     'col   < 2000'
-  #     'Price < 2000'
-  #
-  # Also, note that a filter condition can only be applied to a column in a
-  # range specified by the autofilter() Worksheet method.
-  #
-  # See the autofilter.rb program in the examples directory of the distro
-  # for a more detailed example.
-  #
-  def filter_column(col, expression)
-    raise "Must call autofilter() before filter_column()" if @filter_count == 0
-    #      raise "Incorrect number of arguments to filter_column()" unless @_ == 2
+  def fit_to_pages(width = 0, height = 0)
+    @fit_page      = 1
+    @fit_width     = width
+    @fit_height    = height
+  end
 
-    # Check for a column reference in A1 notation and substitute.
-    if col =~ /^\D/
-      # Convert col ref to a cell ref and then to a col number.
-      no_use, col = substitute_cellref(col + '1')
-    end
-    col_first = @filter_area[2]
-    col_last  = @filter_area[3]
-
-    # Reject column if it is outside filter range.
-    if (col < col_first or col > col_last)
-      raise "Column '#{col}' outside autofilter() column range " +
-      "(#{col_first} .. #{col_last})";
+  #
+  # Set the scale factor of the printed page. Scale factors in the range
+  # 10 <= _scale_ <= 400 are valid:
+  #
+  #     worksheet1.set_print_scale(50)
+  #     worksheet2.set_print_scale(75)
+  #     worksheet3.set_print_scale(300)
+  #     worksheet4.set_print_scale(400)
+  #
+  # The default scale factor is 100. Note, set_print_scale() does not affect
+  # the scale of the visible page in Excel. For that you should use set_zoom().
+  #
+  # Note also that although it is valid to use both fit_to_pages() and
+  # set_print_scale() on the same worksheet only one of these options can be
+  # active at a time. The last method call made will set the active option.
+  #
+  def set_print_scale(scale = 100)
+    # Confine the scale to Excel's range
+    if scale < 10 or scale > 400
+      #           carp "Print scale $scale outside range: 10 <= zoom <= 400";
+      scale = 100
     end
 
-    tokens = extract_filter_tokens(expression)
+    # Turn off "fit to page" option
+    @fit_page    = 0
 
-    unless (tokens.size == 3 or tokens.size == 7)
-      raise "Incorrect number of tokens in expression '#{expression}'"
-    end
+    @print_scale = scale.to_i
+  end
 
+  #
+  # Store the horizontal page breaks on a worksheet. _breaks_ is Fixnum or Array
+  # of Fixnum.
+  #
+  # Add horizontal page breaks to a worksheet. A page break causes all the
+  # data that follows it to be printed on the next page. Horizontal page breaks
+  # act between rows. To create a page break between rows 20 and 21 you must
+  # specify the break at row 21. However in zero index notation this is
+  # actually row 20. So you can pretend for a small while that you are using 1
+  # index notation:
+  #
+  #     worksheet1.set_h_pagebreaks(20)  # Break between row 20 and 21
+  #
+  # The set_h_pagebreaks() method will accept a array of page breaks and you
+  # can call it more than once:
+  #
+  #     worksheet2.set_h_pagebreaks([ 20,  40,  60,  80, 100])  # Add breaks
+  #     worksheet2.set_h_pagebreaks([120, 140, 160, 180, 200])  # Add some more
+  #
+  # Note: If you specify the "fit to page" option via the fit_to_pages()
+  # method it will override all manual page breaks.
+  #
+  # There is a silent limitation of about 1000 horizontal page breaks per
+  # worksheet in line with an Excel internal limitation.
+  #
+  def set_h_pagebreaks(breaks)
+    @hbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
+  end
 
-    tokens = parse_filter_expression(expression, tokens)
-
-    @filter_cols[col] = Array.new(tokens)
-    @filter_on        = 1
+  #
+  # Store the vertical page breaks on a worksheet. _breaks_ is Fixnum or Array
+  # of Fixnum.
+  #
+  # Add vertical page breaks to a worksheet. A page break causes all the data
+  # that follows it to be printed on the next page. Vertical page breaks act
+  # between columns. To create a page break between columns 20 and 21 you must
+  # specify the break at column 21. However in zero index notation this is
+  # actually column 20. So you can pretend for a small while that you are using
+  # 1 index notation:
+  #
+  #     worksheet1.set_v_pagebreaks(20) # Break between column 20 and 21
+  #
+  # The set_v_pagebreaks() method will accept a list of page breaks and you
+  # can call it more than once:
+  #
+  #     worksheet2.set_v_pagebreaks([ 20,  40,  60,  80, 100]) # Add breaks
+  #     worksheet2.set_v_pagebreaks([120, 140, 160, 180, 200]) # Add some more
+  #
+  # Note: If you specify the "fit to page" option via the fit_to_pages() method
+  # it will override all manual page breaks.
+  #
+  def set_v_pagebreaks(breaks)
+    @vbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
   end
 
   ###############################################################################
@@ -1730,230 +2178,6 @@ class Worksheet < BIFFWriter
   private :parse_filter_tokens
 
   #
-  # :call-seq:
-  #    hide_gridlines(option = 1)
-  #
-  # Set the option to hide gridlines on the screen and the printed page.
-  #--
-  # There are two ways of doing this in the Excel BIFF format: The first is by
-  # setting the DspGrid field of the WINDOW2 record, this turns off the screen
-  # and subsequently the print gridline. The second method is to via the
-  # PRINTGRIDLINES and GRIDSET records, this turns off the printed gridlines
-  # only. The first method is probably sufficient for most cases. The second
-  # method is supported for backwards compatibility. Porters take note.
-  #++
-  #
-  # This method is used to hide the gridlines on the screen and printed page.
-  # Gridlines are the lines that divide the cells on a worksheet. Screen and
-  # printed gridlines are turned on by default in an Excel worksheet. If you
-  # have defined your own cell borders you may wish to hide the default
-  # gridlines.
-  #
-  #     worksheet.hide_gridlines
-  #
-  # The following values of _option_ are valid:
-  #
-  #     0 : Don't hide gridlines
-  #     1 : Hide printed gridlines only
-  #     2 : Hide screen and printed gridlines
-  #
-  # If you don't supply an argument the default option is 1, i.e.
-  # only the printed gridlines are hidden.
-  #
-  def hide_gridlines(option = 1)
-    if option == 0
-      @print_gridlines  = 1  # 1 = display, 0 = hide
-      @screen_gridlines = 1
-    elsif option == 1
-      @print_gridlines  = 0
-      @screen_gridlines = 1
-    else
-      @print_gridlines  = 0
-      @screen_gridlines = 0
-    end
-  end
-
-  #
-  # Set the option to print the row and column headers on the printed page.
-  # See also the _store_print_headers() method.
-  #
-  # An Excel worksheet looks something like the following;
-  #
-  #      ------------------------------------------
-  #     |   |   A   |   B   |   C   |   D   |  ...
-  #      ------------------------------------------
-  #     | 1 |       |       |       |       |  ...
-  #     | 2 |       |       |       |       |  ...
-  #     | 3 |       |       |       |       |  ...
-  #     | 4 |       |       |       |       |  ...
-  #     |...|  ...  |  ...  |  ...  |  ...  |  ...
-  #
-  # The headers are the letters and numbers at the top and the left of the
-  # worksheet. Since these headers serve mainly as a indication of position on
-  # the worksheet they generally do not appear on the printed page. If you wish
-  # to have them printed you can use the print_row_col_headers() method :
-  #
-  #     worksheet.print_row_col_headers
-  #
-  # Do not confuse these headers with page headers as described in the
-  # set_header() section.
-  #
-  def print_row_col_headers(option = nil)
-    if option.nil?
-      @print_headers = 1
-    else
-      @print_headers = option
-    end
-  end
-
-  #
-  # Store the vertical and horizontal number of pages that will define the
-  # maximum area printed.
-  #--
-  # See also _store_setup() and _store_wsbool() below.
-  #++
-  #
-  # The fit_to_pages() method is used to fit the printed area to a specific
-  # number of pages both vertically and horizontally. If the printed area
-  # exceeds the specified number of pages it will be scaled down to fit.
-  # This guarantees that the printed area will always appear on the
-  # specified number of pages even if the page size or margins change.
-  #
-  #     worksheet1.fit_to_pages(1, 1)  # Fit to 1x1 pages
-  #     worksheet2.fit_to_pages(2, 1)  # Fit to 2x1 pages
-  #     worksheet3.fit_to_pages(1, 2)  # Fit to 1x2 pages
-  #
-  # The print area can be defined using the print_area() method.
-  #
-  # A common requirement is to fit the printed output to n pages wide but
-  # have the height be as long as necessary. To achieve this set the _height_
-  # to zero or leave it blank:
-  #
-  #     worksheet1.fit_to_pages(1, 0)  # 1 page wide and as long as necessary
-  #     worksheet2.fit_to_pages(1)     # The same
-  #
-  # Note that although it is valid to use both fit_to_pages() and set_print
-  #_scale() on the same worksheet only one of these options can be active at
-  # a time. The last method call made will set the active option.
-  #
-  # Note that fit_to_pages() will override any manual page breaks that are
-  # defined in the worksheet.
-  #
-  def fit_to_pages(width = 0, height = 0)
-    @fit_page      = 1
-    @fit_width     = width
-    @fit_height    = height
-  end
-
-  #
-  # Store the horizontal page breaks on a worksheet. _breaks_ is Fixnum or Array
-  # of Fixnum.
-  #
-  # Add horizontal page breaks to a worksheet. A page break causes all the
-  # data that follows it to be printed on the next page. Horizontal page breaks
-  # act between rows. To create a page break between rows 20 and 21 you must
-  # specify the break at row 21. However in zero index notation this is
-  # actually row 20. So you can pretend for a small while that you are using 1
-  # index notation:
-  #
-  #     worksheet1.set_h_pagebreaks(20)  # Break between row 20 and 21
-  #
-  # The set_h_pagebreaks() method will accept a array of page breaks and you
-  # can call it more than once:
-  #
-  #     worksheet2.set_h_pagebreaks([ 20,  40,  60,  80, 100])  # Add breaks
-  #     worksheet2.set_h_pagebreaks([120, 140, 160, 180, 200])  # Add some more
-  #
-  # Note: If you specify the "fit to page" option via the fit_to_pages()
-  # method it will override all manual page breaks.
-  #
-  # There is a silent limitation of about 1000 horizontal page breaks per
-  # worksheet in line with an Excel internal limitation.
-  #
-  def set_h_pagebreaks(breaks)
-    @hbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
-  end
-
-  #
-  # Store the vertical page breaks on a worksheet. _breaks_ is Fixnum or Array
-  # of Fixnum.
-  #
-  # Add vertical page breaks to a worksheet. A page break causes all the data
-  # that follows it to be printed on the next page. Vertical page breaks act
-  # between columns. To create a page break between columns 20 and 21 you must
-  # specify the break at column 21. However in zero index notation this is
-  # actually column 20. So you can pretend for a small while that you are using
-  # 1 index notation:
-  #
-  #     worksheet1.set_v_pagebreaks(20) # Break between column 20 and 21
-  #
-  # The set_v_pagebreaks() method will accept a list of page breaks and you
-  # can call it more than once:
-  #
-  #     worksheet2.set_v_pagebreaks([ 20,  40,  60,  80, 100]) # Add breaks
-  #     worksheet2.set_v_pagebreaks([120, 140, 160, 180, 200]) # Add some more
-  #
-  # Note: If you specify the "fit to page" option via the fit_to_pages() method
-  # it will override all manual page breaks.
-  #
-  def set_v_pagebreaks(breaks)
-    @vbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
-  end
-
-  #
-  # Set the worksheet zoom factor in the range 10 <= $scale <= 400:
-  #
-  #     worksheet1.set_zoom(50)
-  #     worksheet2.set_zoom(75)
-  #     worksheet3.set_zoom(300)
-  #     worksheet4.set_zoom(400)
-  #
-  # The default zoom factor is 100. You cannot zoom to "Selection" because
-  # it is calculated by Excel at run-time.
-  #
-  # Note, set_zoom() does not affect the scale of the printed page. For that
-  # you should use set_print_scale().
-  #
-  def set_zoom(scale = 100)
-    # Confine the scale to Excel's range
-    if scale < 10 or scale > 400
-      #           carp "Zoom factor $scale outside range: 10 <= zoom <= 400";
-      scale = 100
-    end
-
-    @zoom = scale.to_i
-  end
-
-  #
-  # Set the scale factor of the printed page. Scale factors in the range
-  # 10 <= _scale_ <= 400 are valid:
-  #
-  #     worksheet1.set_print_scale(50)
-  #     worksheet2.set_print_scale(75)
-  #     worksheet3.set_print_scale(300)
-  #     worksheet4.set_print_scale(400)
-  #
-  # The default scale factor is 100. Note, set_print_scale() does not affect
-  # the scale of the visible page in Excel. For that you should use set_zoom().
-  #
-  # Note also that although it is valid to use both fit_to_pages() and
-  # set_print_scale() on the same worksheet only one of these options can be
-  # active at a time. The last method call made will set the active option.
-  #
-  def set_print_scale(scale = 100)
-    # Confine the scale to Excel's range
-    if scale < 10 or scale > 400
-      #           carp "Print scale $scale outside range: 10 <= zoom <= 400";
-      scale = 100
-    end
-
-    # Turn off "fit to page" option
-    @fit_page    = 0
-
-    @print_scale = scale.to_i
-  end
-
-  #
   # Causes the write() method to treat integers with a leading zero as a string.
   # This ensures that any leading zeros such, as in zip codes, are maintained.
   #
@@ -2059,60 +2283,6 @@ class Worksheet < BIFFWriter
   def set_comments_author(author = '', author_enc = 0)
     @comments_author     = author
     @comments_author_enc = author_enc
-  end
-
-  #
-  # Display the worksheet right to left for some eastern versions of Excel.
-  #
-  # The right_to_left() method is used to change the default direction of the
-  # worksheet from left-to-right, with the A1 cell in the top left, to
-  # right-to-left, with the he A1 cell in the top right.
-  #
-  #     worksheet.right_to_left
-  #
-  # This is useful when creating Arabic, Hebrew or other near or far eastern
-  # worksheets that use right-to-left as the default direction.
-  #
-  def right_to_left
-    @display_arabic = 1
-  end
-
-  #
-  # Hide cell zero values.
-  #
-  # The hide_zero() method is used to hide any zero values that appear in
-  # cells.
-  #
-  #     worksheet.hide_zero
-  #
-  # In Excel this option is found under Tools->Options->View.
-  #
-  def hide_zero
-    @display_zeros = 1
-  end
-
-  #
-  # Set the order in which pages are printed.
-  #
-  # The print_across method is used to change the default print direction.
-  # This is referred to by Excel as the sheet "page order".
-  #
-  #     worksheet.print_across
-  #
-  # The default page order is shown below for a worksheet that extends over 4
-  # pages. The order is called "down then across":
-  #
-  #     [1] [3]
-  #     [2] [4]
-  #
-  # However, by using the print_across method the print order will be changed
-  # to "across then down":
-  #
-  #     [1] [2]
-  #     [3] [4]
-  #
-  def print_across
-    @page_order = 1
   end
 
   #
@@ -3397,6 +3567,114 @@ class Worksheet < BIFFWriter
     @comments[row] = { col => comment_params(*args) }
   end
 
+  def active=(val)  # :nodoc:
+    @active = val
+  end
+
+  def encoding  # :nodoc:
+    @encoding
+  end
+
+  def index  # :nodoc:
+    @index
+  end
+
+  def sheet_type  # :nodoc:
+    @sheet_type
+  end
+
+  def images_array  # :nodoc:
+    @images_array
+  end
+
+  def date_1904=(val)  # :nodoc:
+    @date_1904 = val
+  end
+
+  def filter_area  # :nodoc:
+    @filter_area
+  end
+
+  def filter_count  # :nodoc:
+    @filter_count
+  end
+
+  def title_rowmin  # :nodoc:
+    @title_rowmin
+  end
+
+  def title_rowmax  # :nodoc:
+    @title_rowmax
+  end
+
+  def title_colmin  # :nodoc:
+    @title_colmin
+  end
+
+  def title_colmax  # :nodoc:
+    @title_colmax
+  end
+
+  def print_rowmin  # :nodoc:
+    @print_rowmin
+  end
+
+  def print_rowmax  # :nodoc:
+    @print_rowmax
+  end
+
+  def print_colmin  # :nodoc:
+    @print_colmin
+  end
+
+  def print_colmax  # :nodoc:
+    @print_colmax
+  end
+
+  def offset  # :nodoc:
+    @offset
+  end
+
+  def offset=(val)  # :nodoc:
+    @offset = val
+  end
+
+  def selected  # :nodoc:
+    @selected
+  end
+
+  def selected=(val)  # :nodoc:
+    @selected = val
+  end
+
+  def hidden  # :nodoc:
+    @hidden
+  end
+
+  def hidden=(val)  # :nodoc:
+    @hidden = val
+  end
+
+  def object_ids=(val)  # :nodoc:
+    @object_ids = val
+  end
+
+  def num_images  # :nodoc:
+    @num_images
+  end
+
+  def num_images=(val)  # :nodoc:
+    @num_images = val
+  end
+
+  def image_mso_size  # :nodoc:
+    @image_mso_size
+  end
+
+  def image_mso_size=(val)  # :nodoc:
+    @image_mso_size = val
+  end
+
   ###############################################################################
   #
   # _xf_record_index()
@@ -3405,7 +3683,7 @@ class Worksheet < BIFFWriter
   #
   # Note: this is a function, not a method.
   #
-  def xf_record_index(row, col, xf=nil)
+  def xf_record_index(row, col, xf=nil)       #:nodoc:
     if xf.kind_of?(Format)
       return xf.xf_index
     elsif @row_formats.has_key?(row)
@@ -3473,7 +3751,7 @@ class Worksheet < BIFFWriter
   #
   # Returns: row, column
   #
-  def cell_to_rowcol(cell)
+  def cell_to_rowcol(cell)       #:nodoc:
     cell =~ /\$?([A-I]?[A-Z])\$?(\d+)/
     col     = $1
     row     = $2.to_i
@@ -3509,7 +3787,7 @@ class Worksheet < BIFFWriter
   #   2. Sorts the list.
   #   3. Removes 0 from the list if present.
   #
-  def sort_pagebreaks(breaks)
+  def sort_pagebreaks(breaks)       #:nodoc:
     breaks.uniq.sort!
     breaks.shift if breaks[0] == 0
 
@@ -3526,7 +3804,7 @@ class Worksheet < BIFFWriter
   # Based on the algorithm provided by Daniel Rentz of OpenOffice.
   #
   #
-  def encode_password(password)
+  def encode_password(password)       #:nodoc:
     i = 0
     chars = password.split(//)
     count = chars.size
@@ -3547,55 +3825,6 @@ class Worksheet < BIFFWriter
   end
   private :encode_password
 
-  #
-  # :call-seq:
-  #   outline_settings(visible, symbols_below, symbols_right, auto_style)
-  #
-  # This method sets the properties for outlining and grouping. The defaults
-  # correspond to Excel's defaults.
-  #
-  # The outline_settings() method is used to control the appearance of
-  # outlines in Excel. Outlines are described in
-  # "OUTLINES AND GROUPING IN EXCEL".
-  #
-  # The _visible_ parameter is used to control whether or not outlines are
-  # visible. Setting this parameter to 0 will cause all outlines on the
-  # worksheet to be hidden. They can be unhidden in Excel by means of the
-  # "Show Outline Symbols" command button. The default setting is 1 for
-  # visible outlines.
-  #
-  #     worksheet.outline_settings(0)
-  #
-  # The _symbols__below parameter is used to control whether the row outline
-  # symbol will appear above or below the outline level bar. The default
-  # setting is 1 for symbols to appear below the outline level bar.
-  #
-  # The symbols_right parameter is used to control whether the column outline
-  # symbol will appear to the left or the right of the outline level bar. The
-  # default setting is 1 for symbols to appear to the right of the outline
-  # level bar.
-  #
-  # The _auto_style_ parameter is used to control whether the automatic outline
-  # generator in Excel uses automatic styles when creating an outline. This has
-  # no effect on a file generated by WriteExcel but it does have an effect on
-  # how the worksheet behaves after it is created. The default setting is 0 for
-  # "Automatic Styles" to be turned off.
-  #
-  # The default settings for all of these parameters correspond to Excel's
-  # default parameters.
-  #
-  # The worksheet parameters controlled by outline_settings() are rarely used.
-  #
-  def outline_settings(*args)
-    @outline_on    = args[0] || 1
-    @outline_below = args[1] || 1
-    @outline_right = args[2] || 1
-    @outline_style = args[3] || 0
-
-    # Ensure this is a boolean vale for Window2
-    @outline_on    = 1 if @outline_on == 0
-  end
-
   ###############################################################################
   #
   # _encode_formula_result()
@@ -3603,7 +3832,7 @@ class Worksheet < BIFFWriter
   #
   # Encode the user supplied result for a formula.
   #
-  def encode_formula_result(value = nil)
+  def encode_formula_result(value = nil)       #:nodoc:
     is_string = 0;          # Formula evaluates to str.
     # my $num;                    # Current value of formula.
     # my $grbit;                  # Option flags.
@@ -3654,7 +3883,7 @@ class Worksheet < BIFFWriter
   # Pack the string value when a formula evaluates to a string. The value cannot
   # be calculated by the module and thus must be supplied by the user.
   #
-  def get_formula_string(string)
+  def get_formula_string(string)       #:nodoc:
     record    = 0x0207         # Record identifier
     length    = 0x00           # Bytes to follow
     # string                   # Formula string.
@@ -3713,7 +3942,7 @@ class Worksheet < BIFFWriter
   #     worksheet2.repeat_formula('B1', now)
   #     worksheet3.repeat_formula('B1', now)
   #
-  def store_formula(formula)
+  def store_formula(formula)       #:nodoc:
     # Strip the = sign at the beginning of the formula string
     formula.sub!(/^=/, '')
 
@@ -3856,7 +4085,7 @@ class Worksheet < BIFFWriter
   #
   # See also the repeat.rb program in the examples directory of the distro.
   #
-  def repeat_formula(*args)
+  def repeat_formula(*args)       #:nodoc:
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/
       args = substitute_cellref(args)
@@ -4124,7 +4353,7 @@ class Worksheet < BIFFWriter
   #
   # See also write_url() above for a general description and return values.
   #
-  def write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)
+  def write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
     record = 0x01B8                       # Record identifier
     length = 0x00000                      # Bytes to follow
 
@@ -4192,7 +4421,7 @@ class Worksheet < BIFFWriter
   #
   # See also write_url() above for a general description and return values.
   #
-  def write_url_internal(row1, col1, row2, col2, url, str = nil, format = nil)
+  def write_url_internal(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
     record = 0x01B8                       # Record identifier
     length = 0x00000                      # Bytes to follow
 
@@ -4261,7 +4490,7 @@ class Worksheet < BIFFWriter
   #
   # See also write_url() above for a general description and return values.
   #
-  def write_url_external(row1, col1, row2, col2, url, str = nil, format = nil)
+  def write_url_external(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
     # Network drives are different. We will handle them separately
     # MS/Novell network drives and shares start with \\
     if url =~ /^external:\\\\/
@@ -4373,7 +4602,7 @@ class Worksheet < BIFFWriter
   #
   # See also write_url() above for a general description and return values.
   #
-  def write_url_external_net(row1, col1, row2, col2, url, str, format)
+  def write_url_external_net(row1, col1, row2, col2, url, str, format)       #:nodoc:
     record      = 0x01B8                       # Record identifier
     length      = 0x00000                      # Bytes to follow
 
@@ -4539,7 +4768,7 @@ class Worksheet < BIFFWriter
   #            A decimal number representing a valid Excel date, or
   #            undef if the date is invalid.
   #
-  def convert_date_time(date_time_string)
+  def convert_date_time(date_time_string)       #:nodoc:
     date_time = date_time_string
 
     days      = 0 # Number of days since epoch
@@ -4640,145 +4869,6 @@ class Worksheet < BIFFWriter
     return days + seconds
   end
 
-  #
-  #          row       : Row Number
-  #          height    : Format object
-  #          format    : Format object
-  #          hidden    : Hidden flag
-  #          level     : Outline level
-  #          collapsed : Collapsed row
-  #
-  # This method is used to set the height and XF format for a row.
-  # Writes the  BIFF record ROW.
-  #
-  # This method can be used to change the default properties of a row. All
-  # parameters apart from _row_ are optional.
-  #
-  # The most common use for this method is to change the height of a row:
-  #
-  #     worksheet.set_row(0, 20) # Row 1 height set to 20
-  #
-  # If you wish to set the _format_ without changing the _height_ you can pass
-  # nil as the _height_ parameter:
-  #
-  #     worksheet.set_row(0, nil, format)
-  #
-  # The _format_ parameter will be applied to any cells in the row that don't
-  # have a format. For example
-  #
-  #     worksheet.set_row(0, nil, format1)      # Set the format for row 1
-  #     worksheet.write('A1', 'Hello')          # Defaults to format1
-  #     worksheet.write('B1', 'Hello', format2) # Keeps format2
-  #
-  # If you wish to define a row format in this way you should call the method
-  # before any calls to write(). Calling it afterwards will overwrite any format
-  # that was previously specified.
-  #
-  # The hidden parameter should be set to 1 if you wish to hide a row. This can
-  # be used, for example, to hide intermediary steps in a complicated calculation:
-  #
-  #     worksheet.set_row(0, 20,    format, 1)
-  #     worksheet.set_row(1, undef, nil,    1)
-  #
-  # The level parameter is used to set the outline level of the row. Outlines
-  # are described in "OUTLINES AND GROUPING IN EXCEL". Adjacent rows with the
-  # same outline level are grouped together into a single outline.
-  #
-  # The following example sets an outline level of 1 for rows 1 and 2
-  # (zero-indexed):
-  #
-  #     worksheet.set_row(1, nil, nil, 0, 1)
-  #     worksheet.set_row(2, nil, nil, 0, 1)
-  #
-  # The hidden parameter can also be used to hide collapsed outlined rows when
-  # used in conjunction with the level parameter.
-  #
-  #     worksheet.set_row(1, nil, nil, 1, 1)
-  #     worksheet.set_row(2, nil, nil, 1, 1)
-  #
-  # For collapsed outlines you should also indicate which row has the
-  # collapsed + symbol using the optional collapsed parameter.
-  #
-  #     worksheet.set_row(3, nil, nil, 0, 0, 1)
-  #
-  # For a more complete example see the outline.pl and outline_collapsed.rb
-  # programs in the examples directory of the distro.
-  #
-  # Excel allows up to 7 outline levels. Therefore the level parameter should
-  # be in the range 0 <= level <= 7.
-  #
-  def set_row(row, height = nil, format = nil, hidden = 0, level = 0, collapsed = 0)
-    record      = 0x0208               # Record identifier
-    length      = 0x0010               # Number of bytes to follow
-
-    colMic      = 0x0000               # First defined column
-    colMac      = 0x0000               # Last defined column
-    # miyRw;                           # Row height
-    irwMac      = 0x0000               # Used by Excel to optimise loading
-    reserved    = 0x0000               # Reserved
-    grbit       = 0x0000               # Option flags
-    # ixfe;                            # XF index
-
-    return if row.nil?
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, 0, 0, 1) != 0
-
-    # Check for a format object
-    if format.kind_of?(Format)
-      ixfe = format.get_xf_index
-    else
-      ixfe = 0x0F
-    end
-
-    # Set the row height in units of 1/20 of a point. Note, some heights may
-    # not be obtained exactly due to rounding in Excel.
-    #
-    unless height.nil?
-      miyRw = height *20
-    else
-      miyRw = 0xff # The default row height
-      height = 0
-    end
-
-    # Set the limits for the outline levels (0 <= x <= 7).
-    level = 0 if level < 0
-    level = 7 if level > 7
-
-    @outline_row_level = level if level > @outline_row_level
-
-    # Set the options flags.
-    # 0x10: The fCollapsed flag indicates that the row contains the "+"
-    #       when an outline group is collapsed.
-    # 0x20: The fDyZero height flag indicates a collapsed or hidden row.
-    # 0x40: The fUnsynced flag is used to show that the font and row heights
-    #       are not compatible. This is usually the case for WriteExcel.
-    # 0x80: The fGhostDirty flag indicates that the row has been formatted.
-    #
-    grbit |= level
-    grbit |= 0x0010 if collapsed != 0
-    grbit |= 0x0020 if hidden    != 0
-    grbit |= 0x0040
-    grbit |= 0x0080 unless format.nil?
-    grbit |= 0x0100
-
-    header = [record, length].pack("vv")
-    data   = [row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
-
-    # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      @row_data[row] = header + data
-    else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-      append(header, data)
-    end
-
-    # Store the row sizes for use when calculating image vertices.
-    # Also store the column formats.
-    @row_sizes[row]   = height
-    @row_formats[row] = format unless format.nil?
-  end
-
   ###############################################################################
   #
   # _write_row_default()
@@ -4789,7 +4879,7 @@ class Worksheet < BIFFWriter
   # Write a default row record, in compatibility mode, for rows that don't have
   # user specified values..
   #
-  def write_row_default(row, colMic, colMac)
+  def write_row_default(row, colMic, colMac)       #:nodoc:
 
     record      = 0x0208               # Record identifier
     length      = 0x0010               # Number of bytes to follow
@@ -4820,7 +4910,7 @@ class Worksheet < BIFFWriter
   #
   # The ignore flags are use by set_row() and data_validate.
   #
-  def check_dimensions(row, col, ignore_row = 0, ignore_col = 0)
+  def check_dimensions(row, col, ignore_row = 0, ignore_col = 0)       #:nodoc:
     return -2 if row.nil?
     return -2 if row >= @xls_rowmax
 
@@ -5583,111 +5673,6 @@ class Worksheet < BIFFWriter
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
-  end
-
-  #
-  # :call-seq:
-  #   merge_range(first_row, first_col, last_row, last_col, token, format, utf_16_be)
-  #
-  # This is a wrapper to ensure correct use of the merge_cells method, i.e.,
-  # write the first cell of the range, write the formatted blank cells in the
-  # range and then call the merge_cells record. Failing to do the steps in
-  # this order will cause Excel 97 to crash.
-  #
-  # Merging cells can be achieved by setting the merge property of a Format
-  # object, see "CELL FORMATTING". However, this only allows simple Excel5
-  # style horizontal merging which Excel refers to as "center across selection".
-  #
-  #
-  # The merge_range() method allows you to do Excel97+ style formatting where
-  # the cells can contain other types of alignment in addition to the merging:
-  #
-  #     format = workbook.add_format(
-  #                              :border  => 6,
-  #                              :valign  => 'vcenter',
-  #                              :align   => 'center'
-  #                            )
-  #
-  #     worksheet.merge_range('B3:D4', 'Vertical and horizontal', format)
-  #
-  # <em>WARNING.</em> The format object that is used with a merge_range()
-  # method call is marked internally as being associated with a merged range.
-  # It is a fatal error to use a merged format in a non-merged cell. Instead
-  # you should use separate formats for merged and non-merged cells. This
-  # restriction will be removed in a future release.
-  #
-  # The _utf_16_be_ parameter is optional, see below.
-  #
-  # merge_range() writes its _token_ argument using the worksheet write()
-  # method. Therefore it will handle numbers, strings, formulas or urls as
-  # required.
-  #
-  # Setting the merge property of the format isn't required when you are using
-  # merge_range(). In fact using it will exclude the use of any other horizontal
-  # alignment option.
-  #
-  # Your can specify UTF-16BE worksheet names using an additional optional
-  # parameter:
-  #
-  #     str = [0x263a].pack('n')
-  #     worksheet.merge_range('B3:D4', str, format, 1)   # Smiley
-  #
-  # The full possibilities of this method are shown in the merge3.rb to
-  # merge65.rb programs in the examples directory of the distribution.
-  #
-  def merge_range(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
-    raise "Incorrect number of arguments" if args.size != 6 and args.size != 7
-    raise "Format argument is not a format object" unless args[5].kind_of?(Format)
-
-    rwFirst  = args[0]
-    colFirst = args[1]
-    rwLast   = args[2]
-    colLast  = args[3]
-    string   = args[4]
-    format   = args[5]
-    encoding = args[6] ? 1 : 0
-
-    # Temp code to prevent merged formats in non-merged cells.
-    error = "Error: refer to merge_range() in the documentation. " +
-    "Can't use previously non-merged format in merged cells"
-
-    raise error if format.used_merge == -1
-    format.used_merge = 0   # Until the end of this function.
-
-    # Set the merge_range property of the format object. For BIFF8+.
-    format.set_merge_range
-
-    # Excel doesn't allow a single cell to be merged
-    raise "Can't merge single cell" if rwFirst  == rwLast and
-    colFirst == colLast
-
-    # Swap last row/col with first row/col as necessary
-    rwFirst,  rwLast  = rwLast,  rwFirst  if rwFirst  > rwLast
-    colFirst, colLast = colLast, colFirst if colFirst > colLast
-
-    # Write the first cell
-    if encoding != 0
-      write_utf16be_string(rwFirst, colFirst, string, format)
-    else
-      write(rwFirst, colFirst, string, format)
-    end
-
-    # Pad out the rest of the area with formatted blank cells.
-    (rwFirst .. rwLast).each do |row|
-      (colFirst .. colLast).each do |col|
-        next if row == rwFirst and col == colFirst
-        write_blank(row, col, format)
-      end
-    end
-
-    merge_cells(rwFirst, colFirst, rwLast, colLast)
-
-    # Temp code to prevent merged formats in non-merged cells.
-    format.used_merge = 1
   end
 
   ###############################################################################
@@ -8553,38 +8538,6 @@ class Worksheet < BIFFWriter
   #         })
   #
   # See also the data_validate.rb program in the examples directory of the distro.
-  #
-  # =DATA VALIDATION IN EXCEL
-  #
-  # Data validation is a feature of Excel which allows you to restrict the data
-  # that a users enters in a cell and to display help and warning messages. It
-  # also allows you to restrict input to values in a drop down list.
-  #
-  # A typical use case might be to restrict data in a cell to integer values in
-  # a certain range, to provide a help message to indicate the required value and
-  # to issue a warning if the input data doesn't meet the stated criteria.
-  # In WriteExcel we could do that as follows:
-  #
-  #     worksheet.data_validation('B3',
-  #         {
-  #             :validate        => 'integer',
-  #             :criteria        => 'between',
-  #             :minimum         => 1,
-  #             :maximum         => 100,
-  #             :input_title     => 'Input an integer:',
-  #             :input_message   => 'Between 1 and 100',
-  #             :error_message   => 'Sorry, try again.'
-  #         })
-  #
-  # The above example would look like this in Excel:
-  #    http://homepage.eircom.net/~jmcnamara/perl/data_validation.jpg.
-  #
-  # For more information on data validation see the following Microsoft
-  # support article "Description and examples of data validation in Excel":
-  #    http://support.microsoft.com/kb/211485.
-  #
-  # The following sections describe how to use the data_validation() method
-  # and its various options.
   #
   def data_validation(*args)
     # Check for a cell reference in A1 notation and substitute row and column

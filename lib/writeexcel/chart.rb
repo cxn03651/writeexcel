@@ -43,117 +43,12 @@ require 'writeexcel/worksheet'
 #     Spreadsheet::WriteExcel::Chart::* (sub-types)
 #
 
-
+#
 # = Chart
 # Chart - A writer class for Excel Charts.
 #
-# SYNOPSIS ^
-#
-# To create a simple Excel file with a chart using Spreadsheet::WriteExcel:
-#
-#     #!/usr/bin/ruby -w
-#
-#     require 'writeexcel'
-#
-#     workbook  = WriteExcel.new('chart.xls')
-#     worksheet = workbook.add_worksheet
-#
-#     chart     = workbook.add_chart(:type => Chart::Column)
-#
-#     # Configure the chart.
-#     chart.add_series(
-#       :categories => '=Sheet1!$A$2:$A$7',
-#       :values     => '=Sheet1!$B$2:$B$7'
-#     )
-#
-#     # Add the data to the worksheet the chart refers to.
-#     data = [
-#        [ 'Category', 2, 3, 4, 5, 6, 7 ],
-#        [ 'Value',    1, 4, 5, 2, 1, 5 ]
-#     ]
-#
-#     worksheet.write('A1', data)
-#
-#     workbook.close
-#
-# DESCRIPTION ^
-#
-# The Chart module is an abstract base class for modules that implement charts
-# in WriteExcel. The information below is applicable to all of the available
-# subclasses.
-#
-# The Chart module isn't used directly, a chart object is created via the
-# Workbook add_chart() method where the chart type is specified:
-#
-#    chart = workbook.add_chart(:type => Chart::Column)
-#
-# Currently the supported chart types are:
-#
-#    * Chart::Column: Creates a column style (histogram) chart. See WriteExcel::Chart::Column.
-#    * Chart::Bar: Creates a Bar style (transposed histogram) chart. See WriteExcel::Chart::Bar.
-#    * Chart::Line: Creates a Line style chart. See WriteExcel::Chart::Line.
-#    * Chart::Area: Creates an Area (filled line) style chart. See WriteExcel::Chart::Area.
-#
-# More chart types will be supported in time. See the "TODO" section.
-#
-# == Chart names and links ^
-#
-# The add_series()), set_x_axis(), set_y_axis() and set_title() methods all
-# support a name property. In general these names can be either a static
-# string or a link to a worksheet cell. If you choose to use the name_formula
-# property to specify a link then you should also the name property.
-# This isn't strictly required by Excel but some third party applications
-# expect it to be present.
-#
-#     chartl.set_title(
-#       :name          => 'Year End Results',
-#       :name_formula  => '=Sheet1!$C$1'
-#     )
-#
-# These links should be used sparingly since they aren't commonly
-# used in Excel charts.
-#
-# == Chart names and Unicode ^
-#
-# The add_series()), set_x_axis(), set_y_axis() and set_title() methods all
-# support a name property. These names can be UTF8 strings.
-#
-# This methodology is explained in the "UNICODE IN EXCEL" section of WriteExcel
-# but is semi-deprecated. If you are using Unicode the easiest option is to
-# just use UTF8.
-#
-# == TODO ^
-#
-# Charts in WriteExcel are a work in progress. More chart types and
-# features will be added in time. Please be patient. Even a small feature
-# can take a week or more to implement, test and document.
-#
-# Features that are on the TODO list and will be added are:
-#
-#     * Additional chart types. Stock, Pie and Scatter charts are next in line.
-#       Send an email if you are interested in other types and they will be
-#       added to the queue.
-#     * Colours and formatting options. For now you will have to make do
-#       with the default Excel colours and formats.
-#     * Axis controls, gridlines.
-#     * Embedded data in charts for third party application support.
-#
-# == KNOWN ISSUES ^
-#
-#     * Currently charts don't contain embedded data from which the charts
-#       can be rendered. Excel and most other third party applications ignore
-#       this and read the data via the links that have been specified. However,
-#       some applications may complain or not render charts correctly. The
-#       preview option in Mac OS X is an known example. This will be fixed
-#       in a later release.
-#     * When there are several charts with titles set in a workbook some of
-#       the titles may display at a font size of 10 instead of the default
-#       12 until another chart with the title set is viewed.
-#
 class Chart < Worksheet
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
-
-  attr_reader :embedded
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
 
   ###############################################################################
   #
@@ -161,7 +56,7 @@ class Chart < Worksheet
   #
   # Factory method for returning chart objects based on their class type.
   #
-  def self.factory(klass, *args)
+  def self.factory(klass, *args)       #:nodoc:
     klass.new(*args)
   end
 
@@ -172,7 +67,7 @@ class Chart < Worksheet
   #
   # Default constructor for sub-classes.
   #
-  def initialize(*args)
+  def initialize(*args)       #:nodoc:
     super
 
     @sheet_type  = 0x0200
@@ -190,9 +85,6 @@ class Chart < Worksheet
     set_default_config_data
   end
 
-  ###############################################################################
-  #
-  # add_series()
   #
   # Add a series and it's properties to a chart.
   #
@@ -307,9 +199,6 @@ class Chart < Worksheet
     @series << params
   end
 
-  ###############################################################################
-  #
-  # set_x_axis()
   #
   # Set the properties of the X-axis.
   #
@@ -351,9 +240,6 @@ class Chart < Worksheet
     @x_axis_formula  = formula
   end
 
-  ###############################################################################
-  #
-  # set_y_axis()
   #
   # Set the properties of the Y-axis.
   #
@@ -396,9 +282,6 @@ class Chart < Worksheet
     @y_axis_formula  = formula
   end
 
-  ###############################################################################
-  #
-  # set_title()
   #
   # The set_title() method is used to set properties of the chart title.
   #
@@ -435,6 +318,10 @@ class Chart < Worksheet
     @title_name     = name
     @title_encoding = encoding
     @title_formula  = formula
+  end
+
+  def embedded  # :nodoc:
+    @embedded
   end
 
   ###############################################################################
