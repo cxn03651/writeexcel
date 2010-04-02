@@ -82,6 +82,7 @@ class Chart < Worksheet
     @y_axis_name = nil
     @title_name = nil
     @title_formula = nil
+    @vary_data_color = 0
     set_default_config_data
   end
 
@@ -797,7 +798,8 @@ class Chart < Worksheet
   # Write the CHARTFORMAT chart substream.
   #
   def store_chartformat_stream   # :nodoc:
-    store_chartformat
+    # The _vary_data_color is set by classes that need it, like Pie.
+    store_chartformat(@vary_data_color)
 
     store_begin
 
@@ -1128,14 +1130,14 @@ class Chart < Worksheet
   # Write the CHARTFORMAT chart BIFF record. The parent record for formatting
   # of a chart group.
   #
-  def store_chartformat   # :nodoc:
+  def store_chartformat(grbit = 0)   # :nodoc:
     record    = 0x1014         # Record identifier.
     length    = 0x0014         # Number of bytes to follow.
     reserved1 = 0x00000000     # Reserved.
     reserved2 = 0x00000000     # Reserved.
     reserved3 = 0x00000000     # Reserved.
     reserved4 = 0x00000000     # Reserved.
-    grbit     = 0x0000         # Option flags.
+    # grbit                    # Option flags.
     icrt      = 0x0000         # Drawing order.
 
     header = [record, length].pack('vv')

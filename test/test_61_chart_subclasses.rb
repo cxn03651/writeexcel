@@ -61,6 +61,16 @@ class TC_chart_subclasses < Test::Unit::TestCase
     assert_equal(expected, got)
   end
 
+  def test_store_chart_type_of_pie
+    chart = Chart.factory(Chart::Pie, nil, nil, nil, nil, nil, nil,
+                                         nil, nil, nil)
+    expected = %w(
+        19 10 06 00 00 00 00 00 02 00
+      ).join(' ')
+    got = unpack_record(chart.store_chart_type)
+    assert_equal(expected, got)
+  end
+
   def unpack_record(data)
     data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end

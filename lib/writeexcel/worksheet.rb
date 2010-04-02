@@ -4166,13 +4166,11 @@ class Worksheet < BIFFWriter
 
     # The STRING record if the formula evaluates to a string.
     string  = ''
-    string  = encode_formula_result(value) if is_string != 0
+    string  = get_formula_string(value) if is_string != 0
 
 
     # Store the data or write immediately depending on the compatibility mode.
     if @compatibility != 0
-      string = ''
-      string = get_formula_string(value) if is_string != 0
       tmp = []
       tmp[col] = header + data + formula + string
       @table[row] = tmp
