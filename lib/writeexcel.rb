@@ -1063,10 +1063,12 @@ require "writeexcel/workbook"
 #
 # Currently the supported chart types are:
 #
-#    * Chart::Column: Creates a column style (histogram) chart. See WriteExcel::Chart::Column.
-#    * Chart::Bar: Creates a Bar style (transposed histogram) chart. See WriteExcel::Chart::Bar.
-#    * Chart::Line: Creates a Line style chart. See WriteExcel::Chart::Line.
-#    * Chart::Area: Creates an Area (filled line) style chart. See WriteExcel::Chart::Area.
+#    * Chart::Column: Creates a column style (histogram) chart. See Column.
+#    * Chart::Bar: Creates a Bar style (transposed histogram) chart. See Bar.
+#    * Chart::Line: Creates a Line style chart. See Line.
+#    * Chart::Area: Creates an Area (filled line) style chart. See Area.
+#    * Chart::Scatter: Creates an Scatter style chart. See Scatter.
+#    * Chart::Stock: Creates an Stock style chart. See Stock.
 #
 # More chart types will be supported in time. See the "TODO" section.
 #
