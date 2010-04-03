@@ -128,6 +128,12 @@ class TC_ChartGeneric < Test::Unit::TestCase
       ).join(' ')
     got = unpack_record(@chart.store_dataformat(0, 0, 0xFFFF))
     assert_equal(expected, got, caption)
+
+    expected = %w(
+        06 10 08 00 00 00 00 00 FD FF 00 00
+      ).join(' ')
+    got = unpack_record(@chart.store_dataformat(0, 0xFFFD, 0))
+    assert_equal(expected, got, caption)
   end
 
   ###############################################################################

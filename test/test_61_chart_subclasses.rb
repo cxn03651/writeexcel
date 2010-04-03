@@ -71,6 +71,26 @@ class TC_chart_subclasses < Test::Unit::TestCase
     assert_equal(expected, got)
   end
 
+  def test_store_chart_type_of_scatter
+    chart = Chart.factory(Chart::Scatter, nil, nil, nil, nil, nil, nil,
+                                         nil, nil, nil)
+    expected = %w(
+        1B 10 06 00 64 00 01 00 00 00
+      ).join(' ')
+    got = unpack_record(chart.store_chart_type)
+    assert_equal(expected, got)
+  end
+
+  def test_store_chart_type_of_stock
+    chart = Chart.factory(Chart::Stock, nil, nil, nil, nil, nil, nil,
+                                         nil, nil, nil)
+    expected = %w(
+        18 10 02 00 00 00
+      ).join(' ')
+    got = unpack_record(chart.store_chart_type)
+    assert_equal(expected, got)
+  end
+
   def unpack_record(data)
     data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end

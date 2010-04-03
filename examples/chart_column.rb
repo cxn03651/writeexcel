@@ -2,7 +2,7 @@
 #
 ###############################################################################
 #
-# A simple demo of a Column chart in Spreadsheet::WriteExcel.
+# A simple demo of Column chart in Spreadsheet::WriteExcel.
 #
 # reverse('ｩ'), December 2009, John McNamara, jmcnamara@cpan.org
 #
@@ -16,7 +16,7 @@ workbook  = WriteExcel.new('chart_column.xls')
 worksheet = workbook.add_worksheet
 bold      = workbook.add_format(:bold => 1)
 
-# Add the data to the worksheet that the charts will refer to.
+# Add the worksheet data that the charts will refer to.
 headings = [ 'Category', 'Values 1', 'Values 2' ]
 data = [
     [ 2, 3, 4, 5, 6, 7 ],

@@ -520,12 +520,10 @@ class Chart < Worksheet
 
     store_shtprops
 
-    # Write the TEXT stream for each series.
-    font_index = 5
-    (0...@series.size).each do |i|
+    # Write the TEXT streams.
+    (5..6).each do |font_index|
       store_defaulttext
       store_series_text_stream(font_index)
-      font_index += 1
     end
 
     store_axesused(1)
@@ -808,6 +806,7 @@ class Chart < Worksheet
 
     # CHARTFORMATLINK is not used.
     store_legend_stream
+    store_marker_dataformat_stream
     store_end
   end
 

@@ -2,7 +2,7 @@
 #
 ###############################################################################
 #
-# A simple demo of a Pie chart in Spreadsheet::WriteExcel.
+# A simple demo of Pie chart in Spreadsheet::WriteExcel.
 #
 # reverse('ｩ'), December 2009, John McNamara, jmcnamara@cpan.org
 #
@@ -16,12 +16,11 @@ workbook  = WriteExcel.new('chart_pie.xls')
 worksheet = workbook.add_worksheet
 bold      = workbook.add_format(:bold => 1)
 
-# Add the data to the worksheet that the charts will refer to.
-headings = [ 'Category', 'Values 1', 'Values 2' ]
+# Add the worksheet data that the charts will refer to.
+headings = ['Category', 'Values']
 data = [
-    [ 2, 3, 4, 5, 6, 7 ],
-    [ 1, 4, 5, 2, 1, 5 ],
-    [ 3, 6, 7, 5, 4, 3 ]
+    [ 'Apple', 'Cherry', 'Pecan' ],
+    [ 60,       30,       10     ]
 ]
 
 worksheet.write('A1', headings, bold)
@@ -35,65 +34,55 @@ worksheet.write('A2', data)
 chart1 = workbook.add_chart(:type => Chart::Pie)
 
 # Add values only. Use the default categories.
-chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+chart1.add_series(:values => '=Sheet1!$B$2:$B$4')
 
 ###############################################################################
 #
-# Example 2. A minimal chart with user specified categories (X axis)
-#            and a series name.
+# Example 2. A minimal chart with user specified categories and a series name.
 #
 chart2 = workbook.add_chart(:type => Chart::Pie)
 
 # Configure the series.
 chart2.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
+  :categories => '=Sheet1!$A$2:$A$4',
+  :values     => '=Sheet1!$B$2:$B$4',
+  :name       => 'Pie sales data'
 )
 
 ###############################################################################
 #
-# Example 3. Same as previous chart but with added title.
+# Example 3. Same as previous chart but with an added title.
 #
 chart3 = workbook.add_chart(:type => Chart::Pie)
 
 # Configure the series.
 chart3.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
+  :categories => '=Sheet1!$A$2:$A$4',
+  :values     => '=Sheet1!$B$2:$B$4',
+  :name       => 'Pie sales data'
 )
 
-# Add some labels.
-chart3.set_title( :name => 'Results of sample analysis' )
-
-# Note, a Pie chart doesn't have an X or Y axis so the following methods
-# used in the other chart_*.pl examples are ignored.
-# chart3.set_x_axis(:name => 'Sample number')
-# chart3.set_y_axis(:name => 'Sample length (cm)')
+# Add a title.
+chart3.set_title(:name => 'Popular Pie Types')
 
 ###############################################################################
 #
-# Example 4. Same as previous chart but with an added series
+# Example 4. Same as previous chart with a user specified chart sheet name.
 #
 chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Pie)
 
 # Configure the series.
 chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
+  :categories => '=Sheet1!$A$2:$A$4',
+  :values     => '=Sheet1!$B$2:$B$4',
+  :name       => 'Pie sales data'
 )
 
-# Add another series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$C$2:$C$7',
-    :name       => 'Test data series 2'
-)
+# The other chart_*.rb examples add a second series in example 4 but additional
+# series aren't plotted in a pie chart.
 
-# Add some labels.
-chart4.set_title( :name => 'Results of sample analysis' )
+# Add a title.
+chart4.set_title(:name => 'Popular Pie Types')
 
 ###############################################################################
 #
@@ -103,16 +92,16 @@ chart5 = workbook.add_chart(:type => Chart::Pie, :embedded => 1)
 
 # Configure the series.
 chart5.add_series(
-  :categories => '=Sheet1!$A$2:$A$7',
-  :values     => '=Sheet1!$B$2:$B$7',
-  :name       => 'Test data series 1'
+  :categories => '=Sheet1!$A$2:$A$4',
+  :values     => '=Sheet1!$B$2:$B$4',
+  :name       => 'Pie sales data'
 )
 
-# Add some labels.
-chart5.set_title(:name => 'Results of sample analysis' )
+# Add a title.
+chart5.set_title(:name => 'Popular Pie Types')
 
 # Insert the chart into the main worksheet.
-worksheet.insert_chart('E2', chart5)
+worksheet.insert_chart('D2', chart5)
 
 # File save
 workbook.close

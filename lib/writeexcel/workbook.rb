@@ -22,6 +22,8 @@ require 'writeexcel/charts/column'
 require 'writeexcel/charts/external'
 require 'writeexcel/charts/line'
 require 'writeexcel/charts/pie'
+require 'writeexcel/charts/scatter'
+require 'writeexcel/charts/stock'
 require 'writeexcel/properties'
 require 'digest/md5'
 require 'writeexcel/storage_lite'
@@ -343,6 +345,8 @@ class Workbook < BIFFWriter
   #           Chart::Line
   #           Chart::Area
   #           Chart::Pie
+  #           Chart::Scatter
+  #           Chart::Stock
   #
   #     * :name
   #
