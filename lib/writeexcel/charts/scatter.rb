@@ -119,13 +119,13 @@ class Chart
   #
   #     workbook.close
   #
-  class Scatter < Chart  # :nodoc:
+  class Scatter < Chart
     ###############################################################################
     #
     # new()
     #
     #
-    def initialize(*args)
+    def initialize(*args)   # :nodoc:
       super
     end
 
@@ -137,7 +137,7 @@ class Chart
     #
     # Write the AREA chart BIFF record. Defines a area chart type.
     #
-    def store_chart_type
+    def store_chart_type   # :nodoc:
       record       = 0x101B     # Record identifier.
       length       = 0x0006     # Number of bytes to follow.
       bubble_ratio = 0x0064     # Bubble ratio.
@@ -161,7 +161,7 @@ class Chart
     # For a Scatter chart the category stream is replace with a values stream. We
     # override this method and turn it into a values stream.
     #
-    def store_axis_category_stream
+    def store_axis_category_stream   # :nodoc:
       store_axis(0)
 
       store_begin
@@ -177,7 +177,7 @@ class Chart
     # This is an implementation of the parent abstract method  to define
     # properties of markers, linetypes, pie formats and other.
     #
-    def store_marker_dataformat_stream
+    def store_marker_dataformat_stream   # :nodoc:
       store_dataformat(0x0000, 0xFFFD, 0x0000)
 
       store_begin

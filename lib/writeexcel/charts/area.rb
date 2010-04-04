@@ -120,13 +120,13 @@ class Chart
   #
   #    workbook.close
   #
-  class Area < Chart  # :nodoc:
+  class Area < Char
     ###############################################################################
     #
     # new()
     #
     #
-    def initialize(*args)
+    def initialize(*args)   # :nodoc:
       super
     end
 
@@ -138,7 +138,7 @@ class Chart
     #
     # Write the AREA chart BIFF record. Defines a area chart type.
     #
-    def store_chart_type
+    def store_chart_type   # :nodoc:
       record = 0x101A     # Record identifier.
       length = 0x0002     # Number of bytes to follow.
       grbit  = 0x0001     # Option flags.

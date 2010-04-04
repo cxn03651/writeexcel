@@ -120,13 +120,13 @@ class Chart
   #
   #    workbook.close
   #
-  class Line < Chart  # :nodoc:
+  class Line < Chart
     ###############################################################################
     #
     # new()
     #
     #
-    def initialize(*args)
+    def initialize(*args)   # :nodoc:
       super(*args)
     end
 
@@ -138,7 +138,7 @@ class Chart
     #
     # Write the LINE chart BIFF record. Defines a line chart type.
     #
-    def store_chart_type
+    def store_chart_type   # :nodoc:
       record = 0x1018     # Record identifier.
       length = 0x0002     # Number of bytes to follow.
       grbit  = 0x0000     # Option flags.

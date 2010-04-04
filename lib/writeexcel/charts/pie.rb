@@ -114,13 +114,13 @@ class Chart
   #
   #     workbook.close
   #
-  class Pie < Chart  # :nodoc:
+  class Pie < Chart
     ###############################################################################
     #
     # new()
     #
     #
-    def initialize(*args)
+    def initialize(*args)   # :nodoc:
       super
       @vary_data_color = 1
     end
@@ -133,7 +133,7 @@ class Chart
     #
     # Write the Pie chart BIFF record.
     #
-    def store_chart_type
+    def store_chart_type   # :nodoc:
       record = 0x1019     # Record identifier.
       length = 0x0006     # Number of bytes to follow.
       angle  = 0x0000     # Angle.
@@ -156,7 +156,7 @@ class Chart
     #
     # A Pie chart has no X or Y axis so we override this method to remove them.
     #
-    def store_axisparent_stream
+    def store_axisparent_stream   # :nodoc:
       store_axisparent(*@config[:axisparent])
 
       store_begin

@@ -120,13 +120,13 @@ class Chart
   #
   #    workbook.close
   #
-  class Column < Chart  # :nodoc:
+  class Column < Chart
     ###############################################################################
     #
     # new()
     #
     #
-    def initialize(*args)
+    def initialize(*args)   # :nodoc:
       super(*args)
     end
 
@@ -138,7 +138,7 @@ class Chart
     #
     # Write the BAR chart BIFF record. Defines a bar or column chart type.
     #
-    def store_chart_type
+    def store_chart_type   # :nodoc:
       record    = 0x1017     # Record identifier.
       length    = 0x0006     # Number of bytes to follow.
       pcOverlap = 0x0000     # Space between bars.

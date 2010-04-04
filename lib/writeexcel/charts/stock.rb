@@ -143,13 +143,13 @@ class Chart
   #
   #     workbook.close
   #
-  class Stock < Chart  # :nodoc:
+  class Stock < Chart
     ###############################################################################
     #
     # new()
     #
     #
-    def initialize(*args)
+    def initialize(*args)   # :nodoc:
       super
     end
 
@@ -163,7 +163,7 @@ class Chart
     # as a line chart but with additional DROPBAR and CHARTLINE records to define
     # the stock style.
     #
-    def store_chart_type
+    def store_chart_type   # :nodoc:
       record = 0x1018     # Record identifier.
       length = 0x0002     # Number of bytes to follow.
       grbit  = 0x0000     # Option flags.
@@ -181,7 +181,7 @@ class Chart
     # This is an implementation of the parent abstract method to define
     # properties of markers, linetypes, pie formats and other.
     #
-    def store_marker_dataformat_stream
+    def store_marker_dataformat_stream   # :nodoc:
       store_dropbar
       store_begin
       store_lineformat(0x00000000, 0x0000, 0xFFFF, 0x0001, 0x004F)

@@ -120,13 +120,13 @@ class Chart
   #
   #    workbook.close
   #
-  class Bar < Chart  # :nodoc:
+  class Bar < Chart
     ###############################################################################
     #
     # new()
     #
     #
-    def initialize(*args)
+    def initialize(*args)   # :nodoc:
       super
       @config[:x_axis_text]     = [ 0x2D,   0x6D9,  0x5F,   0x1CC, 0x281,  0x0, 90 ]
       @config[:x_axis_text_pos] = [ 2,      2,      0,      0,     0x17,   0x2A ]
@@ -163,7 +163,7 @@ class Chart
     #
     # Override some of the default configuration data for an embedded chart.
     #
-    def set_embedded_config_data
+    def set_embedded_config_data   # :nodoc:
       # Set the parent configuration first.
       super
 
