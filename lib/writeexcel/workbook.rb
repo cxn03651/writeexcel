@@ -1258,17 +1258,14 @@ class Workbook < BIFFWriter
         stream  = "\5SummaryInformation".unpack('C*').pack('v*')
         summary = OLEStorageLitePPSFile.new(stream, @summary)
         streams << summary
-
         stream  = "\5DocumentSummaryInformation".unpack('C*').pack('v*')
         summary = OLEStorageLitePPSFile.new(stream, @doc_summary)
         streams << summary
       end
-
       # Create the OLE root document and add the substreams.
       localtime = @localtime.to_a[0..5]
       localtime[4] -= 1  # month
       localtime[5] -= 1900
-
       ole_root = OLEStorageLitePPSRoot.new(
                      localtime,
                      localtime,
