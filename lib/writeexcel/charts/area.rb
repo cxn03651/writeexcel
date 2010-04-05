@@ -120,7 +120,7 @@ class Chart
   #
   #    workbook.close
   #
-  class Area < Char
+  class Area < Chart
     ###############################################################################
     #
     # new()

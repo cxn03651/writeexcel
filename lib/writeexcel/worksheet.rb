@@ -43,7 +43,7 @@ class Worksheet < BIFFWriter
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
   def initialize(name, index, encoding, url_format, parser, tempdir,
-                 date_1904, compatibility, sinfo)                     # :nodoc:
+                 date_1904, compatibility, palette, sinfo)                     # :nodoc:
     super()
 
     @name                = name
@@ -55,6 +55,7 @@ class Worksheet < BIFFWriter
 
     @date_1904           = date_1904
     @compatibility       = compatibility
+    @palette             = palette
     @sinfo               = sinfo
     # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
 
@@ -3577,6 +3578,10 @@ class Worksheet < BIFFWriter
 
   def index  # :nodoc:
     @index
+  end
+
+  def index=(val)  # :nodoc:
+    @index = val
   end
 
   def sheet_type  # :nodoc:

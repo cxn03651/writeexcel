@@ -305,6 +305,7 @@ class Workbook < BIFFWriter
                   @tempdir,
                   @date_1904,
                   @compatibility,
+                  nil,    # Palette. Not used yet. See add_chart().
                   @sinfo,
     ]
     worksheet = Worksheet.new(*init_data)
@@ -405,6 +406,7 @@ class Workbook < BIFFWriter
       @tempdir,
       @date_1904 ? 1 : 0,
       @compatibility,
+      @palette,
       @sinfo
     ]
 
@@ -414,6 +416,10 @@ class Workbook < BIFFWriter
       @worksheets[index] = chart          # Store ref for iterator
       @sheetnames[index] = name           # Store EXTERNSHEET names
     else
+      # Set index to 0 so that the activate() and set_first_sheet() methods
+      # point back to the first worksheet if used for embedded charts.
+      chart.index = 0
+
       chart.set_embedded_config_data
     end
     chart
@@ -744,7 +750,7 @@ class Workbook < BIFFWriter
     # Set the RGB value
     @palette[index] = [red, green, blue, 0]
 
-    return index +8
+    return index + 8
   end
 
   ###############################################################################
@@ -1130,8 +1136,7 @@ class Workbook < BIFFWriter
     # Ensure that at least one worksheet has been selected.
     @worksheets[0].select if @sinfo[:activesheet] == 0
 
-    # Calculate the number of selected worksheet tabs and call the finalization
-    # methods for each worksheet
+    # Calculate the number of selected sheet tabs and set the active sheet.
     @worksheets.each do |sheet|
       @selected    += 1 if sheet.selected != 0
       sheet.active  = 1 if sheet.index == @sinfo[:activesheet]
@@ -1859,8 +1864,6 @@ class Workbook < BIFFWriter
   # Write the NAME record to define the print area and the repeat rows and cols.
   #
   def store_names  # :nodoc:
-    index       = 0
-
     # Create the user defined names.
     @defined_names.each do |defined_name|
       store_name(
@@ -1871,12 +1874,15 @@ class Workbook < BIFFWriter
       )
     end
 
-    # Create the print area NAME records
-    @worksheets.each do |worksheet|
+    # Sort the worksheets into alphabetical order by name. This is a
+    # requirement for some non-English language Excel patch levels.
+    worksheets = @worksheets.sort_by{ |x| x.name }
 
+    # Create the autofilter NAME records
+    worksheets.each do |worksheet|
+      index = worksheet.index
       key = "#{index}:#{index}"
       ref = @ext_refs[key]
-      index += 1
 
       # Write a Name record if Autofilter has been defined
       if worksheet.filter_count != 0
@@ -1891,6 +1897,13 @@ class Workbook < BIFFWriter
           1     # Hidden
         )
       end
+    end
+
+    # Create the print area NAME records
+    worksheets.each do |worksheet|
+      index  = worksheet.index
+      key = "#{index}:#{index}"
+      ref = @ext_refs[key]
 
       # Write a Name record if the print area has been defined
       if !worksheet.print_rowmin.nil?
@@ -1904,21 +1917,17 @@ class Workbook < BIFFWriter
           worksheet.print_colmax
         )
       end
-
     end
 
-    index = 0
-
     # Create the print title NAME records
-    @worksheets.each do |worksheet|
-
+    worksheets.each do |worksheet|
+      index = worksheet.index
       rowmin = worksheet.title_rowmin
       rowmax = worksheet.title_rowmax
       colmin = worksheet.title_colmin
       colmax = worksheet.title_colmax
       key = "#{index}:#{index}"
       ref = @ext_refs[key]
-      index += 1
 
       # Determine if row + col, row, col or nothing has been defined
       # and write the appropriate record
@@ -1927,13 +1936,13 @@ class Workbook < BIFFWriter
         # Row and column titles have been defined.
         # Row title has been defined.
         store_name_long(
-        worksheet.index,
-        0x07, # NAME type = Print_Titles
-        ref,
-        rowmin,
-        rowmax,
-        colmin,
-        colmax
+          worksheet.index,
+          0x07, # NAME type = Print_Titles
+          ref,
+          rowmin,
+          rowmax,
+          colmin,
+          colmax
         )
       elsif rowmin
         # Row title has been defined.
@@ -2272,24 +2281,24 @@ class Workbook < BIFFWriter
 
     header          = [record, length].pack("vv")
     data            = [grbit].pack("v")
-    data            = data + [chKey].pack("C")
-    data            = data + [cch].pack("C")
-    data            = data + [cce].pack("v")
-    data            = data + [unknown01].pack("v")
-    data            = data + [ixals].pack("v")
-    data            = data + [unknown02].pack("C")
-    data            = data + [cchCustMenu].pack("C")
-    data            = data + [cchDescription].pack("C")
-    data            = data + [cchHelptopic].pack("C")
-    data            = data + [cchStatustext].pack("C")
-    data            = data + [rgch].pack("C")
-    data            = data + [unknown03].pack("C")
-    data            = data + [ext_ref].pack("v")
+    data           += [chKey].pack("C")
+    data           += [cch].pack("C")
+    data           += [cce].pack("v")
+    data           += [unknown01].pack("v")
+    data           += [ixals].pack("v")
+    data           += [unknown02].pack("C")
+    data           += [cchCustMenu].pack("C")
+    data           += [cchDescription].pack("C")
+    data           += [cchHelptopic].pack("C")
+    data           += [cchStatustext].pack("C")
+    data           += [rgch].pack("C")
+    data           += [unknown03].pack("C")
+    data           += [ext_ref].pack("v")
 
-    data            = data + [rowmin].pack("v")
-    data            = data + [rowmax].pack("v")
-    data            = data + [colmin].pack("v")
-    data            = data + [colmax].pack("v")
+    data           += [rowmin].pack("v")
+    data           += [rowmax].pack("v")
+    data           += [colmin].pack("v")
+    data           += [colmax].pack("v")
 
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
@@ -2336,37 +2345,37 @@ class Workbook < BIFFWriter
 
     header          = [record, length].pack("vv")
     data            = [grbit].pack("v")
-    data            = data + [chKey].pack("C")
-    data            = data + [cch].pack("C")
-    data            = data + [cce].pack("v")
-    data            = data + [unknown01].pack("v")
-    data            = data + [ixals].pack("v")
-    data            = data + [unknown02].pack("C")
-    data            = data + [cchCustMenu].pack("C")
-    data            = data + [cchDescription].pack("C")
-    data            = data + [cchHelptopic].pack("C")
-    data            = data + [cchStatustext].pack("C")
-    data            = data + [rgch].pack("C")
+    data           += [chKey].pack("C")
+    data           += [cch].pack("C")
+    data           += [cce].pack("v")
+    data           += [unknown01].pack("v")
+    data           += [ixals].pack("v")
+    data           += [unknown02].pack("C")
+    data           += [cchCustMenu].pack("C")
+    data           += [cchDescription].pack("C")
+    data           += [cchHelptopic].pack("C")
+    data           += [cchStatustext].pack("C")
+    data           += [rgch].pack("C")
 
     # Column definition
-    data            = data + [unknown03].pack("C")
-    data            = data + [unknown04].pack("v")
-    data            = data + [unknown05].pack("C")
-    data            = data + [ext_ref].pack("v")
-    data            = data + [0x0000].pack("v")
-    data            = data + [0xffff].pack("v")
-    data            = data + [colmin].pack("v")
-    data            = data + [colmax].pack("v")
+    data           += [unknown03].pack("C")
+    data           += [unknown04].pack("v")
+    data           += [unknown05].pack("C")
+    data           += [ext_ref].pack("v")
+    data           += [0x0000].pack("v")
+    data           += [0xffff].pack("v")
+    data           += [colmin].pack("v")
+    data           += [colmax].pack("v")
 
     # Row definition
-    data            = data + [unknown05].pack("C")
-    data            = data + [ext_ref].pack("v")
-    data            = data + [rowmin].pack("v")
-    data            = data + [rowmax].pack("v")
-    data            = data + [0x00].pack("v")
-    data            = data + [0xff].pack("v")
+    data           += [unknown05].pack("C")
+    data           += [ext_ref].pack("v")
+    data           += [rowmin].pack("v")
+    data           += [rowmax].pack("v")
+    data           += [0x00].pack("v")
+    data           += [0xff].pack("v")
     # End of data
-    data            = data + [0x10].pack("C")
+    data           += [0x10].pack("C")
 
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)

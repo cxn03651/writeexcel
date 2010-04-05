@@ -83,6 +83,7 @@ class Chart < Worksheet
     @title_name = nil
     @title_formula = nil
     @vary_data_color = 0
+    set_default_properties
     set_default_config_data
   end
 
@@ -321,6 +322,133 @@ class Chart < Worksheet
     @title_formula  = formula
   end
 
+  ###############################################################################
+  #
+  # set_legend()
+  #
+  # Set the properties of the chart legend.
+  #
+  def set_legend(params = {})
+    if params.has_key?(:position)
+      if params[:position].downcase == 'none'
+        legend[:visible] = 0
+      end
+    end
+  end
+
+  ###############################################################################
+  #
+  # set_plotarea()
+  #
+  # Set the properties of the chart plotarea.
+  #
+  def set_plotarea(params = {})
+    return if params.empty?
+
+    area = @plotarea
+
+    # Set the plotarea visibility.
+    if params.has_key?(:visible)
+      area[:visible] = params[:visible]
+      return if area[:visible] == 0
+    end
+
+    # TODO. could move this out of if statement.
+    area[:bg_color_index] = 0x08
+
+    # Set the chart background colour.
+    if params.has_key?(:color)
+      index, rgb = get_color_indices(params[:color])
+      if !index.nil?
+        area[:fg_color_index] = index
+        area[:fg_color_rgb]   = rgb
+        area[:bg_color_index] = 0x08
+        area[:bg_color_rgb]   = 0x000000
+      end
+    end
+
+    # Set the border line colour.
+    if params.has_key?(:line_color)
+      index, rgb = get_color_indices(params[:line_color])
+      if index.nil?
+        area[:line_color_index] = index
+        area[:line_color_rgb]   = rgb
+      end
+    end
+
+    # Set the border line pattern.
+    if params.has_key?(:line_pattern)
+        pattern = get_line_pattern(params[:line_pattern])
+        area[:line_pattern] = pattern
+    end
+
+    # Set the border line weight.
+    if params.has_key?(:line_weight)
+        weight = get_line_weight(params[:line_weight])
+        area[:line_weight] = weight
+    end
+  end
+
+  ###############################################################################
+  #
+  # set_chartarea()
+  #
+  # Set the properties of the chart chartarea.
+  #
+  def set_chartarea(params = {})
+    return if params.empty?
+
+    area = @chartarea
+
+    # Embedded automatic line weight has a different default value.
+    area[:line_weight] = 0xFFFF if @embedded
+
+    # Set the chart background colour.
+    if params.has_key?(:color)
+      index, rgb = get_color_indices(params[:color])
+      if !index.nil?
+        area[:fg_color_index] = index
+        area[:fg_color_rgb]   = rgb
+        area[:bg_color_index] = 0x08
+        area[:bg_color_rgb]   = 0x000000
+        area[:area_pattern]   = 1
+        area[:area_options]   = 0x0000 if @embedded
+        area[:visible]        = 1
+      end
+    end
+
+    # Set the border line colour.
+    if params.has_key?(:line_color)
+      index, rgb = get_color_indices(params[:line_color])
+      if !index.nil?
+        area[:line_color_index] = index
+        area[:line_color_rgb]   = rgb
+        area[:line_pattern]     = 0x00
+        area[:line_options]     = 0x0000
+        area[:visible]          = 1
+      end
+    end
+
+    # Set the border line pattern.
+    if params.has_key?(:line_pattern)
+      pattern = get_line_pattern(params[:line_pattern])
+      area[:line_pattern]     = pattern
+      area[:line_options]     = 0x0000
+      area[:line_color_index] = 0x4F unless params.has_key?(:line_color)
+      area[:visible]          = 1
+    end
+
+    # Set the border line weight.
+    if params.has_key?(:line_weight)
+        weight = get_line_weight(params[:line_weight])
+        area[:line_weight]      = weight
+        area[:line_options]     = 0x0000
+        area[:line_pattern]     = 0x00 unless params.has_key?(:line_pattern)
+        area[:line_color_index] = 0x4F unless params.has_key?(:line_color)
+        area[:visible]          = 1
+    end
+  end
+
   def embedded  # :nodoc:
     @embedded
   end
@@ -403,7 +531,63 @@ class Chart < Worksheet
     # Append the sheet dimensions
     store_dimensions
 
+    # TODO add SINDEX and NUMBER records.
+
+    store_window2 unless @embedded
+
     store_eof
+  end
+
+  ###############################################################################
+  #
+  # _store_window2(), overridden.
+  #
+  # Write BIFF record Window2. Note, this overrides the parent Worksheet
+  # record because the Chart version of the record is smaller and is used
+  # mainly to indicate if the chart tab is selected or not.
+  #
+  def store_window2   # :nodoc:
+    record  = 0x023E     # Record identifier
+    length  = 0x000A     # Number of bytes to follow
+    grbit   = 0x0000     # Option flags
+    rwTop   = 0x0000     # Top visible row
+    colLeft = 0x0000     # Leftmost visible column
+    rgbHdr  = 0x0000     # Row/col heading, grid color
+
+    # The options flags that comprise grbit
+    fDspFmla       = 0                      # 0 - bit
+    fDspGrid       = 0                      # 1
+    fDspRwCol      = 0                      # 2
+    fFrozen        = 0                      # 3
+    fDspZeros      = 0                      # 4
+    fDefaultHdr    = 0                      # 5
+    fArabic        = 0                      # 6
+    fDspGuts       = 0                      # 7
+    fFrozenNoSplit = 0                      # 0 - bit
+    fSelected      = @selected              # 1
+    fPaged         = 0                      # 2
+    fBreakPreview  = 0                      # 3
+
+    #<<< Perltidy ignore this.
+    grbit             = fDspFmla
+    grbit            |= fDspGrid       << 1
+    grbit            |= fDspRwCol      << 2
+    grbit            |= fFrozen        << 3
+    grbit            |= fDspZeros      << 4
+    grbit            |= fDefaultHdr    << 5
+    grbit            |= fArabic        << 6
+    grbit            |= fDspGuts       << 7
+    grbit            |= fFrozenNoSplit << 8
+    grbit            |= fSelected      << 9
+    grbit            |= fPaged         << 10
+    grbit            |= fBreakPreview  << 11
+    #>>>
+
+    header = [record, length].pack("vv")
+    data = [grbit, rwTop, colLeft, rgbHdr].pack("vvvV")
+
+    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
+    append(header, data)
   end
 
   ###############################################################################
@@ -487,6 +671,136 @@ class Chart < Worksheet
 
   ###############################################################################
   #
+  # _get_color_indices()
+  #
+  # Convert the user specified colour index or string to an colour index and
+  # RGB colour number.
+  #
+  def get_color_indices(color)
+    return [nil, nil] if color.nil?
+
+    colors = {
+      :aqua    => 0x0F,
+      :cyan    => 0x0F,
+      :black   => 0x08,
+      :blue    => 0x0C,
+      :brown   => 0x10,
+      :magenta => 0x0E,
+      :fuchsia => 0x0E,
+      :gray    => 0x17,
+      :grey    => 0x17,
+      :green   => 0x11,
+      :lime    => 0x0B,
+      :navy    => 0x12,
+      :orange  => 0x35,
+      :pink    => 0x21,
+      :purple  => 0x14,
+      :red     => 0x0A,
+      :silver  => 0x16,
+      :white   => 0x09,
+      :yellow  => 0x0D,
+    }
+
+    # Check for the various supported colour index/name possibilities.
+    if colors.has_key?(color)
+      # Colour matches one of the supported colour names.
+      index = colors[color]
+    elsif color < 8 || color > 63
+      # Return undef if index is out of range.
+      return [nil, nil]
+    else
+      # We should have a valid color index in a valid range.
+      index = color
+    end
+
+    rgb = get_color_rbg(index)
+    return [index, rgb]
+  end
+
+  ###############################################################################
+  #
+  # _get_color_rbg()
+  #
+  # Get the RedGreenBlue number for the colour index from the Workbook palette.
+  #
+  def get_color_rbg(index)
+    # Adjust colour index from 8-63 (user range) to 0-55 (Excel range).
+    index -= 8
+
+    red_green_blue = @palette[index]
+    [red_green_blue].pack('C*').unpack('V')
+  end
+
+  ###############################################################################
+  #
+  # _get_line_pattern()
+  #
+  # Get the Excel chart index for line pattern that corresponds to the user
+  # defined value.
+  #
+  def get_line_pattern(value)
+    value = value.downcase
+    default = 0
+
+    patterns = {
+      0              => 5,
+      1              => 0,
+      2              => 1,
+      3              => 2,
+      4              => 3,
+      5              => 4,
+      6              => 7,
+      7              => 6,
+      8              => 8,
+      'solid'        => 0,
+      'dash'         => 1,
+      'dot'          => 2,
+      'dash-dot'     => 3,
+      'dash-dot-dot' => 4,
+      'none'         => 5,
+      'dark-gray'    => 6,
+      'medium-gray'  => 7,
+      'light-gray'   => 8,
+    }
+
+    if patterns.has_key?(value)
+      patterns[value]
+    else
+      default
+    end
+  end
+
+  ###############################################################################
+  #
+  # _get_line_weight()
+  #
+  # Get the Excel chart index for line weight that corresponds to the user
+  # defined value.
+  #
+  def get_line_weight(value)
+    value = value.downcase
+    default = 0
+
+    weights = {
+      1          => -1,
+      2          => 0,
+      3          => 1,
+      4          => 2,
+      'hairline' => -1,
+      'narrow'   => 0,
+      'medium'   => 1,
+      'wide'     => 2,
+    }
+
+    if weights.has_key?(value)
+      weights[value]
+    else
+      default
+    end
+  end
+
+  ###############################################################################
+  #
   # _store_chart_stream()
   #
   # Store the CHART record and it's substreams.
@@ -498,8 +812,8 @@ class Chart < Worksheet
     # Store the chart SCL record.
     store_plotgrowth
 
-    if @embedded
-      store_embedded_frame_stream
+    if @chartarea[:visible] != 0
+      store_chartarea_frame_stream
     end
 
     # Store SERIES stream for each series.
@@ -722,8 +1036,10 @@ class Chart < Worksheet
       store_y_axis_text_stream();
     end
 
-    store_plotarea
-    store_frame_stream
+    if @plotarea[:visible] != 0
+      store_plotarea
+      store_plotarea_frame_stream
+    end
     store_chartformat_stream
     store_end
   end
@@ -763,29 +1079,55 @@ class Chart < Worksheet
 
   ###############################################################################
   #
-  # _store_frame_stream()
+  # _store_plotarea_frame_stream()
   #
   # Write the FRAME chart substream.
   #
-  def store_frame_stream   # :nodoc:
+  def store_plotarea_frame_stream   # :nodoc:
+    area = @plotarea
+
     store_frame(0x00, 0x03)
     store_begin
-    store_lineformat(0x00808080, 0x0000, 0x0000, 0x0000, 0x0017)
-    store_areaformat(0x00C0C0C0, 0x0000, 0x01, 0x00, 0x16, 0x4F)
+
+    store_lineformat(
+      area[:line_color_rgb], area[:line_pattern],
+      area[:line_weight],    area[:line_options],
+      area[:line_color_index]
+    )
+
+    store_areaformat(
+      area[:fg_color_rgb],   area[:bg_color_rgb],
+      area[:area_pattern],   area[:area_options],
+      area[:fg_color_index], area[:bg_color_index]
+    )
+
     store_end
   end
 
   ###############################################################################
   #
-  # _store_embedded_frame_stream()
+  # _store_chartarea_frame_stream()
   #
   # Write the FRAME chart substream for and embedded chart.
   #
-  def store_embedded_frame_stream   # :nodoc:
+  def store_chartarea_frame_stream   # :nodoc:
+    area = @chartarea
+
     store_frame(0x00, 0x02)
     store_begin
-    store_lineformat(0x00000000, 0x0000, 0x0000, 0x0009, 0x004D)
-    store_areaformat(0x00FFFFFF, 0x0000, 0x01, 0x01, 0x4E, 0x4D)
+
+    store_lineformat(
+      area[:line_color_rgb], area[:line_pattern],
+      area[:line_weight],    area[:line_options],
+      area[:line_color_index]
+    )
+
+    store_areaformat(
+      area[:fg_color_rgb],   area[:bg_color_rgb],
+      area[:area_pattern],   area[:area_options],
+      area[:fg_color_index], area[:bg_color_index]
+    )
+
     store_end
   end
 
@@ -804,8 +1146,12 @@ class Chart < Worksheet
     # Store the BIFF record that will define the chart type.
     store_chart_type
 
-    # CHARTFORMATLINK is not used.
-    store_legend_stream
+    # Note, the CHARTFORMATLINK record is only written by Excel.
+
+    if @legend[:visible]
+        store_legend_stream
+    end
+
     store_marker_dataformat_stream
     store_end
   end
@@ -1816,6 +2162,49 @@ class Chart < Worksheet
   #
   ###############################################################################
 
+  ###############################################################################
+  #
+  # _set_default_properties()
+  #
+  # Setup the default properties for a chart.
+  #
+  def set_default_properties
+    @legend = {
+      :visible  => 1,
+      :position => 0,
+      :vertical => 0,
+    }
+
+    @chartarea = {
+      :visible          => 0,
+      :fg_color_index   => 0x4E,
+      :fg_color_rgb     => 0xFFFFFF,
+      :bg_color_index   => 0x4D,
+      :bg_color_rgb     => 0x000000,
+      :area_pattern     => 0x0000,
+      :area_options     => 0x0000,
+      :line_pattern     => 0x0005,
+      :line_weight      => 0xFFFF,
+      :line_color_index => 0x4D,
+      :line_color_rgb   => 0x000000,
+      :line_options     => 0x0008,
+    }
+
+    @plotarea = {
+      :visible          => 1,
+      :fg_color_index   => 0x16,
+      :fg_color_rgb     => 0xC0C0C0,
+      :bg_color_index   => 0x4F,
+      :bg_color_rgb     => 0x000000,
+      :area_pattern     => 0x0001,
+      :area_options     => 0x0000,
+      :line_pattern     => 0x0000,
+      :line_weight      => 0x0000,
+      :line_color_index => 0x17,
+      :line_color_rgb   => 0x808080,
+      :line_options     => 0x0000,
+    }
+  end
 
   ###############################################################################
   #
@@ -1856,6 +2245,21 @@ class Chart < Worksheet
   #
   def set_embedded_config_data   # :nodoc:
     @embedded = true
+
+    @chartarea = {
+      :visible          => 1,
+      :fg_color_index   => 0x4E,
+      :fg_color_rgb     => 0xFFFFFF,
+      :bg_color_index   => 0x4D,
+      :bg_color_rgb     => 0x000000,
+      :area_pattern     => 0x0001,
+      :area_options     => 0x0001,
+      :line_pattern     => 0x0000,
+      :line_weight      => 0x0000,
+      :line_color_index => 0x4D,
+      :line_color_rgb   => 0x000000,
+      :line_options     => 0x0009,
+    }
 
     #<<< Perltidy ignore this.
     @config = {
