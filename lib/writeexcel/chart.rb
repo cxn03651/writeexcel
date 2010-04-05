@@ -676,7 +676,7 @@ class Chart < Worksheet
   # Convert the user specified colour index or string to an colour index and
   # RGB colour number.
   #
-  def get_color_indices(color)
+  def get_color_indices(color)   # :nodoc:
     return [nil, nil] if color.nil?
 
     colors = {
@@ -723,7 +723,7 @@ class Chart < Worksheet
   #
   # Get the RedGreenBlue number for the colour index from the Workbook palette.
   #
-  def get_color_rbg(index)
+  def get_color_rbg(index)   # :nodoc:
     # Adjust colour index from 8-63 (user range) to 0-55 (Excel range).
     index -= 8
 
@@ -738,7 +738,7 @@ class Chart < Worksheet
   # Get the Excel chart index for line pattern that corresponds to the user
   # defined value.
   #
-  def get_line_pattern(value)
+  def get_line_pattern(value)   # :nodoc:
     value = value.downcase
     default = 0
 
@@ -777,7 +777,7 @@ class Chart < Worksheet
   # Get the Excel chart index for line weight that corresponds to the user
   # defined value.
   #
-  def get_line_weight(value)
+  def get_line_weight(value)   # :nodoc:
     value = value.downcase
     default = 0
 
@@ -2168,7 +2168,7 @@ class Chart < Worksheet
   #
   # Setup the default properties for a chart.
   #
-  def set_default_properties
+  def set_default_properties   # :nodoc:
     @legend = {
       :visible  => 1,
       :position => 0,
