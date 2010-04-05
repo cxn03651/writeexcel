@@ -2,15 +2,23 @@
 
  Write to a cross-platform Excel binary file.
 
+== Recent Changes
+
+0.3.0
+* Chart support(Area, Bar, Column, Line, Pie, Scatter, Stock).
+* Document added. See rdoc in your installed gem directory.
+* Change Class name from 'Spreadsheet::WriteExcel' to 'WriteExcel'.
+* many bug fix.
+
 == Description
 
- This library is converted from  Spreadsheet::WriteExcel module of Perl.
- http://search.cpan.org/~jmcnamara/Spreadsheet-WriteExcel-2.25/
+This library is converted from  Spreadsheet::WriteExcel module of Perl.
+http://search.cpan.org/~jmcnamara/Spreadsheet-WriteExcel-2.37/
 
- Some examples written in perl was successfully converted to Ruby. But
- this library written in Ruby has many bugs, I think.
+Some examples written in perl was successfully converted to Ruby. But
+this library written in Ruby has many bugs, I think.
 
- Original description is below:
+Original description is below:
 
     The Spreadsheet::WriteExcel module can be used to create a cross-
     platform Excel binary file. Multiple worksheets can be added to a
@@ -28,9 +36,9 @@
 
 == Usage
 
- See rdoc's WriteExcel class document.
+See rdoc's WriteExcel class document.
 
- Example Code:
+Example Code:
 
     require 'writeexcel'
 
@@ -70,21 +78,21 @@
 
 == Caution
 
- This library can handle multibyte character written in utf8. I tested in Japanese,
- and it looks work well. But, in this version, utf8 or not is recognized
- by matching non-ascii characters because ruby 1.8 can not recognize character code
- correctly.
+This library can handle multibyte character written in utf8. I tested in Japanese,
+and it looks work well. But, in this version, utf8 or not is recognized
+by matching non-ascii characters because ruby 1.8 can not recognize character code
+correctly.
 
 == Dependencies
 
- * ruby 1.8
+* ruby 1.8
 
 == Author
 
- Original was written in Perl by John McNamara (jmcnamara@cpan.org).
+Original was written in Perl by John McNamara (jmcnamara@cpan.org).
 
- Convert to ruby by Hideo Nakamura (cxn03651@msj.biglobe.ne.jp)
+Convert to ruby by Hideo Nakamura (cxn03651@msj.biglobe.ne.jp)
 
 == License
 
- same as Ruby.
+same as Ruby.
