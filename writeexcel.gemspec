@@ -1,6 +1,6 @@
 require 'rubygems'
 
-version = '0.3.0'
+version = '0.3.1'
 
 spec = Gem::Specification.new do |s|
   s.name      = 'writeexcel'
@@ -15,4 +15,5 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc     = true
   s.rdoc_options << 'README'
   s.required_ruby_version = '>=1.8'
+  s.homepage  = 'http://wiki.github.com/cxn03651/writeexcel/'
 end
