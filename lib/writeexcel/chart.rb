@@ -370,7 +370,7 @@ class Chart < Worksheet
     # Set the border line colour.
     if params.has_key?(:line_color)
       index, rgb = get_color_indices(params[:line_color])
-      if index.nil?
+      if !index.nil?
         area[:line_color_index] = index
         area[:line_color_rgb]   = rgb
       end
@@ -449,8 +449,22 @@ class Chart < Worksheet
     end
   end
 
+
+
+  def using_tmpfile=(val)  # :nodoc:
+    @using_tmpfile = val
+  end
+
+  def data=(val)  # :nodoc:
+    @data = val
+  end
+
   def embedded  # :nodoc:
     @embedded
+  end
+
+  def embedded=(val)  # :nodoc:
+    @embedded = val
   end
 
   ###############################################################################
