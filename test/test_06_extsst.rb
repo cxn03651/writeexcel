@@ -21,18 +21,13 @@ $LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
 
 require "test/unit"
 require 'writeexcel'
+require 'stringio'
 
 class TC_extsst < Test::Unit::TestCase
 
-  def test_dummy
-    assert(true)
-  end
-
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    @workbook    = WriteExcel.new(@test_file)
+    io = StringIO.new
+    @workbook    = WriteExcel.new(io)
 
     @tests = [  # Unique     Number of   Bucket
       # strings    buckets       size
@@ -67,25 +62,19 @@ class TC_extsst < Test::Unit::TestCase
     ]
   end
 
-  def teardown
-    @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
-  end
-
-=begin
-  def test_1
+  def test_to_tests
     @tests.each do |test|
+
       str_unique = test[0]
 
-      @workbook.str_unique = test[0]
+      @workbook.str_unique = str_unique
       @workbook.calculate_extsst_size
 
-      assert_equal(@workbook.extsst_buckets, test[1],
-      " \tBucket number for str_unique  strings")
-      assert_equal(@workbook.extsst_bucket_size, test[2],
-      " \tBucket size   for str_unique  strings");
+      assert_equal(test[1], @workbook.extsst_buckets,
+        " \tBucket number for #{str_unique}  strings")
+      assert_equal(test[2], @workbook.extsst_bucket_size,
+        " \tBucket size for #{str_unique}  strings")
     end
-
   end
-=end
+
 end

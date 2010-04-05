@@ -1188,6 +1188,18 @@ class Workbook < BIFFWriter
   end
   private :store_workbook
 
+  def str_unique=(val)  # :nodoc:
+    @sinfo[:str_unique] = val
+  end
+
+  def extsst_buckets  # :nodoc:
+    @extsst_buckets
+  end
+
+  def extsst_bucket_size  # :nodoc:
+    @extsst_bucket_size
+  end
+
   def biff_only=(val)  # :nodoc:
     @biff_only = val
   end
@@ -2953,7 +2965,6 @@ class Workbook < BIFFWriter
 
     return 6 + 8 * buckets
   end
-  private :calculate_extsst_size
 
   ###############################################################################
   #
