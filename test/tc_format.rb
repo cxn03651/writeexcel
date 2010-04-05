@@ -1135,15 +1135,6 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
     fh_r.close
   end
 
-  def test_get_xf_index
-  end
-
-  def test_get_color
-  end
-
-  def test_method_missing
-  end
-
   def test_copy
     format1 = Format.new
     format2 = Format.new
@@ -1249,7 +1240,6 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
       :pattern             => format.pattern,
       :bg_color            => format.bg_color,
       :fg_color            => format.fg_color,
-      :border              => format.border,
       :bottom              => format.bottom,
       :top                 => format.top,
       :left                => format.left,

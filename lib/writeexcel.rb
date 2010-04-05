@@ -4,7 +4,7 @@
 #
 # WriteExcel - Write to a cross-platform Excel binary file.
 #
-# Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
+# Copyright 2000-2010, John McNamara, jmcnamara@cpan.org
 #
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
@@ -72,6 +72,9 @@ require "writeexcel/workbook"
 # applications Gnumeric and OpenOffice.org.
 #
 # This module cannot be used to write to an existing Excel file
+#
+# This library is converted from  Spreadsheet::WriteExcel module of Perl.
+# http://search.cpan.org/~jmcnamara/Spreadsheet-WriteExcel-2.37/
 #
 # == Quick Start
 #

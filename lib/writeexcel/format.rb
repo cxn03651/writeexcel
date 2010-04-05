@@ -5,13 +5,18 @@
 #
 # Used in conjunction with WriteExcel
 #
-# Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
+# Copyright 2000-2010, John McNamara, jmcnamara@cpan.org
 #
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 require 'nkf'
 
+#
+# Format - A class for defining Excel formatting.
+#
+# See CELL FORMATTING, FORMAT METHODS, COLOURS IN EXCEL in WriteExcel's rdoc.
+#
 class Format
 
   COLORS = {
@@ -34,24 +39,8 @@ class Format
     'silver'  => 0x16,
     'white'   => 0x09,
     'yellow'  => 0x0D,
-  }
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
-
-  attr_accessor :xf_index, :used_merge
-  attr_accessor :bold, :text_wrap, :text_justlast
-  attr_accessor :fg_color, :bg_color, :color, :font_outline, :font_shadow
-  attr_accessor :align, :border
-  attr_accessor :font_index
-  attr_accessor :num_format
-  attr_reader   :type
-  attr_reader   :font, :size, :font_family, :font_strikeout, :font_script, :font_charset
-  attr_reader   :font_encoding, :merge_range, :reading_order
-  attr_reader   :diag_type, :diag_color, :diag_border
-  attr_reader   :num_format_enc, :locked, :hidden
-  attr_reader   :rotation, :indent, :shrink, :pattern, :bottom, :top, :left, :right
-  attr_reader   :bottom_color, :top_color, :left_color, :right_color
-  attr_reader   :italic, :underline, :font_strikeout
-  attr_reader   :text_h_align, :text_v_align, :font_only
+  }   # :nodoc:
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
 
   ###############################################################################
   #
@@ -454,14 +443,197 @@ end
 
   ###############################################################################
   #
-  # get_xf_index()
+  # xf_index()
   #
   # Returns the used by Worksheet->_XF()
   #
-  def get_xf_index  # :nodoc:
+  def xf_index  # :nodoc:
     return @xf_index
   end
 
+  def used_merge  # :nodoc:
+    @used_merge
+  end
+
+  def used_merge=(val)  # :nodoc:
+    @used_merge = val
+  end
+
+  def type  # :nodoc:
+    @type
+  end
+
+  def font_index  # :nodoc:
+    @font_index
+  end
+
+  def font_index=(val)  # :nodoc:
+    @font_index = val
+  end
+
+  def font  # :nodoc:
+    @font
+  end
+
+  def size  # :nodoc:
+    @size
+  end
+
+  def bold  # :nodoc:
+    @bold
+  end
+
+  def italic  # :nodoc:
+    @italic
+  end
+
+  def color  # :nodoc:
+    @color
+  end
+
+  def underline  # :nodoc:
+    @underline
+  end
+
+  def font_strikeout  # :nodoc:
+    @font_strikeout
+  end
+
+  def font_outline  # :nodoc:
+    @font_outline
+  end
+
+  def font_shadow  # :nodoc:
+    @font_shadow
+  end
+
+  def font_script  # :nodoc:
+    @font_script
+  end
+
+  def font_family  # :nodoc:
+    @font_family
+  end
+
+  def font_charset  # :nodoc:
+    @font_charset
+  end
+
+  def font_encoding  # :nodoc:
+    @font_encoding
+  end
+
+  def num_format  # :nodoc:
+    @num_format
+  end
+
+  def num_format=(val)  # :nodoc:
+    @num_format = val
+  end
+
+  def num_format_enc  # :nodoc:
+    @num_format_enc
+  end
+
+  def hidden  # :nodoc:
+    @hidden
+  end
+
+  def locked  # :nodoc:
+    @locked
+  end
+
+  def text_h_align  # :nodoc:
+    @text_h_align
+  end
+
+  def text_wrap  # :nodoc:
+    @text_wrap
+  end
+
+  def text_v_align  # :nodoc:
+    @text_v_align
+  end
+
+  def text_justlast  # :nodoc:
+    @text_justlast
+  end
+
+  def rotation  # :nodoc:
+    @rotation
+  end
+
+  def fg_color  # :nodoc:
+    @fg_color
+  end
+
+  def bg_color  # :nodoc:
+    @bg_color
+  end
+
+  def pattern  # :nodoc:
+    @pattern
+  end
+
+  def bottom  # :nodoc:
+    @bottom
+  end
+
+  def top  # :nodoc:
+    @top
+  end
+
+  def left  # :nodoc:
+    @left
+  end
+
+  def right  # :nodoc:
+    @right
+  end
+
+  def bottom_color  # :nodoc:
+    @bottom_color
+  end
+
+  def top_color  # :nodoc:
+    @top_color
+  end
+
+  def left_color  # :nodoc:
+    @left_color
+  end
+
+  def right_color  # :nodoc:
+    @right_color
+  end
+
+  def indent  # :nodoc:
+    @indent
+  end
+
+  def shrink  # :nodoc:
+    @shrink
+  end
+
+  def reading_order  # :nodoc:
+    @reading_order
+  end
+
+  def diag_type  # :nodoc:
+    @diag_type
+  end
+
+  def diag_color  # :nodoc:
+    @diag_color
+  end
+
+  def diag_border  # :nodoc:
+    @diag_border
+  end
+
+  def font_only  # :nodoc:
+    @font_only
+  end
 
   ###############################################################################
   #
@@ -1493,7 +1665,7 @@ end
   end
 
   # Dynamically create set methods that aren't already defined.
-  def method_missing(name, *args)
+  def method_missing(name, *args)  # :nodoc:
     # -- original perl comment --
     # There are two types of set methods: set_property() and
     # set_property_color(). When a method is AUTOLOADED we store a new anonymous
@@ -1522,5 +1694,4 @@ end
     end
     eval s
   end
-
 end

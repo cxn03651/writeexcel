@@ -5,7 +5,7 @@
 #
 # Used in conjunction with WriteExcel
 #
-# Copyright 2000-2008, John McNamara, jmcnamara@cpan.org
+# Copyright 2000-2010, John McNamara, jmcnamara@cpan.org
 #
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
@@ -573,7 +573,7 @@ class Worksheet < BIFFWriter
 
     # Check for a format object
     if format.kind_of?(Format)
-      ixfe = format.get_xf_index
+      ixfe = format.xf_index
     else
       ixfe = 0x0F
     end
@@ -5154,7 +5154,7 @@ class Worksheet < BIFFWriter
 
     # Check for a format object
     if !format.nil? && format.kind_of?(Format)
-      ixfe = format.get_xf_index
+      ixfe = format.xf_index
     else
       ixfe = 0x0F
     end
