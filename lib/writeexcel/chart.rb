@@ -702,9 +702,14 @@ class Chart < Worksheet
     }
 
     # Check for the various supported colour index/name possibilities.
-    if colors.has_key?(color)
-      # Colour matches one of the supported colour names.
-      index = colors[color]
+    color = color.downcase.to_sym if color.kind_of?(String)
+    if color.kind_of?(Symbol)
+      if colors.has_key?(color)
+        # Colour matches one of the supported colour names.
+        index = colors[color]
+      else
+        return [nil, nil]
+      end
     elsif color < 8 || color > 63
       # Return undef if index is out of range.
       return [nil, nil]
@@ -728,7 +733,7 @@ class Chart < Worksheet
     index -= 8
 
     red_green_blue = @palette[index]
-    [red_green_blue].pack('C*').unpack('V')
+    red_green_blue.pack('C*').unpack('V')[0]
   end
 
   ###############################################################################
@@ -739,7 +744,7 @@ class Chart < Worksheet
   # defined value.
   #
   def get_line_pattern(value)   # :nodoc:
-    value = value.downcase
+    value = value.downcase if value.kind_of?(String)
     default = 0
 
     patterns = {
@@ -778,7 +783,7 @@ class Chart < Worksheet
   # defined value.
   #
   def get_line_weight(value)   # :nodoc:
-    value = value.downcase
+    value = value.downcase if value.kind_of?(String)
     default = 0
 
     weights = {
