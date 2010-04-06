@@ -1,7 +1,4 @@
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
-
-require "test/unit"
-require "writeexcel"
+require 'helper'
 
 class TC_Worksheet < Test::Unit::TestCase
   TEST_DIR    = File.expand_path(File.dirname(__FILE__))

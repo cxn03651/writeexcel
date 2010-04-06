@@ -185,7 +185,9 @@ class Formula < ExcelFormulaParser       #:nodoc:
         q.push [:LT , s.matched]
       elsif s.scan(/>/)
         q.push [:GT , s.matched]
-      elsif s.scan(/[A-Z0-9_.]+/)
+      elsif s.scan(/[A-Z0-9_.]+\(/)
+        s.unscan
+        s.scan(/[A-Z0-9_.]+/)
         q.push [:FUNC,   s.matched]
       elsif s.scan(/[A-Za-z_]\w+/)
         q.push [:NAME , s.matched]
