@@ -712,7 +712,7 @@ class Workbook < BIFFWriter
   #     workbook.set_custom_color(40, 0xFF, 0x66, 0x00) # Same thing
   #     workbook.set_custom_color(40, '#FF6600'       ) # Same thing
   #
-  #     font = workbook.add_format(color => 40)   # Use the modified colour
+  #     font = workbook.add_format(:color => 40)   # Use the modified colour
   #
   # The return value from set_custom_color() is the index of the colour that
   # was changed:
@@ -720,9 +720,9 @@ class Workbook < BIFFWriter
   #     ferrari = workbook.set_custom_color(40, 216, 12, 12)
   #
   #     format  = workbook.add_format(
-  #                                 bg_color => $ferrari,
-  #                                 pattern  => 1,
-  #                                 border   => 1
+  #                                 :bg_color => $ferrari,
+  #                                 :pattern  => 1,
+  #                                 :border   => 1
   #                            )
   #
   def set_custom_color(index = nil, red = nil, green = nil, blue = nil)
@@ -973,9 +973,9 @@ class Workbook < BIFFWriter
   # The properties should be passed as a hash of values as follows:
   #
   #     workbook.set_properties(
-  #         title    => 'This is an example spreadsheet',
-  #         author   => 'cxn03651',
-  #         comments => 'Created with Ruby and WriteExcel',
+  #         :title    => 'This is an example spreadsheet',
+  #         :author   => 'cxn03651',
+  #         :comments => 'Created with Ruby and WriteExcel',
   #     )
   #
   # The properties that can be set are:
@@ -994,7 +994,7 @@ class Workbook < BIFFWriter
   # You can also pass UTF-8 strings as properties.
   #
   #     $workbook->set_properties(
-  #         subject => "住所録",
+  #         :subject => "住所録",
   #     );
   #
   # Usually WriteExcel allows you to use UTF-16. However, document properties
@@ -1006,7 +1006,7 @@ class Workbook < BIFFWriter
   #
   #     workbook.set_properties(
   #         ...,
-  #         comments => 'Created with Ruby and WriteExcel',
+  #         :comments => 'Created with Ruby and WriteExcel',
   #         ...,
   #     )
   #
