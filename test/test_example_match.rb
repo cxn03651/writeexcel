@@ -2185,6 +2185,19 @@ workbook.close
     compare_file("#{PERL_OUTDIR}/colors.xls", @file)
   end
 
+  def test_comments1
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet
+
+    worksheet.write('A1', 'Hello')
+    worksheet.write_comment('A1', 'This is a comment')
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/comments1.xls", @file)
+  end
+
   def compare_file(expected, target)
     # target is StringIO object.
     assert_equal(

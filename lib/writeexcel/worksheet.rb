@@ -7221,7 +7221,7 @@ class Worksheet < BIFFWriter
     spid            = ids.shift
 
     comments        = @comments_array
-    num_comments    = @comments.size
+    num_comments    = comments.size
 
     # Number of objects written so far.
     num_objects     = @images_array.size + @filter_count + @charts_array.size
@@ -7241,7 +7241,7 @@ class Worksheet < BIFFWriter
       str_len     = str_len / 2 if encoding != 0 # Num of chars not bytes.
       formats     = [[0, 9], [str_len, 0]]
 
-      if i == 0 and num_objects != 0
+      if i == 0 and num_objects == 0
         # Write the parent MSODRAWIING record.
         dg_length   = 200 + 128*(num_comments -1)
         spgr_length = 176 + 128*(num_comments -1)
@@ -7252,27 +7252,22 @@ class Worksheet < BIFFWriter
           store_mso_sp_container(40)                     +
           store_mso_spgr()                               +
           store_mso_sp(0x0, spid, 0x0005)
-        spid = spid + 1
-        data = data + store_mso_sp_container(120)        +
-          store_mso_sp(202, spid, 0x0A00)                +
-          store_mso_opt_comment(0x80, visible, color)    +
-          store_mso_client_anchor(3, *vertices)           +
-          store_mso_client_data()
-        spid = spid + 1
-
+        spid += 1
       else
-        # Write the child MSODRAWIING record.
-        data = store_mso_sp_container(120)               +
-          store_mso_sp(202, spid, 0x0A00)                +
-          store_mso_opt_comment(0x80, visible, color)    +
-          store_mso_client_anchor(3, *vertices)           +
-          store_mso_client_data()
-        spid = spid + 1
+        data = ''
       end
+      data +=
+        store_mso_sp_container(120)                    +
+        store_mso_sp(202, spid, 0x0A00)
+      spid += 1
+      data +=
+        store_mso_opt_comment(0x80, visible, color)    +
+        store_mso_client_anchor(3, *vertices)          +
+        store_mso_client_data
       length      = data.length
       header      = [record, length].pack("vv")
       print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-      append(eader, data)
+      append(header, data)
 
       store_obj_comment(num_objects + i + 1)
       store_mso_drawing_text_box()
