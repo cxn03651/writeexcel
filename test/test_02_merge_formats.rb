@@ -1,7 +1,4 @@
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
-
-require "test/unit"
-require 'writeexcel'
+require 'helper'
 
 class TC_merge_formats < Test::Unit::TestCase
 

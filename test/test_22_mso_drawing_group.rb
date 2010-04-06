@@ -15,10 +15,7 @@
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 #########################################################################
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
-
-require "test/unit"
-require 'writeexcel'
+require 'helper'
 
 class TC_mso_drawing_group < Test::Unit::TestCase
 

@@ -9,11 +9,7 @@
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 #########################################################################
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
-
-require 'test/unit'
-require 'rubygems'
-require 'writeexcel'
+require 'helper'
 
 class TC_property_types < Test::Unit::TestCase
 

@@ -1,6 +1,4 @@
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
-
-require "test/unit"
+require 'helper'
 
 class TC_BIFFWriter < Test::Unit::TestCase
 

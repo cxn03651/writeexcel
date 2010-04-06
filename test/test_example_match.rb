@@ -1453,7 +1453,7 @@ worksheet.write('B9',  'http://www.perl.com/' )
 # Images
 #
 worksheet.write('A10', "Images")
-worksheet.insert_image('B10', 'republic.png', 16, 8)
+worksheet.insert_image('B10', "#{TEST_DIR}/republic.png", 16, 8)
 
 
 #######################################################################

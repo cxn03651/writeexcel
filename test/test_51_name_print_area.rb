@@ -9,10 +9,7 @@
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 #########################################################################
-$LOAD_PATH.unshift "#{File.dirname(__FILE__)}/../lib"
-require 'test/unit'
-require 'rubygems'
-require 'writeexcel'
+require 'helper'
 require 'stringio'
 
 class TC_Name_Print_Area < Test::Unit::TestCase
