@@ -8,7 +8,7 @@ begin
     gem.summary = %Q{Write to a cross-platform Excel binary file.}
     gem.description = %Q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
     gem.email = "cxn03651@msj.biglobe.ne.jp"
-    gem.homepage = "htt;//wiki.github.com/cxn03651/writeexcel"
+    gem.homepage = "http://wiki.github.com/cxn03651/writeexcel/"
     gem.authors = ["Hideo NAKAMURA"]
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
