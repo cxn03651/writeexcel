@@ -5,8 +5,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "writeexcel"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{Write to a cross-platform Excel binary file.}
+    gem.description = %Q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
     gem.email = "cxn03651@msj.biglobe.ne.jp"
     gem.homepage = "htt;//wiki.github.com/cxn03651/writeexcel"
     gem.authors = ["Hideo NAKAMURA"]
