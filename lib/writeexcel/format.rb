@@ -351,7 +351,7 @@ end
     data   = [ifnt, ifmt, style, align, indent,
               border1, border2, border3, icv].pack("vvvvvvvVv")
 
-    return header + data
+    header + data
   end
 
   ###############################################################################
@@ -420,7 +420,7 @@ end
               sss, uls, bFamily,
               bCharSet, reserved, cch, encoding].pack('vvvvvCCCCCC')
 
-    return header + data + rgch
+    header + data + rgch
   end
 
   ###############################################################################
@@ -436,9 +436,7 @@ end
 
     key  = "#{@font}#{@size}#{@font_script}#{@underline}#{@font_strikeout}#{@bold}#{@font_outline}"
     key += "#{@font_family}#{@font_charset}#{@font_shadow}#{@color}#{@italic}#{@font_encoding}"
-    result =  key.gsub(' ', '_') # Convert the key to a single word
-
-    return result
+    key.gsub(' ', '_') # Convert the key to a single word
   end
 
   ###############################################################################
@@ -448,7 +446,7 @@ end
   # Returns the used by Worksheet->_XF()
   #
   def xf_index  # :nodoc:
-    return @xf_index
+    @xf_index
   end
 
   def used_merge  # :nodoc:

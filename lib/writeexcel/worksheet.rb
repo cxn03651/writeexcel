@@ -2048,7 +2048,7 @@ class Worksheet < BIFFWriter
       end
     end
 
-    return tokens
+    tokens
   end
 #  private :extract_filter_tokens
 
@@ -2133,7 +2133,7 @@ class Worksheet < BIFFWriter
       end
 
       if (tokens[2] == '%')
-        operator = operator + 1
+        operator += 1
       end
 
       token    = value
@@ -2175,7 +2175,7 @@ class Worksheet < BIFFWriter
       operator = 22
     end
 
-    return [operator, token]
+    [operator, token]
   end
   private :parse_filter_tokens
 
@@ -2628,7 +2628,7 @@ class Worksheet < BIFFWriter
       append(header, data, xl_double)
     end
 
-    return 0
+    0
   end
 
   #
@@ -2729,7 +2729,7 @@ class Worksheet < BIFFWriter
       append(header, data)
     end
 
-    return str_error
+    str_error
   end
 
   #
@@ -2802,7 +2802,7 @@ class Worksheet < BIFFWriter
       append(header, data)
     end
 
-    return 0
+    0
   end
 
   #
@@ -3153,7 +3153,7 @@ class Worksheet < BIFFWriter
       append(header, data, formula, string)
     end
 
-    return 0
+    0
   end
 
   #
@@ -3258,7 +3258,7 @@ class Worksheet < BIFFWriter
         col += 1
       end
     end
-    return error
+    error
   end
 
 
@@ -3358,7 +3358,7 @@ class Worksheet < BIFFWriter
         row += 1
       end
     end
-    return error
+    error
   end
 
   #
@@ -3770,15 +3770,15 @@ class Worksheet < BIFFWriter
 
     while (!chars.empty?)
       char = chars.pop   # LS char first
-      col = col + (char[0] - "A"[0] +1) * (26**expn)
-      expn = expn + 1
+      col += (char[0] - "A"[0] +1) * (26**expn)
+      expn += 1
     end
 
     # Convert 1-index to zero-index
     row -= 1
     col -= 1
 
-    return [row, col]
+    [row, col]
   end
   private :cell_to_rowcol
 
@@ -3878,7 +3878,7 @@ class Worksheet < BIFFWriter
       end
     end
 
-    return [num, grbit, is_string]
+    [num, grbit, is_string]
   end
   private :encode_formula_result
 
@@ -3907,7 +3907,7 @@ class Worksheet < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [strlen, encoding].pack("vC")
 
-    return header + data + string
+    header + data + string
   end
   private :get_formula_string
 
@@ -3963,7 +3963,7 @@ class Worksheet < BIFFWriter
     #       }
 
     # Return the parsed tokens in an anonymous array
-    return [*tokens]
+    [*tokens]
   end
 
   #
@@ -4185,7 +4185,7 @@ class Worksheet < BIFFWriter
       append(header, data, formula, string)
     end
 
-    return 0
+    0
   end
 
   #
@@ -4282,7 +4282,7 @@ class Worksheet < BIFFWriter
     return -1 if args.size < 3
 
     # Add start row and col to arg list
-    return write_url_range(args[0], args[1], *args)
+    write_url_range(args[0], args[1], *args)
   end
 
   #
@@ -4338,7 +4338,7 @@ class Worksheet < BIFFWriter
     # Check for internal/external sheet links or default to web link
     return write_url_internal(*args) if url =~ /^internal:/
     return write_url_external(*args) if url =~ /^external:/
-    return write_url_web(*args)
+    write_url_web(*args)
   end
 
   ###############################################################################
@@ -4407,7 +4407,7 @@ class Worksheet < BIFFWriter
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append( header, data,unknown1,options,unknown2,url_len,url)
 
-    return error
+    error
   end
   private :write_url_web
 
@@ -4460,7 +4460,7 @@ class Worksheet < BIFFWriter
 
     # Convert an Ascii URL type and to a null terminated wchar string.
     if encoding == 0
-      url = url + "\0"
+      url += "\0"
       url = url.unpack('c*').pack('v*')
     end
 
@@ -4478,7 +4478,7 @@ class Worksheet < BIFFWriter
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append( header, data, unknown1, options, url_len, url)
 
-    return error
+    error
   end
   private :write_url_internal
 
@@ -4548,7 +4548,7 @@ class Worksheet < BIFFWriter
     # Calculate the up-level dir count e.g. (..\..\..\ == 3)
     up_count    = 0
     while dir_long.sub!(/^\.\.\\/, '')
-      up_count = up_count + 1
+      up_count += 1
     end
     up_count    = [up_count].pack("v")
 
@@ -4593,7 +4593,7 @@ class Worksheet < BIFFWriter
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
-    return error
+    error
   end
   private :write_url_external
 
@@ -4645,7 +4645,7 @@ class Worksheet < BIFFWriter
 
 
     # Make the string null terminated
-    dir_long       = dir_long + "\0"
+    dir_long      += "\0"
 
     # Pack the lengths of the dir string
     dir_long_len  = [dir_long.length].pack("V")
@@ -4673,7 +4673,7 @@ class Worksheet < BIFFWriter
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
-    return error
+    error
   end
   private :write_url_external_net
 
@@ -4751,7 +4751,7 @@ class Worksheet < BIFFWriter
       write_string(row, col, str, args[3])
       error = -3
     end
-    return error
+    error
   end
 
   #
@@ -4868,9 +4868,9 @@ class Worksheet < BIFFWriter
     days -= leap                             # Already counted above
 
     # Adjust for Excel erroneously treating 1900 as a leap year.
-    days = days + 1 if !@date_1904 and days > 59
+    days += 1 if !@date_1904 and days > 59
 
-    return days + seconds
+    days + seconds
   end
 
   ###############################################################################
@@ -4941,7 +4941,7 @@ class Worksheet < BIFFWriter
       end
     end
 
-    return 0
+    0
   end
   private :check_dimensions
 
@@ -5838,7 +5838,7 @@ class Worksheet < BIFFWriter
 
     # Append each page break
     breaks.each do |brk|
-      data = data + [brk, 0x0000, 0x00ff].pack("vvv")
+      data += [brk, 0x0000, 0x00ff].pack("vvv")
     end
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
@@ -5868,7 +5868,7 @@ class Worksheet < BIFFWriter
 
     # Append each page break
     breaks.each do |brk|
-      data = data + [brk, 0x0000, 0x00ff].pack("vvv")
+      data += [brk, 0x0000, 0x00ff].pack("vvv")
     end
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
@@ -6075,7 +6075,7 @@ class Worksheet < BIFFWriter
     header          = [record, length].pack('vv')
     data            = [row_offset].pack('V')
     cell_offsets.each do |co|
-      data = data + [co].pack('v')
+      data += [co].pack('v')
     end
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
@@ -6106,7 +6106,7 @@ class Worksheet < BIFFWriter
     data        = [reserved, row_min, row_max, reserved].pack('VVVV')
 
     indices.each do |index|
-      data = data + [index + @offset + 20 + length + 4].pack('V')
+      data += [index + @offset + 20 + length + 4].pack('V')
     end
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
@@ -6344,22 +6344,22 @@ class Worksheet < BIFFWriter
 
     # Adjust start column for offsets that are greater than the col width
     while x1 >= size_col(col_start)
-      x1 = x1 - size_col(col_start)
-      col_start = col_start + 1
+      x1 -= size_col(col_start)
+      col_start += 1
     end
 
     # Adjust start row for offsets that are greater than the row height
     while y1 >= size_row(row_start)
-      y1 = y1 - size_row(row_start)
-      row_start = row_start + 1
+      y1 -= size_row(row_start)
+      row_start += 1
     end
 
     # Initialise end cell to the same as the start cell
     col_end    = col_start
     row_end    = row_start
 
-    width      = width  + x1
-    height     = height + y1
+    width     += x1
+    height    += y1
 
     # Subtract the underlying cell widths to find the end cell of the image
     while width >= size_col(col_end)
@@ -6393,7 +6393,7 @@ class Worksheet < BIFFWriter
     x2 = (x2 +0.5).to_i
     y2 = (y2 +0.5).to_i
 
-    return [
+    [
       col_start, x1,
       row_start, y1,
       col_end,   x2,
@@ -6544,7 +6544,7 @@ class Worksheet < BIFFWriter
       append(header, data)
     end
 
-    return str_error
+    str_error
   end
 
   ###############################################################################
@@ -6577,7 +6577,7 @@ class Worksheet < BIFFWriter
     # Change from UTF16 big-endian to little endian
     str = str.unpack('n*').pack("v*")
 
-    return write_utf16be_string(row, col, str, format)
+    write_utf16be_string(row, col, str, format)
   end
 
 
@@ -6694,8 +6694,8 @@ class Worksheet < BIFFWriter
     string_2 = '' if string_2.nil?
 
     data = [index].pack('v')
-    data = data + [grbit].pack('v')
-    data = data + doper_1 + doper_2 + string_1 + string_2
+    data += [grbit].pack('v')
+    data += doper_1 + doper_2 + string_1 + string_2
 
     length  = data.length
     header  = [record, length].pack('vv')
@@ -6744,7 +6744,7 @@ class Worksheet < BIFFWriter
       doper  = pack_number_doper(operator, token)
     end
 
-    return [doper, string]
+    [doper, string]
   end
   private :pack_doper
 
@@ -6755,7 +6755,7 @@ class Worksheet < BIFFWriter
   # Pack an empty Doper structure.
   #
   def pack_unused_doper   #:nodoc:
-    return [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0].pack('C10')
+    [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0].pack('C10')
   end
   private :pack_unused_doper
 
@@ -6774,11 +6774,10 @@ class Worksheet < BIFFWriter
       operator = 5
     end
 
-    doper = [type,       # Data type
+    [type,       # Data type
       operator,
       0x0000, 0x0000     # Reserved
     ].pack('CCVV')
-    return doper
   end
   private :pack_blanks_doper
 
@@ -6789,13 +6788,12 @@ class Worksheet < BIFFWriter
   # Pack an string Doper structure.
   #
   def pack_string_doper(operator, length)   #:nodoc:
-    doper = [0x06,     # Data type
+    [0x06,     # Data type
       operator,
       0x0000,         #Reserved
       length,         # String char length
       0x0, 0x0, 0x0   # Reserved
     ].pack('CCVCCCC')
-    return doper
   end
   private :pack_string_doper
 
@@ -6809,8 +6807,7 @@ class Worksheet < BIFFWriter
     number = [number].pack('d')
     number.reverse! if @byte_order != '' && @byte_order != 0
 
-    doper  = [0x04, operator].pack('CC') + number
-    return doper
+    [0x04, operator].pack('CC') + number
   end
   private :pack_number_doper
 
@@ -6844,7 +6841,7 @@ class Worksheet < BIFFWriter
     @images       = {}
     @images_array = images
 
-    return count
+    count
   end
 #  private :prepare_images
 
@@ -6872,7 +6869,7 @@ class Worksheet < BIFFWriter
     @comments       = {}
     @comments_array = comments
 
-    return count
+    count
   end
 #  private :prepare_comments
 
@@ -6972,7 +6969,7 @@ class Worksheet < BIFFWriter
         spid = spid + 1
         data = data                              +
           store_mso_opt_image(image_id)          +
-          store_mso_client_anchor(2, *vertices)   +
+          store_mso_client_anchor(2, *vertices)  +
           store_mso_client_data()
       else
         # Write the child MSODRAWIING record.
@@ -6981,7 +6978,7 @@ class Worksheet < BIFFWriter
           spid = spid + 1
         data = data                              +
           store_mso_opt_image(image_id)          +
-          store_mso_client_anchor(2, *vertices)   +
+          store_mso_client_anchor(2, *vertices)  +
           store_mso_client_data
       end
       length      = data.length
@@ -7056,27 +7053,27 @@ class Worksheet < BIFFWriter
               spgr_length += 128 *num_comments
 
 
-              data        = store_mso_dg_container(dg_length)     +
-                            store_mso_dg(*ids)                     +
-                            store_mso_spgr_container(spgr_length) +
-                            store_mso_sp_container(40)            +
-                            store_mso_spgr()                      +
-                            store_mso_sp(0x0, spid, 0x0005)
+              data  = store_mso_dg_container(dg_length)     +
+                      store_mso_dg(*ids)                     +
+                      store_mso_spgr_container(spgr_length) +
+                      store_mso_sp_container(40)            +
+                      store_mso_spgr()                      +
+                      store_mso_sp(0x0, spid, 0x0005)
               spid += 1
-              data = data + store_mso_sp_container(112)           +
-                            store_mso_sp(201, spid, 0x0A00)
+              data += store_mso_sp_container(112)           +
+                      store_mso_sp(201, spid, 0x0A00)
               spid += 1
-              data = data + store_mso_opt_chart()                 +
-                            store_mso_client_anchor(0, *vertices)  +
-                            store_mso_client_data()
+              data += store_mso_opt_chart()                 +
+                      store_mso_client_anchor(0, *vertices)  +
+                      store_mso_client_data()
           else
               # Write the child MSODRAWIING record.
-              data        = store_mso_sp_container(112)           +
-                            store_mso_sp(201, spid, 0x0A00)
+              data  = store_mso_sp_container(112)           +
+                      store_mso_sp(201, spid, 0x0A00)
               spid += 1
-              data = data + store_mso_opt_chart()                 +
-                            store_mso_client_anchor(0, *vertices)  +
-                            store_mso_client_data()
+              data += store_mso_opt_chart()                 +
+                      store_mso_client_anchor(0, *vertices)  +
+                      store_mso_client_data()
           end
           length      = data.length
           header      = [record, length].pack("vv")
@@ -7151,16 +7148,16 @@ class Worksheet < BIFFWriter
     row1, row2, col1, col2 = @filter_area
 
     (0 .. num_filters-1).each do |i|
-      vertices = [ col1 +i,    0, row1   , 0,
-      col1 +i +1, 0, row1 +1, 0]
+      vertices = [ col1 + i,    0, row1   , 0,
+      col1 +i +1, 0, row1 + 1, 0]
 
       if i == 0 and !num_objects.nil?
         # Write the parent MSODRAWIING record.
-        dg_length   = 168 + 96*(num_filters -1)
-        spgr_length = 144 + 96*(num_filters -1)
+        dg_length   = 168 + 96 * (num_filters -1)
+        spgr_length = 144 + 96 * (num_filters -1)
 
-        dg_length   = dg_length   + 128 *num_comments
-        spgr_length = spgr_length + 128 *num_comments
+        dg_length   += 128 * num_comments
+        spgr_length += 128 * num_comments
 
         data = store_mso_dg_container(dg_length)          +
           store_mso_dg(*ids)                              +
@@ -7168,22 +7165,22 @@ class Worksheet < BIFFWriter
           store_mso_sp_container(40)                      +
           store_mso_spgr()                                +
           store_mso_sp(0x0, spid, 0x0005)
-        spid = spid + 1
-        data = data + store_mso_sp_container(88)          +
+        spid += 1
+        data += store_mso_sp_container(88)                +
           store_mso_sp(201, spid, 0x0A00)                 +
           store_mso_opt_filter()                          +
-          store_mso_client_anchor(1, *vertices)            +
+          store_mso_client_anchor(1, *vertices)           +
           store_mso_client_data()
-        spid = spid + 1
+        spid += 1
 
       else
         # Write the child MSODRAWIING record.
         data = store_mso_sp_container(88)                 +
           store_mso_sp(201, spid, 0x0A00)                 +
           store_mso_opt_filter()                          +
-          store_mso_client_anchor(1, *vertices)            +
+          store_mso_client_anchor(1, *vertices)           +
           store_mso_client_data()
-        spid = spid + 1
+        spid += 1
       end
       length      = data.length
       header      = [record, length].pack("vv")
@@ -7307,7 +7304,7 @@ class Worksheet < BIFFWriter
     version     = 15
     instance    = 0
     data        = ''
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_dg_container
 
@@ -7324,7 +7321,7 @@ class Worksheet < BIFFWriter
     length      = 8
     data        = [num_shapes, max_spid].pack("VV")
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_dg
 
@@ -7340,7 +7337,7 @@ class Worksheet < BIFFWriter
     instance    = 0
     data        = ''
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_spgr_container
 
@@ -7356,7 +7353,7 @@ class Worksheet < BIFFWriter
     instance    = 0
     data        = ''
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_sp_container
 
@@ -7373,7 +7370,7 @@ class Worksheet < BIFFWriter
     data        = [0, 0, 0, 0].pack("VVVV")
     length      = 16
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_spgr
 
@@ -7390,7 +7387,7 @@ class Worksheet < BIFFWriter
     length      = 8
     data        = [spid, options].pack('VV')
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_sp
 
@@ -7423,7 +7420,7 @@ class Worksheet < BIFFWriter
     [visible].pack('v')                             +
     ['0A00'].pack('H*')
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_opt_comment
 
@@ -7447,7 +7444,7 @@ class Worksheet < BIFFWriter
     [0x03BF].pack( 'v')     +
     [0x00080000].pack( 'V')
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_opt_image
 
@@ -7484,7 +7481,7 @@ class Worksheet < BIFFWriter
     [0x03BF].pack('v')           +        # Group Shape -> fPrint
     [0x00080000].pack('V')
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_opt_chart
 
@@ -7512,7 +7509,7 @@ class Worksheet < BIFFWriter
     [0x03BF].pack('v')    +        # Group Shape -> fPrint
     [0x000A0000].pack('V')
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_opt_filter
 
@@ -7543,7 +7540,7 @@ class Worksheet < BIFFWriter
 
     data = [flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2].pack('v9')
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_client_anchor
 
@@ -7560,7 +7557,7 @@ class Worksheet < BIFFWriter
     data        = ''
     length      = 0
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_client_data
 
@@ -7594,12 +7591,12 @@ class Worksheet < BIFFWriter
     sub_record  = 0x000D   # ftNts
     sub_length  = 0x0016
     sub_data    = [reserved,reserved,reserved,reserved,reserved,reserved].pack( "VVVVVv")
-    data        = data + [sub_record, sub_length].pack("vv") + sub_data
+    data        += [sub_record, sub_length].pack("vv") + sub_data
 
     # Add ftEnd (end of object) subobject
     sub_record  = 0x0000   # ftNts
     sub_length  = 0x0000
-    data        = data + [sub_record, sub_length].pack("vv")
+    data        += [sub_record, sub_length].pack("vv")
 
     # Pack the record.
     header      = [record, length].pack("vv")
@@ -7640,18 +7637,18 @@ class Worksheet < BIFFWriter
     sub_record  = 0x0007   # ftCf
     sub_length  = 0x0002
     sub_data    = [0xFFFF].pack( 'v')
-    data        = data + [sub_record, sub_length].pack('vv') + sub_data
+    data        += [sub_record, sub_length].pack('vv') + sub_data
 
     # Add ftPioGrbit (Picture option flags) subobject
     sub_record  = 0x0008   # ftPioGrbit
     sub_length  = 0x0002
     sub_data    = [0x0001].pack('v')
-    data        = data + [sub_record, sub_length].pack('vv') + sub_data
+    data        += [sub_record, sub_length].pack('vv') + sub_data
 
     # Add ftEnd (end of object) subobject
     sub_record  = 0x0000   # ftNts
     sub_length  = 0x0000
-    data        = data + [sub_record, sub_length].pack('vv')
+    data        += [sub_record, sub_length].pack('vv')
 
     # Pack the record.
     header  = [record, length].pack('vv')
@@ -7691,7 +7688,7 @@ class Worksheet < BIFFWriter
     # Add ftEnd (end of object) subobject
     sub_record  = 0x0000   # ftNts
     sub_length  = 0x0000
-    data        = data + [sub_record, sub_length].pack('vv')
+    data        += [sub_record, sub_length].pack('vv')
 
     # Pack the record.
     header  = [record, length].pack('vv')
@@ -7733,7 +7730,7 @@ class Worksheet < BIFFWriter
     sub_record  = 0x000C   # ftSbs
     sub_length  = 0x0014
     sub_data    = ['0000000000000000640001000A00000010000100'].pack('H*')
-    data        = data + [sub_record, sub_length].pack('vv') + sub_data
+    data        += [sub_record, sub_length].pack('vv') + sub_data
 
     # Add ftLbsData (List box data) subobject
     sub_record  = 0x0013   # ftLbsData
@@ -7747,12 +7744,12 @@ class Worksheet < BIFFWriter
       sub_data       = ['00000000010001030000020008005700'].pack('H*')
     end
 
-    data        = data + [sub_record, sub_length].pack('vv') + sub_data
+    data        += [sub_record, sub_length].pack('vv') + sub_data
 
     # Add ftEnd (end of object) subobject
     sub_record  = 0x0000   # ftNts
     sub_length  = 0x0000
-    data        = data + [sub_record, sub_length].pack('vv')
+    data        += [sub_record, sub_length].pack('vv')
 
     # Pack the record.
     header  = [record, length].pack('vv')
@@ -7793,7 +7790,7 @@ class Worksheet < BIFFWriter
     data        = ''
     length      = 0
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_client_text_box
 
@@ -7880,7 +7877,7 @@ class Worksheet < BIFFWriter
     data = ''
 
     formats.each do |a_ref|
-      data = data + [a_ref[0], a_ref[1], 0x0].pack('vvV')
+      data += [a_ref[0], a_ref[1], 0x0].pack('vvV')
     end
 
     length  = data.length
@@ -8074,7 +8071,7 @@ class Worksheet < BIFFWriter
       params[:height]
     )
 
-    return [row, col, string,
+    [row, col, string,
       params[:encoding],
       params[:author],
       params[:author_encoding],
@@ -8889,7 +8886,7 @@ class Worksheet < BIFFWriter
     dv_count = cells.size
     dv_data  = [dv_count].pack('v')
     cells.each do |range|
-      dv_data = dv_data + [range[0], range[2], range[1], range[3]].pack('vvvv')
+      dv_data += [range[0], range[2], range[1], range[3]].pack('vvvv')
     end
 
     # Pack the record.
@@ -8941,7 +8938,7 @@ class Worksheet < BIFFWriter
       encoding = 1
     end
 
-    return [str_length, encoding].pack('vC') + string
+    [str_length, encoding].pack('vC') + string
   end
 #  private :pack_dv_string
 
@@ -9000,7 +8997,7 @@ class Worksheet < BIFFWriter
     # Parse the tokens into a formula string.
     formula = parser.parse_tokens(tokens)
 
-    return [formula.length, unused].pack('vv') + formula
+    [formula.length, unused].pack('vv') + formula
   end
 #  private :pack_dv_formula
 

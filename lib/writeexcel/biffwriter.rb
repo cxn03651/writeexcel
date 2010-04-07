@@ -84,7 +84,7 @@ class BIFFWriter       #:nodoc:
 
     print "prepend\n" if defined?($debug)
     print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n" if defined?($debug)
-    return d
+    d
   end
 
   ###############################################################################
@@ -107,7 +107,7 @@ class BIFFWriter       #:nodoc:
 
     print "append\n" if defined?($debug)
     print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n" if defined?($debug)
-    return d
+    d
   end
 
   ###############################################################################
@@ -137,7 +137,7 @@ class BIFFWriter       #:nodoc:
     end
 
     # No data to return
-    return nil
+    nil
   end
 
   ###############################################################################
@@ -225,15 +225,13 @@ class BIFFWriter       #:nodoc:
     # Strip out chunks of 2080/8224 bytes +4 for the header.
     while (data.length > @limit)
       header  = [record, @limit].pack("vv")
-      tmp     = tmp + header + data[0, @limit]
+      tmp     += header + data[0, @limit]
       data[0, @limit] = ''
     end
 
     # Mop up the last of the data
     header  = [record, data.length].pack("vv")
-    tmp     = tmp + header + data
-
-    return tmp
+    tmp     += header + data
   end
 
   ###############################################################################
@@ -257,8 +255,6 @@ class BIFFWriter       #:nodoc:
     header  = version | (instance << 4)
 
     record  = [header, type, length].pack('vvV') + data
-
-    return record
   end
 
   def not_using_tmpfile

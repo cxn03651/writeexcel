@@ -208,7 +208,7 @@ class Workbook < BIFFWriter
     return if @fileclosed  # Prevent close() from being called twice.
 
     @fileclosed = true
-    return store_workbook
+    store_workbook
   end
 
   # get array of Worksheet objects
@@ -750,7 +750,7 @@ class Workbook < BIFFWriter
     # Set the RGB value
     @palette[index] = [red, green, blue, 0]
 
-    return index + 8
+    index + 8
   end
 
   ###############################################################################
@@ -818,7 +818,7 @@ class Workbook < BIFFWriter
       [0x33, 0x33, 0x99, 0x00],   # 62
       [0x33, 0x33, 0x33, 0x00]    # 63
     ]
-    return 0
+    0
   end
   private :set_palette_xl97
 
@@ -1594,7 +1594,7 @@ class Workbook < BIFFWriter
     width   = data[16, 4].unpack("N")[0]
     height  = data[20, 4].unpack("N")[0]
 
-    return [type, width, height]
+    [type, width, height]
   end
   private :process_png
 
@@ -1643,7 +1643,7 @@ class Workbook < BIFFWriter
       raise "#{filename}: compression not supported in bitmap image."
     end
 
-    return [type, width, height]
+    [type, width, height]
   end
   private :process_bmp
 
@@ -1675,7 +1675,7 @@ class Workbook < BIFFWriter
         break
       end
 
-      offset = offset + length + 2
+      offset += length + 2
       break if marker == 0xFFDA
     end
 
@@ -2194,7 +2194,7 @@ class Workbook < BIFFWriter
 
     # Write the XTI structs
     ext.each do |e|
-      rgxti = rgxti + [0, e[0], e[1]].pack("vvv")
+      rgxti += [0, e[0], e[1]].pack("vvv")
     end
 
     data        = [cxti].pack("v") + rgxti
@@ -2280,7 +2280,7 @@ class Workbook < BIFFWriter
     cch             = 0x01         # Length of text name
     cce             = 0x000b       # Length of text definition
     unknown01       = 0x0000       #
-    ixals           = index +1     # Sheet index
+    ixals           = index + 1    # Sheet index
     unknown02       = 0x00         #
     cchCustMenu     = 0x00         # Length of cust menu text
     cchDescription  = 0x00         # Length of description text
@@ -2343,7 +2343,7 @@ class Workbook < BIFFWriter
     cch             = 0x01         # Length of text name
     cce             = 0x001a       # Length of text definition
     unknown01       = 0x0000       #
-    ixals           = index +1     # Sheet index
+    ixals           = index + 1    # Sheet index
     unknown02       = 0x00         #
     cchCustMenu     = 0x00         # Length of cust menu text
     cchDescription  = 0x00         # Length of description text
@@ -2408,7 +2408,7 @@ class Workbook < BIFFWriter
 
     # Pack the RGB data
     @palette.each do |p|
-      data = data + p.pack('CCCC')
+      data += p.pack('CCCC')
     end
 
     header = [record, length, ccv].pack("vvv")
@@ -2571,7 +2571,7 @@ class Workbook < BIFFWriter
     # The EXTERNSHEET record is 6 bytes + 6 bytes for each external ref
     length += 6 * (1 + ext_ref_count)
 
-    return length
+    length
   end
 
   ###############################################################################
@@ -2730,7 +2730,7 @@ class Workbook < BIFFWriter
       length += 4 + block_sizes.shift                         # CONTINUEs
     end
 
-    return length
+    length
   end
   private :calculate_shared_string_sizes
 
@@ -2906,7 +2906,7 @@ class Workbook < BIFFWriter
           length         = block_sizes.shift
 
           header         = [record, length].pack("vv")
-          header         = header + [encoding].pack("C") if continue != 0
+          header        += [encoding].pack("C") if continue != 0
 
           print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           append(header)
@@ -2963,7 +2963,7 @@ class Workbook < BIFFWriter
     @extsst_buckets        = buckets
     @extsst_bucket_size    = bucket_size
 
-    return 6 + 8 * buckets
+    6 + 8 * buckets
   end
 
   ###############################################################################
@@ -2983,7 +2983,7 @@ class Workbook < BIFFWriter
     data        = [bucket_size].pack('v')
 
     offsets.each do |offset|
-      data = data + [offset[0], offset[1], 0].pack('Vvv')
+      data += [offset[0], offset[1], 0].pack('Vvv')
     end
 
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
@@ -3009,20 +3009,20 @@ class Workbook < BIFFWriter
     length  = 0x0000               # Number of bytes to follow
 
     data    = store_mso_dgg_container
-    data    = data + store_mso_dgg(*@mso_clusters)
-    data    = data + store_mso_bstore_container
+    data   += store_mso_dgg(*@mso_clusters)
+    data   += store_mso_bstore_container
     @images_data.each do |image|
-      data = data + store_mso_images(*image)
+      data += store_mso_images(*image)
     end
-    data    = data + store_mso_opt
-    data    = data + store_mso_split_menu_colors
+    data   += store_mso_opt
+    data   += store_mso_split_menu_colors
 
     length  = data.length
     header  = [record, length].pack("vv")
 
     add_mso_drawing_group_continue(header + data)
 
-    return header + data # For testing only.
+    header + data # For testing only.
   end
   private :add_mso_drawing_group
 
@@ -3104,7 +3104,7 @@ class Workbook < BIFFWriter
     data        = ''
     length      = @mso_size -12 # -4 (biff header) -8 (for this).
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_dgg_container
 
@@ -3133,10 +3133,10 @@ class Workbook < BIFFWriter
       drawing_id      = aref[0]
       shape_ids_used  = aref[1]
 
-      data            = data + [drawing_id, shape_ids_used].pack("VV")
+      data           += [drawing_id, shape_ids_used].pack("VV")
     end
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_dgg
 
@@ -3155,7 +3155,7 @@ class Workbook < BIFFWriter
     data        = ''
     length      = @images_size +8 *instance
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_bstore_container
 
@@ -3187,7 +3187,7 @@ class Workbook < BIFFWriter
         checksum2
       )
 
-    return blip_store_entry + blip
+    blip_store_entry + blip
   end
   private :store_mso_images
 
@@ -3218,7 +3218,7 @@ class Workbook < BIFFWriter
     [0x00].pack('C')        +    # Unused
     [0x00].pack('C')             # Unused
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_blip_store_entry
 
@@ -3250,7 +3250,7 @@ class Workbook < BIFFWriter
     [0xFF].pack('C')        +     # Tag
     image_data                   # Image
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_blip
 
@@ -3269,7 +3269,7 @@ class Workbook < BIFFWriter
 
     data        = ['BF0008000800810109000008C0014000'+'0008'].pack("H*")
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_opt
 
@@ -3288,7 +3288,7 @@ class Workbook < BIFFWriter
 
     data        = ['0D0000080C00000817000008F7000010'].pack("H*")
 
-    return add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_split_menu_colors
 end

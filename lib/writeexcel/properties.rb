@@ -37,24 +37,24 @@ def create_summary_property_set(properties)       #:nodoc:
 
     # Create the property type and offsets based on the previous calculation.
     0.upto(properties.size-1) do |i|
-      property_offsets = property_offsets + [properties[i][0], offsets[i]].pack('VV')
+      property_offsets += [properties[i][0], offsets[i]].pack('VV')
     end
 
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
     size = 8 + (property_offsets).length + property_data.length
     size = [size].pack('V')
 
-    return  byte_order         +
-            version            +
-            system_id          +
-            class_id           +
-            num_property_sets  +
-            format_id          +
-            offset             +
-            size               +
-            num_property       +
-            property_offsets   +
-            property_data
+    byte_order         +
+    version            +
+    system_id          +
+    class_id           +
+    num_property_sets  +
+    format_id          +
+    offset             +
+    size               +
+    num_property       +
+    property_offsets   +
+    property_data
 end
 
 
@@ -84,7 +84,7 @@ def create_doc_summary_property_set(properties)       #:nodoc:
 
     # Create the property type and offsets based on the previous calculation.
     0.upto(properties.size-1) do |i|
-      property_offsets_0 = property_offsets_0 + [properties[i][0], offsets[i]].pack('VV')
+      property_offsets_0 += [properties[i][0], offsets[i]].pack('VV')
     end
 
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
@@ -108,22 +108,20 @@ def create_doc_summary_property_set(properties)       #:nodoc:
         7D 00 00 00 00 00 00 00 2D 00 39 00 30 00 33 00
     ).join('')].pack('H*')
 
-    return  byte_order         +
-            version            +
-            system_id          +
-            class_id           +
-            num_property_sets  +
-            format_id_0        +
-            offset_0           +
-            format_id_1        +
-            offset_1           +
-
-            size_0             +
-            num_property_0     +
-            property_offsets_0 +
-            property_data_0    +
-
-            property_data_1
+    byte_order         +
+    version            +
+    system_id          +
+    class_id           +
+    num_property_sets  +
+    format_id_0        +
+    offset_0           +
+    format_id_1        +
+    offset_1           +
+    size_0             +
+    num_property_0     +
+    property_offsets_0 +
+    property_data_0    +
+    property_data_1
 end
 
 
@@ -165,10 +163,10 @@ def pack_property_data(properties, offset = 0)       #:nodoc:
       end
 
       offset += packed_property.length
-      data    = data + packed_property
+      data   += packed_property
     end
 
-    return [data, offsets]
+    [data, offsets]
 end
 
 ###############################################################################
@@ -214,14 +212,14 @@ def pack_VT_LPSTR(str, codepage)       #:nodoc:
     end
 
     # Pack the data.
-    data = [type, length].pack('VV')
-    data = data + byte_string
+    data  = [type, length].pack('VV')
+    data += byte_string
 
     # The packed data has to null padded to a 4 byte boundary.
     if (extra = length % 4) != 0
-        data  = data + "\0" * (4 - extra)
+        data += "\0" * (4 - extra)
     end
-    return data
+    data
 end
 
 ###############################################################################

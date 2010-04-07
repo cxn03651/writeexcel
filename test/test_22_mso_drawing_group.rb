@@ -60,7 +60,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 2, 1025,
@@ -95,7 +95,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 3, 1026,
@@ -129,7 +129,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 4, 1027
@@ -163,7 +163,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047
@@ -198,7 +198,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048
@@ -233,7 +233,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 2049, 3072
@@ -273,7 +273,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 2, 1025,
@@ -314,7 +314,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 3, 1026,
@@ -355,7 +355,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -396,7 +396,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -438,7 +438,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -479,7 +479,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -524,7 +524,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -570,7 +570,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -617,7 +617,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -664,7 +664,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -721,7 +721,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
 
     # Test the parameters pass to the worksheets
-    caption   = caption + ' (params)'
+    caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,

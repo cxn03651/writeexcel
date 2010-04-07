@@ -56,6 +56,6 @@ class External < Chart # :nodoc:
   # external binary, so we have a default close method.
   #
   def close
-    return nil
+    nil
   end
 end

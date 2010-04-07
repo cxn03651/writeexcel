@@ -290,7 +290,7 @@ class OLEStorageLite       #:nodoc:
       iRest -= iGetSize
       iBlock = iNext
     end
-    return sRes
+    sRes
   end
   private :_getBigData
 
@@ -492,7 +492,7 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
     iSbCnt = rh_info[:big_block_size] / LONG_INT_SIZE
     file.write([-1].pack("V") * (iSbCnt - (iSmBlk % iSbCnt))) if iSmBlk % iSbCnt > 0
     #2. Write SBD with adjusting length for block
-    return sRes
+    sRes
   end
   private :_makeSmallData
 
@@ -632,13 +632,13 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
     iBdCnt   = rh_info[:big_block_size] / PPS_SIZE
     iPPScnt  = iCnt / iBdCnt
     iPPScnt += 1 if iCnt % iBdCnt > 0
-    return [iSBDcnt, iBBcnt, iPPScnt]
+    [iSBDcnt, iBBcnt, iPPScnt]
   end
   private :_calcSize
 
   def _adjust2(i2)
     iWk = Math.log(i2)/Math.log(2)
-    return iWk > Integer(iWk) ? Integer(iWk) + 1 : iWk
+    iWk > Integer(iWk) ? Integer(iWk) + 1 : iWk
   end
   private :_adjust2
 
@@ -764,7 +764,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
     if iCnt % iBCnt > 0
       file.write("\x00" * ((iBCnt - (iCnt % iBCnt)) * rh_info[:pps_size]))
     end
-    return (iCnt / iBCnt) + ((iCnt % iBCnt) > 0 ? 1: 0)
+    (iCnt / iBCnt) + ((iCnt % iBCnt) > 0 ? 1: 0)
   end
   private :_savePps
 
@@ -862,7 +862,7 @@ bpp=1
 
         iBdExL  = iBdCnt / iBlCnt
         iBdExL += 1 if iBdCnt % iBlCnt > 0
-        iBBleftover = iBBleftover + iBdExL
+        iBBleftover += iBdExL
         break if iBdCnt == (iBBleftover / iBlCnt + ((iBBleftover % iBlCnt) > 0 ? 1: 0))
       end
     end

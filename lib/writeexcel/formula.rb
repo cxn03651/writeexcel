@@ -151,7 +151,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       end
     end
 
-    return parse_str
+    parse_str
   end
 
   def scan(formula)
@@ -247,7 +247,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       end
     end
 
-    return volatile
+    volatile
   end
 
   ###############################################################################
@@ -269,7 +269,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # Convert a boolean token to ptgBool
   #
   def convert_bool(bool)
-    return [@ptg['ptgBool'], bool.to_i].pack("CC")
+    [@ptg['ptgBool'], bool.to_i].pack("CC")
   end
 
 
@@ -313,7 +313,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
 
     exit "String in formula has more than 255 chars\n" if length > 255
 
-    return [@ptg['ptgStr'], length, encoding].pack("CCC") + str
+    [@ptg['ptgStr'], length, encoding].pack("CCC") + str
   end
 
   ###############################################################################
@@ -337,7 +337,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       exit "Unknown function class in formula\n"
     end
 
-    return ptgref + row + col
+    ptgref + row + col
   end
 
   ###############################################################################
@@ -368,7 +368,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       exit "Unknown function class in formula\n"
     end
 
-    return ptgref + ext_ref + row + col
+    ptgref + ext_ref + row + col
   end
 
   ###############################################################################
@@ -382,8 +382,8 @@ class Formula < ExcelFormulaParser       #:nodoc:
     cell1, cell2 = range.split(':')
 
     # A range such as A:D is equivalent to A1:D65536, so add rows as required
-    cell1 = cell1 + '1'     unless cell1 =~ /\d/
-    cell2 = cell2 + '65536' unless cell2 =~ /\d/
+    cell1 += '1'     unless cell1 =~ /\d/
+    cell2 += '65536' unless cell2 =~ /\d/
 
     # Convert the cell references
     row1, col1 = cell_to_packed_rowcol(cell1)
@@ -400,7 +400,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       exit "Unknown function class in formula\n"
     end
 
-    return ptgarea + row1 + row2 + col1 + col2
+    ptgarea + row1 + row2 + col1 + col2
   end
 
   ###############################################################################
@@ -421,8 +421,8 @@ class Formula < ExcelFormulaParser       #:nodoc:
     cell1, cell2 = range.split(':')
 
     # A range such as A:D is equivalent to A1:D65536, so add rows as required
-    cell1 = cell1 + '1'     unless cell1 =~ /\d/
-    cell2 = cell2 + '65536' unless cell2 =~ /\d/
+    cell1 += '1'     unless cell1 =~ /\d/
+    cell2 += '65536' unless cell2 =~ /\d/
 
     # Convert the cell references
     row1, col1 = cell_to_packed_rowcol(cell1)
@@ -439,7 +439,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       exit "Unknown function class in formula\n"
     end
 
-    return ptgarea + ext_ref + row1 + row2 + col1+ col2
+    ptgarea + ext_ref + row1 + row2 + col1+ col2
   end
 
   ###############################################################################
@@ -482,7 +482,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       index = @ext_refs[key]
     end
 
-    return [index].pack("v")
+    [index].pack("v")
   end
 
   ###############################################################################
@@ -540,7 +540,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # updated by the add_worksheet() method of the Workbook class.
   #
   def get_ext_ref_count
-    return @ext_ref_count
+    @ext_ref_count
   end
 
   ###############################################################################
@@ -645,14 +645,14 @@ class Formula < ExcelFormulaParser       #:nodoc:
 
     while (!chars.empty?)
       char = chars.pop   # LS char first
-      col  = col + (char[0] - "A"[0] + 1) * (26**expn)
+      col  += (char[0] - "A"[0] + 1) * (26**expn)
       expn += 1
     end
     # Convert 1-index to zero-index
     row -= 1
     col -= 1
 
-    return [row, col, row_rel, col_rel]
+    [row, col, row_rel, col_rel]
   end
 
   ###############################################################################
@@ -674,7 +674,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
     row     = [row].pack('v')
     col     = [col].pack('v')
 
-    return [row, col]
+    [row, col]
   end
 
   ###############################################################################

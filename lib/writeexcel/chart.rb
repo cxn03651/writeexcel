@@ -733,7 +733,7 @@ class Chart < Worksheet
     end
 
     rgb = get_color_rbg(index)
-    return [index, rgb]
+    [index, rgb]
   end
 
   ###############################################################################
