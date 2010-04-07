@@ -93,58 +93,58 @@ class Formula < ExcelFormulaParser       #:nodoc:
         exit "Unknown function #{token}() in formula\n" if _class.nil?
         _classary.push(_class)
       elsif (token == '_vol')
-        parse_str = parse_str + convert_volatile()
+        parse_str += convert_volatile()
       elsif (token == 'ptgBool')
         token = args.shift
-        parse_str = parse_str + convert_bool(token)
+        parse_str += convert_bool(token)
       elsif (token == '_num')
         token = args.shift
-        parse_str = parse_str + convert_number(token)
+        parse_str += convert_number(token)
       elsif (token == '_str')
         token = args.shift
-        parse_str = parse_str + convert_string(token)
+        parse_str += convert_string(token)
       elsif (token =~ /^_ref2d/)
         modifier  = token.sub(/_ref2d/, '')
         _class      = _classary[-1]
         _class      = 0 if modifier == 'R'
         _class      = 1 if modifier == 'V'
         token      = args.shift
-        parse_str = parse_str + convert_ref2d(token, _class)
+        parse_str += convert_ref2d(token, _class)
       elsif (token =~ /^_ref3d/)
         modifier  = token.sub(/_ref3d/,'')
         _class      = _classary[-1]
         _class      = 0 if modifier == 'R'
         _class      = 1 if modifier == 'V'
         token      = args.shift
-        parse_str = parse_str + convert_ref3d(token, _class)
+        parse_str += convert_ref3d(token, _class)
       elsif (token =~ /^_range2d/)
         modifier  = token.sub(/_range2d/,'')
         _class      = _classary[-1]
         _class      = 0 if modifier == 'R'
         _class      = 1 if modifier == 'V'
         token      = args.shift
-        parse_str = parse_str + convert_range2d(token, _class)
+        parse_str += convert_range2d(token, _class)
       elsif (token =~ /^_range3d/)
         modifier  = token.sub(/_range3d/,'')
         _class      = _classary[-1]
         _class      = 0 if modifier == 'R'
         _class      = 1 if modifier == 'V'
         token      = args.shift
-        parse_str = parse_str + convert_range3d(token, _class)
+        parse_str += convert_range3d(token, _class)
       elsif (token =~ /^_name/)
         modifier = token.sub(/_name/, '')
         _class      = _classary[-1]
         _class      = 0 if modifier == 'R'
         _class      = 1 if modifier == 'V'
         token      = args.shift
-        parse_str = parse_str + convert_name(token, _class)
+        parse_str += convert_name(token, _class)
       elsif (token == '_func')
         token = args.shift
-        parse_str = parse_str + convert_function(token, num_args.to_i)
+        parse_str += convert_function(token, num_args.to_i)
         _classary.pop
         num_args = 0 # Reset after use
       elsif @ptg[token]
-        parse_str = parse_str + [@ptg[token]].pack("C")
+        parse_str += [@ptg[token]].pack("C")
       else
         # Unrecognised token
         return nil
@@ -189,12 +189,12 @@ class Formula < ExcelFormulaParser       #:nodoc:
         s.unscan
         s.scan(/[A-Z0-9_.]+/)
         q.push [:FUNC,   s.matched]
-      elsif s.scan(/[A-Za-z_]\w+/)
-        q.push [:NAME , s.matched]
       elsif s.scan(/TRUE/)
         q.push [:TRUE, s.matched]
       elsif s.scan(/FALSE/)
         q.push [:FALSE, s.matched]
+      elsif s.scan(/[A-Za-z_]\w+/)
+        q.push [:NAME , s.matched]
       elsif s.scan(/\s+/)
         ;
       elsif s.scan(/./)
@@ -554,7 +554,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
     if @ext_names.has_key?(name)
       @ext_names[name]
     else
-      raise "Unknown defined name $name in formula\n"
+      raise "Unknown defined name #{name} in formula\n"
     end
   end
   private :get_name_index

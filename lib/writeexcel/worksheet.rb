@@ -3850,7 +3850,7 @@ class Worksheet < BIFFWriter
       # flag and check the result type.
       grbit  = 0x00
 
-      if value =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+      if value.to_s =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
         # Value is a number.
         num = [value].pack("d")
       else
@@ -3906,7 +3906,7 @@ class Worksheet < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [strlen, encoding].pack("vC")
 
-    return header . data . string
+    return header + data + string
   end
   private :get_formula_string
 

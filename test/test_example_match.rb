@@ -2536,6 +2536,23 @@ workbook.close
     compare_file("#{PERL_OUTDIR}/comments2.xls", @file)
   end
 
+  def test_formula_result
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet()
+    format    = workbook.add_format(:color => 'blue')
+
+    worksheet.write('A1', '=1+2')
+    worksheet.write('A2', '=1+2',                     format, 4)
+    worksheet.write('A3', '="ABC"',                   nil,    'DEF')
+    worksheet.write('A4', '=IF(A1 > 1, TRUE, FALSE)', nil,    'TRUE')
+    worksheet.write('A5', '=1/0',                     nil,    '#DIV/0!')
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/formula_result.xls", @file)
+  end
+
   def compare_file(expected, target)
     # target is StringIO object.
     assert_equal(
