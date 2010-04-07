@@ -3118,6 +3118,22 @@ workbook.close
     compare_file("#{PERL_OUTDIR}/panes.xls", @file)
   end
 
+  def test_right_to_left
+    workbook   = WriteExcel.new(@file)
+    worksheet1 = workbook.add_worksheet
+    worksheet2 = workbook.add_worksheet
+
+    worksheet2.right_to_left
+
+    worksheet1.write(0, 0, 'Hello')  #  A1, B1, C1, ...
+    worksheet2.write(0, 0, 'Hello')  # ..., C1, B1, A1
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/right_to_left.xls", @file)
+  end
+
   def compare_file(expected, target)
     # target is StringIO object.
     assert_equal(
