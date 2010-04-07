@@ -3559,7 +3559,7 @@ class Worksheet < BIFFWriter
     col = args[1]
 
     # Check for pairs of optional arguments, i.e. an odd number of args.
-    raise "Uneven number of additional arguments" if args.size % 2 == 0
+    # raise "Uneven number of additional arguments" if args.size % 2 == 0
 
     # Check that row and col are valid and store max and min values
     return -2 if check_dimensions(row, col) != 0
@@ -7204,6 +7204,11 @@ class Worksheet < BIFFWriter
   end
   private :store_filters
 
+  def unpack_record(data)
+    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
+  end
+  private :unpack_record
+
   ###############################################################################
   #
   # _store_comments()
@@ -7404,8 +7409,8 @@ class Worksheet < BIFFWriter
     # Use the visible flag if set by the user or else use the worksheet value.
     # Note that the value used is the opposite of _store_note().
     #
-    unless visible.nil?
-      visible = visible           ? 0x0000 : 0x0002
+    if !visible.nil?
+      visible = visible != 0           ? 0x0000 : 0x0002
     else
       visible = @comments_visible != 0 ? 0x0000 : 0x0002
     end
@@ -7907,7 +7912,7 @@ class Worksheet < BIFFWriter
     # Use the visible flag if set by the user or else use the worksheet value.
     # The flag is also set in _store_mso_opt_comment() but with the opposite
     # value.
-    unless visible.nil?
+    if !visible.nil?
       visible = visible != 0           ? 0x0002 : 0x0000
     else
       visible = @comments_visible != 0 ? 0x0002 : 0x0000
@@ -7918,8 +7923,7 @@ class Worksheet < BIFFWriter
     num_chars  = num_chars / 2 if author_enc != 0 && !author_enc.nil?
 
     # Null terminate the author string.
-    author = author + "\0"
-
+    author += "\0"
 
     # Pack the record.
     data    = [row, col, visible, obj_id, num_chars, author_enc].pack("vvvvvC")
@@ -7974,21 +7978,18 @@ class Worksheet < BIFFWriter
 
       # Change from UTF-16BE to UTF-16LE
       string = string.unpack('n*').pack('v*')
-    end
-
-    if params[:author_encoding] != 0
-      raise "Uneven number of bytes in author string"  if params[:author] % 2 != 0
-
-      # Change from UTF-16BE to UTF-16LE
-      params[:author] = params[:author].unpack('n*').pack('v*')
-    end
-
     # Handle utf8 strings
-    if string =~ NonAscii
+    elsif string =~ NonAscii
       string = NKF.nkf('-w16L0 -m0 -W', string)
       params[:encoding] = 1
     end
-    if params[:author] =~ NonAscii
+
+    if params[:author_encoding] != 0
+      raise "Uneven number of bytes in author string"  if params[:author].length % 2 != 0
+
+      # Change from UTF-16BE to UTF-16LE
+      params[:author] = params[:author].unpack('n*').pack('v*')
+    elsif params[:author] =~ NonAscii
       params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
       params[:author_encoding] = 1
     end
@@ -8009,9 +8010,7 @@ class Worksheet < BIFFWriter
 
     # Convert a cell reference to a row and column.
     unless params[:start_cell].nil?
-      row, col = substitute_cellref(params[:start_cell])
-      params[:start_row] = row
-      params[:start_col] = col
+      params[:start_row], params[:start_col] = substitute_cellref(params[:start_cell])
     end
 
     # Set the default start cell and offsets for the comment. These are
