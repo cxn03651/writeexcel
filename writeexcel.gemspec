@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Hideo NAKAMURA"]
-  s.date = %q{2010-04-06}
+  s.date = %q{2010-04-07}
   s.description = %q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
   s.email = %q{cxn03651@msj.biglobe.ne.jp}
   s.extra_rdoc_files = [
@@ -42,6 +42,10 @@ Gem::Specification.new do |s|
      "examples/chart_pie.rb",
      "examples/chart_scatter.rb",
      "examples/chart_stock.rb",
+     "examples/chess.rb",
+     "examples/colors.rb",
+     "examples/comments1.rb",
+     "examples/comments2.rb",
      "examples/copyformat.rb",
      "examples/data_validate.rb",
      "examples/date_time.rb",
@@ -107,6 +111,10 @@ Gem::Specification.new do |s|
      "test/perl_output/chart_bar.xls",
      "test/perl_output/chart_column.xls",
      "test/perl_output/chart_line.xls",
+     "test/perl_output/chess.xls",
+     "test/perl_output/colors.xls",
+     "test/perl_output/comments1.xls",
+     "test/perl_output/comments2.xls",
      "test/perl_output/data_validate.xls",
      "test/perl_output/date_time.xls",
      "test/perl_output/defined_name.xls",
@@ -250,6 +258,10 @@ Gem::Specification.new do |s|
      "examples/chart_pie.rb",
      "examples/chart_scatter.rb",
      "examples/chart_stock.rb",
+     "examples/chess.rb",
+     "examples/colors.rb",
+     "examples/comments1.rb",
+     "examples/comments2.rb",
      "examples/copyformat.rb",
      "examples/data_validate.rb",
      "examples/date_time.rb",
