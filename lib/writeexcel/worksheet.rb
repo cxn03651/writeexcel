@@ -211,8 +211,9 @@ class Worksheet < BIFFWriter
 
     # Prepend the COLINFO records if they exist
     unless @colinfo.empty?
-      while (!@colinfo.empty?)
-        arrayref = @colinfo.pop
+      colinfo = @colinfo.dup
+      while (!colinfo.empty?)
+        arrayref = colinfo.pop
         store_colinfo(*arrayref)
       end
     end
@@ -604,7 +605,7 @@ class Worksheet < BIFFWriter
     #
     grbit |= level
     grbit |= 0x0010 if collapsed != 0
-    grbit |= 0x0020 if hidden    != 0
+    grbit |= 0x0020 if !hidden.nil? && hidden != 0
     grbit |= 0x0040
     grbit |= 0x0080 unless format.nil?
     grbit |= 0x0100
@@ -5775,8 +5776,8 @@ class Worksheet < BIFFWriter
     col_level = 7 if col_level > 7
 
     # The displayed level is one greater than the max outline levels
-    row_level = row_level + 1 if row_level > 0
-    col_level = col_level + 1 if col_level > 0
+    row_level += 1 if row_level > 0
+    col_level += 1 if col_level > 0
 
     header = [record, length].pack("vv")
     data   = [dxRwGut, dxColGut, row_level, col_level].pack("vvvv")
