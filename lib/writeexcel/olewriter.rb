@@ -284,17 +284,13 @@ class OLEWriter       #:nodoc:
     pps_size       = [size].pack("V")     #0x78
 
     write(rawname)
-    for n in 1..64-length
-      write(zero)
-    end
+    write(zero * (64 - length)) if 64 - length >= 1
     write(pps_sizeofname)
     write(pps_type)
     write(pps_prev)
     write(pps_next)
     write(pps_dir)
-    for n in 1..5
-      write(unknown)
-    end
+    write(unknown * 5)
     write(pps_ts1s)
     write(pps_ts1d)
     write(pps_ts2s)
