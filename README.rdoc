@@ -4,6 +4,13 @@ Write to a cross-platform Excel binary file.
 
 == Recent Changes
 
+v0.3.5
+* Bug fix. Worksheet#write_comment() doesn't work when value arg is numeric.
+* Bug fix. TRUE/FALSE in formula was misundarstood as :NAME.
+* Bug fix. Worksheet#close() mis-handled @colinfo.
+* Bug fix. Worksheet#set_row() grbit mis-calculate by param hidden.
+* convert examples.(formula_result, indent, merge6, outline, outline_collapsed, panes, right_to_left, row_wrap)
+
 v0.3.4
 * Bug fix. add_comment doesn't work.
 * convert examples.(chess, colors, comment1, comment2)
