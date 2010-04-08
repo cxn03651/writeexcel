@@ -452,8 +452,8 @@ class Worksheet < BIFFWriter
   # itself. In Excel a cell's locked property is on by default.
   #
   #     # Set some format properties
-  #     unlocked  = workbook.add_format(locked => 0)
-  #     hidden    = workbook.add_format(hidden => 1)
+  #     unlocked  = workbook.add_format(:locked => 0)
+  #     hidden    = workbook.add_format(:hidden => 1)
   #
   #     # Enable worksheet protection
   #     worksheet.protect
@@ -2205,8 +2205,8 @@ class Worksheet < BIFFWriter
   #    worksheet.write('A1', '01209')
   #
   #    # Write a zero padded number using a format: 01209
-  #    my $format1 = $workbook.add_format(num_format => '00000')
-  #    $worksheet.write('A2', '01209', $format1)
+  #    my $format1 = $workbook.add_format(:num_format => '00000')
+  #    $worksheet.write('A2', '01209', format1)
   #
   #    # Write explicitly as a string: 01209
   #    $worksheet.write_string('A3', '01209')
@@ -2235,8 +2235,8 @@ class Worksheet < BIFFWriter
   # behaviour. To avoid this you can use the text format @:
   #
   #    # Format as a string (01209)
-  #    format2 = workbook.add_format(num_format => '@')
-  #    worksheet.write_string('A5', '01209', $format2)
+  #    format2 = workbook.add_format(:num_format => '@')
+  #    worksheet.write_string('A5', '01209', format2)
   #
   # The keep_leading_zeros() property is off by default. The keep
   #_leading_zeros() method takes 0 or 1 as an argument. It defaults to 1 if
@@ -2264,12 +2264,12 @@ class Worksheet < BIFFWriter
   # Individual comments can be made visible using the visible parameter of the
   # write_comment method (see above):
   #
-  #     worksheet.write_comment('C3', 'Hello', visible => 1)
+  #     worksheet.write_comment('C3', 'Hello', :visible => 1)
   #
   # If all of the cell comments have been made visible you can hide individual
   # comments as follows:
   #
-  #     worksheet.write_comment('C3', 'Hello', visible => 0)
+  #     worksheet.write_comment('C3', 'Hello', :visible => 0)
   #
   #
   def show_comments(val = nil)
@@ -2669,7 +2669,7 @@ class Worksheet < BIFFWriter
   # number. To get around this you can use the Excel text format @:
   #
   #    # Format as a string. Doesn't change to a number when edited
-  #    format1 = workbook.add_format(num_format => '@')
+  #    format1 = workbook.add_format(:num_format => '@')
   #    worksheet.write_string('A2', '01209', format1)
   #
   def write_string(*args)
@@ -3398,7 +3398,7 @@ class Worksheet < BIFFWriter
   # several optional key/value pairs to control the format of the comment.
   # For example:
   #
-  #     worksheet.write_comment('C3', 'Hello', visible => 1, author => 'Ruby')
+  #     worksheet.write_comment('C3', 'Hello', :visible => 1, :author => 'Ruby')
   #
   # Most of these options are quite specific and in general the default comment
   # behaviour will be all that you need. However, should you need greater
@@ -3968,8 +3968,8 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
-  #    repeat_formula(row, col,    formula, format, ([pattern => replace, ...]) -> Fixnum
-  #    repeat_formula(A1_notation, formula, format, ([pattern => replace, ...]) -> Fixnum
+  #    repeat_formula(row, col,    formula, format, ([:pattern => replace, ...]) -> Fixnum
+  #    repeat_formula(A1_notation, formula, format, ([:pattern => replace, ...]) -> Fixnum
   #
   # Write a formula to the specified row and column (zero indexed) by
   # substituting _pattern_ _replacement_ pairs in the formula created via
@@ -4121,7 +4121,7 @@ class Worksheet < BIFFWriter
 
 
     # As a temporary and undocumented measure we allow the user to specify the
-    # result of the formula by appending a result => $value pair to the end
+    # result of the formula by appending a result => value pair to the end
     # of the arguments.
     value = nil
     if pairs[-2] == 'result'

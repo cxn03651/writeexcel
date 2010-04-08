@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+#
+# OLE::Storage_Lite
+#  by Kawai, Takanori (Hippo2000) 2000.11.4, 8, 14
+# This Program is Still ALPHA version.
+#//////////////////////////////////////////////////////////////////////////////
+#
+# converted from CPAN's OLE::Storage_Lite.
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
+
 require 'tempfile'
 require 'stringio'
 

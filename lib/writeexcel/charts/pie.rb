@@ -107,7 +107,7 @@ class Chart
   #    )
   #
   #     # Add a title.
-  #     chart.set_title(name => 'Popular Pie Types')
+  #     chart.set_title(:name => 'Popular Pie Types')
   #
   #
   #     # Insert the chart into the worksheet (with an offset).
