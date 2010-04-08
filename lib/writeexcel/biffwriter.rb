@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # BIFFwriter - An abstract base class for Excel workbooks and worksheets.
 #

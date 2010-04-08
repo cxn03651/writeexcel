@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Scatter - A writer class for Excel Scatter charts.
