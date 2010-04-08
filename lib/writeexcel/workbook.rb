@@ -517,7 +517,7 @@ class Workbook < BIFFWriter
 
     # Handle utf8 strings
     if name =~ NonAscii
-      name = NKF.nkf('-w16B0 -m0 -W', name)
+      name = name.encode('UTF-16BE')
       encoding = 1
     end
 
@@ -2103,7 +2103,7 @@ class Workbook < BIFFWriter
 
     # Handle utf8 strings
     if format =~ NonAscii
-      format = NKF.nkf('-w16B0 -m0 -W', format)
+      format = format.encode('UTF-16BE')
       encoding = 1
     end
 

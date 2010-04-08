@@ -11,7 +11,6 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'nkf'
 require 'strscan'
 require 'writeexcel/excelformulaparser'
 
@@ -308,7 +307,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
 
     # Handle utf8 strings
     if str =~ NonAscii
-      str = NKF.nkf('-w16L0 -m0 -W', str)
+      str = str.encode('UTF-16LE')
       encoding = 1
     end
 
@@ -496,7 +495,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   def get_sheet_index(sheet_name)
     # Handle utf8 sheetnames
     if sheet_name =~ NonAscii
-      sheet_name = NKF.nkf('-w16B0 -m0 -W', sheet_name)
+      sheet_name = sheet_name.encode('UTF-16BE')
     end
 
     if @ext_sheets[sheet_name].nil?

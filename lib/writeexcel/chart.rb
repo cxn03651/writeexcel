@@ -669,7 +669,7 @@ class Chart < Worksheet
 
     # Handle utf8 strings in perl 5.8.
     if string =~ NonAscii
-      string = NKF.nkf('-w16B0 -m0 -W', string)
+      string = string.encode('UTF-16BE')
       encoding = 1
     end
 

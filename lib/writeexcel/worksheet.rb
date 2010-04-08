@@ -1658,7 +1658,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if string =~ NonAscii
-      string = NKF.nkf('-w16B0 -m0 -W', string)
+      string = string.encode('UTF-16BE')
       encoding = 1
     end
 
@@ -1683,7 +1683,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if string =~ NonAscii
-      string = NKF.nkf('-w16B0 -m0 -W', string)
+      string = string.encode('UTF-16BE')
       encoding = 1
     end
 
@@ -2694,7 +2694,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if str =~ NonAscii
-      return write_utf16le_string(row, col, NKF.nkf('-w16L0 -m0 -W', str), args[3])
+      return write_utf16le_string(row, col, str.encode('UTF-16LE'), args[3])
     end
 
     # Check that row and col are valid and store max and min values
@@ -3899,7 +3899,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings in perl 5.8.
     if string =~ NonAscii
-      string = NKF.nkf('-w16B0 -m0 -W', string)
+      string = string.encode('UTF-16BE')
       encoding = 1
     end
 
@@ -4383,7 +4383,7 @@ class Worksheet < BIFFWriter
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
     if url =~ NonAscii
-      url = NKF.nkf('-w16B0 -m0 -W', url)
+      url = url.encode('UTF-16BE')
       url += "\0\0"   # URL is null terminated.
       encoding = 1
     end
@@ -4455,7 +4455,7 @@ class Worksheet < BIFFWriter
     if str =~ NonAscii
       # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
       url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
-      url      = NKF.nkf('-w16L0 -m0 -W', url) + "\0\0"  # URL is null terminated.
+      url = url.encode('UTF-16LE') + "\0\0"  # URL is null terminated.
       encoding = 1
     end
 
@@ -6734,7 +6734,7 @@ class Worksheet < BIFFWriter
 
       # Handle utf8 strings
       if string =~ NonAscii
-        string = NKF.nkf('-w16B0 -m0 -W', string)
+        string = string.encode('UTF-16BE')
         encodign = 1
       end
 
@@ -7979,7 +7979,7 @@ class Worksheet < BIFFWriter
       string = string.unpack('n*').pack('v*')
     # Handle utf8 strings
     elsif string =~ NonAscii
-      string = NKF.nkf('-w16L0 -m0 -W', string)
+      string = string.encode('UTF-16LE')
       params[:encoding] = 1
     end
 
@@ -7989,7 +7989,7 @@ class Worksheet < BIFFWriter
       # Change from UTF-16BE to UTF-16LE
       params[:author] = params[:author].unpack('n*').pack('v*')
     elsif params[:author] =~ NonAscii
-      params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
+      params[:author] = params[:author].encode('UTF-16LE')
       params[:author_encoding] = 1
     end
 
@@ -8935,7 +8935,7 @@ class Worksheet < BIFFWriter
       $KCODE = 'u'
       require 'jcode'
       str_length = string.jlength
-      string = NKF.nkf('-w16L0 -m0 -W', string)
+      string = string.encode('UTF-16LE')
       encoding = 1
     end
 

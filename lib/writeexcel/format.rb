@@ -11,7 +11,6 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'nkf'
 
 #
 # Format - A class for defining Excel formatting.
@@ -392,7 +391,7 @@ end
 
     # Handle utf8 strings
     if rgch =~ NonAscii
-      rgch = NKF.nkf('-w16B0 -m0 -W', rgch)
+      rgch = rgch.encode('UTF-16BE')
       encoding = 1
     end
 
