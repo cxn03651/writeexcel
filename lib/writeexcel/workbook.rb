@@ -28,6 +28,7 @@ require 'writeexcel/charts/stock'
 require 'writeexcel/properties'
 require 'digest/md5'
 require 'writeexcel/storage_lite'
+require 'writeexcel/compatibility'
 
 class Workbook < BIFFWriter
   BOF = 11  # :nodoc:
