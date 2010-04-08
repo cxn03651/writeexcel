@@ -25,7 +25,7 @@ class String #:nodoc:
   end
 
   unless "".respond_to?(:encode)
-    def encode(encoding)
+    def encode(encoding) # :nodoc:
       require 'nkf'
       if encoding =~ /UTF-16LE/i
         NKF.nkf('-w16L0 -m0 -W', self)
@@ -34,11 +34,67 @@ class String #:nodoc:
       end
     end
   end
+
+  unless "".respond_to?(:encoding)
+    def encoding
+      case $KCODE[0]
+      when ?s, ?S
+        Encoding::SJIS if self.mbchar?
+      when ?e, ?E
+        Encoding::EUCJP if self.mbchar?
+      when ?u, ?U
+        Encoding::UTF_8 if self.mbchar?
+      else
+        nil
+      end
+    end
+  end
+
+  unless "".respond_to?(:bytesize)
+    def bytesize # :nodoc:
+      self.length
+    end
+  end
+
+  if RUBY_VERSION < "1.9"
+    unless "".respond_to?(:mbchar?)
+      PATTERN_SJIS = '[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc]' # :nodoc:
+      PATTERN_EUC = '[\xa1-\xfe][\xa1-\xfe]' # :nodoc:
+      PATTERN_UTF8 = '[\xc0-\xdf][\x80-\xbf]|[\xe0-\xef][\x80-\xbf][\x80-\xbf]' # :nodoc:
+
+      RE_SJIS = Regexp.new(PATTERN_SJIS, 0, 'n') # :nodoc:
+      RE_EUC = Regexp.new(PATTERN_EUC, 0, 'n') # :nodoc:
+      RE_UTF8 = Regexp.new(PATTERN_UTF8, 0, 'n') # :nodoc:
+
+      def mbchar? # :nodoc:     copied from jcode.rb
+        case $KCODE[0]
+        when ?s, ?S
+          self =~ RE_SJIS
+        when ?e, ?E
+          self =~ RE_EUC
+        when ?u, ?U
+          self =~ RE_UTF8
+        else
+          nil
+        end
+      end
+    end
+  end
 end
 
 unless File.respond_to?(:binread)
   def File.binread(file) #:nodoc:
     File.open(file,"rb") { |f| f.read }
+  end
+end
+
+unless defined?(Encoding)
+  class Encoding # :nodoc:
+    UTF_8    = 1
+    UTF_16BE = 2
+    UTF_16LE = 3
+    SJIS     = 4
+    EUCJP    = 5
   end
 end
 

@@ -2298,7 +2298,7 @@ workbook.close
     worksheet1.write('C6', cell_text, text_wrap)
     worksheet1.write_comment('C6', comment, :encoding => 1)
 
-    # UTF-8 string in perl 5.8.
+    # UTF-8 string.
     worksheet1.set_row(8, 50)
     cell_text = 'This is a UTF-8 string.'
     comment   = '☺'  # chr 0x263a in perl.
@@ -2545,7 +2545,7 @@ workbook.close
     worksheet7.write_comment(cell, comment, :author  => author,
                                             :author_encoding => 1)
 
-    # UTF-8 string in perl 5.8.
+    # UTF-8 string.
     author    = '☺'    # smiley
     cell      = 'C12'
     cell_text = "Move the mouse over this cell and you will see 'Cell commented " +

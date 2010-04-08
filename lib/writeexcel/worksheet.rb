@@ -35,7 +35,6 @@ class Worksheet < BIFFWriter
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/   # :nodoc:
 
   ###############################################################################
   #
@@ -1657,7 +1656,7 @@ class Worksheet < BIFFWriter
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
-    if string =~ NonAscii
+    if string.encoding == Encoding::UTF_8
       string = string.encode('UTF-16BE')
       encoding = 1
     end
@@ -1682,7 +1681,7 @@ class Worksheet < BIFFWriter
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
-    if string =~ NonAscii
+    if string.encoding == Encoding::UTF_8
       string = string.encode('UTF-16BE')
       encoding = 1
     end
@@ -2693,7 +2692,7 @@ class Worksheet < BIFFWriter
     str_error   = 0
 
     # Handle utf8 strings
-    if str =~ NonAscii
+    if str.encoding == Encoding::UTF_8
       return write_utf16le_string(row, col, str.encode('UTF-16LE'), args[3])
     end
 
@@ -3897,8 +3896,8 @@ class Worksheet < BIFFWriter
     strlen    = string.length  # Length of the formula string (chars).
     encoding  = 0              # String encoding.
 
-    # Handle utf8 strings in perl 5.8.
-    if string =~ NonAscii
+    # Handle utf8 strings.
+    if string.encoding == Encoding::UTF_8
       string = string.encode('UTF-16BE')
       encoding = 1
     end
@@ -4382,7 +4381,7 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    if url =~ NonAscii
+    if url.encoding == Encoding::UTF_8
       url = url.encode('UTF-16BE')
       url += "\0\0"   # URL is null terminated.
       encoding = 1
@@ -4452,7 +4451,7 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    if str =~ NonAscii
+    if str.encoding == Encoding::UTF_8
       # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
       url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
       url = url.encode('UTF-16LE') + "\0\0"  # URL is null terminated.
@@ -6733,7 +6732,7 @@ class Worksheet < BIFFWriter
       length   = string.length
 
       # Handle utf8 strings
-      if string =~ NonAscii
+      if string.encoding == Encoding::UTF_8
         string = string.encode('UTF-16BE')
         encodign = 1
       end
@@ -7978,7 +7977,7 @@ class Worksheet < BIFFWriter
       # Change from UTF-16BE to UTF-16LE
       string = string.unpack('n*').pack('v*')
     # Handle utf8 strings
-    elsif string =~ NonAscii
+    elsif string.encoding == Encoding::UTF_8
       string = string.encode('UTF-16LE')
       params[:encoding] = 1
     end
@@ -7988,7 +7987,7 @@ class Worksheet < BIFFWriter
 
       # Change from UTF-16BE to UTF-16LE
       params[:author] = params[:author].unpack('n*').pack('v*')
-    elsif params[:author] =~ NonAscii
+    elsif params[:author].encoding == Encoding::UTF_8
       params[:author] = params[:author].encode('UTF-16LE')
       params[:author_encoding] = 1
     end
@@ -8931,7 +8930,7 @@ class Worksheet < BIFFWriter
     str_length = string.length
 
     # Handle utf8 strings
-    if string =~ NonAscii
+    if string.encoding == Encoding::UTF_8
       str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').length   # jlength
       string = string.encode('UTF-16LE')
       encoding = 1

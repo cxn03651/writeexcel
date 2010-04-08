@@ -49,8 +49,6 @@ require 'writeexcel/worksheet'
 # Chart - A writer class for Excel Charts.
 #
 class Chart < Worksheet
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
-
   ###############################################################################
   #
   # factory()
@@ -667,8 +665,8 @@ class Chart < Worksheet
     # Return if encoding is set, i.e., string has been manually encoded.
     #return ( undef, undef ) if $string == 1;
 
-    # Handle utf8 strings in perl 5.8.
-    if string =~ NonAscii
+    # Handle utf8 strings.
+    if string.encoding == Encoding::UTF_8
       string = string.encode('UTF-16BE')
       encoding = 1
     end

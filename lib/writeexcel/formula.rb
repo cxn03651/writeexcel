@@ -16,8 +16,6 @@ require 'writeexcel/excelformulaparser'
 
 class Formula < ExcelFormulaParser       #:nodoc:
 
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
-
   attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
   def initialize(byte_order)
@@ -306,7 +304,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
     length = str.length
 
     # Handle utf8 strings
-    if str =~ NonAscii
+    if str.encoding == Encoding::UTF_8
       str = str.encode('UTF-16LE')
       encoding = 1
     end
@@ -494,7 +492,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   #
   def get_sheet_index(sheet_name)
     # Handle utf8 sheetnames
-    if sheet_name =~ NonAscii
+    if sheet_name.encoding == Encoding::UTF_8
       sheet_name = sheet_name.encode('UTF-16BE')
     end
 

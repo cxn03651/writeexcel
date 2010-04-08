@@ -1131,4 +1131,7 @@ require "writeexcel/workbook"
 #       12 until another chart with the title set is viewed.
 #
 class WriteExcel < Workbook
+  if RUBY_VERSION < '1.9'
+    $KCODE = 'u'
+  end
 end

@@ -40,7 +40,6 @@ class Format
     'white'   => 0x09,
     'yellow'  => 0x0D,
   }   # :nodoc:
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
 
   ###############################################################################
   #
@@ -390,7 +389,7 @@ end
     encoding   = @font_encoding
 
     # Handle utf8 strings
-    if rgch =~ NonAscii
+    if rgch.encoding == Encoding::UTF_8
       rgch = rgch.encode('UTF-16BE')
       encoding = 1
     end

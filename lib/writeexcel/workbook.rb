@@ -34,7 +34,6 @@ class Workbook < BIFFWriter
   BOF = 11  # :nodoc:
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
 
   #
   # file is a filename (as string) or io object where to out spreadsheet data.
@@ -516,7 +515,7 @@ class Workbook < BIFFWriter
     end
 
     # Handle utf8 strings
-    if name =~ NonAscii
+    if name.encoding == Encoding::UTF_8
       name = name.encode('UTF-16BE')
       encoding = 1
     end
@@ -1114,7 +1113,7 @@ class Workbook < BIFFWriter
     else
       strings.each do |string|
         next unless params.has_key?(string.to_sym)
-        return 0xFDE9 if params[string.to_sym] =~ NonAscii
+        return 0xFDE9 if params[string.to_sym].encoding == Encoding::UTF_8
       end
       return 0x04E4; # Default codepage, Latin 1.
     end
@@ -2102,7 +2101,7 @@ class Workbook < BIFFWriter
     cch = format.length
 
     # Handle utf8 strings
-    if format =~ NonAscii
+    if format.encoding == Encoding::UTF_8
       format = format.encode('UTF-16BE')
       encoding = 1
     end

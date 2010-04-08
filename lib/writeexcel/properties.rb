@@ -194,25 +194,17 @@ def pack_VT_LPSTR(str, codepage)       #:nodoc:
 
     if codepage == 0x04E4
       # Latin1
-      byte_string = string
-      length      = byte_string.length
+      length = string.length
     elsif codepage == 0xFDE9
-      # UTF-8
-      nonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
-      if string =~ nonAscii
-        byte_string = string
-        length = byte_string.gsub(/[^\Wa-zA-Z_\d]/, ' ').length  # jlength
-      else
-        byte_string = string
-        length = byte_string.length
-      end
+      # utf8
+      length = string.length
     else
-      raise "Unknown codepage: codepage\n"
+      raise "Unknown codepage: #{codepage}\n"
     end
 
     # Pack the data.
     data  = [type, length].pack('VV')
-    data += byte_string
+    data += string
 
     # The packed data has to null padded to a 4 byte boundary.
     if (extra = length % 4) != 0

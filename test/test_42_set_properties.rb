@@ -87,7 +87,7 @@ class TC_set_properties < Test::Unit::TestCase
 
     ###############################################################################
     #
-    # Test 3. _get_property_set_codepage() for perl 5.8 utf8 strings.
+    # Test 3. _get_property_set_codepage() for utf8 strings.
     #
     params =   {
                     :title       => 'Title' + smiley,

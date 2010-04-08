@@ -55,6 +55,7 @@ Original description is below:
 == Usage
 
 See rdoc's WriteExcel class document.
+You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'.
 
 Example Code:
 
@@ -96,10 +97,8 @@ Example Code:
 
 == Caution
 
-This library can handle multibyte character written in utf8. I tested in Japanese,
-and it looks work well. But, in this version, utf8 or not is recognized
-by matching non-ascii characters because ruby 1.8 can not recognize character code
-correctly.
+You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'
+when use urf8 string data.
 
 == Dependencies
 
