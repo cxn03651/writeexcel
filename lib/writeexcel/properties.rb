@@ -200,10 +200,8 @@ def pack_VT_LPSTR(str, codepage)       #:nodoc:
       # UTF-8
       nonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
       if string =~ nonAscii
-#        $KCODE = 'u'
-        require 'jcode'
         byte_string = string
-        length = byte_string.jlength
+        length = byte_string.gsub(/[^\Wa-zA-Z_\d]/, ' ').length  # jlength
       else
         byte_string = string
         length = byte_string.length

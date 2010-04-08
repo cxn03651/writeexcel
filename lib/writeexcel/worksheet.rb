@@ -8932,9 +8932,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if string =~ NonAscii
-      $KCODE = 'u'
-      require 'jcode'
-      str_length = string.jlength
+      str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').length   # jlength
       string = string.encode('UTF-16LE')
       encoding = 1
     end
