@@ -42,7 +42,7 @@ def create_summary_property_set(properties)       #:nodoc:
     end
 
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
-    size = 8 + (property_offsets).length + property_data.length
+    size = 8 + (property_offsets).bytesize + property_data.bytesize
     size = [size].pack('V')
 
     byte_order         +
@@ -89,7 +89,7 @@ def create_doc_summary_property_set(properties)       #:nodoc:
     end
 
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
-    data_len = 8 + (property_offsets_0).length + property_data_0.length
+    data_len = 8 + (property_offsets_0).bytesize + property_data_0.bytesize
     size_0   = [data_len].pack('V')
 
     # The second property set offset is at the end of the first property set.
@@ -163,7 +163,7 @@ def pack_property_data(properties, offset = 0)       #:nodoc:
         raise "Unknown property type: '#{property_type}'\n"
       end
 
-      offset += packed_property.length
+      offset += packed_property.bytesize
       data   += packed_property
     end
 
@@ -194,10 +194,10 @@ def pack_VT_LPSTR(str, codepage)       #:nodoc:
 
     if codepage == 0x04E4
       # Latin1
-      length = string.length
+      length = string.bytesize
     elsif codepage == 0xFDE9
       # utf8
-      length = string.length
+      length = string.bytesize
     else
       raise "Unknown codepage: #{codepage}\n"
     end

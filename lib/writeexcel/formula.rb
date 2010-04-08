@@ -237,7 +237,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   def check_volatile(tokens)
     volatile = 0
 
-    (0..tokens.size-1).each do |i|
+    (0..tokens.size - 1).each do |i|
       # If the next token is a function check if it is volatile.
       if tokens[i] == '_func' and @functions[tokens[i+1]][3] != 0
         volatile = 1
@@ -301,7 +301,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
     str.sub!(/"$/,'')   # Remove trailing "
     str.gsub!(/""/,'"') # Substitute Excel's escaped double quote "" for "
 
-    length = str.length
+    length = str.bytesize
 
     # Handle utf8 strings
     if str.encoding == Encoding::UTF_8

@@ -263,7 +263,7 @@ class OLEWriter       #:nodoc:
     unless name.empty?
       name = name + "\0"
       ord_name = name.unpack("c*")
-      length = name.length * 2
+      length = name.bytesize * 2
     end
 
     rawname        = ord_name.pack("v*")

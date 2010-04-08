@@ -394,7 +394,7 @@ end
       encoding = 1
     end
 
-    cch = rgch.length
+    cch = rgch.bytesize
     #
     # Handle Unicode font names.
     if (encoding == 1)
@@ -404,7 +404,7 @@ end
     end
 
     record     = 0x31
-    length     = 0x10 + rgch.length
+    length     = 0x10 + rgch.bytesize
     reserved   = 0x00
 
     grbit      = 0x00

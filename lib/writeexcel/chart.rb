@@ -674,7 +674,7 @@ class Chart < Worksheet
     # Chart strings are limited to 255 characters.
     limit = encoding != 0 ? 255 * 2 : 255
 
-    if string.length >= limit
+    if string.bytesize >= limit
       # truncate the string and raise a warning.
       string = string[0, limit]
     end
@@ -1254,7 +1254,7 @@ class Chart < Worksheet
     # format_index            # Num format index.
     grbit        = 0x0000     # Option flags.
 
-    formula_length  = formula.length
+    formula_length  = formula.bytesize
     length += formula_length
 
     header = [record, length].pack('vv')
@@ -1984,7 +1984,7 @@ class Chart < Worksheet
     id       = 0x0000          # Text id.
     # str                      # Text.
     # encoding                 # String encoding.
-    cch      = str.length      # String length.
+    cch      = str.bytesize      # String length.
 
     encoding ||= 0
 
@@ -1994,7 +1994,7 @@ class Chart < Worksheet
     # Change the UTF-16 name from BE to LE
     str = str.unpack('v*').pack('n*') if encoding != 0
 
-    length = 4 + str.length
+    length = 4 + str.bytesize
 
     header = [record, length].pack('vv')
     data  = [id].pack('v')

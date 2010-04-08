@@ -156,7 +156,7 @@ class OLEStorageLite       #:nodoc:
   def _getInfoFromFile(io, pos, len, fmt)
     io.seek(pos, 0)
     str = io.read(len)
-    if str.length != len
+    if str.bytesize != len
       nil
     else
       str.unpack(fmt)[0]
@@ -447,7 +447,7 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
     if @pps_file
       return @pps_file.lstat.size
     else
-      return @data.size
+      return @data.bytesize
     end
   end
   protected :_datalen
@@ -502,8 +502,8 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
     file = rh_info[:fileh]
     file.write(
         @name                          +
-        ("\x00" * (64 - @name.length)) +       #64
-        [@name.length + 2].pack("v")   +       #66
+        ("\x00" * (64 - @name.bytesize)) +       #64
+        [@name.bytesize + 2].pack("v")   +       #66
         [@type].pack("c")              +       #67
         [0x00].pack("c")               + #UK   #68
         [@prev_pps].pack("V")          + #Prev #72
@@ -730,7 +730,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
             iLen = 0
             pps.pps_file.seek(0, 0) #To The Top
             while sBuff = pps.pps_file.read(4096)
-              iLen += sBuff.length
+              iLen += sBuff.bytesize
               file.write(sBuff)           #Check for update
             end
           else

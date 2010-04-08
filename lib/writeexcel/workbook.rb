@@ -491,10 +491,10 @@ class Workbook < BIFFWriter
     end
 
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
-    raise "Sheetname $name must be <= 31 chars" if name.length > limit
+    raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
 
     # Check that Unicode sheetname has an even number of bytes
-    if encoding == 1 && (name.length % 2 != 0)
+    if encoding == 1 && (name.bytesize % 2 != 0)
       raise "Odd number of bytes in Unicode worksheet name: #{name}"
     end
 
@@ -957,7 +957,7 @@ class Workbook < BIFFWriter
        }
      )
 
-    index = @defined_names.length
+    index = @defined_names.size
 
     parser.set_ext_name(name, index)
   end
@@ -1328,7 +1328,7 @@ class Workbook < BIFFWriter
     offset   += mso_size
 
     @worksheets.each do |sheet|
-      offset += _bof + sheet.name.length
+      offset += _bof + sheet.name.bytesize
     end
 
     offset += _eof
@@ -1484,7 +1484,7 @@ class Workbook < BIFFWriter
           # Slurp the file into a string and do some size calcs.
           #             my $data        = do {local $/; <$fh>};
           data = fh.read
-          size        = data.length
+          size        = data.bytesize
           checksum1   = image_checksum(data, image_id)
           checksum2   = checksum1
           ref_count   = 1
@@ -1611,7 +1611,7 @@ class Workbook < BIFFWriter
     type     = 7   # Excel Blip type (MSOBLIPTYPE).
 
     # Check that the file is big enough to be a bitmap.
-    if data.length  <= 0x36
+    if data.bytesize  <= 0x36
       raise "#{filename} doesn't contain enough data."
     end
 
@@ -1658,7 +1658,7 @@ class Workbook < BIFFWriter
     type     = 5  # Excel Blip type (MSOBLIPTYPE).
 
     offset = 2;
-    data_length = data.length
+    data_length = data.bytesize
 
     # Search through the image data to find the 0xFFC0 marker. The height and
     # width are contained in the data for that sub element.
@@ -2040,9 +2040,9 @@ class Workbook < BIFFWriter
   #
   def store_boundsheet(sheetname, offset, type, hidden, encoding)       #:nodoc:
     record    = 0x0085                    # Record identifier
-    length    = 0x08 + sheetname.length   # Number of bytes to follow
+    length    = 0x08 + sheetname.bytesize   # Number of bytes to follow
 
-    cch       = sheetname.length          # Length of sheet name
+    cch       = sheetname.bytesize          # Length of sheet name
 
     grbit     = type | hidden
 
@@ -2098,7 +2098,7 @@ class Workbook < BIFFWriter
     record    = 0x041E         # Record identifier
     # length                   # Number of bytes to follow
     # Char length of format string
-    cch = format.length
+    cch = format.bytesize
 
     # Handle utf8 strings
     if format.encoding == Encoding::UTF_8
@@ -2120,7 +2120,7 @@ class Workbook < BIFFWriter
       encoding =  1
     end
 
-    length    = 0x05 + format.length
+    length    = 0x05 + format.bytesize
 
     header    = [record, length].pack("vv")
     data      = [ifmt, cch, encoding].pack("vvC")
@@ -2199,7 +2199,7 @@ class Workbook < BIFFWriter
     end
 
     data        = [cxti].pack("v") + rgxti
-    header    = [record, data.length].pack("vv")
+    header    = [record, data.bytesize].pack("vv")
 
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
@@ -2215,8 +2215,8 @@ class Workbook < BIFFWriter
   def store_name(name, encoding, sheet_index, formula)  # :nodoc:
     record          = 0x0018        # Record identifier
 
-    text_length     = name.length
-    formula_length  = formula.length
+    text_length     = name.bytesize
+    formula_length  = formula.bytesize
 
     # UTF-16 string length is in characters not bytes.
     text_length       /= 2 if encoding != 0
@@ -2250,7 +2250,7 @@ class Workbook < BIFFWriter
     data += name
     data += formula
 
-    header = [record, data.length].pack("vv")
+    header = [record, data.bytesize].pack("vv")
 
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
@@ -2506,7 +2506,7 @@ class Workbook < BIFFWriter
     end
 
     @defined_names.each do |defined_name|
-      length += 19 + defined_name[:name].length + defined_name[:formula].length
+      length += 19 + defined_name[:name].bytesize + defined_name[:formula].bytesize
     end
 
     @worksheets.each do |worksheet|
@@ -2621,7 +2621,7 @@ class Workbook < BIFFWriter
 
     strings.each do |string|
 
-      string_length = string.length
+      string_length = string.bytesize
       encoding      = string.unpack("xx C")[0]
       split_string  = 0
 
@@ -2789,7 +2789,7 @@ class Workbook < BIFFWriter
     return if strings.empty?
     strings.each do |string|
 
-      string_length = string.length
+      string_length = string.bytesize
       encoding      = string.unpack("xx C")[0]
       split_string  = 0
       bucket_string = 0 # Used to track EXTSST bucket offsets.
@@ -3018,7 +3018,7 @@ class Workbook < BIFFWriter
     data   += store_mso_opt
     data   += store_mso_split_menu_colors
 
-    length  = data.length
+    length  = data.bytesize
     header  = [record, length].pack("vv")
 
     add_mso_drawing_group_continue(header + data)
@@ -3052,7 +3052,7 @@ class Workbook < BIFFWriter
     @ignore_continue = 1
 
     # Case 1 above. Just return the data as it is.
-    if data.length <= limit
+    if data.bytesize <= limit
       print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(data)
       return
@@ -3066,7 +3066,7 @@ class Workbook < BIFFWriter
     append(tmp)
 
     # Add MSODRAWINGGROUP and CONTINUE blocks for Case 3 above.
-    while data.length > limit
+    while data.bytesize > limit
       if block_count == 1
         # Add extra MSODRAWINGGROUP block header.
         header = [mso_group, limit].pack("vv")
@@ -3083,7 +3083,7 @@ class Workbook < BIFFWriter
     end
 
     # Last CONTINUE block for remaining data. Case 2 and 3 above.
-    header = [continue, data.length].pack("vv")
+    header = [continue, data.bytesize].pack("vv")
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
