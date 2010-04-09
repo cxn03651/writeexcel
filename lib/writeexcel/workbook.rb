@@ -25,12 +25,15 @@ require 'writeexcel/charts/line'
 require 'writeexcel/charts/pie'
 require 'writeexcel/charts/scatter'
 require 'writeexcel/charts/stock'
-require 'writeexcel/properties'
 require 'digest/md5'
 require 'writeexcel/storage_lite'
 require 'writeexcel/compatibility'
 
 class Workbook < BIFFWriter
+  require 'writeexcel/properties'
+  require 'writeexcel/helper'
+  private :convert_to_ascii_if_ascii
+
   BOF = 11  # :nodoc:
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:
@@ -3295,18 +3298,4 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_split_menu_colors
-
-  # Convert to US_ASCII encoding if ascii characters only.
-  def convert_to_ascii_if_ascii(str)
-    ruby_18 do
-      @encoding = str.mbchar? ? Encoding::UTF_8 : Encoding::US_ASCII
-    end
-    ruby_19 do
-      if !str.nil? && str.ascii_only?
-        str = [str].pack('a*')
-      end
-    end
-    str
-  end
-  private :convert_to_ascii_if_ascii
 end

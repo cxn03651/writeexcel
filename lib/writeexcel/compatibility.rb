@@ -33,7 +33,7 @@ class String #:nodoc:
       elsif encoding =~ /UTF-16BE/i
         @encoding = Encoding::UTF_16BE
         NKF.nkf('-w16B0 -m0 -W', self)
-      elsif encoding =~ /US_ASCII/i
+      elsif encoding =~ /BINARY/i || encoding =~ /US-ASCII/i
         if self.mbchar?
           @encoding = Encoding::UTF_8
         else

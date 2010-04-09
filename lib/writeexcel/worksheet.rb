@@ -30,6 +30,8 @@ end
 #  worksheet2 = workbook.add_worksheet
 #
 class Worksheet < BIFFWriter
+  require 'writeexcel/helper'
+  private :convert_to_ascii_if_ascii
 
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
@@ -9014,19 +9016,4 @@ class Worksheet < BIFFWriter
 
     [formula.length, unused].pack('vv') + formula
   end
-#  private :pack_dv_formula
-
-  # Convert to US_ASCII encoding if ascii characters only.
-  def convert_to_ascii_if_ascii(str)
-    ruby_18 do
-      @encoding = str.mbchar? ? Encoding::UTF_8 : Encoding::US_ASCII
-    end
-    ruby_19 do
-      if !str.nil? && str.ascii_only?
-        str = [str].pack('a*')
-      end
-    end
-    str
-  end
-  private :convert_to_ascii_if_ascii
 end

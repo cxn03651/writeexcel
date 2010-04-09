@@ -1263,7 +1263,11 @@ class Chart < Worksheet
     data  += [grbit].pack('v')
     data  += [format_index].pack('v')
     data  += [formula_length].pack('v')
-    data  += formula[0].kind_of?(String) ? formula[0] : formula
+    if formula.kind_of?(Array)
+      data += formula[0].encode('BINARY')
+    else
+      data += formula.encode('BINARY') unless formula.nil?
+    end
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
