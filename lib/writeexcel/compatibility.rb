@@ -27,44 +27,167 @@ class String #:nodoc:
   unless "".respond_to?(:encode)
     def encode(encoding) # :nodoc:
       require 'nkf'
-      if encoding =~ /UTF-16LE/i
-        @encoding = Encoding::UTF_16LE
-        NKF.nkf('-w16L0 -m0 -W', self)
-      elsif encoding =~ /UTF-16BE/i
-        @encoding = Encoding::UTF_16BE
-        NKF.nkf('-w16B0 -m0 -W', self)
-      elsif encoding =~ /BINARY/i || encoding =~ /US-ASCII/i
-        if self.mbchar?
-          @encoding = Encoding::UTF_8
+
+      if @encoding.nil? || @encoding == Encoding::UTF_8
+        # supported only $KCODE = 'u'. so @encoding.nil? means UTF_8.
+        case encoding
+        when /ASCII/i
+          if self.mbchar?('UTF8')
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /BINARY/i
+          if self.mbchar?('UTF8')
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /UTF_8/i
+          raise Encoding::ConverterNotFoundError
+        when /EUCJP/i, /SJIS/i
+          enc = encoding =~ /EUCJP/i ? 'e' : 's'
+          str = NKF.nkf("-#{enc} -m0 -W", self)
+          str.force_encoding(encoding)
+          str
+        when /UTF_16LE/i, /UTF_16BE/i
+          raise Encoding::ConverterNotFoundError
         else
-          @encoding = Encoding::US_ASCII
+          raise "Sorry, encoding #{encoding} is not supported by WriteExcel."
         end
-        self
-      elsif encoding =~ /UTF_8/i
-        @encoding = Encoding::UTF_8
-        self
+      elsif @encoding == Encoding::ASCII
+        case encoding
+        when /ASCII/i, /BINARY/i, /EUCJP/i, /SJIS/i
+          str = String.new(self)
+          str.force_encoding(encoding)
+          str
+        when /UTF_8/i, /UTF_16LE/i, /UTF_16BE/i
+          raise Encoding::ConverterNotFoundError
+        else
+          raise "Sorry, encoding #{encoding} is not supported by WriteExcel."
+        end
+      elsif @encoding == Encoding::BINARY
+        case encoding
+        when /ASCII/i
+          if self.ascii_only? || self.mbchar?('UTF8') || self.mbchar?('EUCJP') || self.mbchar?('SJIS')
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /BINARY/i
+          self
+        when /EUCJP/i, /SJIS/i
+          if self.ascii_only? || self.mbchar?('UTF8') || self.mbchar?('EUCJP') || self.mbchar?('SJIS')
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /UTF_8/i, /UTF_16LE/i, /UTF_16BE/i
+          raise Encoding::ConverterNotFoundError
+        else
+          raise "Sorry, encoding #{encoding} is not supported by WriteExcel."
+        end
+      elsif @encoding == Encoding::EUCJP || @encoding == Encoding::SJIS
+        type   = @encoding == Encoding::EUCJP ? 'EUCJP' : 'SJIS'
+        inenc  = @encoding == Encoding::EUCJP ? 'e' : 's'
+        case encoding
+        when /ASCII/i
+          if self.mbchar?(type)
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /BINARY/i
+          if self.mbchar?(type)
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /UTF_8/i
+          raise Encoding::ConverterNotFoundError
+        when /EUCJP/i, /SJIS/i
+          outenc = encoding =~ /EUCJP/i ? 'E' : 'S'
+          str = NKF.nkf("-#{inenc} -#{outenc}", self)
+          str.force_encoding(encoding)
+          str
+        when /UTF_16LE/i, /UTF_16BE/i
+          raise Encoding::ConverterNotFoundError
+        else
+          raise "Sorry, encoding #{encoding} is not supported by WriteExcel."
+        end
+      elsif @encoding == Encoding::UTF_16LE || @encoding == Encoding::UTF_16BE
+        enc = @encoding == Encoding::UTF_16LE ? 'L' : 'B'
+        utf8 = NKF.nkf("-w -m0 -W16#{enc}", self)
+        case encoding
+        when /ASCII/i
+          if utf8.mbchar?
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /BINARY/i
+          if utf8.mbchar?
+            raise Encoding::UndefinedConversionError
+          else
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+          end
+        when /UTF_8/i
+          raise Encoding::ConverterNotFoundError
+        when /EUCJP/i, /SJIS/i
+            str = String.new(self)
+            str.force_encoding(encoding)
+            str
+        when /UTF_16LE/i, /UTF_16BE/i
+          raise Encoding::ConverterNotFoundError
+        else
+          raise "Sorry, encoding #{encoding} is not supported by WriteExcel."
+        end
+      else
       end
     end
+
+    def self_with_encoding(encoding)
+      if encoding =~ /ASCII/i
+        @encoding = Encoding::ASCII
+      elsif encoding =~ /BINARY/i
+        @encoding = Encoding::BINARY
+      elsif encoding =~ /UTF_8/i
+        @encoding = Encoding::UTF_8
+      elsif encoding =~ /EUCJP/i
+        @encoding = Encoding::EUCJP
+      elsif encoding =~ /SJIS/i
+        @encoding = Encoding::SJIS
+      elsif encoding =~ /UTF_16LE/i
+        @encoding = Encoding::UTF_16LE
+      elsif encoding =~ /UTF_16BE/i
+        @encoding = Encoding::UTF_16BE
+      else
+        raise "Sorry, encoding #{encoding} is not supported by WriteExcel."
+      end
+      self
+    end
+    private :self_with_encoding
   end
 
   unless "".respond_to?(:encoding)
     def encoding
-      if @encoding
-        case $KCODE[0]
-        when ?s, ?S
-          Encoding::SJIS if self.mbchar?
-        when ?e, ?E
-          Encoding::EUCJP if self.mbchar?
-        when ?u, ?U
-          Encoding::UTF_8 if self.mbchar?
-          @encoding
-        else
-          Encoding::US_ASCII
-          @encoding
-        end
-      else
-        @encoding
-      end
+      @encoding.nil? ? Encoding::UTF_8 : @encoding
     end
   end
 
@@ -82,7 +205,29 @@ class String #:nodoc:
 
   unless "".respond_to?(:force_encoding)
     def force_encoding(encoding)
+      @encoding = case encoding
+        when /ASCII/i
+          Encoding::ASCII
+        when /BINARY/i
+          Encoding::BINARY
+        when /UTF_8/i
+          Encoding::UTF_8
+        when /EUCJP/i
+          Encoding::EUCJP
+        when /SJIS/i
+          Encoding::SJIS
+        when /UTF_16LE/i
+          Encoding::UTF_16LE
+        when /UTF_16BE/i
+          Encoding::UTF_16BE
+      end
       self
+    end
+  end
+
+  unless "".respond_to?(:ascii_only?)
+    def ascii_only?
+      !!(self =~ /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/)
     end
   end
 
@@ -96,13 +241,12 @@ class String #:nodoc:
       RE_EUC = Regexp.new(PATTERN_EUC, 0, 'n') # :nodoc:
       RE_UTF8 = Regexp.new(PATTERN_UTF8, 0, 'n') # :nodoc:
 
-      def mbchar? # :nodoc:     copied from jcode.rb
-        case $KCODE[0]
-        when ?s, ?S
+      def mbchar?(type = nil)# :nodoc:     idea copied from jcode.rb
+        if (!type.nil? && type =~ /SJIS/i) || $KCODE == 'SJIS'
           self =~ RE_SJIS
-        when ?e, ?E
+        elsif (!type.nil? && type =~ /EUCJP/i) || $KCODE == 'EUC'
           self =~ RE_EUC
-        when ?u, ?U
+        elsif (!type.nil? && type =~ /UTF_8/i) || $KCODE == 'UTF8'
           self =~ RE_UTF8
         else
           nil
@@ -120,12 +264,16 @@ end
 
 unless defined?(Encoding)
   class Encoding # :nodoc:
-    US_ASCII = 0
-    UTF_8    = 1
-    UTF_16BE = 2
-    UTF_16LE = 3
+    class ConverterNotFoundError < StandardError; end
+    class UndefinedConversionError < StandardError; end
+
+    ASCII    = 0
+    BINARY   = 1
+    UTF_8    = 2
+    EUCJP    = 3
     SJIS     = 4
-    EUCJP    = 5
+    UTF_16LE = 5
+    UTF_16BE = 6
   end
 end
 
@@ -148,5 +296,4 @@ else
   def ruby_19 #:nodoc:
     yield
   end
-
 end
