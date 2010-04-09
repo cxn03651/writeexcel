@@ -89,6 +89,7 @@ Example Code:
 
 * WriteExcel.new()
   * accept default format parameter such as new('foo.xls', :font => 'Roman', :size => 12)
+* Unary minus is supported, but it will be stored as '-1*'. ex) '=-1' -> '=-1*1', '=-SIN(PI()/2)' => '=-1*SIN(PI()/2)'
 * Worksheet.write(row, col, token, format)
   * if token.kind_of?(Numeric) then call write_number, if token.kind_of?(String) then not call write_number().
 * Worksheet.keep_leading_zeros()
@@ -116,7 +117,7 @@ Copyright (c) 2009-2010 Hideo NAKAMURA. See LICENSE for details.
 same as Ruby.
 
 == Note on Patches/Pull Requests
- 
+
 * Fork the project.
 * Make your feature addition or bug fix.
 * Add tests for it. This is important so I don't break it in a
