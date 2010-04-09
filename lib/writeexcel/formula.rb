@@ -295,6 +295,8 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # Convert a string to a ptg Str.
   #
   def convert_string(str)
+    str = convert_to_ascii_if_ascii(str)
+
     encoding = 0
 
     str.sub!(/^"/,'')   # Remove leading  "
@@ -311,7 +313,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
 
     exit "String in formula has more than 255 chars\n" if length > 255
 
-    [@ptg['ptgStr'], length, encoding].pack("CCC") + str
+    [@ptg['ptgStr'], length, encoding].pack("CCC") + str.encode('BINARY')
   end
 
   ###############################################################################
@@ -643,7 +645,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
 
     while (!chars.empty?)
       char = chars.pop   # LS char first
-      col  += (char[0] - "A"[0] + 1) * (26**expn)
+      col  += (char.ord - "A".ord + 1) * (26 ** expn)
       expn += 1
     end
     # Convert 1-index to zero-index
@@ -1024,7 +1026,19 @@ class Formula < ExcelFormulaParser       #:nodoc:
 
   end
 
-
+  # Convert to US_ASCII encoding if ascii characters only.
+  def convert_to_ascii_if_ascii(str)
+    ruby_18 do
+      @encoding = str.mbchar? ? Encoding::UTF_8 : Encoding::US_ASCII
+    end
+    ruby_19 do
+      if !str.nil? && str.ascii_only?
+        str = [str].pack('a*')
+      end
+    end
+    str
+  end
+  private :convert_to_ascii_if_ascii
 end
 
 if $0 ==__FILE__

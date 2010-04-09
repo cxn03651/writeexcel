@@ -1653,6 +1653,8 @@ class Worksheet < BIFFWriter
   # distribution.
   #
   def set_header(string = '', margin = 0.50, encoding = 0)
+    string = convert_to_ascii_if_ascii(string)
+
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
@@ -1678,6 +1680,8 @@ class Worksheet < BIFFWriter
   # there.
   #
   def set_footer(string = '', margin = 0.50, encoding = 0)
+    string = convert_to_ascii_if_ascii(string)
+
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
@@ -2679,6 +2683,8 @@ class Worksheet < BIFFWriter
     end
 
     return -1 if (args.size < 3)                # Check the number of args
+
+    string = convert_to_ascii_if_ascii(string)
 
     record      = 0x00FD                        # Record identifier
     length      = 0x000A                        # Bytes to follow
@@ -3770,7 +3776,7 @@ class Worksheet < BIFFWriter
 
     while (!chars.empty?)
       char = chars.pop   # LS char first
-      col += (char[0] - "A"[0] +1) * (26**expn)
+      col += (char.ord - "A".ord + 1) * (26 ** expn)
       expn += 1
     end
 
@@ -3890,6 +3896,8 @@ class Worksheet < BIFFWriter
   # be calculated by the module and thus must be supplied by the user.
   #
   def get_formula_string(string)       #:nodoc:
+    string = convert_to_ascii_if_ascii(string)
+
     record    = 0x0207         # Record identifier
     length    = 0x00           # Bytes to follow
     # string                   # Formula string.
@@ -4358,6 +4366,8 @@ class Worksheet < BIFFWriter
   # See also write_url() above for a general description and return values.
   #
   def write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
+    url = convert_to_ascii_if_ascii(url)
+
     record = 0x01B8                       # Record identifier
     length = 0x00000                      # Bytes to follow
 
@@ -4383,13 +4393,13 @@ class Worksheet < BIFFWriter
     # Convert an Utf8 URL type and to a null terminated wchar string.
     if url.encoding == Encoding::UTF_8
       url = url.encode('UTF-16BE')
-      url += "\0\0"   # URL is null terminated.
+      url += "\0\0".force_encoding('UTF-16BE')   # URL is null terminated.
       encoding = 1
     end
 
     # Convert an Ascii URL type and to a null terminated wchar string.
     if encoding == 0
-      url += "\0"
+      url  = url.force_encoding('BINARY') + "\0".force_encoding('BINARY')
       url  = url.unpack('c*').pack('v*')
     end
 
@@ -6727,6 +6737,7 @@ class Worksheet < BIFFWriter
       !(token.to_s  =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
       # Excel treats all tokens as strings if the operator is equality, =.
       string = token.to_s
+      string = convert_to_ascii_if_ascii(string)
 
       encoding = 0
       length   = string.bytesize
@@ -6737,7 +6748,7 @@ class Worksheet < BIFFWriter
         encodign = 1
       end
 
-      string = [encoding].pack('C') + string
+      string = [encoding].pack('C') + string.force_encoding('BINARY')
       doper  = pack_string_doper(operator, length)
     else
       string = ''
@@ -7843,7 +7854,7 @@ class Worksheet < BIFFWriter
     while string.bytesize > limit
       string[0 .. limit] = ""
       tmp_str = string
-      data    = [encoding].pack("C") + tmp_str
+      data    = [encoding].pack("C") + tmp_str.force_encoding('ASCII-8BIT')
       length  = data.bytesize
       header  = [record, length].pack('vv')
 
@@ -7852,7 +7863,7 @@ class Worksheet < BIFFWriter
     end
 
     # Pack the record.
-    data    = [encoding].pack("C") + string
+    data    = [encoding].pack("C") + string.force_encoding('ASCII-8BIT')
     length  = data.bytesize
     header  = [record, length].pack('vv')
 
@@ -7901,6 +7912,7 @@ class Worksheet < BIFFWriter
   # Write the worksheet NOTE record that is part of cell comments.
   #
   def store_note(row, col, obj_id, author = nil, author_enc = nil, visible = nil)   #:nodoc:
+    ruby_19 { author = [author].pack('a*') if author.ascii_only? }
     record      = 0x001C               # Record identifier
     length      = 0x000C               # Bytes to follow
 
@@ -7921,7 +7933,7 @@ class Worksheet < BIFFWriter
     num_chars  = num_chars / 2 if author_enc != 0 && !author_enc.nil?
 
     # Null terminate the author string.
-    author += "\0"
+    author = author.force_encoding('BINARY') + "\0".force_encoding('BINARY')
 
     # Pack the record.
     data    = [row, col, visible, obj_id, num_chars, author_enc].pack("vvvvvC")
@@ -7971,6 +7983,7 @@ class Worksheet < BIFFWriter
     params[:height] = default_height if params[:height].nil? || params[:height] == 0
 
     # Check that utf16 strings have an even number of bytes.
+    convert_to_ascii_if_ascii(string)
     if params[:encoding] != 0
       raise "Uneven number of bytes in comment string" if string.bytesize % 2 != 0
 
@@ -7981,6 +7994,8 @@ class Worksheet < BIFFWriter
       string = string.encode('UTF-16LE')
       params[:encoding] = 1
     end
+
+    params[:author] = convert_to_ascii_if_ascii(params[:author])
 
     if params[:author_encoding] != 0
       raise "Uneven number of bytes in author string"  if params[:author].bytesize % 2 != 0
@@ -8914,12 +8929,14 @@ class Worksheet < BIFFWriter
   # Captions are limited to 32 characters. Messages are limited to 255 chars.
   #
   def pack_dv_string(string = nil, max_length = 0)   #:nodoc:
+    string = convert_to_ascii_if_ascii(string)
+
     str_length  = 0
     encoding    = 0
 
     # The default empty string is "\0".
     if string.nil? || string == ''
-      string = "\0"
+      string = "\0".encode('BINARY')
     end
 
     # Excel limits DV captions to 32 chars and messages to 255.
@@ -8936,7 +8953,7 @@ class Worksheet < BIFFWriter
       encoding = 1
     end
 
-    [str_length, encoding].pack('vC') + string
+    [str_length, encoding].pack('vC') + string.force_encoding('BINARY')
   end
 #  private :pack_dv_string
 
@@ -8999,4 +9016,17 @@ class Worksheet < BIFFWriter
   end
 #  private :pack_dv_formula
 
+  # Convert to US_ASCII encoding if ascii characters only.
+  def convert_to_ascii_if_ascii(str)
+    ruby_18 do
+      @encoding = str.mbchar? ? Encoding::UTF_8 : Encoding::US_ASCII
+    end
+    ruby_19 do
+      if !str.nil? && str.ascii_only?
+        str = [str].pack('a*')
+      end
+    end
+    str
+  end
+  private :convert_to_ascii_if_ascii
 end

@@ -29,7 +29,7 @@ class TC_note < Test::Unit::TestCase
   end
 
   def test_blank_author_name
-    data = @worksheet.comment_params(2,0,'Test')
+    data = @worksheet.comment_params(2, 0, 'Test')
     row      = data[0]
     col      = data[1]
     author   = data[4]
@@ -42,7 +42,7 @@ class TC_note < Test::Unit::TestCase
         1C 00 0C 00 02 00 00 00 00 00 01 00 00 00 00 00
     ).join(' ')
     result = unpack_record(
-        @worksheet.store_note(row,col,obj_id,author,encoding,visible))
+        @worksheet.store_note(row, col, obj_id, author, encoding, visible))
     assert_equal(target, result, caption)
   end
 

@@ -33,4 +33,18 @@ class TC_Compatibility < Test::Unit::TestCase
 #    utf16be = NKF.nkf('-w16B0 -m0 -W', str)
     assert_equal(Encoding::UTF_8, utf8.encoding)
   end
+
+  def test_ord
+    a = 'a'
+    abc = 'abc'
+    assert_equal(97, a.ord, "#{a}.ord faild\n")
+    assert_equal(97, abc.ord, "#{abc}.ord faild\n")
+  end
+
+  def test_force_encodig
+    str = 'あいう'
+    org_dump = unpack_record(str)
+    asc8_dump = unpack_record(str.force_encoding('ASCII-8BIT'))
+    assert_equal(org_dump, asc8_dump)
+  end
 end

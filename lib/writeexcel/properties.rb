@@ -190,7 +190,7 @@ end
 #
 def pack_VT_LPSTR(str, codepage)       #:nodoc:
     type        = 0x001E
-    string      = str + "\0"
+    string      = str.encode('BINARY') + "\0".encode('BINARY')
 
     if codepage == 0x04E4
       # Latin1
@@ -238,3 +238,15 @@ def pack_VT_FILETIME(localtime)       #:nodoc:
 
   [type].pack('V') + [low, high].pack('V2')
 end
+
+  def convert_to_ascii_if_ascii(str)
+    ruby_18 do
+      @encoding = str.mbchar? ? Encoding::UTF_8 : Encoding::US_ASCII
+    end
+    ruby_19 do
+      if !str.nil? && str.ascii_only?
+        str = [str].pack('a*')
+      end
+    end
+    str
+  end

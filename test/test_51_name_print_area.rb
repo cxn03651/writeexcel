@@ -71,7 +71,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
-    assert_equal(target, result)
+    assert_equal(target, result, caption)
 
     # Test the NAME record.
     @workbook.clear_data_for_test
@@ -85,7 +85,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     caption    = " \t+ Name      ( Sheet1!#{area} )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
-    assert_equal(target, result)
+    assert_equal(target, result, caption)
   end
 
   def test_print_area_name_for_a_simple_column
@@ -244,14 +244,6 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
-  end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
 
   ###############################################################################

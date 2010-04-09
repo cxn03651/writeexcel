@@ -28,24 +28,42 @@ class String #:nodoc:
     def encode(encoding) # :nodoc:
       require 'nkf'
       if encoding =~ /UTF-16LE/i
+        @encoding = Encoding::UTF_16LE
         NKF.nkf('-w16L0 -m0 -W', self)
       elsif encoding =~ /UTF-16BE/i
+        @encoding = Encoding::UTF_16BE
         NKF.nkf('-w16B0 -m0 -W', self)
+      elsif encoding =~ /US_ASCII/i
+        if self.mbchar?
+          @encoding = Encoding::UTF_8
+        else
+          @encoding = Encoding::US_ASCII
+        end
+        self
+      elsif encoding =~ /UTF_8/i
+        @encoding = Encoding::UTF_8
+        self
       end
     end
   end
 
   unless "".respond_to?(:encoding)
     def encoding
-      case $KCODE[0]
-      when ?s, ?S
-        Encoding::SJIS if self.mbchar?
-      when ?e, ?E
-        Encoding::EUCJP if self.mbchar?
-      when ?u, ?U
-        Encoding::UTF_8 if self.mbchar?
+      if @encoding
+        case $KCODE[0]
+        when ?s, ?S
+          Encoding::SJIS if self.mbchar?
+        when ?e, ?E
+          Encoding::EUCJP if self.mbchar?
+        when ?u, ?U
+          Encoding::UTF_8 if self.mbchar?
+          @encoding
+        else
+          Encoding::US_ASCII
+          @encoding
+        end
       else
-        nil
+        @encoding
       end
     end
   end
@@ -53,6 +71,18 @@ class String #:nodoc:
   unless "".respond_to?(:bytesize)
     def bytesize # :nodoc:
       self.length
+    end
+  end
+
+  unless "".respond_to?(:ord)
+    def ord
+      self[0]
+    end
+  end
+
+  unless "".respond_to?(:force_encoding)
+    def force_encoding(encoding)
+      self
     end
   end
 
@@ -90,6 +120,7 @@ end
 
 unless defined?(Encoding)
   class Encoding # :nodoc:
+    US_ASCII = 0
     UTF_8    = 1
     UTF_16BE = 2
     UTF_16LE = 3

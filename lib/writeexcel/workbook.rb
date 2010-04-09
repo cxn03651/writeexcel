@@ -2113,13 +2113,14 @@ class Workbook < BIFFWriter
       format  = format.unpack('n*').pack('v*')
     end
 
+=begin
     # Special case to handle Euro symbol, 0x80, in non-Unicode strings.
     if encoding == 0 and format =~ /\x80/
       format   =  format.unpack('C*').pack('v*')
       format.gsub!(/\x80\x00/, "\xAC\x20")
       encoding =  1
     end
-
+=end
     length    = 0x05 + format.bytesize
 
     header    = [record, length].pack("vv")
@@ -2213,6 +2214,8 @@ class Workbook < BIFFWriter
   #       and _store_name_long().
   #
   def store_name(name, encoding, sheet_index, formula)  # :nodoc:
+    formula = convert_to_ascii_if_ascii(formula)
+
     record          = 0x0018        # Record identifier
 
     text_length     = name.bytesize
@@ -2231,9 +2234,9 @@ class Workbook < BIFFWriter
 
     # Set grbit built-in flag and the hidden flag for autofilters.
     if text_length == 1
-      grbit = 0x0020 if name[0] == 0x06  # Print area
-      grbit = 0x0020 if name[0] == 0x07  # Print titles
-      grbit = 0x0021 if name[0] == 0x0D  # Autofilter
+      grbit = 0x0020 if name.ord == 0x06  # Print area
+      grbit = 0x0020 if name.ord == 0x07  # Print titles
+      grbit = 0x0021 if name.ord == 0x0D  # Autofilter
     end
 
     data  = [grbit].pack("v")
@@ -3292,4 +3295,18 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_split_menu_colors
+
+  # Convert to US_ASCII encoding if ascii characters only.
+  def convert_to_ascii_if_ascii(str)
+    ruby_18 do
+      @encoding = str.mbchar? ? Encoding::UTF_8 : Encoding::US_ASCII
+    end
+    ruby_19 do
+      if !str.nil? && str.ascii_only?
+        str = [str].pack('a*')
+      end
+    end
+    str
+  end
+  private :convert_to_ascii_if_ascii
 end

@@ -95,7 +95,7 @@ class BIFFWriter       #:nodoc:
   # General storage function
   #
   def append(*args)
-    d = args.join
+    d = args.collect{ |a| a.dup.force_encoding('ASCII-8BIT') }.join
     # Add CONTINUE records if necessary
     d = add_continue(d) if d.bytesize > @limit
     if @using_tmpfile
