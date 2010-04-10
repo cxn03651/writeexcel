@@ -2110,9 +2110,12 @@ class Workbook < BIFFWriter
     # Char length of format string
     cch = format.bytesize
 
+    format = convert_to_ascii_if_ascii(format)
+
     # Handle utf8 strings
     if format.encoding == Encoding::UTF_8
-      format = format.encode('UTF-16BE')
+      format = NKF.nkf('-w16B0 -m0 -W', format)
+      format.force_encoding('UTF-16BE')
       encoding = 1
     end
 

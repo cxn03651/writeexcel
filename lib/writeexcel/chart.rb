@@ -667,7 +667,8 @@ class Chart < Worksheet
 
     # Handle utf8 strings.
     if string.encoding == Encoding::UTF_8
-      string = string.encode('UTF-16BE')
+      string = NKF.nkf('-w16B0 -m0 -W', string)
+      string.force_encoding('UTF-16BE')
       encoding = 1
     end
 

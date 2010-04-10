@@ -2701,7 +2701,9 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if str.encoding == Encoding::UTF_8
-      return write_utf16le_string(row, col, str.encode('UTF-16LE'), args[3])
+      str_utf16le = NKF.nkf('-w16L0 -m0 -W', str)
+      str_utf16le.force_encoding('UTF-16LE')
+      return write_utf16le_string(row, col, str_utf16le, args[3])
     end
 
     # Check that row and col are valid and store max and min values
@@ -7995,7 +7997,8 @@ class Worksheet < BIFFWriter
       string = string.unpack('n*').pack('v*')
     # Handle utf8 strings
     elsif string.encoding == Encoding::UTF_8
-      string = string.encode('UTF-16LE')
+      string = NKF.nkf('-w16L0 -m0 -W', string)
+      string.force_encoding('UTF-16LE')
       params[:encoding] = 1
     end
 
@@ -8007,7 +8010,8 @@ class Worksheet < BIFFWriter
       # Change from UTF-16BE to UTF-16LE
       params[:author] = params[:author].unpack('n*').pack('v*')
     elsif params[:author].encoding == Encoding::UTF_8
-      params[:author] = params[:author].encode('UTF-16LE')
+      params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
+      params[:author].force_encoding('UTF-16LE')
       params[:author_encoding] = 1
     end
 
