@@ -473,8 +473,6 @@ class Workbook < BIFFWriter
   # invalid characters and if the name is unique in the workbook.
   #
   def check_sheetname(name, encoding = 0, chart = 0)       #:nodoc:
-    name = convert_to_ascii_if_ascii(name)
-
     encoding ||= 0
     limit           = encoding != 0 ? 62 : 31
     invalid_char    = %r![\[\]:*?/\\]!
@@ -495,6 +493,8 @@ class Workbook < BIFFWriter
         name = @sheet_name + @sheet_count.to_s
       end
     end
+
+    name = convert_to_ascii_if_ascii(name)
 
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
     raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
@@ -2049,7 +2049,7 @@ class Workbook < BIFFWriter
   # Writes Excel BIFF BOUNDSHEET record.
   #
   def store_boundsheet(sheetname, offset, type, hidden, encoding)       #:nodoc:
-    record    = 0x0085                    # Record identifier
+    record    = 0x0085                      # Record identifier
     length    = 0x08 + sheetname.bytesize   # Number of bytes to follow
 
     cch       = sheetname.bytesize          # Length of sheet name
