@@ -49,6 +49,9 @@ require 'writeexcel/worksheet'
 # Chart - A writer class for Excel Charts.
 #
 class Chart < Worksheet
+  require 'writeexcel/helper'
+  private :convert_to_ascii_if_ascii
+
   ###############################################################################
   #
   # factory()
@@ -665,6 +668,8 @@ class Chart < Worksheet
     # Return if encoding is set, i.e., string has been manually encoded.
     #return ( undef, undef ) if $string == 1;
 
+    string = convert_to_ascii_if_ascii(string)
+
     # Handle utf8 strings.
     if string.encoding == Encoding::UTF_8
       string = NKF.nkf('-w16B0 -m0 -W', string)
@@ -1254,6 +1259,8 @@ class Chart < Worksheet
     # formula                 # Pre-parsed formula.
     # format_index            # Num format index.
     grbit        = 0x0000     # Option flags.
+
+    formula = convert_to_ascii_if_ascii(formula)
 
     formula_length  = formula.bytesize
     length += formula_length
@@ -1984,6 +1991,8 @@ class Chart < Worksheet
   # Write the SERIESTEXT chart BIFF record.
   #
   def store_seriestext(str, encoding)  # :nodoc:
+    str = convert_to_ascii_if_ascii(str)
+
     record   = 0x100D          # Record identifier.
     length   = 0x0000          # Number of bytes to follow.
     id       = 0x0000          # Text id.
