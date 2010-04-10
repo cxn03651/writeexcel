@@ -238,21 +238,3 @@ def pack_VT_FILETIME(localtime)       #:nodoc:
 
   [type].pack('V') + [low, high].pack('V2')
 end
-
-  def convert_to_ascii_if_ascii(str)
-    return nil if str.nil?
-    ruby_18 do
-      enc = str.encoding
-      begin
-        str = str.encode('ASCII')
-      rescue
-        str.force_encoding(enc)
-      end
-    end ||
-    ruby_19 do
-      if !str.nil? && str.ascii_only?
-        str = [str].pack('a*')
-      end
-    end
-    str
-  end

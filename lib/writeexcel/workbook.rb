@@ -523,7 +523,7 @@ class Workbook < BIFFWriter
     # Handle utf8 strings
     if name.encoding == Encoding::UTF_8
       name = NKF.nkf('-w16B0 -m0 -W', name)
-      name.force_encoding('UTF_16BE')
+      name.force_encoding('UTF-16BE')
       encoding = 1
     end
 
@@ -1027,7 +1027,6 @@ class Workbook < BIFFWriter
     params.each do |k, v|
       params[k] = convert_to_ascii_if_ascii(v) if v.kind_of?(String)
     end
-
     # List of valid input parameters.
     properties = {
       :codepage      => [0x0001, 'VT_I2'      ],

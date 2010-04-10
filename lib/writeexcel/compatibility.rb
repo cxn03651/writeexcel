@@ -6,6 +6,21 @@
 # copied from prawn.
 # modified by Hideo NAKAMURA
 #
+unless defined?(Encoding)
+  class Encoding # :nodoc:
+    class ConverterNotFoundError < StandardError; end
+    class UndefinedConversionError < StandardError; end
+
+    ASCII    = 0
+    BINARY   = 1
+    UTF_8    = 2
+    EUCJP    = 3
+    SJIS     = 4
+    UTF_16LE = 5
+    UTF_16BE = 6
+  end
+end
+
 class String #:nodoc:
   def first_line
     self.each_line { |line| return line }
@@ -25,10 +40,12 @@ class String #:nodoc:
   end
 
   unless "".respond_to?(:encode)
+    @encoding = Encoding::UTF_8
+
     def encode(encoding) # :nodoc:
       require 'nkf'
-
-      if @encoding.nil? || @encoding == Encoding::UTF_8
+      @encoding ||= Encoding::UTF_8
+      if @encoding == Encoding::UTF_8
         # supported only $KCODE = 'u'. so @encoding.nil? means UTF_8.
         case encoding
         when /ASCII/i
@@ -187,7 +204,7 @@ class String #:nodoc:
 
   unless "".respond_to?(:encoding)
     def encoding
-      @encoding.nil? ? Encoding::UTF_8 : @encoding
+      @encoding ||= Encoding::UTF_8
     end
   end
 
@@ -211,15 +228,15 @@ class String #:nodoc:
             Encoding::ASCII
           when /BINARY/i
             Encoding::BINARY
-          when /UTF_8/i
+          when /UTF[-_]8/i
             Encoding::UTF_8
           when /EUCJP/i
             Encoding::EUCJP
           when /SJIS/i
             Encoding::SJIS
-          when /UTF_16LE/i
+          when /UTF[-_]16LE/i
             Encoding::UTF_16LE
-          when /UTF_16BE/i
+          when /UTF[-_]16BE/i
             Encoding::UTF_16BE
         end
       else
@@ -278,21 +295,6 @@ end
 unless File.respond_to?(:binread)
   def File.binread(file) #:nodoc:
     File.open(file,"rb") { |f| f.read }
-  end
-end
-
-unless defined?(Encoding)
-  class Encoding # :nodoc:
-    class ConverterNotFoundError < StandardError; end
-    class UndefinedConversionError < StandardError; end
-
-    ASCII    = 0
-    BINARY   = 1
-    UTF_8    = 2
-    EUCJP    = 3
-    SJIS     = 4
-    UTF_16LE = 5
-    UTF_16BE = 6
   end
 end
 
