@@ -2686,8 +2686,6 @@ class Worksheet < BIFFWriter
 
     return -1 if (args.size < 3)                # Check the number of args
 
-    string = convert_to_ascii_if_ascii(string)
-
     record      = 0x00FD                        # Record identifier
     length      = 0x000A                        # Bytes to follow
 
@@ -2698,6 +2696,8 @@ class Worksheet < BIFFWriter
     xf          = xf_record_index(row, col, args[3])   # The cell format
     encoding    = 0x0
     str_error   = 0
+
+    str = convert_to_ascii_if_ascii(str)
 
     # Handle utf8 strings
     if str.encoding == Encoding::UTF_8
@@ -7956,6 +7956,8 @@ class Worksheet < BIFFWriter
   # well as calculating the comment object position and vertices.
   #
   def comment_params(row, col, string, options = {})   #:nodoc:
+    string = convert_to_ascii_if_ascii(string)
+
     default_width   = 128
     default_height  = 74
 
@@ -8931,8 +8933,6 @@ class Worksheet < BIFFWriter
   # Captions are limited to 32 characters. Messages are limited to 255 chars.
   #
   def pack_dv_string(string = nil, max_length = 0)   #:nodoc:
-    string = convert_to_ascii_if_ascii(string)
-
     str_length  = 0
     encoding    = 0
 
@@ -8947,6 +8947,8 @@ class Worksheet < BIFFWriter
     end
 
     str_length = string.bytesize
+
+    string = convert_to_ascii_if_ascii(string)
 
     # Handle utf8 strings
     if string.encoding == Encoding::UTF_8

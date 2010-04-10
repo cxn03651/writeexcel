@@ -37,7 +37,7 @@ def create_summary_property_set(properties)       #:nodoc:
     property_data, offsets = pack_property_data(properties)
 
     # Create the property type and offsets based on the previous calculation.
-    0.upto(properties.size-1) do |i|
+    0.upto(properties.size - 1) do |i|
       property_offsets += [properties[i][0], offsets[i]].pack('VV')
     end
 
@@ -190,7 +190,7 @@ end
 #
 def pack_VT_LPSTR(str, codepage)       #:nodoc:
     type        = 0x001E
-    string      = str.encode('BINARY') + "\0".encode('BINARY')
+    string      = str.force_encoding('BINARY') + "\0".encode('BINARY')
 
     if codepage == 0x04E4
       # Latin1
@@ -240,9 +240,15 @@ def pack_VT_FILETIME(localtime)       #:nodoc:
 end
 
   def convert_to_ascii_if_ascii(str)
+    return nil if str.nil?
     ruby_18 do
-      @encoding = str.mbchar? ? Encoding::UTF_8 : Encoding::US_ASCII
-    end
+      enc = str.encoding
+      begin
+        str = str.encode('ASCII')
+      rescue
+        str.force_encoding(enc)
+      end
+    end ||
     ruby_19 do
       if !str.nil? && str.ascii_only?
         str = [str].pack('a*')

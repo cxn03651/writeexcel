@@ -495,6 +495,8 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # sheet names is updated by the add_worksheet() method of the Workbook class.
   #
   def get_sheet_index(sheet_name)
+    sheet_name = convert_to_ascii_if_ascii(sheet_name)
+
     # Handle utf8 sheetnames
     if sheet_name.encoding == Encoding::UTF_8
       sheet_name = sheet_name.encode('UTF-16BE')

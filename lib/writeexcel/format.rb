@@ -388,6 +388,8 @@ end
     rgch       = @font
     encoding   = @font_encoding
 
+    rgch = convert_to_ascii_if_ascii(rgch)
+
     # Handle utf8 strings
     if rgch.encoding == Encoding::UTF_8
       rgch = rgch.encode('UTF-16BE')

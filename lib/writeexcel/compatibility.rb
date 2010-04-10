@@ -205,21 +205,40 @@ class String #:nodoc:
 
   unless "".respond_to?(:force_encoding)
     def force_encoding(encoding)
-      @encoding = case encoding
-        when /ASCII/i
-          Encoding::ASCII
-        when /BINARY/i
-          Encoding::BINARY
-        when /UTF_8/i
-          Encoding::UTF_8
-        when /EUCJP/i
-          Encoding::EUCJP
-        when /SJIS/i
-          Encoding::SJIS
-        when /UTF_16LE/i
-          Encoding::UTF_16LE
-        when /UTF_16BE/i
-          Encoding::UTF_16BE
+      if encoding.kind_of?(String)
+        @encoding = case encoding
+          when /ASCII/i
+            Encoding::ASCII
+          when /BINARY/i
+            Encoding::BINARY
+          when /UTF_8/i
+            Encoding::UTF_8
+          when /EUCJP/i
+            Encoding::EUCJP
+          when /SJIS/i
+            Encoding::SJIS
+          when /UTF_16LE/i
+            Encoding::UTF_16LE
+          when /UTF_16BE/i
+            Encoding::UTF_16BE
+        end
+      else
+        @encoding = case encoding
+          when Encoding::ASCII
+            Encoding::ASCII
+          when Encoding::BINARY
+            Encoding::BINARY
+          when Encoding::UTF_8
+            Encoding::UTF_8
+          when Encoding::EUCJP
+            Encoding::EUCJP
+          when Encoding::SJIS
+            Encoding::SJIS
+          when Encoding::UTF_16LE
+            Encoding::UTF_16LE
+          when Encoding::UTF_16BE
+            Encoding::UTF_16BE
+        end
       end
       self
     end

@@ -11,6 +11,8 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
+require 'digest/md5'
+require 'nkf'
 require 'writeexcel/biffwriter'
 require 'writeexcel/olewriter'
 require 'writeexcel/formula'
@@ -25,7 +27,6 @@ require 'writeexcel/charts/line'
 require 'writeexcel/charts/pie'
 require 'writeexcel/charts/scatter'
 require 'writeexcel/charts/stock'
-require 'digest/md5'
 require 'writeexcel/storage_lite'
 require 'writeexcel/compatibility'
 
@@ -472,6 +473,8 @@ class Workbook < BIFFWriter
   # invalid characters and if the name is unique in the workbook.
   #
   def check_sheetname(name, encoding = 0, chart = 0)       #:nodoc:
+    name = convert_to_ascii_if_ascii(name)
+
     encoding ||= 0
     limit           = encoding != 0 ? 62 : 31
     invalid_char    = %r![\[\]:*?/\\]!
@@ -519,7 +522,8 @@ class Workbook < BIFFWriter
 
     # Handle utf8 strings
     if name.encoding == Encoding::UTF_8
-      name = name.encode('UTF-16BE')
+      name = NKF.nkf('-w16B0 -m0 -W', name)
+      name.force_encoding('UTF_16BE')
       encoding = 1
     end
 
@@ -1019,6 +1023,10 @@ class Workbook < BIFFWriter
   def set_properties(params)
     # Ignore if no args were passed.
     return -1 if !params.kind_of?(Hash) || params.empty?
+
+    params.each do |k, v|
+      params[k] = convert_to_ascii_if_ascii(v) if v.kind_of?(String)
+    end
 
     # List of valid input parameters.
     properties = {
