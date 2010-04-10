@@ -89,10 +89,7 @@ class TC_Workbook < Test::Unit::TestCase
     # write to @test_file
     @workbook.add_worksheet
     @workbook.close
-    file = ''
-    File.open(@test_file, "rb") do |f|
-      file = f.read
-    end
+    file = File.binread(@test_file)
 
     # write to io
     io = StringIO.new
@@ -101,7 +98,7 @@ class TC_Workbook < Test::Unit::TestCase
     wb.close
 
     # compare @test_file and io
-    assert_equal(file, io.string)
+    assert_equal(file, io.string.force_encoding('BINARY'))
   end
 
   def valid_sheetname

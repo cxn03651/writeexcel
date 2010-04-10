@@ -24,7 +24,7 @@ class TC_property_types < Test::Unit::TestCase
                     02 00 00 00 E4 04 00 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_I2(1252) )
+    result     = unpack_record(pack_VT_I2(1252))
     assert_equal(target, result, caption)
   end
 
@@ -36,7 +36,7 @@ class TC_property_types < Test::Unit::TestCase
                      1E 00 00 00 01 00 00 00 00 00 00 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 
@@ -48,7 +48,7 @@ class TC_property_types < Test::Unit::TestCase
                     1E 00 00 00 02 00 00 00 61 00 00 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 
@@ -60,7 +60,7 @@ class TC_property_types < Test::Unit::TestCase
                     1E 00 00 00 03 00 00 00 62 62 00 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 
@@ -72,7 +72,7 @@ class TC_property_types < Test::Unit::TestCase
                     1E 00 00 00 04 00 00 00 63 63 63 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 
@@ -84,7 +84,7 @@ class TC_property_types < Test::Unit::TestCase
                     1E 00 00 00 05 00 00 00 64 64 64 64 00 00 00 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 
@@ -97,7 +97,7 @@ class TC_property_types < Test::Unit::TestCase
                     00 00 00 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 
@@ -109,7 +109,7 @@ class TC_property_types < Test::Unit::TestCase
                     1E 00 00 00 04 00 00 00 E2 98 BA 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 
@@ -121,7 +121,7 @@ class TC_property_types < Test::Unit::TestCase
                     1E 00 00 00 05 00 00 00 61 E2 98 BA 00 00 00 00
                    ).join(' ')
 
-    result     = unpack_record( pack_VT_LPSTR(string, codepage) )
+    result     = unpack_record(pack_VT_LPSTR(string, codepage))
     assert_equal(target, result, caption)
   end
 

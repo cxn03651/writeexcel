@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 require 'helper'
+require 'stringio'
 
 class TC_Worksheet < Test::Unit::TestCase
   TEST_DIR    = File.expand_path(File.dirname(__FILE__))
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
+    @test_file = StringIO.new
     @workbook = WriteExcel.new(@test_file)
     @sheetname = 'test'
-    @ws      = @workbook.add_worksheet(@sheetname,0)
+    @ws      = @workbook.add_worksheet(@sheetname, 0)
     @perldir = "#{PERL_OUTDIR}/"
     @format  = Format.new(:color=>"green")
   end
@@ -20,7 +19,6 @@ class TC_Worksheet < Test::Unit::TestCase
     @ws     = nil
     @format = nil
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_methods_exist
