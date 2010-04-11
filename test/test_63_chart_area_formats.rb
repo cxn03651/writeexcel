@@ -27,6 +27,10 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
     @plotarea_caption2 = " \tChart: plotarea format - area";
   end
 
+  def teardown
+    @workbook.close
+  end
+
   ###############################################################################
   #
   # 1. Test the chartarea format methods. See the set_*area() properties below.

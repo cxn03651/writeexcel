@@ -9,13 +9,6 @@ class TC_example_match < Test::Unit::TestCase
 
   def setup
     @file  = StringIO.new
-=begin
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file  = File.join(Dir.tmpdir, path)
-    @filename  = @test_file
-    @filename2 = @test_file + "2"
-=end
   end
 
   def test_a_simple

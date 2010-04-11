@@ -20,6 +20,10 @@ class TC_ChartGeneric < Test::Unit::TestCase
     @chart = Chart.new('', 'chart', 0, 0, 0, 0, 0, 0, 0, 0)
   end
 
+  def teardown
+    @chart.cleanup
+  end
+
   ###############################################################################
   #
   # Test the _store_fbi method.

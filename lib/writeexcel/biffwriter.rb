@@ -36,7 +36,7 @@ class BIFFWriter       #:nodoc:
     # Open a tmp file to store the majority of the Worksheet data. If this fails,
     # for example due to write permissions, store the data in memory. This can be
     # slow for large files.
-    @filehandle = Tempfile.new('spreadsheetwriteexcel')
+    @filehandle = Tempfile.new('writeexcel')
     @filehandle.binmode
 
     # failed. store temporary data in memory.
@@ -266,5 +266,9 @@ class BIFFWriter       #:nodoc:
 
   def clear_data_for_test # :nodoc:
     @data = ''
+  end
+
+  def cleanup # :nodoc:
+    @filehandle.close(true) if @filehandle
   end
 end

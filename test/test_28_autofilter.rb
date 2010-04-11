@@ -11,6 +11,7 @@
 #
 #########################################################################
 require 'helper'
+require 'stringio'
 
 class TC_28_autofilter < Test::Unit::TestCase
 
@@ -27,19 +28,8 @@ class TC_28_autofilter < Test::Unit::TestCase
     end
   end
 
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    @workbook   = WriteExcel.new(@test_file)
+    @workbook   = WriteExcel.new(StringIO.new)
     @worksheet  = @workbook.add_worksheet
     @tests = [
     [
@@ -166,7 +156,6 @@ class TC_28_autofilter < Test::Unit::TestCase
 
   def teardown
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
 end

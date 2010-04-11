@@ -5,15 +5,12 @@ require "stringio"
 class TC_Workbook < Test::Unit::TestCase
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file  = File.join(Dir.tmpdir, path)
+    @test_file  = StringIO.new
     @workbook   = Workbook.new(@test_file)
   end
 
   def teardown
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_new
@@ -83,22 +80,6 @@ class TC_Workbook < Test::Unit::TestCase
   def test_raise_set_compatibility_after_sheet_creation
     @workbook.add_worksheet
     assert_raise(RuntimeError) { @workbook.compatibility_mode }
-  end
-
-  def test_write_to_io
-    # write to @test_file
-    @workbook.add_worksheet
-    @workbook.close
-    file = File.binread(@test_file)
-
-    # write to io
-    io = StringIO.new
-    wb = Workbook.new(io)
-    wb.add_worksheet
-    wb.close
-
-    # compare @test_file and io
-    assert_equal(file, io.string.force_encoding('BINARY'))
   end
 
   def valid_sheetname

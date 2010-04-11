@@ -12,21 +12,18 @@
 #
 ############################################################################
 require 'helper'
+require 'stringio'
 
 class TC_data_seconds < Test::Unit::TestCase
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    @workbook  = WriteExcel.new(@test_file)
+    @workbook  = WriteExcel.new(StringIO.new)
     @worksheet = @workbook.add_worksheet
-    @fit_delta = 0.5/(24*60*60*1000)
+    @fit_delta = 0.5/(24 * 60 * 60 * 1000)
   end
 
   def teardown
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def fit_cmp(a, b)

@@ -195,7 +195,7 @@ class Format
     @diag_border    = other.diag_border
 
     @font_only      = other.font_only
-end
+  end
 
   ###############################################################################
   #

@@ -1782,7 +1782,7 @@ class Chart < Worksheet
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
- end
+  end
 
   ###############################################################################
   #

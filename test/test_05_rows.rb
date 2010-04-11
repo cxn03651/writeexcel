@@ -12,6 +12,7 @@
 #
 ############################################################################
 require 'helper'
+require 'stringio'
 
 class TC_rows < Test::Unit::TestCase
 
@@ -19,10 +20,8 @@ class TC_rows < Test::Unit::TestCase
   end
 
   def test_1
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    workbook            = WriteExcel.new(@test_file)
+    file  = StringIO.new
+    workbook = WriteExcel.new(file)
     workbook.compatibility_mode(1)
     @tests               = []
 
@@ -151,7 +150,8 @@ class TC_rows < Test::Unit::TestCase
     # Read in the row records
     rows = []
 
-    xlsfile = open(@test_file, "rb")
+    xlsfile = StringIO.new(file.string)
+
     while header = xlsfile.read(4)
       record, length = header.unpack('vv')
       data = xlsfile.read(length)
@@ -174,7 +174,6 @@ class TC_rows < Test::Unit::TestCase
   end
 
   def teardown
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
 end

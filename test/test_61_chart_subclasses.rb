@@ -19,6 +19,10 @@ class TC_chart_subclasses < Test::Unit::TestCase
     @workbook = WriteExcel.new(io)
   end
 
+  def teardown
+    @workbook.close
+  end
+
   def test_store_chart_type_of_column
     chart = Chart.factory(Chart::Column, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
@@ -87,9 +91,5 @@ class TC_chart_subclasses < Test::Unit::TestCase
       ).join(' ')
     got = unpack_record(chart.store_chart_type)
     assert_equal(expected, got)
-  end
-
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
 end

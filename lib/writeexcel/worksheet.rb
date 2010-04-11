@@ -192,9 +192,7 @@ class Worksheet < BIFFWriter
   # Add data to the beginning of the workbook (note the reverse order)
   # and to the end of the workbook.
   #
-  def close(*sheetnames) #:nodoc:
-    num_sheets = sheetnames.size
-
+  def close #:nodoc:
     ################################################
     # Prepend in reverse order!!
     #
@@ -303,6 +301,10 @@ class Worksheet < BIFFWriter
     # Prepend the BOF and INDEX records
     store_index
     store_bof(0x0010)
+  end
+
+  def cleanup
+    super
   end
 
   ###############################################################################
@@ -6040,15 +6042,15 @@ class Worksheet < BIFFWriter
         # Write the cell data in each row and sum their lengths for the
         # cell offsets.
         #
-        written_rows.each do |row|
+        written_rows.each do |rw|
           cell_offset = 0
 
-          if @table[row]
-            @table[row].each do |col|
-              next unless col
+          if @table[rw]
+            @table[rw].each do |clm|
+              next unless clm
               print "sheet #{@name} : #{__FILE__}(#{__LINE__}) cell_data\n" if defined?($debug)
-              append(col)
-              length = col.bytesize
+              append(clm)
+              length = clm.bytesize
               row_offset  += length
               cell_offset += length
             end

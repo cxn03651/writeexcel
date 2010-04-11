@@ -214,6 +214,7 @@ class Workbook < BIFFWriter
 
     @fileclosed = true
     store_workbook
+    cleanup
   end
 
   # get array of Worksheet objects
@@ -1259,8 +1260,6 @@ class Workbook < BIFFWriter
 
       return ole.close
     else
-      # Write the OLE file using ruby-ole if data > 7MB
-
       # Create the Workbook stream.
       stream   = 'Workbook'.unpack('C*').pack('v*')
       workbook = OLEStorageLitePPSFile.new(stream)
@@ -1773,21 +1772,21 @@ class Workbook < BIFFWriter
     # Fonts that are marked as '_font_only' are always stored. These are used
     # mainly for charts and may not have an associated XF record.
 
-    @formats.each do |format|
-      key = format.get_font_key
-      if format.font_only == 0 and !fonts[key].nil?
+    @formats.each do |fmt|
+      key = fmt.get_font_key
+      if fmt.font_only == 0 and !fonts[key].nil?
         # FONT has already been used
-        format.font_index = fonts[key]
+        fmt.font_index = fonts[key]
       else
         # Add a new FONT record
 
-        if format.font_only == 0
+        if fmt.font_only == 0
           fonts[key] = index
         end
 
-        format.font_index = index
+        fmt.font_index = index
         index += 1
-        font = format.get_font
+        font = fmt.get_font
         print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         append(font)
       end
@@ -2202,7 +2201,7 @@ class Workbook < BIFFWriter
     ext = ext_refs.keys.sort
 
     # Change the external refs from stringified "1:1" to [1, 1]
-    ext.map! {|e| e.split(/:/).map! {|e| e.to_i} }
+    ext.map! {|e| e.split(/:/).map! {|v| v.to_i} }
 
     cxti        = ext.size                 # Number of Excel XTI structures
     rgxti       = ''                       # Array of XTI structures
@@ -3308,4 +3307,9 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_split_menu_colors
+
+  def cleanup
+    super
+    sheets.each { |sheet| sheet.cleanup }
+  end
 end

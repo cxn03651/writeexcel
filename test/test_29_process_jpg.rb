@@ -27,6 +27,10 @@ class TC_29_process_jpg < Test::Unit::TestCase
     @type       = 5   # Excel Blip type (MSOBLIPTYPE).
   end
 
+  def teardown
+    @workbook.close
+  end
+
   def test_valid_jpg_image_1
     testname = '3w x 5h jpeg image.'
 

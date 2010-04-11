@@ -20,6 +20,10 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     @workbook.not_using_tmpfile
   end
 
+  def teardown
+    @workbook.close
+  end
+
   def test_print_area_name_for_a_simple_range
     worksheet1 = @workbook.add_worksheet
     area = 'A1:B12'

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 require 'helper'
+require 'stringio'
 
 class TC_Format < Test::Unit::TestCase
 
@@ -7,15 +8,11 @@ class TC_Format < Test::Unit::TestCase
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @ruby_file  = File.join(Dir.tmpdir, path)
+    @ruby_file = StringIO.new
     @format = Format.new
   end
 
   def teardown
-    File.delete(@ruby_file) if File.exist?(@ruby_file)
-    @format = nil
   end
 
   def test_set_format_properties
@@ -981,12 +978,9 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   def test_xf_biff_size
     perl_file = "#{PERL_OUTDIR}/file_xf_biff"
     size = File.size(perl_file)
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_xf)
-    @fh.close
-    rsize = File.size(@ruby_file)
-    assert_equal(size,rsize,"File sizes not the same")
-
+    @ruby_file.print(@format.get_xf)
+    rsize = @ruby_file.size
+    assert_equal(size, rsize, "File sizes not the same")
   end
 
   # Because of the modifications to bg_color and fg_color, I know this
@@ -1003,47 +997,48 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
 
   def test_font_biff_size
     perl_file = "#{PERL_OUTDIR}/file_font_biff"
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_font)
-    @fh.close
+    @ruby_file.print(@format.get_font)
     contents = IO.readlines(perl_file)
-    rcontents = IO.readlines(@ruby_file)
-    assert_equal(contents,rcontents,"Contents not the same")
+    @ruby_file.rewind
+    rcontents = @ruby_file.readlines
+    assert_equal(contents, rcontents, "Contents not the same")
   end
 
   def test_font_biff_contents
     perl_file = "#{PERL_OUTDIR}/file_font_biff"
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_font)
-    @fh.close
-    contents = IO.readlines(perl_file)
-    rcontents = IO.readlines(@ruby_file)
-    assert_equal(contents,rcontents,"Contents not the same")
+    @ruby_file.print(@format.get_font)
+    contents  = IO.readlines(perl_file)
+    @ruby_file.rewind
+    rcontents = @ruby_file.readlines
+    assert_equal(contents, rcontents, "Contents not the same")
   end
 
   def test_get_font_key_size
     perl_file = "#{PERL_OUTDIR}/file_font_key"
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_font_key)
-    @fh.close
-    assert_equal(File.size(perl_file),File.size(@ruby_file),"Bad file size")
+    @ruby_file.print(@format.get_font_key)
+    assert_equal(File.size(perl_file), @ruby_file.size, "Bad file size")
   end
 
   def test_get_font_key_contents
     perl_file = "#{PERL_OUTDIR}/file_font_key"
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_font_key)
-    @fh.close
-    contents = IO.readlines(perl_file)
-    rcontents = IO.readlines(@ruby_file)
-    assert_equal(contents,rcontents,"Contents not the same")
+    @ruby_file.print(@format.get_font_key)
+    contents  = IO.readlines(perl_file)
+    @ruby_file.rewind
+    rcontents = @ruby_file.readlines
+    assert_equal(contents, rcontents, "Contents not the same")
   end
 
   def test_initialize
     assert_nothing_raised {
-      Format.new(:bold => true, :size => 10, :color => 'black',
-      :fg_color => 43, :align => 'top', :text_wrap => true,
-      :border => 1)
+      Format.new(
+        :bold => true,
+        :size => 10,
+        :color => 'black',
+        :fg_color => 43,
+        :align => 'top',
+        :text_wrap => true,
+        :border => 1
+      )
     }
   end
 
@@ -1052,85 +1047,31 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   def test_get_xf
     perl_file = "#{PERL_OUTDIR}/file_xf_biff"
     size = File.size(perl_file)
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_xf)
-    @fh.close
-    rsize = File.size(@ruby_file)
-    assert_equal(size,rsize,"File sizes not the same")
+    @ruby_file.print(@format.get_xf)
+    rsize = @ruby_file.size
+    assert_equal(size, rsize, "File sizes not the same")
 
-    fh_p = File.open(perl_file, "r")
-    fh_r = File.open(@ruby_file, "r")
-    while true do
-      p1 = fh_p.read(1)
-      r1 = fh_r.read(1)
-      if p1.nil?
-        assert( r1.nil?, 'p1 is EOF but r1 is NOT EOF.')
-        break
-      elsif r1.nil?
-        assert( p1.nil?, 'r1 is EOF but p1 is NOT EOF.')
-        break
-      end
-      assert_equal(p1, r1, sprintf(" p1 = %s but r1 = %s", p1, r1))
-      break
-    end
-    fh_p.close
-    fh_r.close
+    compare_file(perl_file, @ruby_file)
   end
 
   def test_get_font
     perl_file = "#{PERL_OUTDIR}/file_font_biff"
     size = File.size(perl_file)
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_font)
-    @fh.close
-    rsize = File.size(@ruby_file)
-    assert_equal(size,rsize,"File sizes not the same")
+    @ruby_file.print(@format.get_font)
+    rsize = @ruby_file.size
+    assert_equal(size, rsize, "File sizes not the same")
 
-    fh_p = File.open(perl_file, "r")
-    fh_r = File.open(@ruby_file, "r")
-    while true do
-      p1 = fh_p.read(1)
-      r1 = fh_r.read(1)
-      if p1.nil?
-        assert( r1.nil?, 'p1 is EOF but r1 is NOT EOF.')
-        break
-      elsif r1.nil?
-        assert( p1.nil?, 'r1 is EOF but p1 is NOT EOF.')
-        break
-      end
-      assert_equal(p1, r1, sprintf(" p1 = %s but r1 = %s", p1, r1))
-      break
-    end
-    fh_p.close
-    fh_r.close
+    compare_file(perl_file, @ruby_file)
   end
 
   def test_get_font_key
     perl_file = "#{PERL_OUTDIR}/file_font_key"
     size = File.size(perl_file)
-    @fh = File.new(@ruby_file,"w+")
-    @fh.print(@format.get_font_key)
-    @fh.close
-    rsize = File.size(@ruby_file)
-    assert_equal(size,rsize,"File sizes not the same")
+    @ruby_file.print(@format.get_font_key)
+    rsize = @ruby_file.size
+    assert_equal(size, rsize, "File sizes not the same")
 
-    fh_p = File.open(perl_file, "r")
-    fh_r = File.open(@ruby_file, "r")
-    while true do
-      p1 = fh_p.read(1)
-      r1 = fh_r.read(1)
-      if p1.nil?
-        assert( r1.nil?, 'p1 is EOF but r1 is NOT EOF.')
-        break
-      elsif r1.nil?
-        assert( p1.nil?, 'r1 is EOF but p1 is NOT EOF.')
-        break
-      end
-      assert_equal(p1, r1, sprintf(" p1 = %s but r1 = %s", p1, r1))
-      break
-    end
-    fh_p.close
-    fh_r.close
+    compare_file(perl_file, @ruby_file)
   end
 
   def test_copy
@@ -1249,4 +1190,12 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
     }
   end
 
+  def compare_file(expected, target)
+    # target is StringIO object.
+    assert_equal(
+      open(expected, 'rb') { |f| f.read },
+      target.string,
+      "#{File.basename(expected)} doesn't match."
+    )
+  end
 end

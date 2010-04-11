@@ -20,6 +20,10 @@ class TC_autofilter < Test::Unit::TestCase
     @workbook.not_using_tmpfile
   end
 
+  def teardown
+    @workbook.close
+  end
+
   def test_autofilter_on_one_sheet
     worksheet1 = @workbook.add_worksheet
 
@@ -90,14 +94,6 @@ class TC_autofilter < Test::Unit::TestCase
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
-  end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
 
   ###############################################################################
