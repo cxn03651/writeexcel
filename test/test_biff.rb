@@ -72,13 +72,4 @@ class TC_BIFFWriter < Test::Unit::TestCase
     assert_equal(size, rsize, "File sizes not the same")
     compare_file(perl_file, @ruby_file)
   end
-
-  def compare_file(expected, target)
-    # target is StringIO object.
-    assert_equal(
-      open(expected, 'rb') { |f| f.read },
-      target.string,
-      "#{File.basename(expected)} doesn't match."
-    )
-  end
 end

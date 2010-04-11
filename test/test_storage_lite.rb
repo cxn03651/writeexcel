@@ -2,28 +2,6 @@
 require 'helper'
 require 'stringio'
 
-=begin
-  def compare_file(expected, target)
-    fh_e = File.open(expected, "r")
-    fh_t = File.open(target, "r")
-    while true do
-      e1 = fh_e.read(1)
-      t1 = fh_t.read(1)
-      if e1.nil?
-        assert( t1.nil?, "#{expexted} is EOF but #{target} is NOT EOF.")
-        break
-      elsif t1.nil?
-        assert( e1.nil?, '#{target} is EOF but #{expected} is NOT EOF.')
-        break
-      end
-      assert_equal(e1, t1, sprintf(" #{expected} = '%s' but #{target} = '%s'", e1, t1))
-      break
-    end
-    fh_e.close
-    fh_t.close
-  end
-=end
-
 class TC_OLEStorageLite < Test::Unit::TestCase
   TEST_DIR    = File.expand_path(File.dirname(__FILE__))
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')

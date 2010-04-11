@@ -3127,13 +3127,4 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/right_to_left.xls", @file)
   end
-
-  def compare_file(expected, target)
-    # target is StringIO object.
-    assert_equal(
-      open(expected, 'rb') { |f| f.read },
-      target.string,
-      "#{File.basename(expected)} doesn't match."
-    )
-  end
 end

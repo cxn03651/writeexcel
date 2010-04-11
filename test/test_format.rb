@@ -1189,13 +1189,4 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
       :right_color         => format.right_color
     }
   end
-
-  def compare_file(expected, target)
-    # target is StringIO object.
-    assert_equal(
-      open(expected, 'rb') { |f| f.read },
-      target.string,
-      "#{File.basename(expected)} doesn't match."
-    )
-  end
 end
