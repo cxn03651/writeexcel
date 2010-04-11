@@ -4,6 +4,12 @@ Write to a cross-platform Excel binary file.
 
 == Recent Changes
 
+v0.4.0
+* works also on Ruby 1.9.1.
+* modify README.rdoc below.
+ * write source and run in utf8.
+ * unary minus supported. but -1 --> -1*1, -SIN() --> -1*SIN()
+
 v0.3.5
 * Bug fix. Worksheet#write_comment() doesn't work when value arg is numeric.
 * Bug fix. TRUE/FALSE in formula was misundarstood as :NAME.
@@ -55,6 +61,7 @@ Original description is below:
 == Usage
 
 See rdoc's WriteExcel class document.
+You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'.
 
 Example Code:
 
@@ -88,6 +95,7 @@ Example Code:
 
 * WriteExcel.new()
   * accept default format parameter such as new('foo.xls', :font => 'Roman', :size => 12)
+* Unary minus is supported, but it will be stored as '-1*'. ex) '=-1' -> '=-1*1', '=-SIN(PI()/2)' => '=-1*SIN(PI()/2)'
 * Worksheet.write(row, col, token, format)
   * if token.kind_of?(Numeric) then call write_number, if token.kind_of?(String) then not call write_number().
 * Worksheet.keep_leading_zeros()
@@ -96,14 +104,12 @@ Example Code:
 
 == Caution
 
-This library can handle multibyte character written in utf8. I tested in Japanese,
-and it looks work well. But, in this version, utf8 or not is recognized
-by matching non-ascii characters because ruby 1.8 can not recognize character code
-correctly.
+You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'
+when use urf8 string data.
 
 == Dependencies
 
-* ruby 1.8
+* ruby 1.8, ruby 1.9.1
 
 == Author
 
@@ -117,7 +123,7 @@ Copyright (c) 2009-2010 Hideo NAKAMURA. See LICENSE for details.
 same as Ruby.
 
 == Note on Patches/Pull Requests
- 
+
 * Fork the project.
 * Make your feature addition or bug fix.
 * Add tests for it. This is important so I don't break it in a

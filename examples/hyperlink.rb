@@ -1,4 +1,5 @@
 #!/usr/bin/ruby -w
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Example of how to use the WriteExcel module to write hyperlinks

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Chart - A writer class for Excel Charts.
@@ -48,7 +49,8 @@ require 'writeexcel/worksheet'
 # Chart - A writer class for Excel Charts.
 #
 class Chart < Worksheet
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
+  require 'writeexcel/helper'
+  private :convert_to_ascii_if_ascii
 
   ###############################################################################
   #
@@ -639,10 +641,10 @@ class Chart < Worksheet
     formula = parser.parse_tokens(tokens)
 
     # Return formula for a single cell as used by title and series name.
-    return formula if formula[0] == 0x3A
+    return formula if formula.ord == 0x3A
 
     # Extract the range from the parse formula.
-    if formula[0] == 0x3B
+    if formula.ord == 0x3B
         ptg, ext_ref, row_1, row_2, col_1, col_2 = formula.unpack('Cv5')
 
         # TODO. Remove high bit on relative references.
@@ -666,16 +668,19 @@ class Chart < Worksheet
     # Return if encoding is set, i.e., string has been manually encoded.
     #return ( undef, undef ) if $string == 1;
 
-    # Handle utf8 strings in perl 5.8.
-    if string =~ NonAscii
+    string = convert_to_ascii_if_ascii(string)
+
+    # Handle utf8 strings.
+    if string.encoding == Encoding::UTF_8
       string = NKF.nkf('-w16B0 -m0 -W', string)
+      string.force_encoding('UTF-16BE')
       encoding = 1
     end
 
     # Chart strings are limited to 255 characters.
     limit = encoding != 0 ? 255 * 2 : 255
 
-    if string.length >= limit
+    if string.bytesize >= limit
       # truncate the string and raise a warning.
       string = string[0, limit]
     end
@@ -1255,7 +1260,9 @@ class Chart < Worksheet
     # format_index            # Num format index.
     grbit        = 0x0000     # Option flags.
 
-    formula_length  = formula.length
+    formula = convert_to_ascii_if_ascii(formula)
+
+    formula_length  = formula.bytesize
     length += formula_length
 
     header = [record, length].pack('vv')
@@ -1264,7 +1271,11 @@ class Chart < Worksheet
     data  += [grbit].pack('v')
     data  += [format_index].pack('v')
     data  += [formula_length].pack('v')
-    data  += formula[0].kind_of?(String) ? formula[0] : formula
+    if formula.kind_of?(Array)
+      data += formula[0].encode('BINARY')
+    else
+      data += formula.encode('BINARY') unless formula.nil?
+    end
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
@@ -1771,7 +1782,7 @@ class Chart < Worksheet
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
- end
+  end
 
   ###############################################################################
   #
@@ -1980,12 +1991,14 @@ class Chart < Worksheet
   # Write the SERIESTEXT chart BIFF record.
   #
   def store_seriestext(str, encoding)  # :nodoc:
+    str = convert_to_ascii_if_ascii(str)
+
     record   = 0x100D          # Record identifier.
     length   = 0x0000          # Number of bytes to follow.
     id       = 0x0000          # Text id.
     # str                      # Text.
     # encoding                 # String encoding.
-    cch      = str.length      # String length.
+    cch      = str.bytesize      # String length.
 
     encoding ||= 0
 
@@ -1995,7 +2008,7 @@ class Chart < Worksheet
     # Change the UTF-16 name from BE to LE
     str = str.unpack('v*').pack('n*') if encoding != 0
 
-    length = 4 + str.length
+    length = 4 + str.bytesize
 
     header = [record, length].pack('vv')
     data  = [id].pack('v')

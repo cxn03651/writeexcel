@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'helper'
 require 'stringio'
 
@@ -24,6 +25,10 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
     @embed_caption2 = " \tChart: embedded chartarea format - area";
     @plotarea_caption1 = " \tChart: plotarea format - line";
     @plotarea_caption2 = " \tChart: plotarea format - area";
+  end
+
+  def teardown
+    @workbook.close
   end
 
   ###############################################################################

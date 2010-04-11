@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# OLE::Storage_Lite
+#  by Kawai, Takanori (Hippo2000) 2000.11.4, 8, 14
+# This Program is Still ALPHA version.
+#//////////////////////////////////////////////////////////////////////////////
+#
+# converted from CPAN's OLE::Storage_Lite.
+# converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
+#
+
 require 'tempfile'
 require 'stringio'
 
@@ -155,7 +166,7 @@ class OLEStorageLite       #:nodoc:
   def _getInfoFromFile(io, pos, len, fmt)
     io.seek(pos, 0)
     str = io.read(len)
-    if str.length != len
+    if str.bytesize != len
       nil
     else
       str.unpack(fmt)[0]
@@ -446,7 +457,7 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
     if @pps_file
       return @pps_file.lstat.size
     else
-      return @data.size
+      return @data.bytesize
     end
   end
   protected :_datalen
@@ -499,22 +510,23 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
   def _savePpsWk(rh_info)
     #1. Write PPS
     file = rh_info[:fileh]
-    file.write(
-        @name                          +
-        ("\x00" * (64 - @name.length)) +       #64
-        [@name.length + 2].pack("v")   +       #66
-        [@type].pack("c")              +       #67
-        [0x00].pack("c")               + #UK   #68
-        [@prev_pps].pack("V")          + #Prev #72
-        [@next_pps].pack("V")          + #Next #76
-        [@dir_pps].pack("V")           + #Dir  #80
-        "\x00\x09\x02\x00"             +       #84
-        "\x00\x00\x00\x00"             +       #88
-        "\xc0\x00\x00\x00"             +       #92
-        "\x00\x00\x00\x46"             +       #96
-        "\x00\x00\x00\x00"             +       #100
-        localDate2OLE(@time_1st)       +       #108
-        localDate2OLE(@time_2nd)                #116
+    file.write( [
+          @name,
+          ("\x00" * (64 - @name.bytesize)),  #64
+          [@name.bytesize + 2].pack("v"),    #66
+          [@type].pack("c"),                 #67
+          [0x00].pack("c"),            #UK   #68
+          [@prev_pps].pack("V"),       #Prev #72
+          [@next_pps].pack("V"),       #Next #76
+          [@dir_pps].pack("V"),        #Dir  #80
+          "\x00\x09\x02\x00",                #84
+          "\x00\x00\x00\x00",                #88
+          "\xc0\x00\x00\x00",                #92
+          "\x00\x00\x00\x46",                #96
+          "\x00\x00\x00\x00",                #100
+          localDate2OLE(@time_1st),          #108
+          localDate2OLE(@time_2nd)           #116
+        ].collect { |d| d.force_encoding(Encoding::BINARY) }.join('')
       )
     if @start_block != 0
       file.write([@start_block].pack('V'))
@@ -672,22 +684,23 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
     #print "iBdCnt = iBdCnt \n"
 
     #1.Save Header
-    file.write(
-        "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1" +
-        "\x00\x00\x00\x00" * 4             +
-        [0x3b].pack("v")                   +
-        [0x03].pack("v")                   +
-        [-2].pack("v")                     +
-        [9].pack("v")                      +
-        [6].pack("v")                      +
-        [0].pack("v")                      +
-        "\x00\x00\x00\x00" * 2             +
-        [iBdCnt].pack("V")                 +
-        [iBBcnt+iSBDcnt].pack("V")         + #ROOT START
-        [0].pack("V")                      +
-        [0x1000].pack("V")                 +
-        [0].pack("V")                      + #Small Block Depot
-        [1].pack("V")
+    file.write( [
+          "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1",
+          "\x00\x00\x00\x00" * 4,
+          [0x3b].pack("v"),
+          [0x03].pack("v"),
+          [-2].pack("v"),
+          [9].pack("v"),
+          [6].pack("v"),
+          [0].pack("v"),
+          "\x00\x00\x00\x00" * 2,
+          [iBdCnt].pack("V"),
+          [iBBcnt+iSBDcnt].pack("V"),        #ROOT START
+          [0].pack("V"),
+          [0x1000].pack("V"),
+          [0].pack("V"),                     #Small Block Depot
+          [1].pack("V")
+        ].collect { |d| d.force_encoding(Encoding::BINARY) }.join('')
       )
     #2. Extra BDList Start, Count
     if iAll <= i1stBdMax
@@ -729,7 +742,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
             iLen = 0
             pps.pps_file.seek(0, 0) #To The Top
             while sBuff = pps.pps_file.read(4096)
-              iLen += sBuff.length
+              iLen += sBuff.bytesize
               file.write(sBuff)           #Check for update
             end
           else

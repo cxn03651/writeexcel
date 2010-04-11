@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # BIFFwriter - An abstract base class for Excel workbooks and worksheets.
 #
@@ -35,7 +36,7 @@ class BIFFWriter       #:nodoc:
     # Open a tmp file to store the majority of the Worksheet data. If this fails,
     # for example due to write permissions, store the data in memory. This can be
     # slow for large files.
-    @filehandle = Tempfile.new('spreadsheetwriteexcel')
+    @filehandle = Tempfile.new('writeexcel')
     @filehandle.binmode
 
     # failed. store temporary data in memory.
@@ -77,9 +78,9 @@ class BIFFWriter       #:nodoc:
   #
   def prepend(*args)
     d = args.join
-    d = add_continue(d) if d.length > @limit
+    d = add_continue(d) if d.bytesize > @limit
 
-    @datasize += d.length
+    @datasize += d.bytesize
     @data      = d + @data
 
     print "prepend\n" if defined?($debug)
@@ -94,14 +95,14 @@ class BIFFWriter       #:nodoc:
   # General storage function
   #
   def append(*args)
-    d = args.join
+    d = args.collect{ |a| a.dup.force_encoding('ASCII-8BIT') }.join
     # Add CONTINUE records if necessary
-    d = add_continue(d) if d.length > @limit
+    d = add_continue(d) if d.bytesize > @limit
     if @using_tmpfile
       @filehandle.write d
-      @datasize += d.length
+      @datasize += d.bytesize
     else
-      @datasize += d.length
+      @datasize += d.bytesize
       @data      = @data + d
     end
 
@@ -212,7 +213,7 @@ class BIFFWriter       #:nodoc:
 
     # in perl
     #  $tmp = substr($data, 0, $limit, "");
-    if data.length > @limit
+    if data.bytesize > @limit
       tmp = data[0, @limit]
       data[0, @limit] = ''
     else
@@ -223,14 +224,14 @@ class BIFFWriter       #:nodoc:
     tmp[2, 2] = [@limit-4].pack('v')
 
     # Strip out chunks of 2080/8224 bytes +4 for the header.
-    while (data.length > @limit)
+    while (data.bytesize > @limit)
       header  = [record, @limit].pack("vv")
       tmp     += header + data[0, @limit]
       data[0, @limit] = ''
     end
 
     # Mop up the last of the data
-    header  = [record, data.length].pack("vv")
+    header  = [record, data.bytesize].pack("vv")
     tmp     += header + data
   end
 
@@ -249,7 +250,7 @@ class BIFFWriter       #:nodoc:
   # Returns the packed record.
   #
   def add_mso_generic(type, version, instance, data, length = nil)
-    length  = length.nil? ? data.length : length
+    length  = length.nil? ? data.bytesize : length
 
     # The header contains version and instance info packed into 2 bytes.
     header  = version | (instance << 4)
@@ -265,5 +266,9 @@ class BIFFWriter       #:nodoc:
 
   def clear_data_for_test # :nodoc:
     @data = ''
+  end
+
+  def cleanup # :nodoc:
+    @filehandle.close(true) if @filehandle
   end
 end

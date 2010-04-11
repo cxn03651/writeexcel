@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Formula - A class for generating Excel formulas.
@@ -10,13 +11,12 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'nkf'
 require 'strscan'
 require 'writeexcel/excelformulaparser'
 
 class Formula < ExcelFormulaParser       #:nodoc:
-
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
+  require 'writeexcel/helper'
+  private :convert_to_ascii_if_ascii
 
   attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
@@ -239,7 +239,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   def check_volatile(tokens)
     volatile = 0
 
-    (0..tokens.size-1).each do |i|
+    (0..tokens.size - 1).each do |i|
       # If the next token is a function check if it is volatile.
       if tokens[i] == '_func' and @functions[tokens[i+1]][3] != 0
         volatile = 1
@@ -297,23 +297,25 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # Convert a string to a ptg Str.
   #
   def convert_string(str)
+    str = convert_to_ascii_if_ascii(str)
+
     encoding = 0
 
     str.sub!(/^"/,'')   # Remove leading  "
     str.sub!(/"$/,'')   # Remove trailing "
     str.gsub!(/""/,'"') # Substitute Excel's escaped double quote "" for "
 
-    length = str.length
+    length = str.bytesize
 
     # Handle utf8 strings
-    if str =~ NonAscii
-      str = NKF.nkf('-w16L0 -m0 -W', str)
+    if str.encoding == Encoding::UTF_8
+      str = str.encode('UTF-16LE')
       encoding = 1
     end
 
     exit "String in formula has more than 255 chars\n" if length > 255
 
-    [@ptg['ptgStr'], length, encoding].pack("CCC") + str
+    [@ptg['ptgStr'], length, encoding].pack("CCC") + str.encode('BINARY')
   end
 
   ###############################################################################
@@ -493,9 +495,11 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # sheet names is updated by the add_worksheet() method of the Workbook class.
   #
   def get_sheet_index(sheet_name)
+    sheet_name = convert_to_ascii_if_ascii(sheet_name)
+
     # Handle utf8 sheetnames
-    if sheet_name =~ NonAscii
-      sheet_name = NKF.nkf('-w16B0 -m0 -W', sheet_name)
+    if sheet_name.encoding == Encoding::UTF_8
+      sheet_name = sheet_name.encode('UTF-16BE')
     end
 
     if @ext_sheets[sheet_name].nil?
@@ -645,7 +649,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
 
     while (!chars.empty?)
       char = chars.pop   # LS char first
-      col  += (char[0] - "A"[0] + 1) * (26**expn)
+      col  += (char.ord - "A".ord + 1) * (26 ** expn)
       expn += 1
     end
     # Convert 1-index to zero-index
@@ -1025,8 +1029,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     }
 
   end
-
-
 end
 
 if $0 ==__FILE__

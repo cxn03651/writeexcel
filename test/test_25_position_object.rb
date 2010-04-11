@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # A test for Spreadsheet::WriteExcel.
@@ -22,6 +23,10 @@ class TC_position_object < Test::Unit::TestCase
     @test_file  = StringIO.new
     @workbook   = WriteExcel.new(@test_file)
     @worksheet  = @workbook.add_worksheet
+  end
+
+  def teardown
+    @workbook.close
   end
 
 ###############################################################################

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'helper'
 require 'stringio'
 
@@ -17,6 +18,10 @@ class TC_ChartFormats < Test::Unit::TestCase
     @io = StringIO.new
     @workbook = WriteExcel.new(@io)
     @chart = @workbook.add_chart(:type => Chart::Column)
+  end
+
+  def teardown
+    @workbook.close
   end
 
 ###############################################################################

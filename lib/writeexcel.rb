@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # WriteExcel.
@@ -980,7 +981,8 @@ require "writeexcel/workbook"
 #     6. Ensure that the function is in the above table.
 #
 # If you go through steps 1-6 and you still have a problem, mail me.
-# Improving performance when working with formulas
+#
+# ===Improving performance when working with formulas
 #
 # Writing a large number of formulas with Spreadsheet::WriteExcel can be slow.
 # This is due to the fact that each formula has to be parsed and with the
@@ -1130,4 +1132,7 @@ require "writeexcel/workbook"
 #       12 until another chart with the title set is viewed.
 #
 class WriteExcel < Workbook
+  if RUBY_VERSION < '1.9'
+    $KCODE = 'u'
+  end
 end

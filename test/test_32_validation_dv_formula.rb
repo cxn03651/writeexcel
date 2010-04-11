@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##########################################################################
 # test_32_validation_dv_formula.rb
 #
@@ -10,21 +11,18 @@
 #
 #########################################################################
 require 'helper'
+require 'stringio'
 
 class TC_validation_dv_formula < Test::Unit::TestCase
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    @workbook   = WriteExcel.new(@test_file)
+    @workbook   = WriteExcel.new(StringIO.new)
     @worksheet  = @workbook.add_worksheet
     @worksheet2 = @workbook.add_worksheet
   end
 
   def teardown
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_integer_values

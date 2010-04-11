@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # A test for WriteExcel.
@@ -11,14 +12,12 @@
 #
 ############################################################################
 require 'helper'
+require 'stringio'
 
 class TC_dimensions < Test::Unit::TestCase
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    @workbook            = WriteExcel.new(@test_file)
+    @workbook            = WriteExcel.new(StringIO.new)
     @worksheet           = @workbook.add_worksheet
     @format              = @workbook.add_format
     @dims                = ['row_min', 'row_max', 'col_min', 'col_max']
@@ -27,7 +26,6 @@ class TC_dimensions < Test::Unit::TestCase
 
   def teardown
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_no_worksheet_cell_data

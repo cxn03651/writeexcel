@@ -1,3 +1,4 @@
+  # -*- coding: utf-8 -*-
 ##########################################################################
 # test_50_name_stored.rb
 #
@@ -19,6 +20,10 @@ class TC_Name_Stored < Test::Unit::TestCase
     @worksheet  = @workbook.add_worksheet
   end
 
+  def teardown
+    @workbook.close
+  end
+
   def test_print_area_name_with_simple_range
     caption        = " \tNAME for worksheet1.print_area('A1:B12')"
     name           = [0x06].pack('C')
@@ -37,9 +42,9 @@ class TC_Name_Stored < Test::Unit::TestCase
                00 00 00 06 3B 00 00 00 00 0B 00 00 00 01 00
              ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   def test_print_area_name_with_simple_range_in_sheet_3
@@ -61,9 +66,9 @@ class TC_Name_Stored < Test::Unit::TestCase
               00 00 00 06 3B 02 00 06 00 07 00 06 00 07 00
       ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   def test_for_repeat_rows_name
@@ -85,9 +90,9 @@ class TC_Name_Stored < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 09 00 00 00 FF 00
      ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   def test_for_repeat_rows_name_on_sheet_3
@@ -109,9 +114,9 @@ class TC_Name_Stored < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 09 00 00 00 FF 00
      ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   def test_for_repeat_columns_name
@@ -133,9 +138,9 @@ class TC_Name_Stored < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 FF FF 00 00 09 00
      ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   def test_for_repeat_rows_and_repeat_columns_together_name
@@ -158,9 +163,9 @@ class TC_Name_Stored < Test::Unit::TestCase
         04 00 3B 00 00 01 00 02 00 00 00 FF 00 10
      ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   def test_for_print_area_name_with_simple_range
@@ -182,9 +187,9 @@ class TC_Name_Stored < Test::Unit::TestCase
         00 00 00 0D 3B 00 00 00 00 04 00 00 00 02 00
      ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   def test_for_define_name_global_name
@@ -206,17 +211,9 @@ class TC_Name_Stored < Test::Unit::TestCase
         00 00 00 46 6F 6F 3A 00 00 07 00 01 00
      ).join('')].pack('H*')
 
-    result         = _unpack_name(result)
-    target         = _unpack_name(target)
-    assert_equal(result, target)
-  end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
+#    result         = _unpack_name(result)
+#    target         = _unpack_name(target)
+    assert_equal(unpack_record(target), unpack_record(result))
   end
 
   ###############################################################################

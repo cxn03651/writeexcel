@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Workbook - A writer class for Excel Workbooks.
@@ -10,6 +11,8 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
+require 'digest/md5'
+require 'nkf'
 require 'writeexcel/biffwriter'
 require 'writeexcel/olewriter'
 require 'writeexcel/formula'
@@ -24,15 +27,17 @@ require 'writeexcel/charts/line'
 require 'writeexcel/charts/pie'
 require 'writeexcel/charts/scatter'
 require 'writeexcel/charts/stock'
-require 'writeexcel/properties'
-require 'digest/md5'
 require 'writeexcel/storage_lite'
+require 'writeexcel/compatibility'
 
 class Workbook < BIFFWriter
+  require 'writeexcel/properties'
+  require 'writeexcel/helper'
+  private :convert_to_ascii_if_ascii
+
   BOF = 11  # :nodoc:
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
 
   #
   # file is a filename (as string) or io object where to out spreadsheet data.
@@ -209,6 +214,7 @@ class Workbook < BIFFWriter
 
     @fileclosed = true
     store_workbook
+    cleanup
   end
 
   # get array of Worksheet objects
@@ -489,11 +495,13 @@ class Workbook < BIFFWriter
       end
     end
 
+    name = convert_to_ascii_if_ascii(name)
+
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
-    raise "Sheetname $name must be <= 31 chars" if name.length > limit
+    raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
 
     # Check that Unicode sheetname has an even number of bytes
-    if encoding == 1 && (name.length % 2 != 0)
+    if encoding == 1 && (name.bytesize % 2 != 0)
       raise "Odd number of bytes in Unicode worksheet name: #{name}"
     end
 
@@ -514,8 +522,9 @@ class Workbook < BIFFWriter
     end
 
     # Handle utf8 strings
-    if name =~ NonAscii
+    if name.encoding == Encoding::UTF_8
       name = NKF.nkf('-w16B0 -m0 -W', name)
+      name.force_encoding('UTF-16BE')
       encoding = 1
     end
 
@@ -956,7 +965,7 @@ class Workbook < BIFFWriter
        }
      )
 
-    index = @defined_names.length
+    index = @defined_names.size
 
     parser.set_ext_name(name, index)
   end
@@ -1016,6 +1025,9 @@ class Workbook < BIFFWriter
     # Ignore if no args were passed.
     return -1 if !params.kind_of?(Hash) || params.empty?
 
+    params.each do |k, v|
+      params[k] = convert_to_ascii_if_ascii(v) if v.kind_of?(String)
+    end
     # List of valid input parameters.
     properties = {
       :codepage      => [0x0001, 'VT_I2'      ],
@@ -1112,7 +1124,7 @@ class Workbook < BIFFWriter
     else
       strings.each do |string|
         next unless params.has_key?(string.to_sym)
-        return 0xFDE9 if params[string.to_sym] =~ NonAscii
+        return 0xFDE9 if params[string.to_sym].encoding == Encoding::UTF_8
       end
       return 0x04E4; # Default codepage, Latin 1.
     end
@@ -1248,8 +1260,6 @@ class Workbook < BIFFWriter
 
       return ole.close
     else
-      # Write the OLE file using ruby-ole if data > 7MB
-
       # Create the Workbook stream.
       stream   = 'Workbook'.unpack('C*').pack('v*')
       workbook = OLEStorageLitePPSFile.new(stream)
@@ -1327,7 +1337,7 @@ class Workbook < BIFFWriter
     offset   += mso_size
 
     @worksheets.each do |sheet|
-      offset += _bof + sheet.name.length
+      offset += _bof + sheet.name.bytesize
     end
 
     offset += _eof
@@ -1483,7 +1493,7 @@ class Workbook < BIFFWriter
           # Slurp the file into a string and do some size calcs.
           #             my $data        = do {local $/; <$fh>};
           data = fh.read
-          size        = data.length
+          size        = data.bytesize
           checksum1   = image_checksum(data, image_id)
           checksum2   = checksum1
           ref_count   = 1
@@ -1610,7 +1620,7 @@ class Workbook < BIFFWriter
     type     = 7   # Excel Blip type (MSOBLIPTYPE).
 
     # Check that the file is big enough to be a bitmap.
-    if data.length  <= 0x36
+    if data.bytesize  <= 0x36
       raise "#{filename} doesn't contain enough data."
     end
 
@@ -1657,7 +1667,7 @@ class Workbook < BIFFWriter
     type     = 5  # Excel Blip type (MSOBLIPTYPE).
 
     offset = 2;
-    data_length = data.length
+    data_length = data.bytesize
 
     # Search through the image data to find the 0xFFC0 marker. The height and
     # width are contained in the data for that sub element.
@@ -1762,21 +1772,21 @@ class Workbook < BIFFWriter
     # Fonts that are marked as '_font_only' are always stored. These are used
     # mainly for charts and may not have an associated XF record.
 
-    @formats.each do |format|
-      key = format.get_font_key
-      if format.font_only == 0 and !fonts[key].nil?
+    @formats.each do |fmt|
+      key = fmt.get_font_key
+      if fmt.font_only == 0 and !fonts[key].nil?
         # FONT has already been used
-        format.font_index = fonts[key]
+        fmt.font_index = fonts[key]
       else
         # Add a new FONT record
 
-        if format.font_only == 0
+        if fmt.font_only == 0
           fonts[key] = index
         end
 
-        format.font_index = index
+        fmt.font_index = index
         index += 1
-        font = format.get_font
+        font = fmt.get_font
         print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         append(font)
       end
@@ -2038,10 +2048,10 @@ class Workbook < BIFFWriter
   # Writes Excel BIFF BOUNDSHEET record.
   #
   def store_boundsheet(sheetname, offset, type, hidden, encoding)       #:nodoc:
-    record    = 0x0085                    # Record identifier
-    length    = 0x08 + sheetname.length   # Number of bytes to follow
+    record    = 0x0085                      # Record identifier
+    length    = 0x08 + sheetname.bytesize   # Number of bytes to follow
 
-    cch       = sheetname.length          # Length of sheet name
+    cch       = sheetname.bytesize          # Length of sheet name
 
     grbit     = type | hidden
 
@@ -2097,11 +2107,14 @@ class Workbook < BIFFWriter
     record    = 0x041E         # Record identifier
     # length                   # Number of bytes to follow
     # Char length of format string
-    cch = format.length
+    cch = format.bytesize
+
+    format = convert_to_ascii_if_ascii(format)
 
     # Handle utf8 strings
-    if format =~ NonAscii
+    if format.encoding == Encoding::UTF_8
       format = NKF.nkf('-w16B0 -m0 -W', format)
+      format.force_encoding('UTF-16BE')
       encoding = 1
     end
 
@@ -2112,14 +2125,15 @@ class Workbook < BIFFWriter
       format  = format.unpack('n*').pack('v*')
     end
 
+=begin
     # Special case to handle Euro symbol, 0x80, in non-Unicode strings.
     if encoding == 0 and format =~ /\x80/
       format   =  format.unpack('C*').pack('v*')
       format.gsub!(/\x80\x00/, "\xAC\x20")
       encoding =  1
     end
-
-    length    = 0x05 + format.length
+=end
+    length    = 0x05 + format.bytesize
 
     header    = [record, length].pack("vv")
     data      = [ifmt, cch, encoding].pack("vvC")
@@ -2187,7 +2201,7 @@ class Workbook < BIFFWriter
     ext = ext_refs.keys.sort
 
     # Change the external refs from stringified "1:1" to [1, 1]
-    ext.map! {|e| e.split(/:/).map! {|e| e.to_i} }
+    ext.map! {|e| e.split(/:/).map! {|v| v.to_i} }
 
     cxti        = ext.size                 # Number of Excel XTI structures
     rgxti       = ''                       # Array of XTI structures
@@ -2198,7 +2212,7 @@ class Workbook < BIFFWriter
     end
 
     data        = [cxti].pack("v") + rgxti
-    header    = [record, data.length].pack("vv")
+    header    = [record, data.bytesize].pack("vv")
 
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
@@ -2212,10 +2226,12 @@ class Workbook < BIFFWriter
   #       and _store_name_long().
   #
   def store_name(name, encoding, sheet_index, formula)  # :nodoc:
+    formula = convert_to_ascii_if_ascii(formula)
+
     record          = 0x0018        # Record identifier
 
-    text_length     = name.length
-    formula_length  = formula.length
+    text_length     = name.bytesize
+    formula_length  = formula.bytesize
 
     # UTF-16 string length is in characters not bytes.
     text_length       /= 2 if encoding != 0
@@ -2230,9 +2246,9 @@ class Workbook < BIFFWriter
 
     # Set grbit built-in flag and the hidden flag for autofilters.
     if text_length == 1
-      grbit = 0x0020 if name[0] == 0x06  # Print area
-      grbit = 0x0020 if name[0] == 0x07  # Print titles
-      grbit = 0x0021 if name[0] == 0x0D  # Autofilter
+      grbit = 0x0020 if name.ord == 0x06  # Print area
+      grbit = 0x0020 if name.ord == 0x07  # Print titles
+      grbit = 0x0021 if name.ord == 0x0D  # Autofilter
     end
 
     data  = [grbit].pack("v")
@@ -2249,7 +2265,7 @@ class Workbook < BIFFWriter
     data += name
     data += formula
 
-    header = [record, data.length].pack("vv")
+    header = [record, data.bytesize].pack("vv")
 
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
@@ -2505,7 +2521,7 @@ class Workbook < BIFFWriter
     end
 
     @defined_names.each do |defined_name|
-      length += 19 + defined_name[:name].length + defined_name[:formula].length
+      length += 19 + defined_name[:name].bytesize + defined_name[:formula].bytesize
     end
 
     @worksheets.each do |worksheet|
@@ -2620,7 +2636,7 @@ class Workbook < BIFFWriter
 
     strings.each do |string|
 
-      string_length = string.length
+      string_length = string.bytesize
       encoding      = string.unpack("xx C")[0]
       split_string  = 0
 
@@ -2788,7 +2804,7 @@ class Workbook < BIFFWriter
     return if strings.empty?
     strings.each do |string|
 
-      string_length = string.length
+      string_length = string.bytesize
       encoding      = string.unpack("xx C")[0]
       split_string  = 0
       bucket_string = 0 # Used to track EXTSST bucket offsets.
@@ -3017,7 +3033,7 @@ class Workbook < BIFFWriter
     data   += store_mso_opt
     data   += store_mso_split_menu_colors
 
-    length  = data.length
+    length  = data.bytesize
     header  = [record, length].pack("vv")
 
     add_mso_drawing_group_continue(header + data)
@@ -3051,7 +3067,7 @@ class Workbook < BIFFWriter
     @ignore_continue = 1
 
     # Case 1 above. Just return the data as it is.
-    if data.length <= limit
+    if data.bytesize <= limit
       print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(data)
       return
@@ -3065,7 +3081,7 @@ class Workbook < BIFFWriter
     append(tmp)
 
     # Add MSODRAWINGGROUP and CONTINUE blocks for Case 3 above.
-    while data.length > limit
+    while data.bytesize > limit
       if block_count == 1
         # Add extra MSODRAWINGGROUP block header.
         header = [mso_group, limit].pack("vv")
@@ -3082,7 +3098,7 @@ class Workbook < BIFFWriter
     end
 
     # Last CONTINUE block for remaining data. Case 2 and 3 above.
-    header = [continue, data.length].pack("vv")
+    header = [continue, data.bytesize].pack("vv")
     print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
@@ -3291,4 +3307,9 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
   private :store_mso_split_menu_colors
+
+  def cleanup
+    super
+    sheets.each { |sheet| sheet.cleanup }
+  end
 end

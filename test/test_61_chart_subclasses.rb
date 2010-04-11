@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'helper'
 require 'stringio'
 
@@ -16,6 +17,10 @@ class TC_chart_subclasses < Test::Unit::TestCase
   def setup
     io = StringIO.new
     @workbook = WriteExcel.new(io)
+  end
+
+  def teardown
+    @workbook.close
   end
 
   def test_store_chart_type_of_column
@@ -86,9 +91,5 @@ class TC_chart_subclasses < Test::Unit::TestCase
       ).join(' ')
     got = unpack_record(chart.store_chart_type)
     assert_equal(expected, got)
-  end
-
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
 end

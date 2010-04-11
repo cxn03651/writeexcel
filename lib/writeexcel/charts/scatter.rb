@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Scatter - A writer class for Excel Scatter charts.
@@ -110,9 +111,9 @@ class Chart
   #    )
   #
   #     # Add a chart title and some axis labels.
-  #     chart.set_title (name => 'Results of sample analysis')
-  #     chart.set_x_axis(name => 'Test number')
-  #     chart.set_y_axis(name => 'Sample length (cm)')
+  #     chart.set_title (:name => 'Results of sample analysis')
+  #     chart.set_x_axis(:name => 'Test number')
+  #     chart.set_y_axis(:name => 'Sample length (cm)')
   #
   #     # Insert the chart into the worksheet (with an offset).
   #     worksheet.insert_chart('D2', chart, 25, 10)

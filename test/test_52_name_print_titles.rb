@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##########################################################################
 # test_52_name_print_titles.rb
 #
@@ -17,6 +18,10 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     @test_file = StringIO.new
     @workbook   = WriteExcel.new(@test_file)
     @workbook.not_using_tmpfile
+  end
+
+  def teardown
+    @workbook.close
   end
 
   def test_repeat_rows_for_top_row_only
@@ -340,14 +345,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
-  end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
 
   ###############################################################################

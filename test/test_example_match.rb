@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'helper'
 require 'stringio'
 
@@ -8,13 +9,6 @@ class TC_example_match < Test::Unit::TestCase
 
   def setup
     @file  = StringIO.new
-=begin
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file  = File.join(Dir.tmpdir, path)
-    @filename  = @test_file
-    @filename2 = @test_file + "2"
-=end
   end
 
   def test_a_simple
@@ -2297,7 +2291,7 @@ workbook.close
     worksheet1.write('C6', cell_text, text_wrap)
     worksheet1.write_comment('C6', comment, :encoding => 1)
 
-    # UTF-8 string in perl 5.8.
+    # UTF-8 string.
     worksheet1.set_row(8, 50)
     cell_text = 'This is a UTF-8 string.'
     comment   = '☺'  # chr 0x263a in perl.
@@ -2544,7 +2538,7 @@ workbook.close
     worksheet7.write_comment(cell, comment, :author  => author,
                                             :author_encoding => 1)
 
-    # UTF-8 string in perl 5.8.
+    # UTF-8 string.
     author    = '☺'    # smiley
     cell      = 'C12'
     cell_text = "Move the mouse over this cell and you will see 'Cell commented " +
@@ -3132,14 +3126,5 @@ workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/right_to_left.xls", @file)
-  end
-
-  def compare_file(expected, target)
-    # target is StringIO object.
-    assert_equal(
-      open(expected, 'rb') { |f| f.read },
-      target.string,
-      "#{File.basename(expected)} doesn't match."
-    )
   end
 end

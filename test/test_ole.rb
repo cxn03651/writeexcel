@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 require 'helper'
+require 'stringio'
 
 class TC_OLE < Test::Unit::TestCase
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @file  = File.join(Dir.tmpdir, path)
+    @file  = StringIO.new
     @ole  = OLEWriter.new(@file)
   end
 
@@ -102,6 +102,5 @@ class TC_OLE < Test::Unit::TestCase
 
   def teardown
     @ole.close rescue nil
-    File.unlink(@file) if File.exists?(@file)
   end
 end

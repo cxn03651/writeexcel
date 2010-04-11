@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'helper'
 require 'stringio'
 
@@ -17,6 +18,10 @@ class TC_ChartGeneric < Test::Unit::TestCase
     io = StringIO.new
     workbook = WriteExcel.new(io)
     @chart = Chart.new('', 'chart', 0, 0, 0, 0, 0, 0, 0, 0)
+  end
+
+  def teardown
+    @chart.cleanup
   end
 
   ###############################################################################

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # A test for WriteExcel.
@@ -23,9 +24,6 @@ require 'stringio'
 class TC_extsst < Test::Unit::TestCase
 
   def setup
-    io = StringIO.new
-    @workbook    = WriteExcel.new(io)
-
     @tests = [  # Unique     Number of   Bucket
       # strings    buckets       size
       [0,          0,               8],
@@ -61,17 +59,19 @@ class TC_extsst < Test::Unit::TestCase
 
   def test_to_tests
     @tests.each do |test|
+      io = StringIO.new
+      workbook    = WriteExcel.new(io)
+      workbook.not_using_tmpfile
 
       str_unique = test[0]
 
-      @workbook.str_unique = str_unique
-      @workbook.calculate_extsst_size
+      workbook.str_unique = str_unique
+      workbook.calculate_extsst_size
 
-      assert_equal(test[1], @workbook.extsst_buckets,
+      assert_equal(test[1], workbook.extsst_buckets,
         " \tBucket number for #{str_unique}  strings")
-      assert_equal(test[2], @workbook.extsst_bucket_size,
+      assert_equal(test[2], workbook.extsst_bucket_size,
         " \tBucket size for #{str_unique}  strings")
     end
   end
-
 end

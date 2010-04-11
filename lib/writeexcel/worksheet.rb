@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Worksheet - A writer class for Excel Worksheets.
@@ -29,12 +30,13 @@ end
 #  worksheet2 = workbook.add_worksheet
 #
 class Worksheet < BIFFWriter
+  require 'writeexcel/helper'
+  private :convert_to_ascii_if_ascii
 
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/   # :nodoc:
 
   ###############################################################################
   #
@@ -190,9 +192,7 @@ class Worksheet < BIFFWriter
   # Add data to the beginning of the workbook (note the reverse order)
   # and to the end of the workbook.
   #
-  def close(*sheetnames) #:nodoc:
-    num_sheets = sheetnames.size
-
+  def close #:nodoc:
     ################################################
     # Prepend in reverse order!!
     #
@@ -301,6 +301,10 @@ class Worksheet < BIFFWriter
     # Prepend the BOF and INDEX records
     store_index
     store_bof(0x0010)
+  end
+
+  def cleanup
+    super
   end
 
   ###############################################################################
@@ -452,8 +456,8 @@ class Worksheet < BIFFWriter
   # itself. In Excel a cell's locked property is on by default.
   #
   #     # Set some format properties
-  #     unlocked  = workbook.add_format(locked => 0)
-  #     hidden    = workbook.add_format(hidden => 1)
+  #     unlocked  = workbook.add_format(:locked => 0)
+  #     hidden    = workbook.add_format(:hidden => 1)
   #
   #     # Enable worksheet protection
   #     worksheet.protect
@@ -1653,15 +1657,17 @@ class Worksheet < BIFFWriter
   # distribution.
   #
   def set_header(string = '', margin = 0.50, encoding = 0)
+    string = convert_to_ascii_if_ascii(string)
+
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
-    if string =~ NonAscii
-      string = NKF.nkf('-w16B0 -m0 -W', string)
+    if string.encoding == Encoding::UTF_8
+      string = string.encode('UTF-16BE')
       encoding = 1
     end
 
-    if string.length >= limit
+    if string.bytesize >= limit
       #           carp 'Header string must be less than 255 characters';
       return
     end
@@ -1678,15 +1684,17 @@ class Worksheet < BIFFWriter
   # there.
   #
   def set_footer(string = '', margin = 0.50, encoding = 0)
+    string = convert_to_ascii_if_ascii(string)
+
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
-    if string =~ NonAscii
-      string = NKF.nkf('-w16B0 -m0 -W', string)
+    if string.encoding == Encoding::UTF_8
+      string = string.encode('UTF-16BE')
       encoding = 1
     end
 
-    if string.length >= limit
+    if string.bytesize >= limit
       #           carp 'Header string must be less than 255 characters';
       return
     end
@@ -2205,8 +2213,8 @@ class Worksheet < BIFFWriter
   #    worksheet.write('A1', '01209')
   #
   #    # Write a zero padded number using a format: 01209
-  #    my $format1 = $workbook.add_format(num_format => '00000')
-  #    $worksheet.write('A2', '01209', $format1)
+  #    my $format1 = $workbook.add_format(:num_format => '00000')
+  #    $worksheet.write('A2', '01209', format1)
   #
   #    # Write explicitly as a string: 01209
   #    $worksheet.write_string('A3', '01209')
@@ -2235,8 +2243,8 @@ class Worksheet < BIFFWriter
   # behaviour. To avoid this you can use the text format @:
   #
   #    # Format as a string (01209)
-  #    format2 = workbook.add_format(num_format => '@')
-  #    worksheet.write_string('A5', '01209', $format2)
+  #    format2 = workbook.add_format(:num_format => '@')
+  #    worksheet.write_string('A5', '01209', format2)
   #
   # The keep_leading_zeros() property is off by default. The keep
   #_leading_zeros() method takes 0 or 1 as an argument. It defaults to 1 if
@@ -2264,12 +2272,12 @@ class Worksheet < BIFFWriter
   # Individual comments can be made visible using the visible parameter of the
   # write_comment method (see above):
   #
-  #     worksheet.write_comment('C3', 'Hello', visible => 1)
+  #     worksheet.write_comment('C3', 'Hello', :visible => 1)
   #
   # If all of the cell comments have been made visible you can hide individual
   # comments as follows:
   #
-  #     worksheet.write_comment('C3', 'Hello', visible => 0)
+  #     worksheet.write_comment('C3', 'Hello', :visible => 0)
   #
   #
   def show_comments(val = nil)
@@ -2669,7 +2677,7 @@ class Worksheet < BIFFWriter
   # number. To get around this you can use the Excel text format @:
   #
   #    # Format as a string. Doesn't change to a number when edited
-  #    format1 = workbook.add_format(num_format => '@')
+  #    format1 = workbook.add_format(:num_format => '@')
   #    worksheet.write_string('A2', '01209', format1)
   #
   def write_string(*args)
@@ -2686,14 +2694,18 @@ class Worksheet < BIFFWriter
     row         = args[0]                       # Zero indexed row
     col         = args[1]                       # Zero indexed column
     str         = args[2].to_s
-    strlen      = str.length
+    strlen      = str.bytesize
     xf          = xf_record_index(row, col, args[3])   # The cell format
     encoding    = 0x0
     str_error   = 0
 
+    str = convert_to_ascii_if_ascii(str)
+
     # Handle utf8 strings
-    if str =~ NonAscii
-      return write_utf16le_string(row, col, NKF.nkf('-w16L0 -m0 -W', str), args[3])
+    if str.encoding == Encoding::UTF_8
+      str_utf16le = NKF.nkf('-w16L0 -m0 -W', str)
+      str_utf16le.force_encoding('UTF-16LE')
+      return write_utf16le_string(row, col, str_utf16le, args[3])
     end
 
     # Check that row and col are valid and store max and min values
@@ -3131,7 +3143,7 @@ class Worksheet < BIFFWriter
     #           croak $@       # Re-raise the error
     #       }
 
-    formlen = formula.length     # Length of the binary string
+    formlen = formula.bytesize     # Length of the binary string
     length  = 0x16 + formlen     # Length of the record data
 
     header  = [record, length].pack("vv")
@@ -3398,7 +3410,7 @@ class Worksheet < BIFFWriter
   # several optional key/value pairs to control the format of the comment.
   # For example:
   #
-  #     worksheet.write_comment('C3', 'Hello', visible => 1, author => 'Ruby')
+  #     worksheet.write_comment('C3', 'Hello', :visible => 1, :author => 'Ruby')
   #
   # Most of these options are quite specific and in general the default comment
   # behaviour will be all that you need. However, should you need greater
@@ -3770,7 +3782,7 @@ class Worksheet < BIFFWriter
 
     while (!chars.empty?)
       char = chars.pop   # LS char first
-      col += (char[0] - "A"[0] +1) * (26**expn)
+      col += (char.ord - "A".ord + 1) * (26 ** expn)
       expn += 1
     end
 
@@ -3890,19 +3902,21 @@ class Worksheet < BIFFWriter
   # be calculated by the module and thus must be supplied by the user.
   #
   def get_formula_string(string)       #:nodoc:
+    string = convert_to_ascii_if_ascii(string)
+
     record    = 0x0207         # Record identifier
     length    = 0x00           # Bytes to follow
     # string                   # Formula string.
-    strlen    = string.length  # Length of the formula string (chars).
+    strlen    = string.bytesize  # Length of the formula string (chars).
     encoding  = 0              # String encoding.
 
-    # Handle utf8 strings in perl 5.8.
-    if string =~ NonAscii
-      string = NKF.nkf('-w16B0 -m0 -W', string)
+    # Handle utf8 strings.
+    if string.encoding == Encoding::UTF_8
+      string = string.encode('UTF-16BE')
       encoding = 1
     end
 
-    length    = 0x03 + string.length  # Length of the record data
+    length    = 0x03 + string.bytesize  # Length of the record data
 
     header    = [record, length].pack("vv")
     data      = [strlen, encoding].pack("vC")
@@ -3968,8 +3982,8 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
-  #    repeat_formula(row, col,    formula, format, ([pattern => replace, ...]) -> Fixnum
-  #    repeat_formula(A1_notation, formula, format, ([pattern => replace, ...]) -> Fixnum
+  #    repeat_formula(row, col,    formula, format, ([:pattern => replace, ...]) -> Fixnum
+  #    repeat_formula(A1_notation, formula, format, ([:pattern => replace, ...]) -> Fixnum
   #
   # Write a formula to the specified row and column (zero indexed) by
   # substituting _pattern_ _replacement_ pairs in the formula created via
@@ -4121,7 +4135,7 @@ class Worksheet < BIFFWriter
 
 
     # As a temporary and undocumented measure we allow the user to specify the
-    # result of the formula by appending a result => $value pair to the end
+    # result of the formula by appending a result => value pair to the end
     # of the arguments.
     value = nil
     if pairs[-2] == 'result'
@@ -4162,7 +4176,7 @@ class Worksheet < BIFFWriter
     return -2 if check_dimensions(row, col) != 0
 
 
-    formlen   = formula.length     # Length of the binary string
+    formlen   = formula.bytesize     # Length of the binary string
     length    = 0x16 + formlen     # Length of the record data
 
     header    = [record, length].pack("vv")
@@ -4358,6 +4372,8 @@ class Worksheet < BIFFWriter
   # See also write_url() above for a general description and return values.
   #
   def write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
+    url = convert_to_ascii_if_ascii(url)
+
     record = 0x01B8                       # Record identifier
     length = 0x00000                      # Bytes to follow
 
@@ -4381,23 +4397,23 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    if url =~ NonAscii
-      url = NKF.nkf('-w16B0 -m0 -W', url)
-      url += "\0\0"   # URL is null terminated.
+    if url.encoding == Encoding::UTF_8
+      url = url.encode('UTF-16BE')
+      url += "\0\0".force_encoding('UTF-16BE')   # URL is null terminated.
       encoding = 1
     end
 
     # Convert an Ascii URL type and to a null terminated wchar string.
     if encoding == 0
-      url += "\0"
+      url  = url.force_encoding('BINARY') + "\0".force_encoding('BINARY')
       url  = url.unpack('c*').pack('v*')
     end
 
     # Pack the length of the URL
-    url_len     = [url.length].pack("V")
+    url_len     = [url.bytesize].pack("V")
 
     # Calculate the data length
-    length         = 0x34 + url.length
+    length         = 0x34 + url.bytesize
 
     # Pack the header data
     header      = [record, length].pack("vv")
@@ -4451,10 +4467,10 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    if str =~ NonAscii
+    if str.encoding == Encoding::UTF_8
       # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
       url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
-      url      = NKF.nkf('-w16L0 -m0 -W', url) + "\0\0"  # URL is null terminated.
+      url = url.encode('UTF-16LE') + "\0\0"  # URL is null terminated.
       encoding = 1
     end
 
@@ -4468,7 +4484,7 @@ class Worksheet < BIFFWriter
     url_len     = [(url.length/2).to_i].pack("V")
 
     # Calculate the data length
-    length         = 0x24 + url.length
+    length         = 0x24 + url.bytesize
 
     # Pack the header data
     header      = [record, length].pack("vv")
@@ -4535,7 +4551,7 @@ class Worksheet < BIFFWriter
 
     unless sheet.nil?
       link_type |= 0x08
-      sheet_len  = [sheet.length + 0x01].pack("V")
+      sheet_len  = [sheet.bytesize + 0x01].pack("V")
       sheet      = sheet.split('').join("\0") + "\0\0\0"
     else
       sheet_len   = ''
@@ -4559,9 +4575,9 @@ class Worksheet < BIFFWriter
     dir_long = dir_long.split('').join("\0") + "\0"
 
     # Pack the lengths of the dir strings
-    dir_short_len = [dir_short.length].pack("V")
-    dir_long_len  = [dir_long.length].pack("V")
-    stream_len    = [dir_long.length + 0x06].pack("V")
+    dir_short_len = [dir_short.bytesize].pack("V")
+    dir_long_len  = [dir_long.bytesize].pack("V")
+    stream_len    = [dir_long.bytesize + 0x06].pack("V")
 
     # Pack the undocumented parts of the hyperlink stream
     unknown1 = ['D0C9EA79F9BACE118C8200AA004BA90B02000000'].pack("H*")
@@ -4586,7 +4602,7 @@ class Worksheet < BIFFWriter
     sheet
 
     # Pack the header data
-    length      = data.length
+    length      = data.bytesize
     header      = [record, length].pack("vv")
 
     # Write the packed data
@@ -4633,7 +4649,7 @@ class Worksheet < BIFFWriter
 
     unless sheet.nil?
       link_type |= 0x08
-      sheet_len  = [sheet.length + 0x01].pack("V")
+      sheet_len  = [sheet.bytesize + 0x01].pack("V")
       sheet      = sheet.split('').join("\0") + "\0\0\0"
     else
       sheet_len   = ''
@@ -4648,7 +4664,7 @@ class Worksheet < BIFFWriter
     dir_long      += "\0"
 
     # Pack the lengths of the dir string
-    dir_long_len  = [dir_long.length].pack("V")
+    dir_long_len  = [dir_long.bytesize].pack("V")
 
     # Store the long dir name as a wchar string (non-null terminated)
     dir_long = dir_long.split('').join("\0") + "\0"
@@ -4666,7 +4682,7 @@ class Worksheet < BIFFWriter
     sheet
 
     # Pack the header data
-    length      = data.length
+    length      = data.bytesize
     header      = [record, length].pack("vv")
 
     # Write the packed data
@@ -5318,8 +5334,8 @@ class Worksheet < BIFFWriter
       cch       = 1     # The following byte
       rgch      = 0x02  # Self reference
     else
-      length    = 0x02 + sheetname.length
-      cch       = sheetname.length
+      length    = 0x02 + sheetname.bytesize
+      cch       = sheetname.bytesize
       rgch      = 0x03  # Reference to a sheet in the current workbook
     end
 
@@ -5464,7 +5480,7 @@ class Worksheet < BIFFWriter
     # length                          # Bytes to follow
 
     str         = @header             # header string
-    cch         = str.length          # Length of header string
+    cch         = str.bytesize          # Length of header string
     encoding    = @header_encoding    # Character encoding
 
 
@@ -5474,7 +5490,7 @@ class Worksheet < BIFFWriter
     # Change the UTF-16 name from BE to LE
     str         = str.unpack('v*').pack('n*') if encoding != 0
 
-    length      = 3 + str.length
+    length      = 3 + str.bytesize
 
     header      = [record, length].pack('vv')
     data        = [cch, encoding].pack('vC')
@@ -5495,7 +5511,7 @@ class Worksheet < BIFFWriter
     # length;                                     # Bytes to follow
 
     str         = @footer             # footer string
-    cch         = str.length                 # Length of ooter string
+    cch         = str.bytesize                 # Length of ooter string
     encoding    = @footer_encoding    # Character encoding
 
 
@@ -5505,7 +5521,7 @@ class Worksheet < BIFFWriter
     # Change the UTF-16 name from BE to LE
     str         = str.unpack('v*').pack('n*') if encoding != 0
 
-    length      = 3 + str.length
+    length      = 3 + str.bytesize
 
     header      = [record, length].pack('vv')
     data        =  [cch, encoding].pack('vC')
@@ -6026,15 +6042,15 @@ class Worksheet < BIFFWriter
         # Write the cell data in each row and sum their lengths for the
         # cell offsets.
         #
-        written_rows.each do |row|
+        written_rows.each do |rw|
           cell_offset = 0
 
-          if @table[row]
-            @table[row].each do |col|
-              next unless col
+          if @table[rw]
+            @table[rw].each do |clm|
+              next unless clm
               print "sheet #{@name} : #{__FILE__}(#{__LINE__}) cell_data\n" if defined?($debug)
-              append(col)
-              length = col.length
+              append(clm)
+              length = clm.bytesize
               row_offset  += length
               cell_offset += length
             end
@@ -6496,7 +6512,7 @@ class Worksheet < BIFFWriter
 
     row         = args[0]                         # Zero indexed row
     col         = args[1]                         # Zero indexed column
-    strlen      = args[2].length
+    strlen      = args[2].bytesize
     str         = args[2]
     xf          = xf_record_index(row, col, args[3]) # The cell format
     encoding    = 0x1
@@ -6511,7 +6527,7 @@ class Worksheet < BIFFWriter
       str_error = -3
     end
 
-    num_bytes = str.length
+    num_bytes = str.bytesize
     num_chars = (num_bytes / 2).to_i
 
     # Check for a valid 2-byte char string.
@@ -6697,7 +6713,7 @@ class Worksheet < BIFFWriter
     data += [grbit].pack('v')
     data += doper_1 + doper_2 + string_1 + string_2
 
-    length  = data.length
+    length  = data.bytesize
     header  = [record, length].pack('vv')
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
@@ -6727,17 +6743,18 @@ class Worksheet < BIFFWriter
       !(token.to_s  =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
       # Excel treats all tokens as strings if the operator is equality, =.
       string = token.to_s
+      string = convert_to_ascii_if_ascii(string)
 
       encoding = 0
-      length   = string.length
+      length   = string.bytesize
 
       # Handle utf8 strings
-      if string =~ NonAscii
-        string = NKF.nkf('-w16B0 -m0 -W', string)
+      if string.encoding == Encoding::UTF_8
+        string = string.encode('UTF-16BE')
         encodign = 1
       end
 
-      string = [encoding].pack('C') + string
+      string = [encoding].pack('C') + string.force_encoding('BINARY')
       doper  = pack_string_doper(operator, length)
     else
       string = ''
@@ -6981,7 +6998,7 @@ class Worksheet < BIFFWriter
           store_mso_client_anchor(2, *vertices)  +
           store_mso_client_data
       end
-      length      = data.length
+      length      = data.bytesize
       header      = [record, length].pack("vv")
       print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
@@ -7075,7 +7092,7 @@ class Worksheet < BIFFWriter
                       store_mso_client_anchor(0, *vertices)  +
                       store_mso_client_data()
           end
-          length      = data.length
+          length      = data.bytesize
           header      = [record, length].pack("vv")
           print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
           append(header, data)
@@ -7182,7 +7199,7 @@ class Worksheet < BIFFWriter
           store_mso_client_data()
         spid += 1
       end
-      length      = data.length
+      length      = data.bytesize
       header      = [record, length].pack("vv")
       print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
@@ -7240,7 +7257,7 @@ class Worksheet < BIFFWriter
       visible     = comments[i][6]
       color       = comments[i][7]
       vertices    = comments[i][8]
-      str_len     = str.length
+      str_len     = str.bytesize
       str_len     = str_len / 2 if encoding != 0 # Num of chars not bytes.
       formats     = [[0, 9], [str_len, 0]]
 
@@ -7267,7 +7284,7 @@ class Worksheet < BIFFWriter
         store_mso_opt_comment(0x80, visible, color)    +
         store_mso_client_anchor(3, *vertices)          +
         store_mso_client_data
-      length      = data.length
+      length      = data.bytesize
       header      = [record, length].pack("vv")
       print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
@@ -7840,11 +7857,11 @@ class Worksheet < BIFFWriter
     # so that UTF16 chars occur in the same block.
     #
     limit = 8218
-    while string.length > limit
+    while string.bytesize > limit
       string[0 .. limit] = ""
       tmp_str = string
-      data    = [encoding].pack("C") + tmp_str
-      length  = data.length
+      data    = [encoding].pack("C") + tmp_str.force_encoding('ASCII-8BIT')
+      length  = data.bytesize
       header  = [record, length].pack('vv')
 
       print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
@@ -7852,8 +7869,8 @@ class Worksheet < BIFFWriter
     end
 
     # Pack the record.
-    data    = [encoding].pack("C") + string
-    length  = data.length
+    data    = [encoding].pack("C") + string.force_encoding('ASCII-8BIT')
+    length  = data.bytesize
     header  = [record, length].pack('vv')
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
@@ -7880,7 +7897,7 @@ class Worksheet < BIFFWriter
       data += [a_ref[0], a_ref[1], 0x0].pack('vvV')
     end
 
-    length  = data.length
+    length  = data.bytesize
     header  = [record, length].pack("vv")
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
@@ -7901,6 +7918,7 @@ class Worksheet < BIFFWriter
   # Write the worksheet NOTE record that is part of cell comments.
   #
   def store_note(row, col, obj_id, author = nil, author_enc = nil, visible = nil)   #:nodoc:
+    ruby_19 { author = [author].pack('a*') if author.ascii_only? }
     record      = 0x001C               # Record identifier
     length      = 0x000C               # Bytes to follow
 
@@ -7917,16 +7935,16 @@ class Worksheet < BIFFWriter
     end
 
     # Get the number of chars in the author string (not bytes).
-    num_chars  = author.length
+    num_chars  = author.bytesize
     num_chars  = num_chars / 2 if author_enc != 0 && !author_enc.nil?
 
     # Null terminate the author string.
-    author += "\0"
+    author = author.force_encoding('BINARY') + "\0".force_encoding('BINARY')
 
     # Pack the record.
     data    = [row, col, visible, obj_id, num_chars, author_enc].pack("vvvvvC")
 
-    length  = data.length + author.length
+    length  = data.bytesize + author.bytesize
     header  = [record, length].pack("vv")
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
@@ -7942,6 +7960,8 @@ class Worksheet < BIFFWriter
   # well as calculating the comment object position and vertices.
   #
   def comment_params(row, col, string, options = {})   #:nodoc:
+    string = convert_to_ascii_if_ascii(string)
+
     default_width   = 128
     default_height  = 74
 
@@ -7971,24 +7991,29 @@ class Worksheet < BIFFWriter
     params[:height] = default_height if params[:height].nil? || params[:height] == 0
 
     # Check that utf16 strings have an even number of bytes.
+    convert_to_ascii_if_ascii(string)
     if params[:encoding] != 0
-      raise "Uneven number of bytes in comment string" if string.length % 2 != 0
+      raise "Uneven number of bytes in comment string" if string.bytesize % 2 != 0
 
       # Change from UTF-16BE to UTF-16LE
       string = string.unpack('n*').pack('v*')
     # Handle utf8 strings
-    elsif string =~ NonAscii
+    elsif string.encoding == Encoding::UTF_8
       string = NKF.nkf('-w16L0 -m0 -W', string)
+      string.force_encoding('UTF-16LE')
       params[:encoding] = 1
     end
 
+    params[:author] = convert_to_ascii_if_ascii(params[:author])
+
     if params[:author_encoding] != 0
-      raise "Uneven number of bytes in author string"  if params[:author].length % 2 != 0
+      raise "Uneven number of bytes in author string"  if params[:author].bytesize % 2 != 0
 
       # Change from UTF-16BE to UTF-16LE
       params[:author] = params[:author].unpack('n*').pack('v*')
-    elsif params[:author] =~ NonAscii
+    elsif params[:author].encoding == Encoding::UTF_8
       params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
+      params[:author].force_encoding('UTF-16LE')
       params[:author_encoding] = 1
     end
 
@@ -7996,7 +8021,7 @@ class Worksheet < BIFFWriter
     max_len = 32767
     max_len = max_len * 2 if params[:encoding] != 0
 
-    if string.length > max_len
+    if string.bytesize > max_len
       string = string[0 .. max_len]
     end
 
@@ -8899,7 +8924,7 @@ class Worksheet < BIFFWriter
       formula_2                    +
       dv_data
 
-    header = [record, data.length].pack('vv')
+    header = [record, data.bytesize].pack('vv')
 
     print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
@@ -8919,26 +8944,26 @@ class Worksheet < BIFFWriter
 
     # The default empty string is "\0".
     if string.nil? || string == ''
-      string = "\0"
+      string = "\0".encode('BINARY')
     end
 
     # Excel limits DV captions to 32 chars and messages to 255.
-    if string.length > max_length
+    if string.bytesize > max_length
       string = string[0 .. max_length-1]
     end
 
-    str_length = string.length
+    str_length = string.bytesize
+
+    string = convert_to_ascii_if_ascii(string)
 
     # Handle utf8 strings
-    if string =~ NonAscii
-      $KCODE = 'u'
-      require 'jcode'
-      str_length = string.jlength
-      string = NKF.nkf('-w16L0 -m0 -W', string)
+    if string.encoding == Encoding::UTF_8
+      str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
+      string = string.encode('UTF-16LE')
       encoding = 1
     end
 
-    [str_length, encoding].pack('vC') + string
+    [str_length, encoding].pack('vC') + string.force_encoding('BINARY')
   end
 #  private :pack_dv_string
 
@@ -8999,6 +9024,4 @@ class Worksheet < BIFFWriter
 
     [formula.length, unused].pack('vv') + formula
   end
-#  private :pack_dv_formula
-
 end

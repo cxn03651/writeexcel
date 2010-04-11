@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##############################################################################
 #
 # Format - A class for defining Excel formatting.
@@ -10,7 +11,6 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'nkf'
 
 #
 # Format - A class for defining Excel formatting.
@@ -40,7 +40,6 @@ class Format
     'white'   => 0x09,
     'yellow'  => 0x0D,
   }   # :nodoc:
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/  # :nodoc:
 
   ###############################################################################
   #
@@ -196,7 +195,7 @@ class Format
     @diag_border    = other.diag_border
 
     @font_only      = other.font_only
-end
+  end
 
   ###############################################################################
   #
@@ -389,13 +388,15 @@ end
     rgch       = @font
     encoding   = @font_encoding
 
+    rgch = convert_to_ascii_if_ascii(rgch)
+
     # Handle utf8 strings
-    if rgch =~ NonAscii
-      rgch = NKF.nkf('-w16B0 -m0 -W', rgch)
+    if rgch.encoding == Encoding::UTF_8
+      rgch = rgch.encode('UTF-16BE')
       encoding = 1
     end
 
-    cch = rgch.length
+    cch = rgch.bytesize
     #
     # Handle Unicode font names.
     if (encoding == 1)
@@ -405,7 +406,7 @@ end
     end
 
     record     = 0x31
-    length     = 0x10 + rgch.length
+    length     = 0x10 + rgch.bytesize
     reserved   = 0x00
 
     grbit      = 0x00

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'helper'
 
 class TC_add_worksheet < Test::Unit::TestCase

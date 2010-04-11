@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##########################################################################
 # test_22_mso_drawing_group.rb
 #
@@ -16,6 +17,7 @@
 #
 #########################################################################
 require 'helper'
+require 'stringio'
 
 class TC_mso_drawing_group < Test::Unit::TestCase
 
@@ -24,10 +26,7 @@ class TC_mso_drawing_group < Test::Unit::TestCase
   end
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    @workbook   = WriteExcel.new(@test_file)
+    @workbook   = WriteExcel.new(StringIO.new)
     @worksheet1 = @workbook.add_worksheet
     @worksheet2 = @workbook.add_worksheet
     @worksheet3 = @workbook.add_worksheet
@@ -35,7 +34,6 @@ class TC_mso_drawing_group < Test::Unit::TestCase
 
   def teardown
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
 =begin

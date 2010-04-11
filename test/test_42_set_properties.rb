@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##########################################################################
 # test_42_set_properties.rb
 #
@@ -16,6 +17,7 @@
 #
 #########################################################################
 require 'helper'
+require 'stringio'
 
 class TC_set_properties < Test::Unit::TestCase
 
@@ -24,13 +26,10 @@ class TC_set_properties < Test::Unit::TestCase
   end
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
+    @test_file = StringIO.new
   end
 
   def teardown
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_same_as_previous_plus_creation_date
@@ -86,7 +85,7 @@ class TC_set_properties < Test::Unit::TestCase
 
     ###############################################################################
     #
-    # Test 3. _get_property_set_codepage() for perl 5.8 utf8 strings.
+    # Test 3. _get_property_set_codepage() for utf8 strings.
     #
     params =   {
                     :title       => 'Title' + smiley,
@@ -130,7 +129,7 @@ class TC_set_properties < Test::Unit::TestCase
                               02 00 00 00 E4 04 00 00
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -153,7 +152,7 @@ class TC_set_properties < Test::Unit::TestCase
                               1E 00 00 00 06 00 00 00 54 69 74 6C 65 00 00 00
                 ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -179,7 +178,7 @@ class TC_set_properties < Test::Unit::TestCase
                               53 75 62 6A 65 63 74 00
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -207,7 +206,7 @@ class TC_set_properties < Test::Unit::TestCase
                               1E 00 00 00 07 00 00 00 41 75 74 68 6F 72 00 00
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -238,7 +237,7 @@ class TC_set_properties < Test::Unit::TestCase
                               4B 65 79 77 6F 72 64 73 00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -272,7 +271,7 @@ class TC_set_properties < Test::Unit::TestCase
                               65 6E 74 73 00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -309,7 +308,7 @@ class TC_set_properties < Test::Unit::TestCase
                             00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -353,7 +352,7 @@ class TC_set_properties < Test::Unit::TestCase
                             80 74 89 21 52 02 C9 01
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -396,7 +395,7 @@ class TC_set_properties < Test::Unit::TestCase
                               80 74 89 21 52 02 C9 01
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -420,7 +419,7 @@ class TC_set_properties < Test::Unit::TestCase
                               00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record( workbook.summary )
+  result     = unpack_record(workbook.summary)
   assert_equal(target, result, caption)
 
   workbook.close

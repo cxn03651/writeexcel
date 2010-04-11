@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##########################################################################
 # test_23_note.rb
 #
@@ -11,24 +12,21 @@
 #
 #########################################################################
 require 'helper'
+require 'stringio'
 
 class TC_note < Test::Unit::TestCase
 
   def setup
-    t = Time.now.strftime("%Y%m%d")
-    path = "temp#{t}-#{$$}-#{rand(0x100000000).to_s(36)}"
-    @test_file           = File.join(Dir.tmpdir, path)
-    @workbook   = WriteExcel.new(@test_file)
+    @workbook   = WriteExcel.new(StringIO.new)
     @worksheet  = @workbook.add_worksheet
   end
 
   def teardown
     @workbook.close
-    File.unlink(@test_file) if FileTest.exist?(@test_file)
   end
 
   def test_blank_author_name
-    data = @worksheet.comment_params(2,0,'Test')
+    data = @worksheet.comment_params(2, 0, 'Test')
     row      = data[0]
     col      = data[1]
     author   = data[4]
@@ -41,7 +39,7 @@ class TC_note < Test::Unit::TestCase
         1C 00 0C 00 02 00 00 00 00 00 01 00 00 00 00 00
     ).join(' ')
     result = unpack_record(
-        @worksheet.store_note(row,col,obj_id,author,encoding,visible))
+        @worksheet.store_note(row, col, obj_id, author, encoding, visible))
     assert_equal(target, result, caption)
   end
 

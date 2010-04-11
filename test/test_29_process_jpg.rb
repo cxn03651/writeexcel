@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##########################################################################
 # test_29_process_jpg.rb
 #
@@ -24,6 +25,10 @@ class TC_29_process_jpg < Test::Unit::TestCase
     @test_file  = StringIO.new
     @workbook   = WriteExcel.new(@test_file)
     @type       = 5   # Excel Blip type (MSOBLIPTYPE).
+  end
+
+  def teardown
+    @workbook.close
   end
 
   def test_valid_jpg_image_1

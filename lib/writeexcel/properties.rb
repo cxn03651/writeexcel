@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###############################################################################
 #
 # Properties - A module for creating Excel property sets.
@@ -36,12 +37,12 @@ def create_summary_property_set(properties)       #:nodoc:
     property_data, offsets = pack_property_data(properties)
 
     # Create the property type and offsets based on the previous calculation.
-    0.upto(properties.size-1) do |i|
+    0.upto(properties.size - 1) do |i|
       property_offsets += [properties[i][0], offsets[i]].pack('VV')
     end
 
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
-    size = 8 + (property_offsets).length + property_data.length
+    size = 8 + (property_offsets).bytesize + property_data.bytesize
     size = [size].pack('V')
 
     byte_order         +
@@ -88,7 +89,7 @@ def create_doc_summary_property_set(properties)       #:nodoc:
     end
 
     # Size of size (4 bytes) +  num_property (4 bytes) + the data structures.
-    data_len = 8 + (property_offsets_0).length + property_data_0.length
+    data_len = 8 + (property_offsets_0).bytesize + property_data_0.bytesize
     size_0   = [data_len].pack('V')
 
     # The second property set offset is at the end of the first property set.
@@ -162,7 +163,7 @@ def pack_property_data(properties, offset = 0)       #:nodoc:
         raise "Unknown property type: '#{property_type}'\n"
       end
 
-      offset += packed_property.length
+      offset += packed_property.bytesize
       data   += packed_property
     end
 
@@ -189,31 +190,21 @@ end
 #
 def pack_VT_LPSTR(str, codepage)       #:nodoc:
     type        = 0x001E
-    string      = str + "\0"
+    string      = str.force_encoding('BINARY') + "\0".encode('BINARY')
 
     if codepage == 0x04E4
       # Latin1
-      byte_string = string
-      length      = byte_string.length
+      length = string.bytesize
     elsif codepage == 0xFDE9
-      # UTF-8
-      nonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]^` ~\0\n]/
-      if string =~ nonAscii
-#        $KCODE = 'u'
-        require 'jcode'
-        byte_string = string
-        length = byte_string.jlength
-      else
-        byte_string = string
-        length = byte_string.length
-      end
+      # utf8
+      length = string.bytesize
     else
-      raise "Unknown codepage: codepage\n"
+      raise "Unknown codepage: #{codepage}\n"
     end
 
     # Pack the data.
     data  = [type, length].pack('VV')
-    data += byte_string
+    data += string
 
     # The packed data has to null padded to a 4 byte boundary.
     if (extra = length % 4) != 0
