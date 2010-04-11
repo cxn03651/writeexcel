@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{writeexcel}
-  s.version = "0.3.5"
+  s.version = "0.4.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Hideo NAKAMURA"]
-  s.date = %q{2010-04-07}
+  s.date = %q{2010-04-11}
   s.description = %q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
   s.email = %q{cxn03651@msj.biglobe.ne.jp}
   s.extra_rdoc_files = [
@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     ".document",
+     ".gitattributes",
      ".gitignore",
      "README.rdoc",
      "Rakefile",
@@ -91,10 +92,12 @@ Gem::Specification.new do |s|
      "lib/writeexcel/charts/pie.rb",
      "lib/writeexcel/charts/scatter.rb",
      "lib/writeexcel/charts/stock.rb",
+     "lib/writeexcel/compatibility.rb",
      "lib/writeexcel/excelformula.y",
      "lib/writeexcel/excelformulaparser.rb",
      "lib/writeexcel/format.rb",
      "lib/writeexcel/formula.rb",
+     "lib/writeexcel/helper.rb",
      "lib/writeexcel/olewriter.rb",
      "lib/writeexcel/properties.rb",
      "lib/writeexcel/storage_lite.rb",
@@ -206,6 +209,7 @@ Gem::Specification.new do |s|
      "test/test_62_chart_formats.rb",
      "test/test_63_chart_area_formats.rb",
      "test/test_biff.rb",
+     "test/test_compatibility.rb",
      "test/test_example_match.rb",
      "test/test_format.rb",
      "test/test_formula.rb",
@@ -213,6 +217,7 @@ Gem::Specification.new do |s|
      "test/test_storage_lite.rb",
      "test/test_workbook.rb",
      "test/test_worksheet.rb",
+     "utils/add_magic_comment.rb",
      "writeexcel.gemspec",
      "writeexcel.rdoc"
   ]
@@ -256,6 +261,7 @@ Gem::Specification.new do |s|
      "test/test_62_chart_formats.rb",
      "test/test_63_chart_area_formats.rb",
      "test/test_biff.rb",
+     "test/test_compatibility.rb",
      "test/test_example_match.rb",
      "test/test_format.rb",
      "test/test_formula.rb",
