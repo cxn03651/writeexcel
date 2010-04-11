@@ -641,10 +641,10 @@ class Chart < Worksheet
     formula = parser.parse_tokens(tokens)
 
     # Return formula for a single cell as used by title and series name.
-    return formula if formula[0] == 0x3A
+    return formula if formula.ord == 0x3A
 
     # Extract the range from the parse formula.
-    if formula[0] == 0x3B
+    if formula.ord == 0x3B
         ptg, ext_ref, row_1, row_2, col_1, col_2 = formula.unpack('Cv5')
 
         # TODO. Remove high bit on relative references.
