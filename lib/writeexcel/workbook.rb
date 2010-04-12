@@ -531,14 +531,16 @@ class Workbook < BIFFWriter
       error   = 0;
 
       if    encd_a == 0 and encd_b == 0
-        error  = 1 if name_a.downcase == name_b.downcase
+        error  = (name_a.downcase == name_b.downcase)
       elsif encd_a == 0 and encd_b == 1
-        name_a = name_a.unpack("C*").pack("n*")
-        error  = 1 if name_a.downcase == name_b.downcase
+        name_a = ascii_to_16be(name_a)
+        error  = (name_a.downcase == name_b.downcase)
       elsif encd_a == 1 and encd_b == 0
-        name_b = name_b.unpack("C*").pack("n*")
-        error  = 1 if name_a.downcase == name_b.downcase
+        name_b = ascii_to_16be(name_b)
+        error  = (name_a.downcase == name_b.downcase)
       elsif encd_a == 1 and encd_b == 1
+        # TODO : not converted yet.
+
         #  We can't easily do a case insensitive test of the UTF16 names.
         # As a special case we check if all of the high bytes are nulls and
         # then do an ASCII style case insensitive test.
@@ -554,9 +556,8 @@ class Workbook < BIFFWriter
         #    $error  = 1 if lc($name_a) eq lc($name_b);
         # }
       end
-      if error != 0
-        raise "Worksheet name '#{name}', with case ignored, " +
-        "is already in use"
+      if error
+        raise "Worksheet name '#{name}', with case ignored, is already in use"
       end
     end
     [name,  encoding]
@@ -3195,5 +3196,10 @@ class Workbook < BIFFWriter
   def utf8_to_16le(utf8)
     utf16le = NKF.nkf('-w16L0 -m0 -W', utf8)
     utf16le.force_encoding('UTF-16LE')
+  end
+
+  def ascii_to_16be(ascii)
+    ascii.unpack("C*").pack("n*")
+    ascii.force_encoding('UTF-16BE')
   end
 end
