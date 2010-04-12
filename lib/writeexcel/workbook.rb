@@ -108,7 +108,6 @@ class Workbook < BIFFWriter
     @extsst_buckets        = 0
     @extsst_bucket_size    = 0
 
-    @ext_ref_count         = 0
     @ext_refs              = {}
 
     @mso_clusters          = []
@@ -1169,7 +1168,7 @@ class Workbook < BIFFWriter
     # NOTE: If any records are added between here and EOF the
     # _calc_sheet_offsets() should be updated to include the new length.
     store_country
-    if @ext_ref_count != 0
+    if @ext_refs.keys.size != 0
       store_supbook
       store_externsheet
       store_names
@@ -2167,8 +2166,7 @@ class Workbook < BIFFWriter
     record      = 0x0017                   # Record identifier
 
     # Get the external refs
-    ext_refs = @ext_refs
-    ext = ext_refs.keys.sort
+    ext = @ext_refs.keys.sort
 
     # Change the external refs from stringified "1:1" to [1, 1]
     ext.map! {|e| e.split(/:/).map! {|v| v.to_i} }
@@ -2468,7 +2466,6 @@ class Workbook < BIFFWriter
   #
   def calculate_extern_sizes  # :nodoc:
     ext_refs        = @parser.get_ext_sheets
-    ext_ref_count   = ext_refs.keys.size
     length          = 0
     index           = 0
 
@@ -2476,10 +2473,7 @@ class Workbook < BIFFWriter
       index   = 0
       key     = "#{index}:#{index}"
 
-      unless ext_refs.has_key?(key)
-        ext_refs[key] = ext_ref_count
-        ext_ref_count += 1
-      end
+      add_ext_refs(ext_refs, key) unless ext_refs.has_key?(key)
     end
 
     @defined_names.each do |defined_name|
@@ -2490,34 +2484,23 @@ class Workbook < BIFFWriter
 
       rowmin      = worksheet.title_rowmin
       colmin      = worksheet.title_colmin
-      filter      = worksheet.filter_count
       key         = "#{index}:#{index}"
       index += 1
 
       # Add area NAME records
       #
-      if !worksheet.print_rowmin.nil?
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
+      if worksheet.print_rowmin
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       end
 
       # Add title  NAME records
       #
       if rowmin and colmin
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
-
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 46
       elsif rowmin or colmin
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       else
         # TODO, may need this later.
@@ -2525,17 +2508,14 @@ class Workbook < BIFFWriter
 
       # Add Autofilter  NAME records
       #
-      if filter != 0
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
+      unless worksheet.filter_count == 0
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       end
     end
 
     # Update the ref counts.
-    @ext_ref_count = ext_ref_count
+    ext_ref_count = ext_refs.keys.size
     @ext_refs      = ext_refs
 
     # If there are no external refs then we don't write, SUPBOOK, EXTERNSHEET
@@ -2551,6 +2531,11 @@ class Workbook < BIFFWriter
 
     length
   end
+
+  def add_ext_refs(ext_refs, key)
+    ext_refs[key] = ext_refs.keys.size
+  end
+  private :add_ext_refs
 
   ###############################################################################
   #
