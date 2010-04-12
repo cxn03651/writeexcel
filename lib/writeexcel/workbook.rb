@@ -104,7 +104,7 @@ class Workbook < BIFFWriter
     }
     @str_array             = []
     @str_block_sizes       = []
-    @extsst_offsets        = []
+    @extsst_offsets        = []  # array of [global_offset, local_offset]
     @extsst_buckets        = 0
     @extsst_bucket_size    = 0
 
@@ -2771,13 +2771,11 @@ class Workbook < BIFFWriter
     strings.each do |string|
 
       string_length = string.bytesize
-      bucket_string = 0 # Used to track EXTSST bucket offsets.
 
       # Check if the string is at the start of a EXTSST bucket.
       extsst_str_num += 1
-      if extsst_str_num % @extsst_bucket_size == 0
-        bucket_string = 1
-      end
+      # Used to track EXTSST bucket offsets.
+      bucket_string = (extsst_str_num % @extsst_bucket_size == 0)
 
       # Block length is the total length of the strings that will be
       # written out in a single SST or CONTINUE block.
@@ -2788,12 +2786,9 @@ class Workbook < BIFFWriter
       if block_length < continue_limit
 
         # Store location of EXTSST bucket string.
-        if bucket_string != 0
-          global_offset   = @datasize
-          local_offset    = @datasize - sst_block_start
-
-          @extsst_offsets.push([global_offset, local_offset])
-          bucket_string = 0
+        if bucket_string
+          @extsst_offsets.push([@datasize, @datasize - sst_block_start])
+          bucket_string = false
         end
 
         append(string)
@@ -2815,16 +2810,12 @@ class Workbook < BIFFWriter
           tmp = string[0, space_remaining]
 
           # Store location of EXTSST bucket string.
-          if bucket_string != 0
-            global_offset   = @datasize
-            local_offset    = @datasize - sst_block_start
-
-            @extsst_offsets.push([global_offset, local_offset])
-            bucket_string = 0
+          if bucket_string
+            @extsst_offsets.push([@datasize, @datasize - sst_block_start])
+            bucket_string = false
           end
 
           append(tmp)
-
 
           # The remainder will be written in the next block(s)
           string = string[space_remaining .. string.length-1]
@@ -2867,13 +2858,9 @@ class Workbook < BIFFWriter
         if block_length < continue_limit
 
           # Store location of EXTSST bucket string.
-          if bucket_string != 0
-            global_offset   = @datasize
-            local_offset    = @datasize - sst_block_start
-
-            @extsst_offsets.push([global_offset, local_offset])
-
-            bucket_string = 0
+          if bucket_string
+            @extsst_offsets.push([@datasize, @datasize - sst_block_start])
+            bucket_string = false
           end
           append(string)
 
