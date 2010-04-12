@@ -17,6 +17,8 @@
 #
 # See CELL FORMATTING, FORMAT METHODS, COLOURS IN EXCEL in WriteExcel's rdoc.
 #
+require 'writeexcel/compatibility'
+
 class Format
 
   COLORS = {

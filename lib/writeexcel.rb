@@ -10,7 +10,24 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
+require 'writeexcel/biffwriter'
+require 'writeexcel/olewriter'
+require 'writeexcel/formula'
+require 'writeexcel/format'
+require 'writeexcel/worksheet'
 require "writeexcel/workbook"
+require 'writeexcel/chart'
+require 'writeexcel/charts/area'
+require 'writeexcel/charts/bar'
+require 'writeexcel/charts/column'
+require 'writeexcel/charts/external'
+require 'writeexcel/charts/line'
+require 'writeexcel/charts/pie'
+require 'writeexcel/charts/scatter'
+require 'writeexcel/charts/stock'
+require 'writeexcel/storage_lite'
+require 'writeexcel/compatibility'
+require 'writeexcel/debug_info'
 #
 # = WriteExcel - Write to a cross-platform Excel binary file.
 #
