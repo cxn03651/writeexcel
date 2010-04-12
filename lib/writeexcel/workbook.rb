@@ -514,8 +514,7 @@ class Workbook < BIFFWriter
 
     # Handle utf8 strings
     if name.encoding == Encoding::UTF_8
-      name = NKF.nkf('-w16B0 -m0 -W', name)
-      name.force_encoding('UTF-16BE')
+      name = utf8_to_16be(name)
       encoding = 1
     end
 
@@ -540,30 +539,20 @@ class Workbook < BIFFWriter
         name_b = name_b.unpack("C*").pack("n*")
         error  = 1 if name_a.downcase == name_b.downcase
       elsif encd_a == 1 and encd_b == 1
-        #            # We can do a true case insensitive test with Perl 5.8 and utf8.
-        #            if ($] >= 5.008) {
-        #               $name_a = Encode::decode("UTF-16BE", $name_a);
-        #               $name_b = Encode::decode("UTF-16BE", $name_b);
-        #               $error  = 1 if lc($name_a) eq lc($name_b);
-        #            }
-        #            else {
-        #               # We can't easily do a case insensitive test of the UTF16 names.
-        #               # As a special case we check if all of the high bytes are nulls and
-        #               # then do an ASCII style case insensitive test.
+        #  We can't easily do a case insensitive test of the UTF16 names.
+        # As a special case we check if all of the high bytes are nulls and
+        # then do an ASCII style case insensitive test.
         #
-        #               # Strip out the high bytes (funkily).
-        #               my $hi_a = grep {ord} $name_a =~ /(.)./sg;
-        #               my $hi_b = grep {ord} $name_b =~ /(.)./sg;
+        # Strip out the high bytes (funkily).
+        # my $hi_a = grep {ord} $name_a =~ /(.)./sg;
+        # my $hi_b = grep {ord} $name_b =~ /(.)./sg;
         #
-        #               if ($hi_a or $hi_b) {
-        #                  $error  = 1 if    $name_a  eq    $name_b;
-        #               }
-        #               else {
-        #                  $error  = 1 if lc($name_a) eq lc($name_b);
-        #               }
-        #            }
-        #         }
-        #         # If any of the cases failed we throw the error here.
+        # if ($hi_a or $hi_b) {
+        #    $error  = 1 if    $name_a  eq    $name_b;
+        # }
+        # else {
+        #    $error  = 1 if lc($name_a) eq lc($name_b);
+        # }
       end
       if error != 0
         raise "Worksheet name '#{name}', with case ignored, " +
@@ -2085,8 +2074,7 @@ class Workbook < BIFFWriter
 
     # Handle utf8 strings
     if format.encoding == Encoding::UTF_8
-      format = NKF.nkf('-w16B0 -m0 -W', format)
-      format.force_encoding('UTF-16BE')
+      format = utf8_to_16be(format)
       encoding = 1
     end
 
@@ -2408,10 +2396,7 @@ class Workbook < BIFFWriter
     length          = 0x0002               # Number of bytes to follow
     cv              = @codepage            # The code page
 
-    header          = [record, length].pack("vv")
-    data            = [cv].pack("v")
-
-    append(header, data)
+    store_common(record, length, cv)
   end
   private :store_codepage
 
@@ -2427,9 +2412,7 @@ class Workbook < BIFFWriter
     country_default = @country
     country_win_ini = @country
 
-    header          = [record, length].pack("vv")
-    data            = [country_default, country_win_ini].pack("vv")
-    append(header, data)
+    store_common(record, length, country_default, country_win_ini)
   end
   private :store_country
 
@@ -2444,18 +2427,17 @@ class Workbook < BIFFWriter
     length          = 0x0002               # Number of bytes to follow
     hide            = @hideobj             # Option to hide objects
 
-    header          = [record, length].pack("vv")
-    data            = [hide].pack("v")
-
-    append(header, data)
+    store_common(record, length, hide)
   end
   private :store_hideobj
 
-  ###############################################################################
-  ###############################################################################
-  ###############################################################################
+  def store_common(record, length, *data)
+    header = [record, length].pack("vv")
+    add_data   = [*data].pack("v*")
 
-
+    append(header, add_data)
+  end
+  private :store_common
 
   ###############################################################################
   #
@@ -3203,5 +3185,15 @@ class Workbook < BIFFWriter
   def cleanup
     super
     sheets.each { |sheet| sheet.cleanup }
+  end
+
+  def utf8_to_16be(utf8)
+    utf16be = NKF.nkf('-w16B0 -m0 -W', utf8)
+    utf16be.force_encoding('UTF-16BE')
+  end
+
+  def utf8_to_16le(utf8)
+    utf16le = NKF.nkf('-w16L0 -m0 -W', utf8)
+    utf16le.force_encoding('UTF-16LE')
   end
 end
