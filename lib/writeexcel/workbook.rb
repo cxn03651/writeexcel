@@ -1987,24 +1987,24 @@ class Workbook < BIFFWriter
     record    = 0x003D                 # Record identifier
     length    = 0x0012                 # Number of bytes to follow
 
-    xWn       = 0x0000                 # Horizontal position of window
-    yWn       = 0x0000                 # Vertical position of window
-    dxWn      = 0x355C                 # Width of window
-    dyWn      = 0x30ED                 # Height of window
+    x_pos     = 0x0000                 # Horizontal position of window
+    y_pos     = 0x0000                 # Vertical position of window
+    dx_win    = 0x355C                 # Width of window
+    dy_win    = 0x30ED                 # Height of window
 
     grbit     = 0x0038                 # Option flags
     ctabsel   = @selected              # Number of workbook tabs selected
-    wTabRatio = 0x0258                 # Tab to scrollbar ratio
+    tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
-    itabFirst = @sinfo[:firstsheet]    # 1st displayed worksheet
-    itabCur   = @sinfo[:activesheet]   # Active worksheet
+    tab_cur   = @sinfo[:activesheet]   # Active worksheet
+    tab_first = @sinfo[:firstsheet]    # 1st displayed worksheet
 
     header    = [record, length].pack("vv")
     data      = [
-                  xWn, yWn, dxWn, dyWn,
+                  x_pos, y_pos, dx_win, dy_win,
                   grbit,
-                  itabCur, itabFirst,
-                  ctabsel, wTabRatio
+                  tab_cur, tab_first,
+                  ctabsel, tab_ratio
                 ].pack("vvvvvvvvv")
 
     append(header, data)
@@ -2145,11 +2145,11 @@ class Workbook < BIFFWriter
     record      = 0x01AE                   # Record identifier
     length      = 0x0004                   # Number of bytes to follow
 
-    ctabs       = @worksheets.size         # Number of worksheets
-    stVirtPath  = 0x0401                   # Encoded workbook filename
+    tabs        = @worksheets.size         # Number of worksheets
+    virt_path   = 0x0401                   # Encoded workbook filename
 
     header    = [record, length].pack("vv")
-    data      = [ctabs, stVirtPath].pack("vv")
+    data      = [tabs, virt_path].pack("vv")
 
     append(header, data)
   end
@@ -2260,16 +2260,16 @@ class Workbook < BIFFWriter
     length          = 0x001b       # Number of bytes to follow
 
     grbit           = 0x0020       # Option flags
-    chKey           = 0x00         # Keyboard shortcut
+    chkey           = 0x00         # Keyboard shortcut
     cch             = 0x01         # Length of text name
     cce             = 0x000b       # Length of text definition
     unknown01       = 0x0000       #
     ixals           = index + 1    # Sheet index
     unknown02       = 0x00         #
-    cchCustMenu     = 0x00         # Length of cust menu text
-    cchDescription  = 0x00         # Length of description text
-    cchHelptopic    = 0x00         # Length of help topic text
-    cchStatustext   = 0x00         # Length of status bar text
+    cch_cust_menu   = 0x00         # Length of cust menu text
+    cch_description = 0x00         # Length of description text
+    cch_helptopic   = 0x00         # Length of help topic text
+    cch_statustext  = 0x00         # Length of status bar text
     rgch            = type         # Built-in name type
     unknown03       = 0x3b         #
 
@@ -2277,16 +2277,16 @@ class Workbook < BIFFWriter
 
     header          = [record, length].pack("vv")
     data            = [grbit].pack("v")
-    data           += [chKey].pack("C")
+    data           += [chkey].pack("C")
     data           += [cch].pack("C")
     data           += [cce].pack("v")
     data           += [unknown01].pack("v")
     data           += [ixals].pack("v")
     data           += [unknown02].pack("C")
-    data           += [cchCustMenu].pack("C")
-    data           += [cchDescription].pack("C")
-    data           += [cchHelptopic].pack("C")
-    data           += [cchStatustext].pack("C")
+    data           += [cch_cust_menu].pack("C")
+    data           += [cch_description].pack("C")
+    data           += [cch_helptopic].pack("C")
+    data           += [cch_statustext].pack("C")
     data           += [rgch].pack("C")
     data           += [unknown03].pack("C")
     data           += [ext_ref].pack("v")
@@ -2322,16 +2322,16 @@ class Workbook < BIFFWriter
     length          = 0x002a       # Number of bytes to follow
 
     grbit           = 0x0020       # Option flags
-    chKey           = 0x00         # Keyboard shortcut
+    chkey           = 0x00         # Keyboard shortcut
     cch             = 0x01         # Length of text name
     cce             = 0x001a       # Length of text definition
     unknown01       = 0x0000       #
     ixals           = index + 1    # Sheet index
     unknown02       = 0x00         #
-    cchCustMenu     = 0x00         # Length of cust menu text
-    cchDescription  = 0x00         # Length of description text
-    cchHelptopic    = 0x00         # Length of help topic text
-    cchStatustext   = 0x00         # Length of status bar text
+    cch_cust_menu   = 0x00         # Length of cust menu text
+    cch_description = 0x00         # Length of description text
+    cch_helptopic   = 0x00         # Length of help topic text
+    cch_statustext  = 0x00         # Length of status bar text
     rgch            = type         # Built-in name type
 
     unknown03       = 0x29
@@ -2340,16 +2340,16 @@ class Workbook < BIFFWriter
 
     header          = [record, length].pack("vv")
     data            = [grbit].pack("v")
-    data           += [chKey].pack("C")
+    data           += [chkey].pack("C")
     data           += [cch].pack("C")
     data           += [cce].pack("v")
     data           += [unknown01].pack("v")
     data           += [ixals].pack("v")
     data           += [unknown02].pack("C")
-    data           += [cchCustMenu].pack("C")
-    data           += [cchDescription].pack("C")
-    data           += [cchHelptopic].pack("C")
-    data           += [cchStatustext].pack("C")
+    data           += [cch_cust_menu].pack("C")
+    data           += [cch_description].pack("C")
+    data           += [cch_helptopic].pack("C")
+    data           += [cch_statustext].pack("C")
     data           += [rgch].pack("C")
 
     # Column definition
