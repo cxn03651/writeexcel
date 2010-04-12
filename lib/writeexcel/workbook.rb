@@ -2603,10 +2603,7 @@ class Workbook < BIFFWriter
     continue       = 0
 
     strings.each do |string|
-
       string_length = string.bytesize
-      encoding      = string.unpack("xx C")[0]
-      split_string  = 0
 
       # Block length is the total length of the strings that will be
       # written out in a single SST or CONTINUE block.
@@ -2619,44 +2616,14 @@ class Workbook < BIFFWriter
         next
       end
 
-
       # Deal with the cases where the next string to be written will exceed
       # the CONTINUE boundary. If the string is very long it may need to be
       # written in more than one CONTINUE record.
-      #
+      encoding      = string.unpack("xx C")[0]
+      split_string  = 0
       while block_length >= continue_limit
-
-        # We need to avoid the case where a string is continued in the first
-        # n bytes that contain the string header information.
-        #
-        header_length   = 3 # Min string + header size -1
-        space_remaining = continue_limit -written -continue
-
-
-        # Unicode data should only be split on char (2 byte) boundaries.
-        # Therefore, in some cases we need to reduce the amount of available
-        # space by 1 byte to ensure the correct alignment.
-        align = 0
-
-        # Only applies to Unicode strings
-        if encoding == 1
-          # Min string + header size -1
-          header_length = 4
-
-          if space_remaining > header_length
-            # String contains 3 byte header => split on odd boundary
-            if split_string == 0 and space_remaining % 2 != 1
-              space_remaining -= 1
-              align = 1
-              # Split section without header => split on even boundary
-            elsif split_string != 0 and space_remaining % 2 == 1
-              space_remaining -= 1
-              align = 1
-            end
-
-            split_string = 1
-          end
-        end
+        header_length, space_remaining, align, split_string =
+          _split_string_setup(encoding, split_string, continue_limit, written, continue)
 
         if space_remaining > header_length
           # Write as much as possible of the string in the current block
@@ -2718,6 +2685,38 @@ class Workbook < BIFFWriter
   end
   private :calculate_shared_string_sizes
 
+  def _split_string_setup(encoding, split_string, continue_limit, written, continue)
+    # We need to avoid the case where a string is continued in the first
+    # n bytes that contain the string header information.
+    header_length   = 3 # Min string + header size -1
+    space_remaining = continue_limit - written - continue
+
+    # Unicode data should only be split on char (2 byte) boundaries.
+    # Therefore, in some cases we need to reduce the amount of available
+    # space by 1 byte to ensure the correct alignment.
+    align = 0
+
+    # Only applies to Unicode strings
+    if encoding == 1
+      # Min string + header size -1
+      header_length = 4
+      if space_remaining > header_length
+        # String contains 3 byte header => split on odd boundary
+        if split_string == 0 and space_remaining % 2 != 1
+          space_remaining -= 1
+          align = 1
+          # Split section without header => split on even boundary
+        elsif split_string != 0 and space_remaining % 2 == 1
+          space_remaining -= 1
+          align = 1
+        end
+        split_string = 1
+      end
+    end
+    [header_length, space_remaining, align, split_string]
+  end
+  private :_split_string_setup
+
   ###############################################################################
   #
   # _store_shared_strings()
@@ -2772,8 +2771,6 @@ class Workbook < BIFFWriter
     strings.each do |string|
 
       string_length = string.bytesize
-      encoding      = string.unpack("xx C")[0]
-      split_string  = 0
       bucket_string = 0 # Used to track EXTSST bucket offsets.
 
       # Check if the string is at the start of a EXTSST bucket.
@@ -2807,40 +2804,11 @@ class Workbook < BIFFWriter
       # Deal with the cases where the next string to be written will exceed
       # the CONTINUE boundary. If the string is very long it may need to be
       # written in more than one CONTINUE record.
-      #
+      encoding      = string.unpack("xx C")[0]
+      split_string  = 0
       while block_length >= continue_limit
-
-        # We need to avoid the case where a string is continued in the first
-        # n bytes that contain the string header information.
-        #
-        header_length   = 3 # Min string + header size -1
-        space_remaining = continue_limit -written -continue
-
-
-        # Unicode data should only be split on char (2 byte) boundaries.
-        # Therefore, in some cases we need to reduce the amount of available
-        # space by 1 byte to ensure the correct alignment.
-        align = 0
-
-        # Only applies to Unicode strings
-        if encoding == 1
-          # Min string + header size -1
-          header_length = 4
-
-          if space_remaining > header_length
-            # String contains 3 byte header => split on odd boundary
-            if split_string == 0 and space_remaining % 2 != 1
-              space_remaining -= 1
-              align = 1
-              # Split section without header => split on even boundary
-            elsif split_string != 0 and space_remaining % 2 == 1
-              space_remaining -= 1
-              align = 1
-            end
-
-            split_string = 1
-          end
-        end
+        header_length, space_remaining, align, split_string =
+          _split_string_setup(encoding, split_string, continue_limit, written, continue)
 
         if space_remaining > header_length
           # Write as much as possible of the string in the current block
