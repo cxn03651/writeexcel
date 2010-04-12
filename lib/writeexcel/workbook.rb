@@ -1060,14 +1060,9 @@ class Workbook < BIFFWriter
     property_sets = []
     strings.unshift("codepage")
     strings.push("created")
-    strings.each do |property|
-      if params.has_key?(property.to_sym) && !params[property.to_sym].nil?
-        property_sets.push(
-          [ properties[property.to_sym][0],
-            properties[property.to_sym][1],
-          params[property.to_sym]  ]
-        )
-      end
+    strings.each do |string|
+      property = string.to_sym
+      property_sets.push(property_set(properties, property, params)) if params[property]
     end
 
     # Pack the property sets.
@@ -1084,14 +1079,8 @@ class Workbook < BIFFWriter
     # Create an array of property set values.
     property_sets = []
 
-    ["codepage", "category", "manager", "company"].each do |property|
-      if params.has_key?(property.to_sym) && !params[property.to_sym].nil?
-        property_sets.push(
-        [ properties[property.to_sym][0],
-          properties[property.to_sym][1],
-        params[property.to_sym]  ]
-        )
-      end
+    [:codepage, :category, :manager, :company].each do |property|
+      property_sets.push(property_set(properties, property, params)) if params[property]
     end
 
     # Pack the property sets.
@@ -1100,6 +1089,11 @@ class Workbook < BIFFWriter
     # Set a flag for when the files is written.
     @add_doc_properties = 1
   end
+
+  def property_set(properties, property, params)
+    [ properties[property][0], properties[property][1], params[property] ]
+  end
+  private :property_set
 
   ###############################################################################
   #
