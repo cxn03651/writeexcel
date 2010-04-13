@@ -149,7 +149,7 @@ class Workbook < BIFFWriter
     # Add the default format for hyperlinks
     @url_format = add_format(:color => 'blue', :underline => 1)
 
-    if file.kind_of?(String) && file != ''
+    if file.respond_to?(:to_str) && file != ''
       @fh_out      = open(file, "wb")
       @internal_fh = 1
     else
@@ -1004,10 +1004,10 @@ class Workbook < BIFFWriter
   #
   def set_properties(params)
     # Ignore if no args were passed.
-    return -1 if !params.kind_of?(Hash) || params.empty?
+    return -1 if !params.respond_to?(:to_hash) || params.empty?
 
     params.each do |k, v|
-      params[k] = convert_to_ascii_if_ascii(v) if v.kind_of?(String)
+      params[k] = convert_to_ascii_if_ascii(v) if v.respond_to?(:to_str)
     end
     # List of valid input parameters.
     properties = {
@@ -2065,7 +2065,7 @@ class Workbook < BIFFWriter
   # Writes Excel FORMAT record for non "built-in" numerical formats.
   #
   def store_num_format(format, ifmt, encoding)       #:nodoc:
-    format = format.to_s unless format.kind_of?(String)
+    format = format.to_s unless format.respond_to?(:to_str)
     record    = 0x041E         # Record identifier
     # length                   # Number of bytes to follow
     # Char length of format string

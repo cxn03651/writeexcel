@@ -27,7 +27,7 @@ class OLEWriter       #:nodoc:
 
   # Accept an IO or IO-like object or a filename (as a String)
   def initialize(arg)
-    if arg.kind_of?(String)
+    if arg.respond_to?(:to_str)
       @io = File.open(arg, "w")
     else
       @io = arg

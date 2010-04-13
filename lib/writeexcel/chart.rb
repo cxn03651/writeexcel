@@ -13,6 +13,7 @@
 #
 
 require 'writeexcel/worksheet'
+require 'writeexcel/colors'
 
 ###############################################################################
 #
@@ -694,49 +695,15 @@ class Chart < Worksheet
   # RGB colour number.
   #
   def get_color_indices(color)   # :nodoc:
-    return [nil, nil] if color.nil?
+    invalid = 0x7FFF   # return from Colors#get_color when color is invalid
 
-    colors = {
-      :aqua    => 0x0F,
-      :cyan    => 0x0F,
-      :black   => 0x08,
-      :blue    => 0x0C,
-      :brown   => 0x10,
-      :magenta => 0x0E,
-      :fuchsia => 0x0E,
-      :gray    => 0x17,
-      :grey    => 0x17,
-      :green   => 0x11,
-      :lime    => 0x0B,
-      :navy    => 0x12,
-      :orange  => 0x35,
-      :pink    => 0x21,
-      :purple  => 0x14,
-      :red     => 0x0A,
-      :silver  => 0x16,
-      :white   => 0x09,
-      :yellow  => 0x0D,
-    }
-
-    # Check for the various supported colour index/name possibilities.
-    color = color.downcase.to_sym if color.kind_of?(String)
-    if color.kind_of?(Symbol)
-      if colors.has_key?(color)
-        # Colour matches one of the supported colour names.
-        index = colors[color]
-      else
-        return [nil, nil]
-      end
-    elsif color < 8 || color > 63
-      # Return undef if index is out of range.
-      return [nil, nil]
+    index = Colors.new.get_color(color)
+    index = invalid if color.respond_to?(:coerce) && (color < 8 || color > 63)
+    if index == invalid
+      [nil, nil]
     else
-      # We should have a valid color index in a valid range.
-      index = color
+      [index, get_color_rbg(index)]
     end
-
-    rgb = get_color_rbg(index)
-    [index, rgb]
   end
 
   ###############################################################################
@@ -761,7 +728,7 @@ class Chart < Worksheet
   # defined value.
   #
   def get_line_pattern(value)   # :nodoc:
-    value = value.downcase if value.kind_of?(String)
+    value = value.downcase if value.respond_to?(:to_str)
     default = 0
 
     patterns = {
@@ -800,7 +767,7 @@ class Chart < Worksheet
   # defined value.
   #
   def get_line_weight(value)   # :nodoc:
-    value = value.downcase if value.kind_of?(String)
+    value = value.downcase if value.respond_to?(:to_str)
     default = 0
 
     weights = {
@@ -1268,7 +1235,7 @@ class Chart < Worksheet
     data  += [grbit].pack('v')
     data  += [format_index].pack('v')
     data  += [formula_length].pack('v')
-    if formula.kind_of?(Array)
+    if formula.respond_to?(:to_array)
       data += formula[0].encode('BINARY')
     else
       data += formula.encode('BINARY') unless formula.nil?

@@ -18,30 +18,9 @@
 # See CELL FORMATTING, FORMAT METHODS, COLOURS IN EXCEL in WriteExcel's rdoc.
 #
 require 'writeexcel/compatibility'
+require 'writeexcel/colors'
 
-class Format
-
-  COLORS = {
-    'aqua'    => 0x0F,
-    'cyan'    => 0x0F,
-    'black'   => 0x08,
-    'blue'    => 0x0C,
-    'brown'   => 0x10,
-    'magenta' => 0x0E,
-    'fuchsia' => 0x0E,
-    'gray'    => 0x17,
-    'grey'    => 0x17,
-    'green'   => 0x11,
-    'lime'    => 0x0B,
-    'navy'    => 0x12,
-    'orange'  => 0x35,
-    'pink'    => 0x21,
-    'purple'  => 0x14,
-    'red'     => 0x0A,
-    'silver'  => 0x16,
-    'white'   => 0x09,
-    'yellow'  => 0x0D,
-  }   # :nodoc:
+class Format < Colors
 
   ###############################################################################
   #
@@ -141,8 +120,6 @@ class Format
   # copying.
   #
   def copy(other)
-    return unless other.kind_of?(Format)
-
     # copy properties except xf, merge_range, used_merge
     # Copy properties
     @type           = other.type
@@ -638,86 +615,14 @@ class Format
 
   ###############################################################################
   #
-  # get_color(colour)
-  #
-  # Used in conjunction with the set_xxx_color methods to convert a color
-  # string into a number. Color range is 0..63 but we will restrict it
-  # to 8..63 to comply with Gnumeric. Colors 0..7 are repeated in 8..15.
-  #
-  def get_color(colour = nil)  # :nodoc:
-    # Return the default color, 0x7FFF, if undef,
-    return 0x7FFF if colour.nil?
-
-    if colour.kind_of?(Numeric)
-      if colour < 0
-        return 0x7FFF
-
-      # or an index < 8 mapped into the correct range,
-      elsif colour < 8
-        return (colour + 8).to_i
-
-      # or the default color if arg is outside range,
-      elsif colour > 63
-        return 0x7FFF
-
-      # or an integer in the valid range
-      else
-        return colour.to_i
-      end
-    elsif colour.kind_of?(String)
-      # or the color string converted to an integer,
-      if COLORS.has_key?(colour)
-        return COLORS[colour]
-
-      # or the default color if string is unrecognised,
-      else
-        return 0x7FFF
-      end
-    else
-      return 0x7FFF
-    end
-  end
-
-  ###############################################################################
-  #
   # class method    Format._get_color(colour)
   #
   #  used from Worksheet.rb
   #
   #  this is cut & copy of get_color().
   #
-  def self._get_color(colour)  # :nodoc:
-    # Return the default color, 0x7FFF, if undef,
-    return 0x7FFF if colour.nil?
-
-    if colour.kind_of?(Numeric)
-      if colour < 0
-        return 0x7FFF
-
-        # or an index < 8 mapped into the correct range,
-      elsif colour < 8
-        return (colour + 8).to_i
-
-        # or the default color if arg is outside range,
-      elsif 63 < colour
-        return 0x7FFF
-
-        # or an integer in the valid range
-      else
-        return colour.to_i
-      end
-    elsif colour.kind_of?(String)
-      # or the color string converted to an integer,
-      if COLORS.has_key?(colour)
-        return COLORS[colour]
-
-        # or the default color if string is unrecognised,
-      else
-        return 0x7FFF
-      end
-    else
-      return 0x7FFF
-    end
+  def self._get_color(color)  # :nodoc:
+    Colors.new.get_color(color)
   end
 
   ###############################################################################
@@ -748,9 +653,9 @@ class Format
   #     format.set_size(30)
   #
   def set_size(size = 1)
-    if size.kind_of?(Numeric) && size >= 1
-      @size = size.to_i
-    end
+   if size.respond_to?(:to_int) && size.respond_to?(:+) && size >= 1 # avoid Symbol
+     @size = size.to_int
+   end
   end
 
   #
@@ -811,17 +716,16 @@ class Format
   # value to 1 and use normal bold.
   #
   def set_bold(weight = nil)
+
     if weight.nil?
       weight = 0x2BC
-    elsif !weight.kind_of?(Numeric)
+    elsif !weight.respond_to?(:to_int) || !weight.respond_to?(:+) # avoid Symbol
       weight = 0x190
-    elsif weight == 1                    # Bold text
+    elsif weight == 1                       # Bold text
       weight = 0x2BC
-    elsif weight == 0                    # Normal text
+    elsif weight == 0                       # Normal text
       weight = 0x190
-    elsif weight <  0x064                # Lower bound
-      weight = 0x190
-    elsif weight >  0x3E8                # Upper bound
+    elsif weight <  0x064 || 0x3E8 < weight # Out bound
       weight = 0x190
     else
       weight = weight.to_i
@@ -1057,12 +961,7 @@ class Format
   # For further examples see the 'Alignment' worksheet created by formats.rb.
   #
   def set_align(align = 'left')
-
-    return unless align.kind_of?(String)
-
-    location = align.downcase
-
-    case location
+    case align.to_s.downcase
     when 'left'             then set_text_h_align(1)
     when 'centre', 'center' then set_text_h_align(2)
     when 'right'            then set_text_h_align(3)
@@ -1080,6 +979,7 @@ class Format
     when 'vjustify'         then set_text_v_align(3)
     when 'vdistributed'     then set_text_v_align(4)
     when 'vequal_space'     then set_text_v_align(4) # ParseExcel
+    else nil
     end
   end
 
@@ -1340,9 +1240,6 @@ class Format
   # from top to bottom.
   #
   def set_rotation(rotation)
-    # Argument should be a number
-    return unless rotation.kind_of?(Numeric)
-
     # The arg type can be a double but the Excel dialog only allows integers.
     rotation = rotation.to_i
 
@@ -1392,11 +1289,11 @@ class Format
     return if properties.empty?
     properties.each do |property|
       property.each do |key, value|
-        # Strip leading "-" from Tk style properties e.g. -color => 'red'.
-        key.sub!(/^-/, '') if key.kind_of?(String)
+        # Strip leading "-" from Tk style properties e.g. "-color" => 'red'.
+        key.sub!(/^-/, '') if key.respond_to?(:to_str)
 
         # Create a sub to set the property.
-        if value.kind_of?(String)
+        if value.respond_to?(:to_str) || !value.respond_to?(:+)
           s = "set_#{key}('#{value}')"
         else
           s = "set_#{key}(#{value})"
@@ -1688,10 +1585,10 @@ class Format
     else                            # for "set_xxx" methods
       value = args[0].nil? ? 1 : args[0]
     end
-    if value.kind_of?(String)
-      s = "#{attribute} = \"#{value.to_s}\""
+    if value.respond_to?(:to_str) || !value.respond_to?(:+)
+      s = %Q!#{attribute} = "#{value.to_s}"!
     else
-      s = "#{attribute} =   #{value.to_s}"
+      s = %Q!#{attribute} =   #{value.to_s}!
     end
     eval s
   end

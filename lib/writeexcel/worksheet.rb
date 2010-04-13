@@ -578,7 +578,7 @@ class Worksheet < BIFFWriter
     return -2 if check_dimensions(row, 0, 0, 1) != 0
 
     # Check for a format object
-    if format.kind_of?(Format)
+    if format.respond_to?(:xf_index)
       ixfe = format.xf_index
     else
       ixfe = 0x0F
@@ -1012,7 +1012,7 @@ class Worksheet < BIFFWriter
       args = substitute_cellref(*args)
     end
     raise "Incorrect number of arguments" if args.size != 6 and args.size != 7
-    raise "Format argument is not a format object" unless args[5].kind_of?(Format)
+    raise "Format argument is not a format object" unless args[5].respond_to?(:xf_index)
 
     rwFirst  = args[0]
     colFirst = args[1]
@@ -1128,8 +1128,8 @@ class Worksheet < BIFFWriter
   #
   # See the tab_colors.rb program in the examples directory of the distro.
   #
-  def set_tab_color(colour)
-    color = Format._get_color(colour)
+  def set_tab_color(color)
+    color = Colors.new.get_color(color)
     color = 0 if color == 0x7FFF # Default color.
     @tab_color = color
   end
@@ -1987,7 +1987,7 @@ class Worksheet < BIFFWriter
   # worksheet in line with an Excel internal limitation.
   #
   def set_h_pagebreaks(breaks)
-    @hbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
+    @hbreaks += breaks.respond_to?(:to_ary) ? breaks : [breaks]
   end
 
   #
@@ -2013,7 +2013,7 @@ class Worksheet < BIFFWriter
   # it will override all manual page breaks.
   #
   def set_v_pagebreaks(breaks)
-    @vbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
+    @vbreaks += breaks.respond_to?(:to_ary) ? breaks : [breaks]
   end
 
   ###############################################################################
@@ -2554,9 +2554,9 @@ class Worksheet < BIFFWriter
     end
 
     # Match an array ref.
-    if token.kind_of?(Array)
+    if token.respond_to?(:to_ary)
       return write_row(*args)
-    elsif token.kind_of?(Numeric)
+    elsif token.respond_to?(:coerce)  # Numeric
       return write_number(*args)
       # Match http, https or ftp URL
     elsif token =~ %r|^[fh]tt?ps?://|    and @writing_url == 0
@@ -3246,7 +3246,7 @@ class Worksheet < BIFFWriter
     end
 
     # Catch non array refs passed by user.
-    unless args[2].kind_of?(Array)
+    unless args[2].respond_to?(:to_ary)
       raise "Not an array ref in call to write_row() #{$!}";
     end
 
@@ -3255,7 +3255,7 @@ class Worksheet < BIFFWriter
     unless tokens.nil?
       tokens.each do |token|
         # Check for nested arrays
-        if token.kind_of?(Array)
+        if token.respond_to?(:to_ary)
           ret = write_col(row, col, token, options)
         else
           ret = write(row, col, token, options)
@@ -3350,7 +3350,7 @@ class Worksheet < BIFFWriter
     end
 
     # Catch non array refs passed by user.
-    unless args[2].kind_of?(Array)
+    unless args[2].respond_to?(:to_ary)
       raise "Not an array ref in call to write_row()";
     end
 
@@ -3698,7 +3698,7 @@ class Worksheet < BIFFWriter
   # Note: this is a function, not a method.
   #
   def xf_record_index(row, col, xf=nil)       #:nodoc:
-    if xf.kind_of?(Format)
+    if xf.respond_to?(:xf_index)
       return xf.xf_index
     elsif @row_formats.has_key?(row)
       return @row_formats[row].xf_index
@@ -3726,7 +3726,7 @@ class Worksheet < BIFFWriter
   # Ex: ("A4", "Hello") is converted to (3, 0, "Hello").
   #
   def substitute_cellref(cell, *args)       #:nodoc:
-    return [*args] if cell.kind_of?(Numeric)
+    return [*args] if cell.respond_to?(:coerce) # Numeric
 
     cell.upcase!
 
@@ -4122,7 +4122,7 @@ class Worksheet < BIFFWriter
     raise "Odd number of elements in pattern/replacement list" if pairs.size % 2 != 0
 
     # Check that formula is an array ref
-    raise "Not a valid formula" unless formula_ref.kind_of?(Array)
+    raise "Not a valid formula" unless formula_ref.respond_to?(:to_ary)
 
     tokens  = formula_ref.join("\t").split("\t")
 
@@ -4340,7 +4340,7 @@ class Worksheet < BIFFWriter
     # in order to protect the callers args. We don't use "local @_" in case of
     # perl50005 threads.
     #
-    args[5], args[6] = [ args[6], args[5] ] if args[5].kind_of?(Format)
+    args[5], args[6] = [ args[6], args[5] ] if args[5].respond_to?(:xf_index)
 
     url = args[4]
 
@@ -5154,7 +5154,7 @@ class Worksheet < BIFFWriter
     reserved = 0x00                 # Reserved
 
     # Check for a format object
-    if !format.nil? && format.kind_of?(Format)
+    if !format.nil? && format.respond_to?(:xf_index)
       ixfe = format.xf_index
     else
       ixfe = 0x0F
@@ -6150,7 +6150,7 @@ class Worksheet < BIFFWriter
     scale_x     = args[5] || 1
     scale_y     = args[6] || 1
 
-    if chart.kind_of?(Chart)
+    if chart.respond_to?(:embedded)
       print "Not a embedded style Chart object in insert_chart()" unless chart.embedded
     else
       # Assume an external bin filename.
@@ -6995,8 +6995,8 @@ class Worksheet < BIFFWriter
           width       =   526
           height      =   319
 
-          width  *= scale_x if scale_x.kind_of?(Numeric) && scale_x != 0
-          height *= scale_y if scale_y.kind_of?(Numeric) && scale_y != 0
+          width  *= scale_x if scale_x.respond_to?(:coerce) && scale_x != 0
+          height *= scale_y if scale_y.respond_to?(:coerce) && scale_y != 0
 
           # Calculate the positions of chart object.
           vertices = position_object( col,
@@ -7070,16 +7070,16 @@ class Worksheet < BIFFWriter
   # or from an external binary file (for backwards compatibility).
   #
   def store_chart_binary(chart)   #:nodoc:
-    if chart.kind_of?(Chart)
-      chart.close
-      tmp = chart.get_data
-      append(tmp)
-    else
+    if chart.respond_to?(:to_str)
       filehandle = File.open(chart, "rb")
       #      die "Couldn't open $filename in add_chart_ext(): $!.\n";
       while tmp = filehandle.read(4096)
         append(tmp)
       end
+    else
+      chart.close
+      tmp = chart.get_data
+      append(tmp)
     end
   end
   private :store_chart_binary
@@ -7961,7 +7961,7 @@ class Worksheet < BIFFWriter
 
     # Set the comment background colour.
     color = params[:color]
-    color = Format._get_color(color)
+    color = Colors.new.get_color(color)
     color = 0x50 if color == 0x7FFF  # Default color.
     params[:color] = color
 
@@ -8517,7 +8517,7 @@ class Worksheet < BIFFWriter
     return -2 if check_dimensions(row2, col2, 1, 1) != 0
 
     # Check that the last parameter is a hash list.
-    unless param.kind_of?(Hash)
+    unless param.respond_to?(:to_hash)
       #           carp "Last parameter '$param' in data_validation() must be a hash ref";
       return -3
     end
@@ -8812,7 +8812,7 @@ class Worksheet < BIFFWriter
     str_lookup      = 0            # See below.
 
     # Set the string lookup flag for 'list' validations with a string array.
-    if validation_type == 3 && formula_1.kind_of?(Array)
+    if validation_type == 3 && formula_1.respond_to?(:to_ary)
       str_lookup = 1
     end
 
@@ -8920,13 +8920,13 @@ class Worksheet < BIFFWriter
     end
 
     # Pack a list array ref as a null separated string.
-    if formula.kind_of?(Array)
+    if formula.respond_to?(:to_ary)
       formula   = formula.join("\0")
       formula   = '"' + formula + '"'
     end
 
     # Strip the = sign at the beginning of the formula string
-    formula = formula.to_s unless formula.kind_of?(String)
+    formula = formula.to_s unless formula.respond_to?(:to_str)
     formula.sub!(/^=/, '')
 
     # Parse the formula using the parser in Formula.pm
