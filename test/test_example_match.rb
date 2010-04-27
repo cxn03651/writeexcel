@@ -3127,4 +3127,18 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/right_to_left.xls", @file)
   end
+
+  def test_utf8
+    workbook = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet('シート１')
+    format = workbook.add_format(:font => 'ＭＳ 明朝')
+    worksheet.set_footer('フッター')
+    worksheet.set_header('ヘッダー')
+    worksheet.write('A1', 'ＵＴＦ８文字列', format)
+    worksheet.write('A2', '=CONCATENATE(A1,"の連結")', format)
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/utf8.xls", @file)
+  end
 end

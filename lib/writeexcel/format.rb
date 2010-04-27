@@ -371,7 +371,7 @@ class Format < Colors
 
     # Handle utf8 strings
     if rgch.encoding == Encoding::UTF_8
-      rgch = rgch.encode('UTF-16BE')
+      rgch = utf8_to_16be(rgch)
       encoding = 1
     end
 

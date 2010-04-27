@@ -1677,7 +1677,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if string.encoding == Encoding::UTF_8
-      string = string.encode('UTF-16BE')
+      string = utf8_to_16be(string)
       encoding = 1
     end
 
@@ -2696,8 +2696,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if str.encoding == Encoding::UTF_8
-      str_utf16le = NKF.nkf('-w16L0 -m0 -W', str)
-      str_utf16le.force_encoding('UTF-16LE')
+      str_utf16le = utf8_to_16le(str)
       return write_utf16le_string(row, col, str_utf16le, args[3])
     end
 
@@ -3864,7 +3863,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings.
     if string.encoding == Encoding::UTF_8
-      string = string.encode('UTF-16BE')
+      string = utf8_to_16be(string)
       encoding = 1
     end
 
@@ -6583,7 +6582,7 @@ class Worksheet < BIFFWriter
 
       # Handle utf8 strings
       if string.encoding == Encoding::UTF_8
-        string = string.encode('UTF-16BE')
+        string = utf8_to_16be(string)
         encodign = 1
       end
 
@@ -8754,7 +8753,7 @@ class Worksheet < BIFFWriter
     # Handle utf8 strings
     if string.encoding == Encoding::UTF_8
       str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
-      string = string.encode('UTF-16LE')
+      string = utf8_to_16le(string)
       encoding = 1
     end
 

@@ -574,7 +574,9 @@ class Workbook < BIFFWriter
   #
   # See the "CELL FORMATTING" section for more details about Format properties and how to set them.
   #
-  def add_format(formats = {})
+  def add_format(*args)
+    formats = {}
+    args.each { |arg| formats = formats.merge(arg) }
     format = Format.new(@xf_index, @default_formats.merge(formats))
     @xf_index += 1
     @formats.push format # Store format reference
@@ -3186,20 +3188,5 @@ class Workbook < BIFFWriter
   def cleanup
     super
     sheets.each { |sheet| sheet.cleanup }
-  end
-
-  def utf8_to_16be(utf8)
-    utf16be = NKF.nkf('-w16B0 -m0 -W', utf8)
-    utf16be.force_encoding('UTF-16BE')
-  end
-
-  def utf8_to_16le(utf8)
-    utf16le = NKF.nkf('-w16L0 -m0 -W', utf8)
-    utf16le.force_encoding('UTF-16LE')
-  end
-
-  def ascii_to_16be(ascii)
-    ascii.unpack("C*").pack("n*")
-    ascii.force_encoding('UTF-16BE')
   end
 end

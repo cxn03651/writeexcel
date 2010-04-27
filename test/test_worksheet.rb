@@ -107,5 +107,4 @@ class TC_Worksheet < Test::Unit::TestCase
   def assert_equal_filesize(target, test, msg = "Bad file size")
     assert_equal(File.size(target),File.size(test),msg)
   end
-
 end

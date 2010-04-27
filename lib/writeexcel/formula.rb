@@ -305,17 +305,20 @@ class Formula < ExcelFormulaParser       #:nodoc:
     str.sub!(/"$/,'')   # Remove trailing "
     str.gsub!(/""/,'"') # Substitute Excel's escaped double quote "" for "
 
-    length = str.bytesize
+    # number of characters in str
+    length = ruby_18 { str.gsub(/[^\WA-Za-z_\d]/, ' ').length } ||
+             ruby_19 { str.length }
 
     # Handle utf8 strings
     if str.encoding == Encoding::UTF_8
-      str = str.encode('UTF-16LE')
+      str = utf8_to_16le(str)
+      str.force_encoding('BINARY')
       encoding = 1
     end
 
     exit "String in formula has more than 255 chars\n" if length > 255
 
-    [@ptg['ptgStr'], length, encoding].pack("CCC") + str.encode('BINARY')
+    [@ptg['ptgStr'], length, encoding].pack("CCC") + str
   end
 
   ###############################################################################

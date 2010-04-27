@@ -113,4 +113,27 @@ class TC_Workbook < Test::Unit::TestCase
     ]
   end
 
+  def test_add_format_must_accept_one_or_more_hash_params
+    font    = {
+      :font   => 'ＭＳ 明朝',
+      :size   => 12,
+      :color  => 'blue',
+      :bold   => 1
+    }
+    shading = {
+      :bg_color => 'green',
+      :pattern  => 1
+    }
+    properties = font.merge(shading)
+
+    format1 = @workbook.add_format(properties)
+    format2 = @workbook.add_format(font, shading)
+    assert(format_equal?(format1, format2))
+  end
+
+  def format_equal?(f1, f2)
+    require 'yaml'
+    re = /xf_index: \d+\n/
+    YAML.dump(f1).sub(re, '') == YAML.dump(f2).sub(re, '')
+  end
 end
