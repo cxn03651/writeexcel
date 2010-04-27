@@ -1,19 +1,74 @@
-= 説明
+= 目次
+ 概要
+ 説明
+ クイックスタート
+ WORDBOOK メソッド
+ WORKSHEET メソッド
+ PAGE セットアップメソッド
+ セルフォーマッティング
+ 色の扱い
+ 日付、時刻の扱い
+ アウトライン、グルーピング
+ データの検証
+ 数式と関数
 
-Spreadsheet::WriteExcelライブラリは、エクセルのバイナリファイルを作成することができます。プラットフォームを問いません。複数のワークシートを作成することができますし、セルの書式を設定することもできます。テキスト、数値、数式、ハイパーリンク、画像を格納することが出来ます。
+== 概要
+最初の Sheet に、文字列、書式付き文字列、数値、数式を書き込んだ ruby.xls を作成するには、
+次のようにします。
 
-このライブラリで作成されるエクセルファイルは、エクセル97、2000、2002、2003と互換性があります。
+  require 'WriteExcel'
 
-このライブラリは主要なWindows、UNIX、マッキントッシュプラットフォームで動作します。作成されたファイルは、LinuxやUNIXのスプレッドシートアプリケーションであるGnumericやOpenOffice.orgとも互換性があります。
+  # エクセルワークブックオブジェクトを作成
+  workbook = WriteExcel.new('ruby.xls')
 
-このライブラリは、既存のエクセルファイルの編集には使うことができません。(See "MODIFYING AND REWRITING EXCEL FILES")
-= クイックスタート
+  # シートを追加
+  worksheet = workbook.add_worksheet
 
-Spreadsheet::WriteExcelは、エクセルの機能へのできるだけ多くのインターフェイスを提供しようとしています。結果として、インターフェイスに関する多くのドキュメントがあります。最初はどれが重要でどれがそうでないかわかりずらいでしょう。イケアの家具を組み立てるのが好みの人は、まずこの使用説明を読んでください。３つの簡単なステップです。
+  # 書式を作成
+  format = workbook.add_format # Add a format
+  format.set_bold()
+  format.set_color('red')
+  format.set_align('center')
+
+  # 文字列を書式指定有りと無しの２形式で格納。行・桁でセルを指定。
+  col = row = 0
+  worksheet.write(row, col, 'Hi Excel!', format)
+  worksheet.write(1,   col, 'Hi Excel!')
+
+  # 数値と数式を格納。A1形式でセルを指定。
+  worksheet.write('A3', 1.2345)
+  worksheet.write('A4', '=SIN(PI()/4)')
+
+  # 作成を完了し、エクセルファイルを書き出し。
+  workbook.close
+
+== 説明
+
+WriteExcelライブラリは、エクセルのバイナリファイルを作成することができます。プラットフォームを問いません。
+複数のワークシートを作成することができますし、セルの書式を設定することもできます。
+テキスト、数値、数式、ハイパーリンク、画像を格納することが出来ます。
+
+このライブラリで作成されるエクセルファイルは、エクセル97、2000、2002、2003、2007と互換性があります。
+
+このライブラリはWindows、UNIX、マッキントッシュプラットフォームのほとんどで動作します。
+作成されたファイルは、LinuxやUNIXのスプレッドシートアプリケーションであるGnumericやOpenOffice.orgとも互換性があります。
+
+このライブラリは、既存のエクセルファイルの編集には使うことができません。
+
+このライブラリは、PerlのSpreadsheet::WriteexcelモジュールをRubyに移植したものです。
+http://search.cpan.org/~jmcnamara/Spreadsheet-WriteExcel-2.37/
+
+== クイックスタート
+
+WriteExcelは、エクセルの機能へのできるだけ多くのインターフェイスを提供しようとしています。
+結果として、インターフェイスに関する多くのドキュメントがあります。最初はどれが重要でどれが
+そうでないかわかりずらいでしょう。イケアの家具を組み立てるのが好みの人は、まずこの使用説明を読んでください。
+４つの簡単なステップです。
 
 1.new()メソッドで新規にエクセルのワークブックを作成する。
 2.add_worksheet()メソッドでこのワークブックにワークシートを加える。
 3.write()メソッドでこのワークシートにデータを書き込む。
+4.ファイルに保存する。
 
 こんな感じです。
 
@@ -22,11 +77,11 @@ Spreadsheet::WriteExcelは、エクセルの機能へのできるだけ多くの
  workbook  = Spreadsheet::WriteExcel.new('ruby.xls')     # Step 1
  worksheet = workbook.add_worksheet                      # Step 2
  worksheet.write('A1', 'Hi Excel!')                      # Step 3
- workbook.close                                          # ファイルに出力
+ workbook.close                                          # Step 4
 
-これで、一つのワークシートを持ち、A1セルに'Hi Excel!'というテキストが書き込まれたエクセルファイルが作成されます。これでできあがりです。実際は０番目のステップがありますが、これはgoes without saying. 多くの使用例がgemには含まれていますので、それを参考にすることも出来ます。 See EXAMPLES
-
-最初にこの使用方法を読んで後で家具を作る人は、どうやって進めるかわかるでしょう。;-)
+これで、一つのワークシートを持ち、A1セルに'Hi Excel!'というテキストが書き込まれたエクセル
+ファイル（ruby.xls）が作成されます。これでできあがりです。多くの使用例がgemには含まれていますので、
+それを参考にすることも出来ます。
 
 = Workbook メソッド
 
@@ -35,10 +90,11 @@ Spreadsheet::WriteExcel ライブラリは新規のワークブックへのオ�
  new
  add_worksheet
  add_format
- add_chart_ext ※ 未対応
+ add_chart
+ add_chart_ext
  close
  compatibility_mode
- set_properties ※ 未対応
+ set_properties
  set_tempdir
  set_custom_color
  sheets
@@ -213,72 +269,73 @@ set_codepage()はめったに必要にはなりません。
 
 = Worksheet メソッド
 
-ワークブックオブジェクトにadd_worksheet()メソッドを呼ぶことで新しいワークシートが作成されます。
+ワークブックオブジェクトnのadd_worksheet()メソッドを呼ぶことで、新しいワークシートが作成されます。
 
  worksheet1 = workbook.add_worksheet
  worksheet2 = workbook.add_worksheet
 
-新しいワークシートに対して、次のメソッドを使うことが出来ます。
+このワークシートに対して、次のメソッドを使うことが出来ます。
 
-    write()
-    write_number()
-    write_string()
-    write_utf16be_string()
-    write_utf16le_string()
-    keep_leading_zeros()
-    write_blank()
-    write_row()
-    write_col()
-    write_date_time()
-    write_url()
-    write_url_range()
-    write_formula()
-    store_formula()
-    repeat_formula()
-    write_comment()
-    show_comments()
-    add_write_handler()
-    insert_image()
-    embed_chart()
-    data_validation()
-    get_name()
-    activate()
-    select()
-    hide()
-    set_first_sheet()
-    protect()
-    set_selection()
-    set_row()
-    set_column()
-    outline_settings()
-    freeze_panes()
-    split_panes()
-    merge_range()
-    set_zoom()
-    right_to_left()
-    hide_zero()
-    set_tab_color()
-    autofilter()
+ write
+ write_number
+ write_string
+ write_utf16be_string
+ write_utf16le_string
+ keep_leading_zeros
+ write_blank
+ write_row
+ write_col
+ write_date_time
+ write_url
+ write_url_range
+ write_formula
+ store_formula
+ repeat_formula
+ write_comment
+ show_comments
+ add_write_handler
+ insert_image
+ insert_chart
+ data_validation
+ get_name
+ activate
+ select
+ hide
+ set_first_sheet
+ protect
+ set_selection
+ set_row
+ set_column
+ outline_settings
+ freeze_panes
+ split_panes
+ merge_range
+ set_zoom
+ right_to_left
+ hide_zero
+ set_tab_color
+ autofilter
 
 == セル・ノーテーション
 
-Spreadsheet::WriteExcelはセルの位置を指定するのに２つの表記法、Row-Column法とA1法をサポートしています。
+WriteExcelはセルの位置を指定するのに２つの表記法、Row-Column法とA1法をサポートしています。
 
-Row-Column法は行、桁ともに0から始まるインデックスですが、A1法はエクセルで標準的に用いられる桁を示す英字と行を示す1から始まる数字からなる英数字の並びです。例えば、
+Row-Column法は行、桁ともに0から始まるインデックスですが、A1法はエクセルで標準的に
+用いられる桁を示す英字と行を示す1から始まる数字からなる英数字の並びです。例えば、
 
- (0, 0)    # The top left cell in row-column notation.
- ('A1')    # The top left cell in A1 notation.
+ (0, 0)     # Row-Column 法
+ ('A1')     # A1 法
 
- (1999,29) # Row-column notation.
- ('AD2000') # The same cell in A1 notation.
+ (1999,29)  # Row-Column 法
+ ('AD2000') # 同じセルを A1 法で
 
 Row-column法はセルをプログラムで扱うのに便利です。
 
- 0.upto(9) do |i|
+ (0..10).each do |i|
    worksheet.write(i, 0, 'Hello')  # Cells A1 to A10
  end
 
-A1法はワークシートを手動で設定したり数式を用いるときに便利です。
+A1法はワークシートを手動で設定したりエクセルの数式で用いるときに便利です。
 
  worksheet.write('H1', 200)
  worksheet.write('H2', '=H1+1')  # 201
@@ -289,7 +346,7 @@ A1法はワークシートを手動で設定したり数式を用いるときに
 
 簡便さのために、以下のワークシートのメソッドではrow-column法で記述していますが、全てA1法も用いることができます。
 
-注：エクセルではR1C1法も使うことができますが、Spreadsheet::WriteExcelではサポートしていません。
+注：エクセルではR1C1法も使うことができますが、WriteExcelではサポートしていません。
 
 == write(row, column, [token, format])
 
@@ -581,3 +638,148 @@ DOSやWindowsであっても、ファイル名の区切りには'/'を使用す�
  worksheet.write_formula('A4', '=IF(A3>1,"Yes", "No")'   )
  worksheet.write_formula('A5', '=AVERAGE(1, 2, 3, 4)'    )
  worksheet.write_formula('A6', '=DATEVALUE("1-Jan-2001")')
+
+
+
+== ページセットアップメソッド
+
+印刷されたときの書式設定ですね。ヘッダ・フッタやマージンなど。
+次のメソッドが用意されています。
+
+  set_landscape
+  set_portrait
+  set_page_view
+  set_paper
+  center_horizontally
+  center_vertically
+  set_margins
+  set_header
+  set_footer
+  repeat_rows
+  repeat_columns
+  hide_gridlines
+  print_row_col_headers
+  print_area
+  print_across
+  fit_to_pages
+  set_start_page
+  set_print_scale
+  set_h_pagebreaks
+  set_v_pagebreaks
+
+すべてのワークシートに同じ印刷書式を設定する場合は、ワークシートの sheet メソッドを使って
+行うのが簡単です。
+
+  workbook.sheets.each do |worksheet|
+    worksheet.set_landscape
+  end
+
+== セルフォーマッティング
+
+ここではセルの書式設定について説明します。フォント、色、（塗りつぶし）パターン、枠線、配置、
+数値書式などなどです。
+
+=== フォーマットオブジェクトの作成と利用
+
+セル書式はフォーマットオブジェクトを通して定義される。フォーマットオブジェクトは、workbook
+の add_format メソッドで作成する。
+
+  format1 = workbook.add_format                   # プロパティは後で設定
+  format2 = workbook.add_format(property hash..)  # 作成時にプロパティを設定
+
+フォーマットオブジェクトはセルや行、桁に適用できる書式プロパティをすべて保持する。これらの
+プロパティを設定するプロセスについては次節で述べられている。
+
+フォーマットオブジェクトが作成されプロパティがセットされれば、worksheet の write メソッド
+にパラメータとして渡して使う。
+
+  worksheet.write(0, 0, 'One', format)
+  worksheet.wirte_string(1, 0, 'Two', format)
+  worksheet.write_number(2, 0, 3, format)
+  worksheet.write_blank(3, 0, format)
+
+フォーマットオブジェクトは、worksheet の set_row や set_column メソッドに渡され、行や
+桁のデフォルトプロパティを設定するのにも用いられる。
+
+  worksheet.set_row(0, 15, format)
+  worksheet.set_column(0, 0, 15, format)
+
+=== Format メソッドとプロパティ
+
+     Category   Description       Property        Method Name
+     --------   -----------       --------        -----------
+     Font       Font type         font            set_font()
+                Font size         size            set_size()
+                Font color        color           set_color()
+                Bold              bold            set_bold()
+                Italic            italic          set_italic()
+                Underline         underline       set_underline()
+                Strikeout         font_strikeout  set_font_strikeout()
+                Super/Subscript   font_script     set_font_script()
+                Outline           font_outline    set_font_outline()
+                Shadow            font_shadow     set_font_shadow()
+
+     Number     Numeric format    num_format      set_num_format()
+
+     Protection Lock cells        locked          set_locked()
+                Hide formulas     hidden          set_hidden()
+
+     Alignment  Horizontal align  align           set_align()
+                Vertical align    valign          set_align()
+                Rotation          rotation        set_rotation()
+                Text wrap         text_wrap       set_text_wrap()
+                Justify last      text_justlast   set_text_justlast()
+                Center across     center_across   set_center_across()
+                Indentation       indent          set_indent()
+                Shrink to fit     shrink          set_shrink()
+
+     Pattern    Cell pattern      pattern         set_pattern()
+                Background color  bg_color        set_bg_color()
+                Foreground color  fg_color        set_fg_color()
+
+     Border     Cell border       border          set_border()
+                Bottom border     bottom          set_bottom()
+                Top border        top             set_top()
+                Left border       left            set_left()
+                Right border      right           set_right()
+                Border color      border_color    set_border_color()
+                Bottom color      bottom_color    set_bottom_color()
+                Top color         top_color       set_top_color()
+                Left color        left_color      set_left_color()
+                Right color       right_color     set_right_color()
+
+書式プロパティを設定するには２つの方法がある。すなわち、オブジェクトメソッドインターフェースを用いる
+方法と、プロパティを直接設定する方法である。たとえば、メソッドインターフェースを用いる典型的な例は
+次のようなものである。
+
+  format = workbook.add_format
+  format.set_bold
+  format.set_color('red')
+
+フォーマットオブジェクトを作成する際に、直接プロパティを hash で渡して指定する方法と比較する。
+
+  format = workbook.add_format(:bold => 1, :color => 'red')
+
+あるいは、フォーマットオブジェクトを作成した後に set_format_properties メソッドで指定する
+やり方は次の通りとなる。
+
+  format = workbook.add_format
+  format.set_format_properties(:bold => 1, :color => 'red')
+
+プロパティを１つあるいはいくつかのハッシュに格納してメソッドに渡すこともできる。
+
+  font    = {
+             :font   => 'ＭＳ 明朝',
+             :size   => 12,
+             :color  => 'blue',
+             :bold   => 1
+           }
+
+  shading = {
+              :bg_color => 'green',
+              :pattern  => 1
+            }
+
+  format1 = workbook.add_format(font)            # フォントだけ設定
+  format2 = workbook.add_format(font, shading)   # 両方を設定
+
