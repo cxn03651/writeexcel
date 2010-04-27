@@ -13,6 +13,7 @@
 #
 
 require 'writeexcel/worksheet'
+require 'writeexcel/colors'
 
 ###############################################################################
 #
@@ -481,7 +482,6 @@ class Chart < Worksheet
   #
   def prepend(*args)  # :nodoc:
     @using_tmpfile = false
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(*args)
   end
 
@@ -602,7 +602,6 @@ class Chart < Worksheet
     header = [record, length].pack("vv")
     data = [grbit, rwTop, colLeft, rgbHdr].pack("vvvV")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -672,8 +671,7 @@ class Chart < Worksheet
 
     # Handle utf8 strings.
     if string.encoding == Encoding::UTF_8
-      string = NKF.nkf('-w16B0 -m0 -W', string)
-      string.force_encoding('UTF-16BE')
+      utf8_to_16be(string)
       encoding = 1
     end
 
@@ -696,49 +694,15 @@ class Chart < Worksheet
   # RGB colour number.
   #
   def get_color_indices(color)   # :nodoc:
-    return [nil, nil] if color.nil?
+    invalid = 0x7FFF   # return from Colors#get_color when color is invalid
 
-    colors = {
-      :aqua    => 0x0F,
-      :cyan    => 0x0F,
-      :black   => 0x08,
-      :blue    => 0x0C,
-      :brown   => 0x10,
-      :magenta => 0x0E,
-      :fuchsia => 0x0E,
-      :gray    => 0x17,
-      :grey    => 0x17,
-      :green   => 0x11,
-      :lime    => 0x0B,
-      :navy    => 0x12,
-      :orange  => 0x35,
-      :pink    => 0x21,
-      :purple  => 0x14,
-      :red     => 0x0A,
-      :silver  => 0x16,
-      :white   => 0x09,
-      :yellow  => 0x0D,
-    }
-
-    # Check for the various supported colour index/name possibilities.
-    color = color.downcase.to_sym if color.kind_of?(String)
-    if color.kind_of?(Symbol)
-      if colors.has_key?(color)
-        # Colour matches one of the supported colour names.
-        index = colors[color]
-      else
-        return [nil, nil]
-      end
-    elsif color < 8 || color > 63
-      # Return undef if index is out of range.
-      return [nil, nil]
+    index = Colors.new.get_color(color)
+    index = invalid if color.respond_to?(:coerce) && (color < 8 || color > 63)
+    if index == invalid
+      [nil, nil]
     else
-      # We should have a valid color index in a valid range.
-      index = color
+      [index, get_color_rbg(index)]
     end
-
-    rgb = get_color_rbg(index)
-    [index, rgb]
   end
 
   ###############################################################################
@@ -763,7 +727,7 @@ class Chart < Worksheet
   # defined value.
   #
   def get_line_pattern(value)   # :nodoc:
-    value = value.downcase if value.kind_of?(String)
+    value = value.downcase if value.respond_to?(:to_str)
     default = 0
 
     patterns = {
@@ -802,7 +766,7 @@ class Chart < Worksheet
   # defined value.
   #
   def get_line_weight(value)   # :nodoc:
-    value = value.downcase if value.kind_of?(String)
+    value = value.downcase if value.respond_to?(:to_str)
     default = 0
 
     weights = {
@@ -1239,7 +1203,6 @@ class Chart < Worksheet
     data   = [riser].pack('C')
     data  += [taper].pack('C')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1271,13 +1234,12 @@ class Chart < Worksheet
     data  += [grbit].pack('v')
     data  += [format_index].pack('v')
     data  += [formula_length].pack('v')
-    if formula.kind_of?(Array)
+    if formula.respond_to?(:to_array)
       data += formula[0].encode('BINARY')
     else
       data += formula.encode('BINARY') unless formula.nil?
     end
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1306,7 +1268,6 @@ class Chart < Worksheet
     data += [indexFore].pack('v')
     data += [indexBack].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1340,7 +1301,6 @@ class Chart < Worksheet
     data += [catCrossDate].pack('v')
     data += [grbit].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1358,7 +1318,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [num_axes].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1384,7 +1343,6 @@ class Chart < Worksheet
     data += [reserved3].pack('V')
     data += [reserved4].pack('V')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1402,7 +1360,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [line_format].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1428,7 +1385,6 @@ class Chart < Worksheet
     data  += [dx].pack('V')
     data  += [dy].pack('V')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1444,7 +1400,6 @@ class Chart < Worksheet
 
     header = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header)
   end
 
@@ -1468,7 +1423,6 @@ class Chart < Worksheet
     data  += [catMark].pack('v')
     data  += [grbit].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1494,7 +1448,6 @@ class Chart < Worksheet
     data  += [dx].pack('V')
     data  += [dy].pack('V')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1523,7 +1476,6 @@ class Chart < Worksheet
     data  += [grbit].pack('v')
     data  += [icrt].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1541,7 +1493,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data   = [type].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1581,7 +1532,6 @@ class Chart < Worksheet
     data += [grbit2].pack('v')
     data += [rotation].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1606,7 +1556,6 @@ class Chart < Worksheet
     data += [series_number].pack('v')
     data += [grbit].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1625,7 +1574,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data  = [type].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1643,7 +1591,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data  = [percent_gap].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1659,7 +1606,6 @@ class Chart < Worksheet
 
     header = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header)
   end
 
@@ -1685,7 +1631,6 @@ class Chart < Worksheet
     data  += [scale_basis].pack('v')
     data  += [index].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1704,7 +1649,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data   = [index].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1724,7 +1668,6 @@ class Chart < Worksheet
     data  = [frame_type].pack('v')
     data += [grbit].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1754,7 +1697,6 @@ class Chart < Worksheet
     data += [wSpacing].pack('C')
     data += [grbit].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1780,7 +1722,6 @@ class Chart < Worksheet
     data += [grbit].pack('v')
     data += [index].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1810,7 +1751,6 @@ class Chart < Worksheet
     data += [icvBack].pack('v')
     data += [miSize].pack('V')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1832,7 +1772,6 @@ class Chart < Worksheet
     data += [link_index1].pack('v')
     data += [link_index2].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1850,7 +1789,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data   = [percent].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1867,7 +1805,6 @@ class Chart < Worksheet
 
     header = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header)
   end
 
@@ -1887,7 +1824,6 @@ class Chart < Worksheet
     data  = [dx_plot].pack('V')
     data += [dy_plot].pack('V')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1916,7 +1852,6 @@ class Chart < Worksheet
     data += [x2].pack('V')
     data += [y2].pack('V')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1952,7 +1887,6 @@ class Chart < Worksheet
     data += forecast
     data += backcast
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -1980,7 +1914,6 @@ class Chart < Worksheet
     data += [bubble_type].pack('v')
     data += [bubble_count].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2015,7 +1948,6 @@ class Chart < Worksheet
     data += [cch].pack('C')
     data += [encoding].pack('C')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, str)
   end
 
@@ -2033,7 +1965,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [series].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2051,7 +1982,6 @@ class Chart < Worksheet
     header = [record, length].pack('vv')
     data = [chartgroup].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2073,7 +2003,6 @@ class Chart < Worksheet
     data  = [grbit].pack('v')
     data += [empty_cells].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2113,7 +2042,6 @@ class Chart < Worksheet
     data += [grbit2].pack('v')
     data += [rotation].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2153,7 +2081,6 @@ class Chart < Worksheet
     data += [index].pack('v')
     data += [reserved5].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2183,7 +2110,6 @@ class Chart < Worksheet
     data += [numCross].pack('d')
     data += [grbit].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 

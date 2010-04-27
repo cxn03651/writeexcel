@@ -42,7 +42,7 @@ class OLEStorageLite       #:nodoc:
   end
 
   def _initParse(file)
-    io = file.kind_of?(String) ? open(file, 'rb') : file
+    io = file.respond_to?(:to_str) ? open(file, 'rb') : file
     _getHeaderInfo(io)
   end
   private :_initParse
@@ -580,7 +580,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
 
     #1.Open File
     #1.1 sFile is Ref of scalar
-    if sFile.kind_of?(String)
+    if sFile.respond_to?(:to_str)
       rh_info[:fileh] = open(sFile, "wb")
     else
       rh_info[:fileh] = sFile.binmode
@@ -956,9 +956,9 @@ class OLEStorageLitePPSFile < OLEStorageLitePPS       #:nodoc:
   def set_file(sFile = '')
     if sFile.nil? or sFile == ''
       @pps_file = Tempfile.new('OLEStorageLitePPSFile')
-    elsif sFile.kind_of?(IO) || sFile.kind_of?(StringIO)
+    elsif sFile.respond_to?(:write)
       @pps_file = sFile
-    elsif sFile.kind_of?(String)
+    elsif sFile.respond_to?(:to_str)
       #File Name
       @pps_file = open(sFile, "r+")
       return nil unless @pps_file

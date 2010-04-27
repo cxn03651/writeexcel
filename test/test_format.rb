@@ -1112,23 +1112,23 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   end
 
   def get_valid_color_string_number
-    return {
-      'black'     =>    8,
-      'blue'      =>   12,
-      'brown'     =>   16,
-      'cyan'      =>   15,
-      'gray'      =>   23,
-      'green'     =>   17,
-      'lime'      =>   11,
-      'magenta'   =>   14,
-      'navy'      =>   18,
-      'orange'    =>   53,
-      'pink'      =>   33,
-      'purple'    =>   20,
-      'red'       =>   10,
-      'silver'    =>   22,
-      'white'     =>    9,
-      'yellow'    =>   13
+    {
+      :black     =>    8,
+      :blue      =>   12,
+      :brown     =>   16,
+      :cyan      =>   15,
+      :gray      =>   23,
+      :green     =>   17,
+      :lime      =>   11,
+      :magenta   =>   14,
+      :navy      =>   18,
+      :orange    =>   53,
+      :pink      =>   33,
+      :purple    =>   20,
+      :red       =>   10,
+      :silver    =>   22,
+      :white     =>    9,
+      :yellow    =>   13
     }
   end
   #         :rotation => -90,

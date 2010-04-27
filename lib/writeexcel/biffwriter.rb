@@ -13,8 +13,9 @@
 
 
 require 'tempfile'
+require 'writeexcel/write_file'
 
-class BIFFWriter       #:nodoc:
+class BIFFWriter < WriteFile       #:nodoc:
 
   BIFF_Version = 0x0600
   BigEndian    = [1].pack("I") == [1].pack("N")
@@ -68,47 +69,6 @@ class BIFFWriter       #:nodoc:
       "of the documentation."
       )
     end
-  end
-
-  ###############################################################################
-  #
-  # _prepend($data)
-  #
-  # General storage function
-  #
-  def prepend(*args)
-    d = args.join
-    d = add_continue(d) if d.bytesize > @limit
-
-    @datasize += d.bytesize
-    @data      = d + @data
-
-    print "prepend\n" if defined?($debug)
-    print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n" if defined?($debug)
-    d
-  end
-
-  ###############################################################################
-  #
-  # _append($data)
-  #
-  # General storage function
-  #
-  def append(*args)
-    d = args.collect{ |a| a.dup.force_encoding('ASCII-8BIT') }.join
-    # Add CONTINUE records if necessary
-    d = add_continue(d) if d.bytesize > @limit
-    if @using_tmpfile
-      @filehandle.write d
-      @datasize += d.bytesize
-    else
-      @datasize += d.bytesize
-      @data      = @data + d
-    end
-
-    print "append\n" if defined?($debug)
-    print d.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ') + "\n\n" if defined?($debug)
-    d
   end
 
   ###############################################################################
@@ -168,7 +128,6 @@ class BIFFWriter       #:nodoc:
     header  = [record,length].pack("vv")
     data    = [BIFF_Version,type,build,year,bfh,sfo].pack("vvvvVV")
 
-    print "store_bof in #{__FILE__}\n" if defined?($debug)
     prepend(header, data)
   end
 
@@ -183,7 +142,6 @@ class BIFFWriter       #:nodoc:
     length = 0x0000
     header = [record,length].pack("vv")
 
-    print "store_eof in #{__FILE__}\n" if defined?($debug)
     append(header)
   end
 

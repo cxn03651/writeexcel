@@ -222,7 +222,7 @@ class String #:nodoc:
 
   unless "".respond_to?(:force_encoding)
     def force_encoding(encoding)
-      if encoding.kind_of?(String)
+      if encoding.respond_to?(:to_str)
         @encoding = case encoding
           when /ASCII/i
             Encoding::ASCII

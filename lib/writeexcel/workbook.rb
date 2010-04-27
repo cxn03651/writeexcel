@@ -14,19 +14,11 @@
 require 'digest/md5'
 require 'nkf'
 require 'writeexcel/biffwriter'
-require 'writeexcel/olewriter'
-require 'writeexcel/formula'
-require 'writeexcel/format'
 require 'writeexcel/worksheet'
 require 'writeexcel/chart'
-require 'writeexcel/charts/area'
-require 'writeexcel/charts/bar'
-require 'writeexcel/charts/column'
-require 'writeexcel/charts/external'
-require 'writeexcel/charts/line'
-require 'writeexcel/charts/pie'
-require 'writeexcel/charts/scatter'
-require 'writeexcel/charts/stock'
+require 'writeexcel/format'
+require 'writeexcel/formula'
+require 'writeexcel/olewriter'
 require 'writeexcel/storage_lite'
 require 'writeexcel/compatibility'
 
@@ -112,11 +104,10 @@ class Workbook < BIFFWriter
     }
     @str_array             = []
     @str_block_sizes       = []
-    @extsst_offsets        = []
+    @extsst_offsets        = []  # array of [global_offset, local_offset]
     @extsst_buckets        = 0
     @extsst_bucket_size    = 0
 
-    @ext_ref_count         = 0
     @ext_refs              = {}
 
     @mso_clusters          = []
@@ -158,7 +149,7 @@ class Workbook < BIFFWriter
     # Add the default format for hyperlinks
     @url_format = add_format(:color => 'blue', :underline => 1)
 
-    if file.kind_of?(String) && file != ''
+    if file.respond_to?(:to_str) && file != ''
       @fh_out      = open(file, "wb")
       @internal_fh = 1
     else
@@ -523,8 +514,7 @@ class Workbook < BIFFWriter
 
     # Handle utf8 strings
     if name.encoding == Encoding::UTF_8
-      name = NKF.nkf('-w16B0 -m0 -W', name)
-      name.force_encoding('UTF-16BE')
+      name = utf8_to_16be(name)
       encoding = 1
     end
 
@@ -541,42 +531,33 @@ class Workbook < BIFFWriter
       error   = 0;
 
       if    encd_a == 0 and encd_b == 0
-        error  = 1 if name_a.downcase == name_b.downcase
+        error  = (name_a.downcase == name_b.downcase)
       elsif encd_a == 0 and encd_b == 1
-        name_a = name_a.unpack("C*").pack("n*")
-        error  = 1 if name_a.downcase == name_b.downcase
+        name_a = ascii_to_16be(name_a)
+        error  = (name_a.downcase == name_b.downcase)
       elsif encd_a == 1 and encd_b == 0
-        name_b = name_b.unpack("C*").pack("n*")
-        error  = 1 if name_a.downcase == name_b.downcase
+        name_b = ascii_to_16be(name_b)
+        error  = (name_a.downcase == name_b.downcase)
       elsif encd_a == 1 and encd_b == 1
-        #            # We can do a true case insensitive test with Perl 5.8 and utf8.
-        #            if ($] >= 5.008) {
-        #               $name_a = Encode::decode("UTF-16BE", $name_a);
-        #               $name_b = Encode::decode("UTF-16BE", $name_b);
-        #               $error  = 1 if lc($name_a) eq lc($name_b);
-        #            }
-        #            else {
-        #               # We can't easily do a case insensitive test of the UTF16 names.
-        #               # As a special case we check if all of the high bytes are nulls and
-        #               # then do an ASCII style case insensitive test.
+        # TODO : not converted yet.
+
+        #  We can't easily do a case insensitive test of the UTF16 names.
+        # As a special case we check if all of the high bytes are nulls and
+        # then do an ASCII style case insensitive test.
         #
-        #               # Strip out the high bytes (funkily).
-        #               my $hi_a = grep {ord} $name_a =~ /(.)./sg;
-        #               my $hi_b = grep {ord} $name_b =~ /(.)./sg;
+        # Strip out the high bytes (funkily).
+        # my $hi_a = grep {ord} $name_a =~ /(.)./sg;
+        # my $hi_b = grep {ord} $name_b =~ /(.)./sg;
         #
-        #               if ($hi_a or $hi_b) {
-        #                  $error  = 1 if    $name_a  eq    $name_b;
-        #               }
-        #               else {
-        #                  $error  = 1 if lc($name_a) eq lc($name_b);
-        #               }
-        #            }
-        #         }
-        #         # If any of the cases failed we throw the error here.
+        # if ($hi_a or $hi_b) {
+        #    $error  = 1 if    $name_a  eq    $name_b;
+        # }
+        # else {
+        #    $error  = 1 if lc($name_a) eq lc($name_b);
+        # }
       end
-      if error != 0
-        raise "Worksheet name '#{name}', with case ignored, " +
-        "is already in use"
+      if error
+        raise "Worksheet name '#{name}', with case ignored, is already in use"
       end
     end
     [name,  encoding]
@@ -593,7 +574,9 @@ class Workbook < BIFFWriter
   #
   # See the "CELL FORMATTING" section for more details about Format properties and how to set them.
   #
-  def add_format(formats = {})
+  def add_format(*args)
+    formats = {}
+    args.each { |arg| formats = formats.merge(arg) }
     format = Format.new(@xf_index, @default_formats.merge(formats))
     @xf_index += 1
     @formats.push format # Store format reference
@@ -1023,10 +1006,10 @@ class Workbook < BIFFWriter
   #
   def set_properties(params)
     # Ignore if no args were passed.
-    return -1 if !params.kind_of?(Hash) || params.empty?
+    return -1 if !params.respond_to?(:to_hash) || params.empty?
 
     params.each do |k, v|
-      params[k] = convert_to_ascii_if_ascii(v) if v.kind_of?(String)
+      params[k] = convert_to_ascii_if_ascii(v) if v.respond_to?(:to_str)
     end
     # List of valid input parameters.
     properties = {
@@ -1068,14 +1051,9 @@ class Workbook < BIFFWriter
     property_sets = []
     strings.unshift("codepage")
     strings.push("created")
-    strings.each do |property|
-      if params.has_key?(property.to_sym) && !params[property.to_sym].nil?
-        property_sets.push(
-          [ properties[property.to_sym][0],
-            properties[property.to_sym][1],
-          params[property.to_sym]  ]
-        )
-      end
+    strings.each do |string|
+      property = string.to_sym
+      property_sets.push(property_set(properties, property, params)) if params[property]
     end
 
     # Pack the property sets.
@@ -1092,14 +1070,8 @@ class Workbook < BIFFWriter
     # Create an array of property set values.
     property_sets = []
 
-    ["codepage", "category", "manager", "company"].each do |property|
-      if params.has_key?(property.to_sym) && !params[property.to_sym].nil?
-        property_sets.push(
-        [ properties[property.to_sym][0],
-          properties[property.to_sym][1],
-        params[property.to_sym]  ]
-        )
-      end
+    [:codepage, :category, :manager, :company].each do |property|
+      property_sets.push(property_set(properties, property, params)) if params[property]
     end
 
     # Pack the property sets.
@@ -1108,6 +1080,11 @@ class Workbook < BIFFWriter
     # Set a flag for when the files is written.
     @add_doc_properties = 1
   end
+
+  def property_set(properties, property, params)
+    [ properties[property][0], properties[property][1], params[property] ]
+  end
+  private :property_set
 
   ###############################################################################
   #
@@ -1183,7 +1160,7 @@ class Workbook < BIFFWriter
     # NOTE: If any records are added between here and EOF the
     # _calc_sheet_offsets() should be updated to include the new length.
     store_country
-    if @ext_ref_count != 0
+    if @ext_refs.keys.size != 0
       store_supbook
       store_externsheet
       store_names
@@ -1196,7 +1173,7 @@ class Workbook < BIFFWriter
     store_eof
 
     # Store the workbook in an OLE container
-    store_OLE_file
+    store_ole_filie
   end
   private :store_workbook
 
@@ -1226,12 +1203,12 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
-  # _store_OLE_file()
+  # _store_ole_filie()
   #
   # Store the workbook in an OLE container using the default handler or using
   # OLE::Storage_Lite if the workbook data is > ~ 7MB.
   #
-  def store_OLE_file       #:nodoc:
+  def store_ole_filie       #:nodoc:
     maxsize = 7_087_104
 #    maxsize = 1
 
@@ -1266,13 +1243,11 @@ class Workbook < BIFFWriter
       workbook.set_file   # use tempfile
 
       while tmp = get_data
-        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         workbook.append(tmp)
       end
 
       @worksheets.each do |worksheet|
         while tmp = worksheet.get_data
-        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           workbook.append(tmp)
         end
       end
@@ -1304,7 +1279,7 @@ class Workbook < BIFFWriter
       return @fh_out.close if @internal_fh != 0
     end
   end
-  private :store_OLE_file
+  private :store_ole_filie
 
   ###############################################################################
   #
@@ -1708,7 +1683,6 @@ class Workbook < BIFFWriter
 
     # Fonts are 0-indexed. According to the SDK there is no index 4,
     (0..3).each do
-      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(font)
     end
 
@@ -1721,7 +1695,6 @@ class Workbook < BIFFWriter
         nil,
         :font_only => 1
     )
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 6. Series names.
@@ -1729,7 +1702,6 @@ class Workbook < BIFFWriter
         nil,
         :font_only => 1
     )
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 7. Title.
@@ -1738,7 +1710,6 @@ class Workbook < BIFFWriter
         :font_only => 1,
         :bold      => 1
     )
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 8. Axes.
@@ -1747,7 +1718,6 @@ class Workbook < BIFFWriter
         :font_only => 1,
         :bold      => 1
     )
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Index 9. Comments.
@@ -1757,7 +1727,6 @@ class Workbook < BIFFWriter
         :font      => 'Tahoma',
         :size      => 8
     )
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp_format.get_font)
 
     # Iterate through the XF objects and write a FONT record if it isn't the
@@ -1787,7 +1756,6 @@ class Workbook < BIFFWriter
         fmt.font_index = index
         index += 1
         font = fmt.get_font
-        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         append(font)
       end
     end
@@ -1842,7 +1810,6 @@ class Workbook < BIFFWriter
   def store_all_xfs       #:nodoc:
     @formats.each do |format|
       xf = format.get_xf
-      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(xf)
     end
   end
@@ -2011,27 +1978,26 @@ class Workbook < BIFFWriter
     record    = 0x003D                 # Record identifier
     length    = 0x0012                 # Number of bytes to follow
 
-    xWn       = 0x0000                 # Horizontal position of window
-    yWn       = 0x0000                 # Vertical position of window
-    dxWn      = 0x355C                 # Width of window
-    dyWn      = 0x30ED                 # Height of window
+    x_pos     = 0x0000                 # Horizontal position of window
+    y_pos     = 0x0000                 # Vertical position of window
+    dx_win    = 0x355C                 # Width of window
+    dy_win    = 0x30ED                 # Height of window
 
     grbit     = 0x0038                 # Option flags
     ctabsel   = @selected              # Number of workbook tabs selected
-    wTabRatio = 0x0258                 # Tab to scrollbar ratio
+    tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
-    itabFirst = @sinfo[:firstsheet]    # 1st displayed worksheet
-    itabCur   = @sinfo[:activesheet]   # Active worksheet
+    tab_cur   = @sinfo[:activesheet]   # Active worksheet
+    tab_first = @sinfo[:firstsheet]    # 1st displayed worksheet
 
     header    = [record, length].pack("vv")
     data      = [
-                  xWn, yWn, dxWn, dyWn,
+                  x_pos, y_pos, dx_win, dy_win,
                   grbit,
-                  itabCur, itabFirst,
-                  ctabsel, wTabRatio
+                  tab_cur, tab_first,
+                  ctabsel, tab_ratio
                 ].pack("vvvvvvvvv")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_window1
@@ -2064,7 +2030,6 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [offset, grbit, cch, encoding].pack("VvCC")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, sheetname)
   end
   private :store_boundsheet
@@ -2088,7 +2053,6 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [xf_index, type, level].pack("vCC")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_style
@@ -2103,7 +2067,7 @@ class Workbook < BIFFWriter
   # Writes Excel FORMAT record for non "built-in" numerical formats.
   #
   def store_num_format(format, ifmt, encoding)       #:nodoc:
-    format = format.to_s unless format.kind_of?(String)
+    format = format.to_s unless format.respond_to?(:to_str)
     record    = 0x041E         # Record identifier
     # length                   # Number of bytes to follow
     # Char length of format string
@@ -2113,8 +2077,7 @@ class Workbook < BIFFWriter
 
     # Handle utf8 strings
     if format.encoding == Encoding::UTF_8
-      format = NKF.nkf('-w16B0 -m0 -W', format)
-      format.force_encoding('UTF-16BE')
+      format = utf8_to_16be(format)
       encoding = 1
     end
 
@@ -2138,7 +2101,6 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [ifmt, cch, encoding].pack("vvC")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, format)
   end
   private :store_num_format
@@ -2158,7 +2120,6 @@ class Workbook < BIFFWriter
     header    = [record, length].pack("vv")
     data      = [f1904].pack("v")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_1904
@@ -2174,13 +2135,12 @@ class Workbook < BIFFWriter
     record      = 0x01AE                   # Record identifier
     length      = 0x0004                   # Number of bytes to follow
 
-    ctabs       = @worksheets.size         # Number of worksheets
-    stVirtPath  = 0x0401                   # Encoded workbook filename
+    tabs        = @worksheets.size         # Number of worksheets
+    virt_path   = 0x0401                   # Encoded workbook filename
 
     header    = [record, length].pack("vv")
-    data      = [ctabs, stVirtPath].pack("vv")
+    data      = [tabs, virt_path].pack("vv")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_supbook
@@ -2197,8 +2157,7 @@ class Workbook < BIFFWriter
     record      = 0x0017                   # Record identifier
 
     # Get the external refs
-    ext_refs = @ext_refs
-    ext = ext_refs.keys.sort
+    ext = @ext_refs.keys.sort
 
     # Change the external refs from stringified "1:1" to [1, 1]
     ext.map! {|e| e.split(/:/).map! {|v| v.to_i} }
@@ -2214,7 +2173,6 @@ class Workbook < BIFFWriter
     data        = [cxti].pack("v") + rgxti
     header    = [record, data.bytesize].pack("vv")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2267,7 +2225,6 @@ class Workbook < BIFFWriter
 
     header = [record, data.bytesize].pack("vv")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -2292,16 +2249,16 @@ class Workbook < BIFFWriter
     length          = 0x001b       # Number of bytes to follow
 
     grbit           = 0x0020       # Option flags
-    chKey           = 0x00         # Keyboard shortcut
+    chkey           = 0x00         # Keyboard shortcut
     cch             = 0x01         # Length of text name
     cce             = 0x000b       # Length of text definition
     unknown01       = 0x0000       #
     ixals           = index + 1    # Sheet index
     unknown02       = 0x00         #
-    cchCustMenu     = 0x00         # Length of cust menu text
-    cchDescription  = 0x00         # Length of description text
-    cchHelptopic    = 0x00         # Length of help topic text
-    cchStatustext   = 0x00         # Length of status bar text
+    cch_cust_menu   = 0x00         # Length of cust menu text
+    cch_description = 0x00         # Length of description text
+    cch_helptopic   = 0x00         # Length of help topic text
+    cch_statustext  = 0x00         # Length of status bar text
     rgch            = type         # Built-in name type
     unknown03       = 0x3b         #
 
@@ -2309,16 +2266,16 @@ class Workbook < BIFFWriter
 
     header          = [record, length].pack("vv")
     data            = [grbit].pack("v")
-    data           += [chKey].pack("C")
+    data           += [chkey].pack("C")
     data           += [cch].pack("C")
     data           += [cce].pack("v")
     data           += [unknown01].pack("v")
     data           += [ixals].pack("v")
     data           += [unknown02].pack("C")
-    data           += [cchCustMenu].pack("C")
-    data           += [cchDescription].pack("C")
-    data           += [cchHelptopic].pack("C")
-    data           += [cchStatustext].pack("C")
+    data           += [cch_cust_menu].pack("C")
+    data           += [cch_description].pack("C")
+    data           += [cch_helptopic].pack("C")
+    data           += [cch_statustext].pack("C")
     data           += [rgch].pack("C")
     data           += [unknown03].pack("C")
     data           += [ext_ref].pack("v")
@@ -2328,7 +2285,6 @@ class Workbook < BIFFWriter
     data           += [colmin].pack("v")
     data           += [colmax].pack("v")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_name_short
@@ -2355,16 +2311,16 @@ class Workbook < BIFFWriter
     length          = 0x002a       # Number of bytes to follow
 
     grbit           = 0x0020       # Option flags
-    chKey           = 0x00         # Keyboard shortcut
+    chkey           = 0x00         # Keyboard shortcut
     cch             = 0x01         # Length of text name
     cce             = 0x001a       # Length of text definition
     unknown01       = 0x0000       #
     ixals           = index + 1    # Sheet index
     unknown02       = 0x00         #
-    cchCustMenu     = 0x00         # Length of cust menu text
-    cchDescription  = 0x00         # Length of description text
-    cchHelptopic    = 0x00         # Length of help topic text
-    cchStatustext   = 0x00         # Length of status bar text
+    cch_cust_menu   = 0x00         # Length of cust menu text
+    cch_description = 0x00         # Length of description text
+    cch_helptopic   = 0x00         # Length of help topic text
+    cch_statustext  = 0x00         # Length of status bar text
     rgch            = type         # Built-in name type
 
     unknown03       = 0x29
@@ -2373,16 +2329,16 @@ class Workbook < BIFFWriter
 
     header          = [record, length].pack("vv")
     data            = [grbit].pack("v")
-    data           += [chKey].pack("C")
+    data           += [chkey].pack("C")
     data           += [cch].pack("C")
     data           += [cce].pack("v")
     data           += [unknown01].pack("v")
     data           += [ixals].pack("v")
     data           += [unknown02].pack("C")
-    data           += [cchCustMenu].pack("C")
-    data           += [cchDescription].pack("C")
-    data           += [cchHelptopic].pack("C")
-    data           += [cchStatustext].pack("C")
+    data           += [cch_cust_menu].pack("C")
+    data           += [cch_description].pack("C")
+    data           += [cch_helptopic].pack("C")
+    data           += [cch_statustext].pack("C")
     data           += [rgch].pack("C")
 
     # Column definition
@@ -2405,7 +2361,6 @@ class Workbook < BIFFWriter
     # End of data
     data           += [0x10].pack("C")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_name_long
@@ -2429,7 +2384,6 @@ class Workbook < BIFFWriter
 
     header = [record, length, ccv].pack("vvv")
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_palette
@@ -2445,11 +2399,7 @@ class Workbook < BIFFWriter
     length          = 0x0002               # Number of bytes to follow
     cv              = @codepage            # The code page
 
-    header          = [record, length].pack("vv")
-    data            = [cv].pack("v")
-
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-    append(header, data)
+    store_common(record, length, cv)
   end
   private :store_codepage
 
@@ -2465,10 +2415,7 @@ class Workbook < BIFFWriter
     country_default = @country
     country_win_ini = @country
 
-    header          = [record, length].pack("vv")
-    data            = [country_default, country_win_ini].pack("vv")
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-    append(header, data)
+    store_common(record, length, country_default, country_win_ini)
   end
   private :store_country
 
@@ -2483,19 +2430,17 @@ class Workbook < BIFFWriter
     length          = 0x0002               # Number of bytes to follow
     hide            = @hideobj             # Option to hide objects
 
-    header          = [record, length].pack("vv")
-    data            = [hide].pack("v")
-
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-    append(header, data)
+    store_common(record, length, hide)
   end
   private :store_hideobj
 
-  ###############################################################################
-  ###############################################################################
-  ###############################################################################
+  def store_common(record, length, *data)
+    header = [record, length].pack("vv")
+    add_data   = [*data].pack("v*")
 
-
+    append(header, add_data)
+  end
+  private :store_common
 
   ###############################################################################
   #
@@ -2506,7 +2451,6 @@ class Workbook < BIFFWriter
   #
   def calculate_extern_sizes  # :nodoc:
     ext_refs        = @parser.get_ext_sheets
-    ext_ref_count   = ext_refs.keys.size
     length          = 0
     index           = 0
 
@@ -2514,10 +2458,7 @@ class Workbook < BIFFWriter
       index   = 0
       key     = "#{index}:#{index}"
 
-      unless ext_refs.has_key?(key)
-        ext_refs[key] = ext_ref_count
-        ext_ref_count += 1
-      end
+      add_ext_refs(ext_refs, key) unless ext_refs.has_key?(key)
     end
 
     @defined_names.each do |defined_name|
@@ -2528,34 +2469,23 @@ class Workbook < BIFFWriter
 
       rowmin      = worksheet.title_rowmin
       colmin      = worksheet.title_colmin
-      filter      = worksheet.filter_count
       key         = "#{index}:#{index}"
       index += 1
 
       # Add area NAME records
       #
-      if !worksheet.print_rowmin.nil?
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
+      if worksheet.print_rowmin
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       end
 
       # Add title  NAME records
       #
       if rowmin and colmin
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
-
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 46
       elsif rowmin or colmin
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       else
         # TODO, may need this later.
@@ -2563,17 +2493,14 @@ class Workbook < BIFFWriter
 
       # Add Autofilter  NAME records
       #
-      if filter != 0
-        if ext_refs[key].nil?
-          ext_refs[key] = ext_ref_count
-          ext_ref_count += 1
-        end
+      unless worksheet.filter_count == 0
+        add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       end
     end
 
     # Update the ref counts.
-    @ext_ref_count = ext_ref_count
+    ext_ref_count = ext_refs.keys.size
     @ext_refs      = ext_refs
 
     # If there are no external refs then we don't write, SUPBOOK, EXTERNSHEET
@@ -2589,6 +2516,11 @@ class Workbook < BIFFWriter
 
     length
   end
+
+  def add_ext_refs(ext_refs, key)
+    ext_refs[key] = ext_refs.keys.size
+  end
+  private :add_ext_refs
 
   ###############################################################################
   #
@@ -2635,10 +2567,7 @@ class Workbook < BIFFWriter
     continue       = 0
 
     strings.each do |string|
-
       string_length = string.bytesize
-      encoding      = string.unpack("xx C")[0]
-      split_string  = 0
 
       # Block length is the total length of the strings that will be
       # written out in a single SST or CONTINUE block.
@@ -2651,44 +2580,14 @@ class Workbook < BIFFWriter
         next
       end
 
-
       # Deal with the cases where the next string to be written will exceed
       # the CONTINUE boundary. If the string is very long it may need to be
       # written in more than one CONTINUE record.
-      #
+      encoding      = string.unpack("xx C")[0]
+      split_string  = 0
       while block_length >= continue_limit
-
-        # We need to avoid the case where a string is continued in the first
-        # n bytes that contain the string header information.
-        #
-        header_length   = 3 # Min string + header size -1
-        space_remaining = continue_limit -written -continue
-
-
-        # Unicode data should only be split on char (2 byte) boundaries.
-        # Therefore, in some cases we need to reduce the amount of available
-        # space by 1 byte to ensure the correct alignment.
-        align = 0
-
-        # Only applies to Unicode strings
-        if encoding == 1
-          # Min string + header size -1
-          header_length = 4
-
-          if space_remaining > header_length
-            # String contains 3 byte header => split on odd boundary
-            if split_string == 0 and space_remaining % 2 != 1
-              space_remaining -= 1
-              align = 1
-              # Split section without header => split on even boundary
-            elsif split_string != 0 and space_remaining % 2 == 1
-              space_remaining -= 1
-              align = 1
-            end
-
-            split_string = 1
-          end
-        end
+        header_length, space_remaining, align, split_string =
+          _split_string_setup(encoding, split_string, continue_limit, written, continue)
 
         if space_remaining > header_length
           # Write as much as possible of the string in the current block
@@ -2750,6 +2649,38 @@ class Workbook < BIFFWriter
   end
   private :calculate_shared_string_sizes
 
+  def _split_string_setup(encoding, split_string, continue_limit, written, continue)
+    # We need to avoid the case where a string is continued in the first
+    # n bytes that contain the string header information.
+    header_length   = 3 # Min string + header size -1
+    space_remaining = continue_limit - written - continue
+
+    # Unicode data should only be split on char (2 byte) boundaries.
+    # Therefore, in some cases we need to reduce the amount of available
+    # space by 1 byte to ensure the correct alignment.
+    align = 0
+
+    # Only applies to Unicode strings
+    if encoding == 1
+      # Min string + header size -1
+      header_length = 4
+      if space_remaining > header_length
+        # String contains 3 byte header => split on odd boundary
+        if split_string == 0 and space_remaining % 2 != 1
+          space_remaining -= 1
+          align = 1
+          # Split section without header => split on even boundary
+        elsif split_string != 0 and space_remaining % 2 == 1
+          space_remaining -= 1
+          align = 1
+        end
+        split_string = 1
+      end
+    end
+    [header_length, space_remaining, align, split_string]
+  end
+  private :_split_string_setup
+
   ###############################################################################
   #
   # _store_shared_strings()
@@ -2797,7 +2728,6 @@ class Workbook < BIFFWriter
     # Write the SST block header information
     header      = [record, length].pack("vv")
     data        = [@sinfo[:str_total], @sinfo[:str_unique]].pack("VV")
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     # Iterate through the strings and write them out
@@ -2805,15 +2735,11 @@ class Workbook < BIFFWriter
     strings.each do |string|
 
       string_length = string.bytesize
-      encoding      = string.unpack("xx C")[0]
-      split_string  = 0
-      bucket_string = 0 # Used to track EXTSST bucket offsets.
 
       # Check if the string is at the start of a EXTSST bucket.
       extsst_str_num += 1
-      if extsst_str_num % @extsst_bucket_size == 0
-        bucket_string = 1
-      end
+      # Used to track EXTSST bucket offsets.
+      bucket_string = (extsst_str_num % @extsst_bucket_size == 0)
 
       # Block length is the total length of the strings that will be
       # written out in a single SST or CONTINUE block.
@@ -2824,15 +2750,11 @@ class Workbook < BIFFWriter
       if block_length < continue_limit
 
         # Store location of EXTSST bucket string.
-        if bucket_string != 0
-          global_offset   = @datasize
-          local_offset    = @datasize - sst_block_start
-
-          @extsst_offsets.push([global_offset, local_offset])
-          bucket_string = 0
+        if bucket_string
+          @extsst_offsets.push([@datasize, @datasize - sst_block_start])
+          bucket_string = false
         end
 
-        print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
         append(string)
         written += string_length
         next
@@ -2841,57 +2763,23 @@ class Workbook < BIFFWriter
       # Deal with the cases where the next string to be written will exceed
       # the CONTINUE boundary. If the string is very long it may need to be
       # written in more than one CONTINUE record.
-      #
+      encoding      = string.unpack("xx C")[0]
+      split_string  = 0
       while block_length >= continue_limit
-
-        # We need to avoid the case where a string is continued in the first
-        # n bytes that contain the string header information.
-        #
-        header_length   = 3 # Min string + header size -1
-        space_remaining = continue_limit -written -continue
-
-
-        # Unicode data should only be split on char (2 byte) boundaries.
-        # Therefore, in some cases we need to reduce the amount of available
-        # space by 1 byte to ensure the correct alignment.
-        align = 0
-
-        # Only applies to Unicode strings
-        if encoding == 1
-          # Min string + header size -1
-          header_length = 4
-
-          if space_remaining > header_length
-            # String contains 3 byte header => split on odd boundary
-            if split_string == 0 and space_remaining % 2 != 1
-              space_remaining -= 1
-              align = 1
-              # Split section without header => split on even boundary
-            elsif split_string != 0 and space_remaining % 2 == 1
-              space_remaining -= 1
-              align = 1
-            end
-
-            split_string = 1
-          end
-        end
+        header_length, space_remaining, align, split_string =
+          _split_string_setup(encoding, split_string, continue_limit, written, continue)
 
         if space_remaining > header_length
           # Write as much as possible of the string in the current block
           tmp = string[0, space_remaining]
 
           # Store location of EXTSST bucket string.
-          if bucket_string != 0
-            global_offset   = @datasize
-            local_offset    = @datasize - sst_block_start
-
-            @extsst_offsets.push([global_offset, local_offset])
-            bucket_string = 0
+          if bucket_string
+            @extsst_offsets.push([@datasize, @datasize - sst_block_start])
+            bucket_string = false
           end
 
-          print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           append(tmp)
-
 
           # The remainder will be written in the next block(s)
           string = string[space_remaining .. string.length-1]
@@ -2924,7 +2812,6 @@ class Workbook < BIFFWriter
           header         = [record, length].pack("vv")
           header        += [encoding].pack("C") if continue != 0
 
-          print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           append(header)
         end
 
@@ -2935,15 +2822,10 @@ class Workbook < BIFFWriter
         if block_length < continue_limit
 
           # Store location of EXTSST bucket string.
-          if bucket_string != 0
-            global_offset   = @datasize
-            local_offset    = @datasize - sst_block_start
-
-            @extsst_offsets.push([global_offset, local_offset])
-
-            bucket_string = 0
+          if bucket_string
+            @extsst_offsets.push([@datasize, @datasize - sst_block_start])
+            bucket_string = false
           end
-          print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
           append(string)
 
           written = block_length
@@ -3002,7 +2884,6 @@ class Workbook < BIFFWriter
       data += [offset[0], offset[1], 0].pack('Vvv')
     end
 
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_extsst
@@ -3068,7 +2949,6 @@ class Workbook < BIFFWriter
 
     # Case 1 above. Just return the data as it is.
     if data.bytesize <= limit
-      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(data)
       return
     end
@@ -3077,7 +2957,6 @@ class Workbook < BIFFWriter
     tmp = data.dup
     tmp[0, limit + 4] = ""
     tmp[2, 2] = [limit].pack('v')
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(tmp)
 
     # Add MSODRAWINGGROUP and CONTINUE blocks for Case 3 above.
@@ -3093,13 +2972,11 @@ class Workbook < BIFFWriter
 
       tmp = data.dup
       tmp[0, limit] = ''
-      print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, tmp)
     end
 
     # Last CONTINUE block for remaining data. Case 2 and 3 above.
     header = [continue, data.bytesize].pack("vv")
-    print "#{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     # Turn the base class _add_continue() method back on.

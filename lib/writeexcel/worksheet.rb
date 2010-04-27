@@ -11,9 +11,10 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
+require 'writeexcel/biffwriter'
 require 'writeexcel/format'
 require 'writeexcel/formula'
-require 'writeexcel/workbook'
+require 'writeexcel/compatibility'
 
 class MaxSizeError < StandardError   #:nodoc:
 end
@@ -577,7 +578,7 @@ class Worksheet < BIFFWriter
     return -2 if check_dimensions(row, 0, 0, 1) != 0
 
     # Check for a format object
-    if format.kind_of?(Format)
+    if format.respond_to?(:xf_index)
       ixfe = format.xf_index
     else
       ixfe = 0x0F
@@ -621,7 +622,6 @@ class Worksheet < BIFFWriter
     if @compatibility != 0
       @row_data[row] = header + data
     else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data)
     end
 
@@ -1012,7 +1012,7 @@ class Worksheet < BIFFWriter
       args = substitute_cellref(*args)
     end
     raise "Incorrect number of arguments" if args.size != 6 and args.size != 7
-    raise "Format argument is not a format object" unless args[5].kind_of?(Format)
+    raise "Format argument is not a format object" unless args[5].respond_to?(:xf_index)
 
     rwFirst  = args[0]
     colFirst = args[1]
@@ -1128,8 +1128,8 @@ class Worksheet < BIFFWriter
   #
   # See the tab_colors.rb program in the examples directory of the distro.
   #
-  def set_tab_color(colour)
-    color = Format._get_color(colour)
+  def set_tab_color(color)
+    color = Colors.new.get_color(color)
     color = 0 if color == 0x7FFF # Default color.
     @tab_color = color
   end
@@ -1657,24 +1657,7 @@ class Worksheet < BIFFWriter
   # distribution.
   #
   def set_header(string = '', margin = 0.50, encoding = 0)
-    string = convert_to_ascii_if_ascii(string)
-
-    limit    = encoding != 0 ? 255 *2 : 255
-
-    # Handle utf8 strings
-    if string.encoding == Encoding::UTF_8
-      string = string.encode('UTF-16BE')
-      encoding = 1
-    end
-
-    if string.bytesize >= limit
-      #           carp 'Header string must be less than 255 characters';
-      return
-    end
-
-    @header          = string
-    @margin_header   = margin
-    @header_encoding = encoding
+    set_header_footer_common(:header, string, margin, encoding)
   end
 
   #
@@ -1684,13 +1667,17 @@ class Worksheet < BIFFWriter
   # there.
   #
   def set_footer(string = '', margin = 0.50, encoding = 0)
+    set_header_footer_common(:footer, string, margin, encoding)
+  end
+
+  def set_header_footer_common(type, string, margin, encoding)
     string = convert_to_ascii_if_ascii(string)
 
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
     if string.encoding == Encoding::UTF_8
-      string = string.encode('UTF-16BE')
+      string = utf8_to_16be(string)
       encoding = 1
     end
 
@@ -1699,10 +1686,17 @@ class Worksheet < BIFFWriter
       return
     end
 
-    @footer          = string
-    @margin_footer   = margin
-    @footer_encoding = encoding
+    if type == :header
+      @header          = string
+      @margin_header   = margin
+      @header_encoding = encoding
+    else
+      @footer          = string
+      @margin_footer   = margin
+      @footer_encoding = encoding
+    end
   end
+  private :set_header_footer_common
 
   #
   # Set the rows to repeat at the top of each printed page.
@@ -1987,7 +1981,7 @@ class Worksheet < BIFFWriter
   # worksheet in line with an Excel internal limitation.
   #
   def set_h_pagebreaks(breaks)
-    @hbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
+    @hbreaks += breaks.respond_to?(:to_ary) ? breaks : [breaks]
   end
 
   #
@@ -2013,7 +2007,7 @@ class Worksheet < BIFFWriter
   # it will override all manual page breaks.
   #
   def set_v_pagebreaks(breaks)
-    @vbreaks += breaks.kind_of?(Array) ? breaks : [breaks]
+    @vbreaks += breaks.respond_to?(:to_ary) ? breaks : [breaks]
   end
 
   ###############################################################################
@@ -2087,9 +2081,9 @@ class Worksheet < BIFFWriter
       end
       expression_1 = parse_filter_tokens(expression, tokens[0..2])
       expression_2 = parse_filter_tokens(expression, tokens[4..6])
-      return [expression_1, conditional, expression_2].flatten
+      [expression_1, conditional, expression_2].flatten
     else
-      return parse_filter_tokens(expression, tokens)
+      parse_filter_tokens(expression, tokens)
     end
   end
 #  private :parse_filter_expression
@@ -2554,28 +2548,28 @@ class Worksheet < BIFFWriter
     end
 
     # Match an array ref.
-    if token.kind_of?(Array)
-      return write_row(*args)
-    elsif token.kind_of?(Numeric)
-      return write_number(*args)
+    if token.respond_to?(:to_ary)
+      write_row(*args)
+    elsif token.respond_to?(:coerce)  # Numeric
+      write_number(*args)
       # Match http, https or ftp URL
     elsif token =~ %r|^[fh]tt?ps?://|    and @writing_url == 0
-      return write_url(*args)
+      write_url(*args)
       # Match mailto:
     elsif token =~ %r|^mailto:|          and @writing_url == 0
-      return write_url(*args)
+      write_url(*args)
       # Match internal or external sheet link
     elsif token =~ %r!^(?:in|ex)ternal:! and @writing_url == 0
-      return write_url(*args)
+      write_url(*args)
       # Match formula
     elsif token =~ /^=/
-      return write_formula(*args)
+      write_formula(*args)
       # Match blank
     elsif token == ''
       args.delete_at(2)     # remove the empty string from the parameter list
-      return write_blank(*args)
+      write_blank(*args)
     else
-      return write_string(*args)
+      write_string(*args)
     end
   end
 
@@ -2632,7 +2626,6 @@ class Worksheet < BIFFWriter
       tmp[col] = header + data + xl_double
       @table[row] = tmp
     else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data, xl_double)
     end
 
@@ -2703,8 +2696,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings
     if str.encoding == Encoding::UTF_8
-      str_utf16le = NKF.nkf('-w16L0 -m0 -W', str)
-      str_utf16le.force_encoding('UTF-16LE')
+      str_utf16le = utf8_to_16le(str)
       return write_utf16le_string(row, col, str_utf16le, args[3])
     end
 
@@ -2732,17 +2724,26 @@ class Worksheet < BIFFWriter
     data   = [row, col, xf, @sinfo[:str_table][str]].pack('vvvV')
 
     # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data
-      @table[row] = tmp
-    else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-      append(header, data)
-    end
+    store_with_compatibility(row, col, header + data)
 
     str_error
   end
+
+  def store_with_compatibility(row, col, data)
+    if @compatibility != 0
+      store_to_table(row, col, data)
+    else
+      append(data)
+    end
+  end
+  private :store_with_compatibility
+
+  def store_to_table(row, col, data)
+    tmp = []
+    tmp[col] = data
+    @table[row] = tmp
+  end
+  private :store_to_table
 
   #
   # :call-seq:
@@ -2805,14 +2806,7 @@ class Worksheet < BIFFWriter
     data      = [row, col, xf].pack('vvv')
 
     # Store the data or write immediately depending    on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data
-      @table[row] = tmp
-    else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-      append(header, data)
-    end
+    store_with_compatibility(row, col, header + data)
 
     0
   end
@@ -3103,29 +3097,12 @@ class Worksheet < BIFFWriter
 
     return -1 if args.size < 3   # Check the number of args
 
-    record    = 0x0006     # Record identifier
-    # length               # Bytes to follow
-
     row       = args[0]      # Zero indexed row
     col       = args[1]      # Zero indexed column
     formula   = args[2].dup  # The formula text string
     value     = args[4]      # The formula text string
 
-
     xf        = xf_record_index(row, col, args[3])  # The cell format
-    chn       = 0x0000                         # Must be zero
-    is_string = 0                              # Formula evaluates to str
-    # num                                      # Current value of formula
-    # grbi                                     # Option flags
-
-    # Excel normally stores the last calculated value of the formula in num.
-    # Clearly we are not in a position to calculate this "a priori". Instead
-    # we set num to zero and set the option flags in grbit to ensure
-    # automatic calculation of the formula when the file is opened.
-    # As a workaround for some non-Excel apps we also allow the user to
-    # specify the result of the formula.
-    #
-    num, grbit, is_string = encode_formula_result(value)
 
     # Check that row and col are valid and store max and min values
     return -2 if check_dimensions(row, col) != 0
@@ -3138,33 +3115,7 @@ class Worksheet < BIFFWriter
     # because ruby doesn't have Perl's "wantarray"
     formula = @parser.parse_formula(formula, true)
 
-    #       if ($@) {
-    #           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
-    #           croak $@       # Re-raise the error
-    #       }
-
-    formlen = formula.bytesize     # Length of the binary string
-    length  = 0x16 + formlen     # Length of the record data
-
-    header  = [record, length].pack("vv")
-    data    = [row, col, xf].pack("vvv") +
-    num +
-    [grbit, chn, formlen].pack('vVv')
-
-    # The STRING record if the formula evaluates to a string.
-    string  = ''
-    string  = get_formula_string(value) if is_string != 0
-
-    # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data + formula + string
-      @table[row] = tmp
-    else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-      append(header, data, formula, string)
-    end
-
+    store_formula_common(row, col, xf, value, formula)
     0
   end
 
@@ -3250,7 +3201,7 @@ class Worksheet < BIFFWriter
     end
 
     # Catch non array refs passed by user.
-    unless args[2].kind_of?(Array)
+    unless args[2].respond_to?(:to_ary)
       raise "Not an array ref in call to write_row() #{$!}";
     end
 
@@ -3259,7 +3210,7 @@ class Worksheet < BIFFWriter
     unless tokens.nil?
       tokens.each do |token|
         # Check for nested arrays
-        if token.kind_of?(Array)
+        if token.respond_to?(:to_ary)
           ret = write_col(row, col, token, options)
         else
           ret = write(row, col, token, options)
@@ -3354,7 +3305,7 @@ class Worksheet < BIFFWriter
     end
 
     # Catch non array refs passed by user.
-    unless args[2].kind_of?(Array)
+    unless args[2].respond_to?(:to_ary)
       raise "Not an array ref in call to write_row()";
     end
 
@@ -3702,14 +3653,14 @@ class Worksheet < BIFFWriter
   # Note: this is a function, not a method.
   #
   def xf_record_index(row, col, xf=nil)       #:nodoc:
-    if xf.kind_of?(Format)
-      return xf.xf_index
+    if xf.respond_to?(:xf_index)
+      xf.xf_index
     elsif @row_formats.has_key?(row)
-      return @row_formats[row].xf_index
+      @row_formats[row].xf_index
     elsif @col_formats.has_key?(col)
-      return @col_formats[col].xf_index
+      @col_formats[col].xf_index
     else
-      return 0x0F
+      0x0F
     end
   end
   private :xf_record_index
@@ -3730,7 +3681,7 @@ class Worksheet < BIFFWriter
   # Ex: ("A4", "Hello") is converted to (3, 0, "Hello").
   #
   def substitute_cellref(cell, *args)       #:nodoc:
-    return [*args] if cell.kind_of?(Numeric)
+    return [*args] if cell.respond_to?(:coerce) # Numeric
 
     cell.upcase!
 
@@ -3912,7 +3863,7 @@ class Worksheet < BIFFWriter
 
     # Handle utf8 strings.
     if string.encoding == Encoding::UTF_8
-      string = string.encode('UTF-16BE')
+      string = utf8_to_16be(string)
       encoding = 1
     end
 
@@ -4113,9 +4064,6 @@ class Worksheet < BIFFWriter
 
     return -1 if (args.size < 2)   # Check the number of args
 
-    record      = 0x0006   # Record identifier
-    # length                 # Bytes to follow
-
     row         = args.shift    # Zero indexed row
     col         = args.shift    # Zero indexed column
     formula_ref = args.shift    # Array ref with formula tokens
@@ -4126,7 +4074,7 @@ class Worksheet < BIFFWriter
     raise "Odd number of elements in pattern/replacement list" if pairs.size % 2 != 0
 
     # Check that formula is an array ref
-    raise "Not a valid formula" unless formula_ref.kind_of?(Array)
+    raise "Not a valid formula" unless formula_ref.respond_to?(:to_ary)
 
     tokens  = formula_ref.join("\t").split("\t")
 
@@ -4158,11 +4106,15 @@ class Worksheet < BIFFWriter
     raise "Unrecognised token in formula" unless formula
 
     xf        = xf_record_index(row, col, format) # The cell format
-    chn       = 0x0000                          # Must be zero
-    is_string = 0                               # Formula evaluates to str
-    #  num                                      # Current value of formula
-    #  grbit                                    # Option flags
 
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    store_formula_common(row, col, xf, value, formula)
+    0
+  end
+
+  def store_formula_common(row, col, xf, value, formula)
     # Excel normally stores the last calculated value of the formula in $num.
     # Clearly we are not in a position to calculate this "a priori". Instead
     # we set $num to zero and set the option flags in $grbit to ensure
@@ -4170,14 +4122,16 @@ class Worksheet < BIFFWriter
     # As a workaround for some non-Excel apps we also allow the user to
     # specify the result of the formula.
     #
+    # is_string                                # Formula evaluates to str
+    # num                                      # Current value of formula
+    # grbit                                    # Option flags
     num, grbit, is_string = encode_formula_result(value)
 
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
+    record    = 0x0006       # Record identifier
+    chn       = 0x0000       # Must be zero
 
     formlen   = formula.bytesize     # Length of the binary string
-    length    = 0x16 + formlen     # Length of the record data
+    length    = 0x16 + formlen       # Length of the record data
 
     header    = [record, length].pack("vv")
     data      = [row, col, xf].pack("vvv") +
@@ -4188,19 +4142,10 @@ class Worksheet < BIFFWriter
     string  = ''
     string  = get_formula_string(value) if is_string != 0
 
-
     # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data + formula + string
-      @table[row] = tmp
-    else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
-      append(header, data, formula, string)
-    end
-
-    0
+    store_with_compatibility(row, col, header + data + formula + string)
   end
+  private :store_formula_common
 
   #
   # :call-seq:
@@ -4345,7 +4290,7 @@ class Worksheet < BIFFWriter
     # in order to protect the callers args. We don't use "local @_" in case of
     # perl50005 threads.
     #
-    args[5], args[6] = [ args[6], args[5] ] if args[5].kind_of?(Format)
+    args[5], args[6] = [ args[6], args[5] ] if args[5].respond_to?(:xf_index)
 
     url = args[4]
 
@@ -4420,7 +4365,6 @@ class Worksheet < BIFFWriter
     data        = [row1, row2, col1, col2].pack("vvvv")
 
     # Write the packed data
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append( header, data,unknown1,options,unknown2,url_len,url)
 
     error
@@ -4491,7 +4435,6 @@ class Worksheet < BIFFWriter
     data        = [row1, row2, col1, col2].pack("vvvv")
 
     # Write the packed data
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append( header, data, unknown1, options, url_len, url)
 
     error
@@ -4542,21 +4485,7 @@ class Worksheet < BIFFWriter
     absolute    = 0x00
     absolute    = 0x02  if url =~ /^[A-Za-z]:/
 
-    # Determine if the link contains a sheet reference and change some of the
-    # parameters accordingly.
-    # Split the dir name and sheet name (if it exists)
-    #
-    dir_long , sheet = url.split(/\#/)
-    link_type        = 0x01 | absolute
-
-    unless sheet.nil?
-      link_type |= 0x08
-      sheet_len  = [sheet.bytesize + 0x01].pack("V")
-      sheet      = sheet.split('').join("\0") + "\0\0\0"
-    else
-      sheet_len   = ''
-      sheet       = ''
-    end
+    dir_long, link_type, sheet_len, sheet = analyze_link(url, absolute)
 
     # Pack the link type
     link_type      = link_type.pack("V")
@@ -4606,7 +4535,6 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
 
     # Write the packed data
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     error
@@ -4640,25 +4568,10 @@ class Worksheet < BIFFWriter
     @writing_url = 0
     return error if error == -2
 
-    # Determine if the link contains a sheet reference and change some of the
-    # parameters accordingly.
-    # Split the dir name and sheet name (if it exists)
-    #
-    dir_long , sheet = url.split(/\#/)
-    link_type        = 0x0103  # Always absolute
-
-    unless sheet.nil?
-      link_type |= 0x08
-      sheet_len  = [sheet.bytesize + 0x01].pack("V")
-      sheet      = sheet.split('').join("\0") + "\0\0\0"
-    else
-      sheet_len   = ''
-      sheet       = ''
-    end
+    dir_long, link_type, sheet_len, sheet = analyze_link(url)
 
     # Pack the link type
     link_type      = [link_type].pack("V")
-
 
     # Make the string null terminated
     dir_long      += "\0"
@@ -4686,12 +4599,32 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
 
     # Write the packed data
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
 
     error
   end
   private :write_url_external_net
+
+  # Determine if the link contains a sheet reference and change some of the
+  # parameters accordingly.
+  # Split the dir name and sheet name (if it exists)
+  #
+  def analyze_link(url, absolute = nil)
+    dir_long , sheet = url.split(/\#/)
+    link_type = absolute ? (0x01 | absolute) : 0x0103
+
+    unless sheet.nil?
+      link_type |= 0x08
+      sheet_len  = [sheet.bytesize + 0x01].pack("V")
+      sheet      = sheet.split('').join("\0") + "\0\0\0"
+    else
+      sheet_len   = ''
+      sheet       = ''
+    end
+
+    [dir_long, link_type, sheet_len, sheet]
+  end
+  private :analyze_link
 
   #
   # :call-seq:
@@ -4913,7 +4846,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :write_row_default
@@ -4993,7 +4925,6 @@ class Worksheet < BIFFWriter
     fields = [row_min, row_max, col_min, col_max, reserved]
     data   = fields.pack("VVvvv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
 #  private :store_dimensions
@@ -5048,7 +4979,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data    =[grbit, rwTop, colLeft, rgbHdr, wScaleSLV, wScaleNormal, reserved].pack("vvvVvvV")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_window2
@@ -5062,7 +4992,6 @@ class Worksheet < BIFFWriter
   def store_page_view   #:nodoc:
     return if @page_view == 0
     data    = ['C8081100C808000000000040000000000900000000'].pack("H*")
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(data)
   end
   private :store_page_view
@@ -5088,7 +5017,6 @@ class Worksheet < BIFFWriter
     data   = [record, zero, zero, zero, zero,
     zero, unknown, zero, color, zero].pack("vvvvvvvvvv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_tab_color
@@ -5109,7 +5037,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [grbit,  height].pack("vv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_defrow
@@ -5129,7 +5056,6 @@ class Worksheet < BIFFWriter
     header   = [record, length].pack("vv")
     data     = [colwidth].pack("v")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_defcol
@@ -5170,7 +5096,7 @@ class Worksheet < BIFFWriter
     reserved = 0x00                 # Reserved
 
     # Check for a format object
-    if !format.nil? && format.kind_of?(Format)
+    if !format.nil? && format.respond_to?(:xf_index)
       ixfe = format.xf_index
     else
       ixfe = 0x0F
@@ -5190,7 +5116,6 @@ class Worksheet < BIFFWriter
     data   = [firstcol, lastcol, coldx,
               ixfe, grbit, reserved].pack("vvvvvC")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
 #  private :store_colinfo
@@ -5211,7 +5136,6 @@ class Worksheet < BIFFWriter
 
     header = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header)
   end
 #  private :store_filtermode
@@ -5233,7 +5157,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [num_filters].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_autofilterinfo
@@ -5276,7 +5199,6 @@ class Worksheet < BIFFWriter
     data = [pnn, rwAct, colAct, irefAct, cref,
     rwFirst, rwLast, colFirst, colLast].pack('CvvvvvvCC')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_selection
@@ -5303,7 +5225,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [cxals].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_externcount
@@ -5342,7 +5263,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [cch, rgch].pack('CC')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data, sheetname)
   end
   private :store_externsheet
@@ -5402,7 +5322,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [x, y, rwtop, colleft, pnnAct].pack('vvvvv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_panes
@@ -5463,7 +5382,6 @@ class Worksheet < BIFFWriter
     data2  = numHdr + numFtr
     data3  = [iCopies].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data1, data2, data3)
 
   end
@@ -5476,13 +5394,35 @@ class Worksheet < BIFFWriter
   # Store the header caption BIFF record.
   #
   def store_header   #:nodoc:
-    record      = 0x0014              # Record identifier
-    # length                          # Bytes to follow
+    store_header_footer_common(:header)
+  end
+  private :store_header
 
-    str         = @header             # header string
-    cch         = str.bytesize          # Length of header string
-    encoding    = @header_encoding    # Character encoding
+  ###############################################################################
+  #
+  # _store_footer()
+  #
+  # Store the footer caption BIFF record.
+  #
+  def store_footer   #:nodoc:
+    store_header_footer_common(:footer)
+  end
+  private :store_footer
 
+  #
+  # type :  :header / :footer
+  #
+  def store_header_footer_common(type)
+    if type == :header
+      record   = 0x0014
+      str      = @header
+      encoding = @header_encoding
+    else
+      record   = 0x0015
+      str      = @footer
+      encoding = @footer_encoding
+    end
+    cch         = str.bytesize        # Length of header/footer string
 
     # Character length is num of chars not num of bytes
     cch         /= 2 if encoding != 0
@@ -5495,41 +5435,9 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack('vv')
     data        = [cch, encoding].pack('vC')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data, str)
   end
-  private :store_header
-
-  ###############################################################################
-  #
-  # _store_footer()
-  #
-  # Store the footer caption BIFF record.
-  #
-  def store_footer   #:nodoc:
-    record      = 0x0015                       # Record identifier
-    # length;                                     # Bytes to follow
-
-    str         = @footer             # footer string
-    cch         = str.bytesize                 # Length of ooter string
-    encoding    = @footer_encoding    # Character encoding
-
-
-    # Character length is num of chars not num of bytes
-    cch         /= 2 if encoding != 0
-
-    # Change the UTF-16 name from BE to LE
-    str         = str.unpack('v*').pack('n*') if encoding != 0
-
-    length      = 3 + str.bytesize
-
-    header      = [record, length].pack('vv')
-    data        =  [cch, encoding].pack('vC')
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data, str)
-  end
-  private :store_footer
+  private :store_header_footer_common
 
   ###############################################################################
   #
@@ -5538,16 +5446,7 @@ class Worksheet < BIFFWriter
   # Store the horizontal centering HCENTER BIFF record.
   #
   def store_hcenter   #:nodoc:
-    record   = 0x0083              # Record identifier
-    length   = 0x0002              # Bytes to follow
-
-    fHCenter = @hcenter   # Horizontal centering
-
-    header   = [record, length].pack('vv')
-    data     = [fHCenter].pack('v')
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_biff_common(:hcenter)
   end
   private :store_hcenter
 
@@ -5558,16 +5457,7 @@ class Worksheet < BIFFWriter
   # Store the vertical centering VCENTER BIFF record.
   #
   def store_vcenter   #:nodoc:
-    record   = 0x0084              # Record identifier
-    length   = 0x0002              # Bytes to follow
-
-    mfVCenter = @vcenter   # Horizontal centering
-
-    header    = [record, length].pack('vv')
-    data      = [mfVCenter].pack('v')
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_biff_common(:vcenter)
   end
   private :store_vcenter
 
@@ -5578,18 +5468,7 @@ class Worksheet < BIFFWriter
   # Store the LEFTMARGIN BIFF record.
   #
   def store_margin_left   #:nodoc:
-    record  = 0x0026                   # Record identifier
-    length  = 0x0008                   # Bytes to follow
-
-    margin  = @margin_left    # Margin in inches
-
-    header  = [record, length].pack('vv')
-    data    = [margin].pack('d')
-
-    data = data.reverse if @byte_order != 0 && @byte_order != ''
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_margin_common(0x0026, 0x0008, @margin_left)
   end
   private :store_margin_left
 
@@ -5600,18 +5479,7 @@ class Worksheet < BIFFWriter
   # Store the RIGHTMARGIN BIFF record.
   #
   def store_margin_right   #:nodoc:
-    record  = 0x0027                   # Record identifier
-    length  = 0x0008                   # Bytes to follow
-
-    margin  = @margin_right   # Margin in inches
-
-    header  = [record, length].pack('vv')
-    data    = [margin].pack('d')
-
-    data = data.reverse if @byte_order != 0 && @byte_order != ''
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_margin_common(0x0027, 0x0008, @margin_right)
   end
   private :store_margin_right
 
@@ -5622,18 +5490,7 @@ class Worksheet < BIFFWriter
   # Store the TOPMARGIN BIFF record.
   #
   def store_margin_top   #:nodoc:
-    record  = 0x0028                   # Record identifier
-    length  = 0x0008                   # Bytes to follow
-
-    margin  = @margin_top     # Margin in inches
-
-    header  = [record, length].pack('vv')
-    data    = [margin].pack('d')
-
-    data = data.reverse if @byte_order != 0 && @byte_order != ''
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_margin_common(0x0028, 0x0008, @margin_top)
   end
   private :store_margin_top
 
@@ -5644,20 +5501,24 @@ class Worksheet < BIFFWriter
   # Store the BOTTOMMARGIN BIFF record.
   #
   def store_margin_bottom   #:nodoc:
-    record  = 0x0029                   # Record identifier
-    length  = 0x0008                   # Bytes to follow
+    store_margin_common(0x0029, 0x0008, @margin_bottom)
+  end
+  private :store_margin_bottom
 
-    margin  = @margin_bottom  # Margin in inches
-
+  #
+  # record     : Record identifier
+  # length     : bytes to follow
+  # margin     : Margin in inches
+  #
+  def store_margin_common(record, length, margin)
     header  = [record, length].pack('vv')
     data    = [margin].pack('d')
 
     data = data.reverse if @byte_order != 0 && @byte_order != ''
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
-  private :store_margin_bottom
+  private :store_margin_common
 
   ###############################################################################
   #
@@ -5691,7 +5552,6 @@ class Worksheet < BIFFWriter
     header   = [record, length].pack("vv")
     data     = [cref, rwFirst, rwLast, colFirst, colLast].pack("vvvvv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 
@@ -5702,16 +5562,7 @@ class Worksheet < BIFFWriter
   # Write the PRINTHEADERS BIFF record.
   #
   def store_print_headers   #:nodoc:
-    record      = 0x002a                   # Record identifier
-    length      = 0x0002                   # Bytes to follow
-
-    fPrintRwCol = @print_headers           # Boolean flag
-
-    header      = [record, length].pack("vv")
-    data        = [fPrintRwCol].pack("v")
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_biff_common(:print_headers)
   end
   private :store_print_headers
 
@@ -5723,18 +5574,33 @@ class Worksheet < BIFFWriter
   # GRIDSET record.
   #
   def store_print_gridlines   #:nodoc:
-    record      = 0x002b                    # Record identifier
-    length      = 0x0002                    # Bytes to follow
-
-    fPrintGrid  = @print_gridlines          # Boolean flag
-
-    header      = [record, length].pack("vv")
-    data        = [fPrintGrid].pack("v")
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_biff_common(:print_gridlines)
   end
   private :store_print_gridlines
+
+  def store_biff_common(type)
+    case type
+    when :hcenter
+      record = 0x0083
+      flag   = @hcenter
+    when :vcenter
+      record = 0x0084
+      flag   = @vcenter
+    when :print_headers
+      record = 0x002a
+      flag   = @print_headers
+    when :print_gridlines
+      record = 0x002b
+      flag   = @print_gridlines
+    end
+    length   = 0x0002
+
+    header      = [record, length].pack("vv")
+    data        = [flag].pack("v")
+
+    prepend(header, data)
+  end
+  private :store_biff_common
 
   ###############################################################################
   #
@@ -5752,7 +5618,6 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
     data        = [fGridSet].pack("v")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_gridset
@@ -5798,7 +5663,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [dxRwGut, dxColGut, row_level, col_level].pack("vvvv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_guts
@@ -5827,7 +5691,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack("vv")
     data   = [grbit].pack('v')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_wsbool
@@ -5839,26 +5702,7 @@ class Worksheet < BIFFWriter
   # Write the HORIZONTALPAGEBREAKS BIFF record.
   #
   def store_hbreak   #:nodoc:
-    # Return if the user hasn't specified pagebreaks
-    return if @hbreaks.size == 0
-
-    # Sort and filter array of page breaks
-    breaks  = sort_pagebreaks(@hbreaks)
-
-    record  = 0x001b               # Record identifier
-    cbrk    = breaks.size          # Number of page breaks
-    length  = 2 + 6 * cbrk         # Bytes to follow
-
-    header = [record, length].pack("vv")
-    data   = [cbrk].pack("v")
-
-    # Append each page break
-    breaks.each do |brk|
-      data += [brk, 0x0000, 0x00ff].pack("vvv")
-    end
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_breaks_common(@hbreaks)
   end
   private :store_hbreak
 
@@ -5869,28 +5713,28 @@ class Worksheet < BIFFWriter
   # Write the VERTICALPAGEBREAKS BIFF record.
   #
   def store_vbreak   #:nodoc:
-    # Return if the user hasn't specified pagebreaks
-    return if @vbreaks.size == 0
-
-    # Sort and filter array of page breaks
-    breaks  = sort_pagebreaks(@vbreaks)
-
-    record  = 0x001a               # Record identifier
-    cbrk    = breaks.size          # Number of page breaks
-    length  = 2 + 6*cbrk           # Bytes to follow
-
-    header = [record, length].pack("vv")
-    data   = [cbrk].pack("v")
-
-    # Append each page break
-    breaks.each do |brk|
-      data += [brk, 0x0000, 0x00ff].pack("vvv")
-    end
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_breaks_common(@vbreaks)
   end
   private :store_vbreak
+
+  def store_breaks_common(breaks)
+    unless breaks.empty?
+      record  = breaks == @vbreaks ? 0x001a : 0x001b # Record identifier
+      cbrk    = breaks.size   # Number of page breaks
+      length  = 2 + 6 * cbrk         # Bytes to follow
+
+      header = [record, length].pack("vv")
+      data   = [cbrk].pack("v")
+
+      # Append each sorted page break
+      sort_pagebreaks(breaks).each do |brk|
+        data += [brk, 0x0000, 0x00ff].pack("vvv")
+      end
+
+      prepend(header, data)
+    end
+  end
+  private :store_breaks_common
 
   ###############################################################################
   #
@@ -5899,19 +5743,7 @@ class Worksheet < BIFFWriter
   # Set the Biff PROTECT record to indicate that the worksheet is protected.
   #
   def store_protect   #:nodoc:
-    # Exit unless sheet protection has been specified
-    return if @protect == 0
-
-    record = 0x0012               # Record identifier
-    length = 0x0002               # Bytes to follow
-
-    fLock  = @protect             # Worksheet is protected
-
-    header = [record, length].pack("vv")
-    data   = [fLock].pack("v")
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_protect_common
   end
   private :store_protect
 
@@ -5922,21 +5754,29 @@ class Worksheet < BIFFWriter
   # Set the Biff OBJPROTECT record to indicate that objects are protected.
   #
   def store_obj_protect   #:nodoc:
-    # Exit unless sheet protection has been specified
-    return if @protect == 0
-
-    record = 0x0063               # Record identifier
-    length = 0x0002               # Bytes to follow
-
-    fLock  = @protect             # Worksheet is protected
-
-    header = [record, length].pack("vv")
-    data   = [fLock].pack("v")
-
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-    prepend(header, data)
+    store_protect_common(:obj)
   end
   private :store_obj_protect
+
+  def store_protect_common(type = nil)
+    if @protect != 0
+      record = if type == :obj      # Record identifier
+        0x0063                      # store_obj_protect
+      else
+        0x0012                      # store_protect
+      end
+      length = 0x0002               # Bytes to follow
+
+      fLock  = @protect             # Worksheet is protected
+
+      header = [record, length].pack("vv")
+      data   = [fLock].pack("v")
+
+      prepend(header, data)
+    end
+  end
+  private :store_protect_common
+
 
   ###############################################################################
   #
@@ -5956,7 +5796,6 @@ class Worksheet < BIFFWriter
     header      = [record, length].pack("vv")
     data        = [wPassword].pack("v")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_password
@@ -6024,7 +5863,6 @@ class Worksheet < BIFFWriter
         # Rewrite the min and max cols for user defined row record.
         packed_row = @row_data[row]
         packed_row[6..9] = [col_min, col_max].pack('vv')
-        print "sheet #{@name} : #{__FILE__}(#{__LINE__}) packed_row\n" if defined?($debug)
         append(packed_row)
       else
         # Write a default Row record if there isn't a  user defined ROW.
@@ -6048,7 +5886,6 @@ class Worksheet < BIFFWriter
           if @table[rw]
             @table[rw].each do |clm|
               next unless clm
-              print "sheet #{@name} : #{__FILE__}(#{__LINE__}) cell_data\n" if defined?($debug)
               append(clm)
               length = clm.bytesize
               row_offset  += length
@@ -6094,7 +5931,6 @@ class Worksheet < BIFFWriter
       data += [co].pack('v')
     end
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
   private :store_dbcell
@@ -6125,7 +5961,6 @@ class Worksheet < BIFFWriter
       data += [index + @offset + 20 + length + 4].pack('V')
     end
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
   private :store_index
@@ -6197,7 +6032,7 @@ class Worksheet < BIFFWriter
     scale_x     = args[5] || 1
     scale_y     = args[6] || 1
 
-    if chart.kind_of?(Chart)
+    if chart.respond_to?(:embedded)
       print "Not a embedded style Chart object in insert_chart()" unless chart.embedded
     else
       # Assume an external bin filename.
@@ -6359,16 +6194,10 @@ class Worksheet < BIFFWriter
     # height;     # Height of image frame
 
     # Adjust start column for offsets that are greater than the col width
-    while x1 >= size_col(col_start)
-      x1 -= size_col(col_start)
-      col_start += 1
-    end
+    x1, col_start = adjust_col_position(x1, col_start)
 
     # Adjust start row for offsets that are greater than the row height
-    while y1 >= size_row(row_start)
-      y1 -= size_row(row_start)
-      row_start += 1
-    end
+    y1, row_start = adjust_row_position(y1, row_start)
 
     # Initialise end cell to the same as the start cell
     col_end    = col_start
@@ -6378,16 +6207,10 @@ class Worksheet < BIFFWriter
     height    += y1
 
     # Subtract the underlying cell widths to find the end cell of the image
-    while width >= size_col(col_end)
-      width   -= size_col(col_end)
-      col_end += 1
-    end
+    width, col_end = adjust_col_position(width, col_end)
 
     # Subtract the underlying cell heights to find the end cell of the image
-    while height >= size_row(row_end)
-      height  -= size_row(row_end)
-      row_end += 1
-    end
+    height, row_end = adjust_row_position(height, row_end)
 
     # Bitmap isn't allowed to start or finish in a hidden cell, i.e. a cell
     # with zero eight or width.
@@ -6417,6 +6240,24 @@ class Worksheet < BIFFWriter
     ]
   end
 
+  def adjust_col_position(x, col)
+    while x >= size_col(col)
+      x -= size_col(col)
+      col += 1
+    end
+    [x, col]
+  end
+  private :adjust_col_position
+
+  def adjust_row_position(y, row)
+    while y >= size_row(row)
+      y -= size_row(row)
+      row += 1
+    end
+    [y, row]
+  end
+  private :adjust_row_position
+
   ###############################################################################
   #
   # _size_col($col)
@@ -6432,12 +6273,12 @@ class Worksheet < BIFFWriter
 
       # The relationship is different for user units less than 1.
       if width < 1
-        return (width *12).to_i
+        (width *12).to_i
       else
-        return (width *7 +5 ).to_i
+        (width *7 +5 ).to_i
       end
     else
-      return 64
+      64
     end
   end
   private :size_col
@@ -6455,12 +6296,12 @@ class Worksheet < BIFFWriter
     # Look up the cell value to see if it has been changed
     unless @row_sizes[row].nil?
       if @row_sizes[row] == 0
-        return 0
+        0
       else
-        return (4/3.0 * @row_sizes[row]).to_i
+        (4/3.0 * @row_sizes[row]).to_i
       end
     else
-      return 17
+      17
     end
   end
   private :size_row
@@ -6483,7 +6324,6 @@ class Worksheet < BIFFWriter
     header      = [record, header].pack("vv")
     data        = [@zoom, 100].pack("vv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
   private :store_zoom
@@ -6551,14 +6391,7 @@ class Worksheet < BIFFWriter
     data   = [row, col, xf, @sinfo[:str_table][str]].pack("vvvV")
 
     # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
-      tmp = []
-      tmp[col] = header + data
-      @table[row] = tmp
-    else
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-      append(header, data)
-    end
+    store_with_compatibility(row, col, header + data)
 
     str_error
   end
@@ -6716,7 +6549,6 @@ class Worksheet < BIFFWriter
     length  = data.bytesize
     header  = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     prepend(header, data)
   end
 #  private :store_autofilter
@@ -6750,7 +6582,7 @@ class Worksheet < BIFFWriter
 
       # Handle utf8 strings
       if string.encoding == Encoding::UTF_8
-        string = string.encode('UTF-16BE')
+        string = utf8_to_16be(string)
         encodign = 1
       end
 
@@ -6840,25 +6672,7 @@ class Worksheet < BIFFWriter
   # Turn the HoH that stores the images into an array for easier handling.
   #
   def prepare_images   #:nodoc:
-    count  = 0
-    images = []
-
-    # We sort the images by row and column but that isn't strictly required.
-    #
-    rows = @images.keys.sort
-
-    rows.each do |row|
-      cols = @images[row].keys.sort
-      cols.each do |col|
-        images.push(@images[row][col])
-        count += 1
-      end
-    end
-
-    @images       = {}
-    @images_array = images
-
-    count
+    prepare_common(:images)
   end
 #  private :prepare_images
 
@@ -6869,24 +6683,7 @@ class Worksheet < BIFFWriter
   # Turn the HoH that stores the comments into an array for easier handling.
   #
   def prepare_comments   #:nodoc:
-    count   = 0
-    comments = []
-
-    # We sort the comments by row and column but that isn't strictly required.
-    #
-    rows = @comments.keys.sort
-    rows.each do |row|
-      cols = @comments[row].keys.sort
-      cols.each do |col|
-        comments.push(@comments[row][col])
-        count += 1
-      end
-    end
-
-    @comments       = {}
-    @comments_array = comments
-
-    count
+    prepare_common(:comments)
   end
 #  private :prepare_comments
 
@@ -6897,25 +6694,43 @@ class Worksheet < BIFFWriter
   # Turn the HoH that stores the charts into an array for easier handling.
   #
   def prepare_charts   #:nodoc:
-    count  = 0
-    charts = []
+    prepare_common(:charts)
+  end
+#  private :prepare_charts
+
+  def prepare_common(param)
+    hash = {
+      :images => @images, :comments => @comments, :charts => @charts
+    }[param]
+
+    count = 0
+    obj   = []
 
     # We sort the charts by row and column but that isn't strictly required.
     #
-    rows = @charts.keys.sort
+    rows = hash.keys.sort
     rows.each do |row|
-      cols = @charts[row].keys.sort
+      cols = hash[row].keys.sort
       cols.each do |col|
-        charts.push(@charts[row][col])
+        obj.push(hash[row][col])
         count += 1
       end
     end
 
-    @charts       = {}
-    @charts_array = charts
+    case param
+    when :images
+      @images         = {}
+      @images_array   = obj
+    when :comments
+      @comments       = {}
+      @comments_array = obj
+    when :charts
+      @charts         = {}
+      @charts_array   = obj
+    end
     count
   end
-#  private :prepare_charts
+  private :prepare_common
 
   ###############################################################################
   #
@@ -6973,18 +6788,13 @@ class Worksheet < BIFFWriter
         dg_length   += 128 * num_comments
         spgr_length += 128 * num_comments
 
-        data = store_mso_dg_container(dg_length) +
-          store_mso_dg(*ids)                     +
-          store_mso_spgr_container(spgr_length)  +
-          store_mso_sp_container(40)             +
-          store_mso_spgr()                       +
-          store_mso_sp(0x0, spid, 0x0005)
-        spid = spid + 1
-        data = data                              +
+        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+        spid += 1
+        data +=
           store_mso_sp_container(76)             +
           store_mso_sp(75, spid, 0x0A00)
-        spid = spid + 1
-        data = data                              +
+        spid += 1
+        data +=
           store_mso_opt_image(image_id)          +
           store_mso_client_anchor(2, *vertices)  +
           store_mso_client_data()
@@ -7000,7 +6810,6 @@ class Worksheet < BIFFWriter
       end
       length      = data.bytesize
       header      = [record, length].pack("vv")
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
 
       store_obj_image(i+1)
@@ -7009,6 +6818,25 @@ class Worksheet < BIFFWriter
     @object_ids[0] = spid
   end
   private :store_images
+
+  def store_parent_mso_record(dg_length, ids, spgr_length, spid)
+    store_mso_dg_container(dg_length)      +
+    store_mso_dg(*ids)                     +
+    store_mso_spgr_container(spgr_length)  +
+    store_mso_sp_container(40)             +
+    store_mso_spgr()                       +
+    store_mso_sp(0x0, spid, 0x0005)
+  end
+  private :store_parent_mso_record
+
+  def store_child_mso_record(spid, *vertices)
+    store_mso_sp_container(88)             +
+    store_mso_sp(201, spid, 0x0A00)        +
+    store_mso_opt_filter                   +
+    store_mso_client_anchor(1, *vertices)  +
+    store_mso_client_data
+  end
+  private :store_child_mso_record
 
   ###############################################################################
   #
@@ -7046,8 +6874,8 @@ class Worksheet < BIFFWriter
           width       =   526
           height      =   319
 
-          width  *= scale_x if scale_x.kind_of?(Numeric) && scale_x != 0
-          height *= scale_y if scale_y.kind_of?(Numeric) && scale_y != 0
+          width  *= scale_x if scale_x.respond_to?(:coerce) && scale_x != 0
+          height *= scale_y if scale_y.respond_to?(:coerce) && scale_y != 0
 
           # Calculate the positions of chart object.
           vertices = position_object( col,
@@ -7070,37 +6898,24 @@ class Worksheet < BIFFWriter
               spgr_length += 128 *num_comments
 
 
-              data  = store_mso_dg_container(dg_length)     +
-                      store_mso_dg(*ids)                     +
-                      store_mso_spgr_container(spgr_length) +
-                      store_mso_sp_container(40)            +
-                      store_mso_spgr()                      +
-                      store_mso_sp(0x0, spid, 0x0005)
+              data  = store_parent_mso_record(dg_length, ids, spgr_length, spid)
               spid += 1
-              data += store_mso_sp_container(112)           +
-                      store_mso_sp(201, spid, 0x0A00)
+              data += store_mso_sp_container_sp(spid)
               spid += 1
-              data += store_mso_opt_chart()                 +
-                      store_mso_client_anchor(0, *vertices)  +
-                      store_mso_client_data()
+              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
           else
               # Write the child MSODRAWIING record.
-              data  = store_mso_sp_container(112)           +
-                      store_mso_sp(201, spid, 0x0A00)
+              data  = store_mso_sp_container_sp(spid)
               spid += 1
-              data += store_mso_opt_chart()                 +
-                      store_mso_client_anchor(0, *vertices)  +
-                      store_mso_client_data()
+              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
           end
           length      = data.bytesize
           header      = [record, length].pack("vv")
-          print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
           append(header, data)
 
-          store_obj_chart(num_objects+i+1)
+          store_obj_chart(num_objects + i + 1)
           store_chart_binary(chart)
       end
-
 
       # Simulate the EXTERNSHEET link between the chart and data using a formula
       # such as '=Sheet1!A1'.
@@ -7114,6 +6929,18 @@ class Worksheet < BIFFWriter
   end
   private :store_charts
 
+  def store_mso_sp_container_sp(spid)
+    store_mso_sp_container(112) + store_mso_sp(201, spid, 0x0A00)
+  end
+  private :store_mso_sp_container_sp
+
+  def store_mso_opt_chart_client_anchor_client_data(*vertices)
+    store_mso_opt_chart                   +
+    store_mso_client_anchor(0, *vertices) +
+    store_mso_client_data
+  end
+  private :store_mso_opt_chart_client_anchor_client_data
+
   ###############################################################################
   #
   # _store_chart_binary
@@ -7122,18 +6949,16 @@ class Worksheet < BIFFWriter
   # or from an external binary file (for backwards compatibility).
   #
   def store_chart_binary(chart)   #:nodoc:
-    if chart.kind_of?(Chart)
-      chart.close
-      tmp = chart.get_data
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
-      append(tmp)
-    else
+    if chart.respond_to?(:to_str)
       filehandle = File.open(chart, "rb")
       #      die "Couldn't open $filename in add_chart_ext(): $!.\n";
       while tmp = filehandle.read(4096)
-        print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
         append(tmp)
       end
+    else
+      chart.close
+      tmp = chart.get_data
+      append(tmp)
     end
   end
   private :store_chart_binary
@@ -7176,32 +7001,18 @@ class Worksheet < BIFFWriter
         dg_length   += 128 * num_comments
         spgr_length += 128 * num_comments
 
-        data = store_mso_dg_container(dg_length)          +
-          store_mso_dg(*ids)                              +
-          store_mso_spgr_container(spgr_length)           +
-          store_mso_sp_container(40)                      +
-          store_mso_spgr()                                +
-          store_mso_sp(0x0, spid, 0x0005)
+        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
         spid += 1
-        data += store_mso_sp_container(88)                +
-          store_mso_sp(201, spid, 0x0A00)                 +
-          store_mso_opt_filter()                          +
-          store_mso_client_anchor(1, *vertices)           +
-          store_mso_client_data()
+        data += store_child_mso_record(spid, *vertices)
         spid += 1
 
       else
         # Write the child MSODRAWIING record.
-        data = store_mso_sp_container(88)                 +
-          store_mso_sp(201, spid, 0x0A00)                 +
-          store_mso_opt_filter()                          +
-          store_mso_client_anchor(1, *vertices)           +
-          store_mso_client_data()
+        data = store_child_mso_record(spid, *vertices)
         spid += 1
       end
       length      = data.bytesize
       header      = [record, length].pack("vv")
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
 
       store_obj_filter(num_objects+i+1, col1 +i)
@@ -7266,12 +7077,7 @@ class Worksheet < BIFFWriter
         dg_length   = 200 + 128*(num_comments -1)
         spgr_length = 176 + 128*(num_comments -1)
 
-        data = store_mso_dg_container(dg_length)         +
-          store_mso_dg(*ids)                             +
-          store_mso_spgr_container(spgr_length)          +
-          store_mso_sp_container(40)                     +
-          store_mso_spgr()                               +
-          store_mso_sp(0x0, spid, 0x0005)
+        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
         spid += 1
       else
         data = ''
@@ -7286,7 +7092,6 @@ class Worksheet < BIFFWriter
         store_mso_client_data
       length      = data.bytesize
       header      = [record, length].pack("vv")
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
       append(header, data)
 
       store_obj_comment(num_objects + i + 1)
@@ -7334,7 +7139,6 @@ class Worksheet < BIFFWriter
   def store_mso_dg(instance, num_shapes, max_spid)   #:nodoc:
     type        = 0xF008
     version     = 0
-    data        = ''
     length      = 8
     data        = [num_shapes, max_spid].pack("VV")
 
@@ -7478,22 +7282,19 @@ class Worksheet < BIFFWriter
     data        = ''
     length      = nil
 
-    data = [0x007F].pack('v')       +        # Protection -> fLockAgainstGrouping
-    [0x01040104].pack('V')       +
-    [0x00BF].pack('v')           +        # Text -> fFitTextToShape
-    [0x00080008].pack('V')       +
-    [0x0181].pack('v')           +        # Fill Style -> fillColor
+    data = store_mso_protection_and_text
+    data += [0x0181].pack('v')   +        # Fill Style -> fillColor
     [0x0800004E].pack('V')       +
     [0x0183].pack('v')           +        # Fill Style -> fillBackColor
     [0x0800004D].pack('V')       +
 
-    [0x01BF].pack('v')           +         # Fill Style -> fNoFillHitTest
+    [0x01BF].pack('v')           +        # Fill Style -> fNoFillHitTest
     [0x00110010].pack('V')       +
     [0x01C0].pack('v')           +        # Line Style -> lineColor
     [0x0800004D].pack('V')       +
     [0x01FF].pack('v')           +        # Line Style -> fNoLineDrawDash
     [0x00080008].pack('V')       +
-    [0x023F].pack('v')            +        # Shadow Style -> fshadowObscured
+    [0x023F].pack('v')           +        # Shadow Style -> fshadowObscured
     [0x00020000].pack('V')       +
     [0x03BF].pack('v')           +        # Group Shape -> fPrint
     [0x00080000].pack('V')
@@ -7515,20 +7316,25 @@ class Worksheet < BIFFWriter
     data        = ''
     length      = nil
 
-    data = [0x007F].pack('v')     +    # Protection -> fLockAgainstGrouping
-    [0x01040104].pack('V')     +
-    [0x00BF].pack('v')    +        # Text -> fFitTextToShape
-    [0x00080008].pack('V')+
-    [0x01BF].pack('v')    +        # Fill Style -> fNoFillHitTest
-    [0x00010000].pack('V')+
-    [0x01FF].pack('v')    +        # Line Style -> fNoLineDrawDash
-    [0x00080000].pack('V')+
-    [0x03BF].pack('v')    +        # Group Shape -> fPrint
+    data = store_mso_protection_and_text
+    data += [0x01BF].pack('v')   +        # Fill Style -> fNoFillHitTest
+    [0x00010000].pack('V')       +
+    [0x01FF].pack('v')           +        # Line Style -> fNoLineDrawDash
+    [0x00080000].pack('V')       +
+    [0x03BF].pack('v')           +        # Group Shape -> fPrint
     [0x000A0000].pack('V')
 
     add_mso_generic(type, version, instance, data, length)
   end
 #  private :store_mso_opt_filter
+
+  def store_mso_protection_and_text
+    [0x007F].pack('v')       +        # Protection -> fLockAgainstGrouping
+    [0x01040104].pack('V')   +
+    [0x00BF].pack('v')       +        # Text -> fFitTextToShape
+    [0x00080008].pack('V')
+  end
+  private :store_mso_protection_and_text
 
   ###############################################################################
   #
@@ -7618,7 +7424,6 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header      = [record, length].pack("vv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
 
   end
@@ -7670,7 +7475,6 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header  = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
 
   end
@@ -7710,7 +7514,6 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header  = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
 
   end
@@ -7771,7 +7574,6 @@ class Worksheet < BIFFWriter
     # Pack the record.
     header  = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
 #  private :store_obj_filter
@@ -7789,7 +7591,6 @@ class Worksheet < BIFFWriter
     data        = store_mso_client_text_box()
     header  = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__})\n" if defined?($debug)
     append(header, data)
   end
 #  private :store_mso_drawing_text_box
@@ -7832,7 +7633,6 @@ class Worksheet < BIFFWriter
     data    = [grbit, rotation, reserved, reserved,
     string_len, format_len, reserved].pack("vvVvvvV")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_txo
@@ -7864,7 +7664,6 @@ class Worksheet < BIFFWriter
       length  = data.bytesize
       header  = [record, length].pack('vv')
 
-      print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
       append(header, data)
     end
 
@@ -7873,7 +7672,6 @@ class Worksheet < BIFFWriter
     length  = data.bytesize
     header  = [record, length].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_txo_continue_1
@@ -7900,7 +7698,6 @@ class Worksheet < BIFFWriter
     length  = data.bytesize
     header  = [record, length].pack("vv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_txo_continue_2
@@ -7947,7 +7744,6 @@ class Worksheet < BIFFWriter
     length  = data.bytesize + author.bytesize
     header  = [record, length].pack("vv")
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data, author)
   end
 #  private :store_note
@@ -8027,7 +7823,7 @@ class Worksheet < BIFFWriter
 
     # Set the comment background colour.
     color = params[:color]
-    color = Format._get_color(color)
+    color = Colors.new.get_color(color)
     color = 0x50 if color == 0x7FFF  # Default color.
     params[:color] = color
 
@@ -8583,7 +8379,7 @@ class Worksheet < BIFFWriter
     return -2 if check_dimensions(row2, col2, 1, 1) != 0
 
     # Check that the last parameter is a hash list.
-    unless param.kind_of?(Hash)
+    unless param.respond_to?(:to_hash)
       #           carp "Last parameter '$param' in data_validation() must be a hash ref";
       return -3
     end
@@ -8840,7 +8636,6 @@ class Worksheet < BIFFWriter
     header = [record, length].pack('vv')
     data   = [flags, x_coord, y_coord, obj_id, dv_count].pack('vVVVV')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
 #  private :store_dval
@@ -8879,7 +8674,7 @@ class Worksheet < BIFFWriter
     str_lookup      = 0            # See below.
 
     # Set the string lookup flag for 'list' validations with a string array.
-    if validation_type == 3 && formula_1.kind_of?(Array)
+    if validation_type == 3 && formula_1.respond_to?(:to_ary)
       str_lookup = 1
     end
 
@@ -8926,7 +8721,6 @@ class Worksheet < BIFFWriter
 
     header = [record, data.bytesize].pack('vv')
 
-    print "sheet #{@name} : #{__FILE__}(#{__LINE__}) \n" if defined?($debug)
     append(header, data)
   end
   private :store_dv
@@ -8959,7 +8753,7 @@ class Worksheet < BIFFWriter
     # Handle utf8 strings
     if string.encoding == Encoding::UTF_8
       str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
-      string = string.encode('UTF-16LE')
+      string = utf8_to_16le(string)
       encoding = 1
     end
 
@@ -8988,13 +8782,13 @@ class Worksheet < BIFFWriter
     end
 
     # Pack a list array ref as a null separated string.
-    if formula.kind_of?(Array)
+    if formula.respond_to?(:to_ary)
       formula   = formula.join("\0")
       formula   = '"' + formula + '"'
     end
 
     # Strip the = sign at the beginning of the formula string
-    formula = formula.to_s unless formula.kind_of?(String)
+    formula = formula.to_s unless formula.respond_to?(:to_str)
     formula.sub!(/^=/, '')
 
     # Parse the formula using the parser in Formula.pm

@@ -10,7 +10,24 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
+require 'writeexcel/biffwriter'
+require 'writeexcel/olewriter'
+require 'writeexcel/formula'
+require 'writeexcel/format'
+require 'writeexcel/worksheet'
 require "writeexcel/workbook"
+require 'writeexcel/chart'
+require 'writeexcel/charts/area'
+require 'writeexcel/charts/bar'
+require 'writeexcel/charts/column'
+require 'writeexcel/charts/external'
+require 'writeexcel/charts/line'
+require 'writeexcel/charts/pie'
+require 'writeexcel/charts/scatter'
+require 'writeexcel/charts/stock'
+require 'writeexcel/storage_lite'
+require 'writeexcel/compatibility'
+require 'writeexcel/debug_info'
 #
 # = WriteExcel - Write to a cross-platform Excel binary file.
 #
@@ -58,6 +75,9 @@ require "writeexcel/workbook"
 #     worksheet.write('A3', 1.2345)
 #     worksheet.write('A4', '=SIN(PI()/4)')
 #
+#     # Save to ruby.xls
+#     workbook.close
+#
 # == Description
 #
 # WriteExcel can be used to create a cross-platform Excel binary file.
@@ -83,13 +103,15 @@ require "writeexcel/workbook"
 # possible. As a result there is a lot of documentation to accompany the
 # interface and it can be difficult at first glance to see what it important
 # and what is not. So for those of you who prefer to assemble Ikea furniture
-# first and then read the instructions, here are three easy steps:
+# first and then read the instructions, here are four easy steps:
 #
 # 1. Create a new Excel workbook (i.e. file) using new().
 #
 # 2. Add a worksheet to the new workbook using add_worksheet().
 #
 # 3. Write to the worksheet using write().
+#
+# 4. Save to file.
 #
 # Like this:
 #
@@ -98,6 +120,7 @@ require "writeexcel/workbook"
 #     workbook  = WriteExcel.new('ruby.xls')   # Step 1
 #     worksheet = workbook.add_worksheet       # Step 2
 #     worksheet.write('A1', 'Hi Excel!')       # Step 3
+#     workbook.close                           # Step 4
 #
 # This will create an Excel file called ruby.xls with a single worksheet and the
 # text 'Hi Excel!' in the relevant cell. And that's it. Okay, so there is
