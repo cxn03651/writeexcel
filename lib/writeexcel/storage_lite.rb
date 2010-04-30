@@ -671,14 +671,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
     iBlCnt -= 1 #the BlCnt is reduced in the count of the last sect is used for a pointer the next Bl
     iBBleftover = iAll - i1stBdMax
     if iAll >i1stBdMax
-      while true
-        iBdCnt       = iBBleftover / iBlCnt
-        iBdCnt      += 1 if iBBleftover % iBlCnt > 0
-        iBdExL       = iBdCnt / iBlCnt
-        iBdExL      += 1 if iBdCnt % iBlCnt > 0
-        iBBleftover += iBdExL
-        break if iBdCnt == iBBleftover / iBlCnt + (iBBleftover % iBlCnt > 0 ? 1 : 0)
-      end
+      iBdCnt, iBdExL, iBBleftover = calc_idbcnt_idbexl_ibbleftover(iBBleftover, iBlCnt, iBdCnt, iBdExL)
     end
     iBdCnt += i1stBdL
     #print "iBdCnt = iBdCnt \n"
@@ -784,7 +777,6 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
   def _savePpsSetPnt(pps_array, aList, rh_info)
     #1. make Array as Children-Relations
     #1.1 if No Children
-bpp=1
     if pps_array.nil? || pps_array.size == 0
         return 0xFFFFFFFF
     #1.2 Just Only one
@@ -869,15 +861,7 @@ bpp=1
     #0.1 Calculate BD count
     iBBleftover = iAll - i1stBdMax
     if iAll >i1stBdMax
-      while true
-        iBdCnt  = iBBleftover / iBlCnt
-        iBdCnt += 1 if iBBleftover % iBlCnt > 0
-
-        iBdExL  = iBdCnt / iBlCnt
-        iBdExL += 1 if iBdCnt % iBlCnt > 0
-        iBBleftover += iBdExL
-        break if iBdCnt == (iBBleftover / iBlCnt + ((iBBleftover % iBlCnt) > 0 ? 1: 0))
-      end
+      iBdCnt, iBdExL, iBBleftover = calc_idbcnt_idbexl_ibbleftover(iBBleftover, iBlCnt, iBdCnt, iBdExL)
     end
     iAllW  += iBdExL
     iBdCnt += i1stBdL
@@ -933,6 +917,19 @@ bpp=1
       file.write([-2].pack('V'))
     end
   end
+
+  def calc_idbcnt_idbexl_ibbleftover(iBBleftover, iBlCnt, iBdCnt, iBdExL)
+    while true
+      iBdCnt       = iBBleftover / iBlCnt
+      iBdCnt      += 1 if iBBleftover % iBlCnt > 0
+      iBdExL       = iBdCnt / iBlCnt
+      iBdExL      += 1 if iBdCnt % iBlCnt > 0
+      iBBleftover += iBdExL
+      break if iBdCnt == iBBleftover / iBlCnt + (iBBleftover % iBlCnt > 0 ? 1 : 0)
+    end
+    [iBdCnt, iBdExL, iBBleftover]
+  end
+  private :calc_idbcnt_idbexl_ibbleftover
 end
 
 class OLEStorageLitePPSFile < OLEStorageLitePPS       #:nodoc:
