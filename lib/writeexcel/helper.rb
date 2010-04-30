@@ -40,3 +40,11 @@
     ascii.force_encoding('UTF-16BE')
   end
   private :ascii_to_16be
+
+  def store_simple(record, length, *args)
+    header = [record, length].pack('vv')
+    data = args.collect { |arg| [arg].pack('v') }.join('')
+
+    append(header, data)
+  end
+  private :store_simple

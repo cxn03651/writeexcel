@@ -1290,18 +1290,8 @@ class Chart < Worksheet
     catCrossDate = 0x0000     # Crossing point.
     grbit        = 0x00EF     # Option flags.
 
-    header = [record, length].pack('vv')
-    data  = [catMin].pack('v')
-    data += [catMax].pack('v')
-    data += [catMajor].pack('v')
-    data += [unitMajor].pack('v')
-    data += [catMinor].pack('v')
-    data += [unitMinor].pack('v')
-    data += [unitBase].pack('v')
-    data += [catCrossDate].pack('v')
-    data += [grbit].pack('v')
-
-    append(header, data)
+    store_simple(record, length, catMin, catMax, catMajor, unitMajor,
+                 catMinor, unitMinor, unitBase, catCrossDate, grbit)
   end
 
   ###############################################################################
@@ -1315,10 +1305,7 @@ class Chart < Worksheet
     length   = 0x0002     # Number of bytes to follow.
     # num_axes            # Number of axes used.
 
-    header = [record, length].pack('vv')
-    data = [num_axes].pack('v')
-
-    append(header, data)
+    store_simple(record, length, num_axes)
   end
 
   ###############################################################################
@@ -1357,10 +1344,7 @@ class Chart < Worksheet
     length      = 0x0002     # Number of bytes to follow.
     line_format = 0x0001     # Axis line format.
 
-    header = [record, length].pack('vv')
-    data = [line_format].pack('v')
-
-    append(header, data)
+    store_simple(record, length, line_format)
   end
 
   ###############################################################################
@@ -1398,9 +1382,7 @@ class Chart < Worksheet
     record = 0x1033     # Record identifier.
     length = 0x0000     # Number of bytes to follow.
 
-    header = [record, length].pack('vv')
-
-    append(header)
+    store_simple(record, length)
   end
 
   ###############################################################################
@@ -1417,13 +1399,7 @@ class Chart < Worksheet
     catMark  = 0x0001     # Frequency of ticks.
     grbit    = 0x0001     # Option flags.
 
-    header = [record, length].pack('vv')
-    data   = [catCross].pack('v')
-    data  += [catLabel].pack('v')
-    data  += [catMark].pack('v')
-    data  += [grbit].pack('v')
-
-    append(header, data)
+    store_simple(record, length, catCross, catLabel, catMark, grbit)
   end
 
   ###############################################################################
@@ -1490,10 +1466,7 @@ class Chart < Worksheet
     length = 0x0002     # Number of bytes to follow.
     type   = 0x0001     # Drop/hi-lo line type.
 
-    header = [record, length].pack('vv')
-    data   = [type].pack('v')
-
-    append(header, data)
+    store_simple(record, length, type)
   end
 
   ###############################################################################
@@ -1550,13 +1523,7 @@ class Chart < Worksheet
     # point_number             # Point number.
     grbit         = 0x0000     # Format flags.
 
-    header = [record, length].pack('vv')
-    data  = [point_number].pack('v')
-    data += [series_index].pack('v')
-    data += [series_number].pack('v')
-    data += [grbit].pack('v')
-
-    append(header, data)
+    store_simple(record, length, point_number, series_index, series_number, grbit)
   end
 
   ###############################################################################
@@ -1571,10 +1538,7 @@ class Chart < Worksheet
     length = 0x0002     # Number of bytes to follow.
     type   = 0x0002     # Type.
 
-    header = [record, length].pack('vv')
-    data  = [type].pack('v')
-
-    append(header, data)
+    store_simple(record, length, type)
   end
 
   ###############################################################################
@@ -1588,10 +1552,7 @@ class Chart < Worksheet
     length      = 0x0002     # Number of bytes to follow.
     percent_gap = 0x0096     # Drop bar width gap (%).
 
-    header = [record, length].pack('vv')
-    data  = [percent_gap].pack('v')
-
-    append(header, data)
+    store_simple(record, length, percent_gap)
   end
 
   ###############################################################################
@@ -1604,9 +1565,7 @@ class Chart < Worksheet
     record = 0x1034     # Record identifier.
     length = 0x0000     # Number of bytes to follow.
 
-    header = [record, length].pack('vv')
-
-    append(header)
+    store_simple(record, length)
   end
 
   ###############################################################################
@@ -1624,14 +1583,7 @@ class Chart < Worksheet
     # height_basis           # Height basis, in twips.
     # scale_basis            # Scale by chart area or plot area.
 
-    header = [record, length].pack('vv')
-    data   = [width_basis].pack('v')
-    data  += [height_basis].pack('v')
-    data  += [height].pack('v')
-    data  += [scale_basis].pack('v')
-    data  += [index].pack('v')
-
-    append(header, data)
+    store_simple(record, length, width_basis, height_basis, height, scale_basis, index)
   end
 
   ###############################################################################
@@ -1646,10 +1598,7 @@ class Chart < Worksheet
     length = 0x0002     # Number of bytes to follow.
     # index             # Font index.
 
-    header = [record, length].pack('vv')
-    data   = [index].pack('v')
-
-    append(header, data)
+    store_simple(record, length, index)
   end
 
   ###############################################################################
@@ -1664,11 +1613,7 @@ class Chart < Worksheet
     # frame_type            # Frame type.
     # grbit                 # Option flags.
 
-    header = [record, length].pack('vv')
-    data  = [frame_type].pack('v')
-    data += [grbit].pack('v')
-
-    append(header, data)
+    store_simple(record, length, frame_type, grbit)
   end
 
   ###############################################################################
@@ -1767,12 +1712,7 @@ class Chart < Worksheet
     link_index1 = 0x0000     # Link index 1.
     link_index2 = 0x0000     # Link index 2.
 
-    header = [record, length].pack('vv')
-    data  = [link_type].pack('v')
-    data += [link_index1].pack('v')
-    data += [link_index2].pack('v')
-
-    append(header, data)
+    store_simple(record, length, link_type, link_index1, link_index2)
   end
 
   ###############################################################################
@@ -1786,10 +1726,7 @@ class Chart < Worksheet
     length  = 0x0002     # Number of bytes to follow.
     percent = 0x0000     # Distance % from center.
 
-    header = [record, length].pack('vv')
-    data   = [percent].pack('v')
-
-    append(header, data)
+    store_simple(record, length, percent)
   end
 
   ###############################################################################
@@ -1803,9 +1740,7 @@ class Chart < Worksheet
     record = 0x1035     # Record identifier.
     length = 0x0000     # Number of bytes to follow.
 
-    header = [record, length].pack('vv')
-
-    append(header)
+    store_simple(record, length)
   end
 
   ###############################################################################
@@ -1906,15 +1841,8 @@ class Chart < Worksheet
     bubble_type    = 0x0001     # Type: bubble.
     bubble_count   = 0x0000     # Num of bubble values.
 
-    header = [record, length].pack('vv')
-    data  = [category_type].pack('v')
-    data += [value_type].pack('v')
-    data += [category_count].pack('v')
-    data += [value_count].pack('v')
-    data += [bubble_type].pack('v')
-    data += [bubble_count].pack('v')
-
-    append(header, data)
+    store_simple(record, length, category_type, value_type,
+                 category_count, value_count, bubble_type, bubble_count)
   end
 
   ###############################################################################
@@ -1962,10 +1890,7 @@ class Chart < Worksheet
     length = 0x0002     # Number of bytes to follow.
     # series            # Series parent.
 
-    header = [record, length].pack('vv')
-    data = [series].pack('v')
-
-    append(header, data)
+    store_simple(record, length, series)
   end
 
   ###############################################################################
@@ -1979,10 +1904,7 @@ class Chart < Worksheet
     length     = 0x0002     # Number of bytes to follow.
     chartgroup = 0x0000     # Chart group index.
 
-    header = [record, length].pack('vv')
-    data = [chartgroup].pack('v')
-
-    append(header, data)
+    store_simple(record, length, chartgroup)
   end
 
   ###############################################################################
@@ -1999,11 +1921,7 @@ class Chart < Worksheet
 
     grbit = 0x000A if @embedded
 
-    header = [record, length].pack('vv')
-    data  = [grbit].pack('v')
-    data += [empty_cells].pack('v')
-
-    append(header, data)
+    store_simple(record, length, grbit, empty_cells)
   end
 
   ###############################################################################
@@ -2171,8 +2089,11 @@ class Chart < Worksheet
   # Setup the default configuration data for a chart.
   #
   def set_default_config_data   # :nodoc:
-    #<<< Perltidy ignore this.
-    @config = {
+    @config = default_config_data
+  end
+
+  def default_config_data   # :nodoc:
+    {
         :axisparent      => [ 0, 0x00F8, 0x01F5, 0x0E7F, 0x0B36              ],
         :axisparent_pos  => [ 2, 2, 0x008C, 0x01AA, 0x0EEA, 0x0C52           ],
         :chart           => [ 0x0000, 0x0000, 0x02DD51E0, 0x01C2B838         ],
@@ -2192,8 +2113,9 @@ class Chart < Worksheet
         :x_axis_text_pos => [ 2, 2, 0, 0,  0x2B,  0x17                       ],
         :y_axis_text     => [ 0x002D, 0x06AA, 0x5F, 0x1CC, 0x0281, 0x00, 90  ],
         :y_axis_text_pos => [ 2, 2, 0, 0, 0x17,  0x44                        ],
-    }  #>>>
+    }
   end
+  private :default_config_data
 
   ###############################################################################
   #
@@ -2219,8 +2141,7 @@ class Chart < Worksheet
       :line_options     => 0x0009,
     }
 
-    #<<< Perltidy ignore this.
-    @config = {
+    @config = default_config_data.merge({
         :axisparent      => [ 0, 0x01D8, 0x031D, 0x0D79, 0x07E9              ],
         :axisparent_pos  => [ 2, 2, 0x010C, 0x0292, 0x0E46, 0x09FD           ],
         :chart           => [ 0x0000, 0x0000, 0x01847FE8, 0x00F47FE8         ],
@@ -2231,15 +2152,10 @@ class Chart < Worksheet
         :legend          => [ 0x044E, 0x0E4A, 0x088D, 0x0123, 0x0, 0x1, 0xF  ],
         :legend_pos      => [ 5, 2, 0x044E, 0x0E4A, 0, 0                     ],
         :legend_text     => [ 0xFFFFFFD9, 0xFFFFFFC1, 0, 0, 0x00B1, 0x0000   ],
-        :legend_text_pos => [ 2, 2, 0, 0, 0, 0                               ],
         :series_text     => [ 0xFFFFFFD9, 0xFFFFFFC1, 0, 0, 0x00B1, 0x1020   ],
-        :series_text_pos => [ 2, 2, 0, 0, 0, 0                               ],
         :title_text      => [ 0x060F, 0x004C, 0x038A, 0x016F, 0x0081, 0x1030 ],
-        :title_text_pos  => [ 2, 2, 0, 0, 0x73, 0x1D                         ],
         :x_axis_text     => [ 0x07EF, 0x0C8F, 0x153, 0x123, 0x81, 0x00       ],
-        :x_axis_text_pos => [ 2, 2, 0, 0, 0x2B, 0x17                         ],
         :y_axis_text     => [ 0x0057, 0x0564, 0xB5, 0x035D, 0x0281, 0x00, 90 ],
-        :y_axis_text_pos => [ 2, 2, 0, 0, 0x17, 0x44                         ],
-    }  #>>>
+    })
   end
 end

@@ -169,10 +169,7 @@ class Chart
       length = 0x0002     # Number of bytes to follow.
       grbit  = 0x0000     # Option flags.
 
-      header = [record, length].pack('vv')
-      data   = [grbit].pack('v')
-
-      append(header, data)
+      store_simple(record, length, grbit)
     end
 
     ###############################################################################

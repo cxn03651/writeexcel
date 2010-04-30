@@ -4843,10 +4843,8 @@ class Worksheet < BIFFWriter
     grbit       = 0x0100               # Option flags
     ixfe        = 0x0F                 # XF index
 
-    header = [record, length].pack("vv")
-    data   = [row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
-
-    append(header, data)
+    store_simple(record, length,
+                 row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe)
   end
   private :write_row_default
 
@@ -5013,11 +5011,8 @@ class Worksheet < BIFFWriter
     zero    = 0x0000
     unknown = 0x0014
 
-    header = [record, length].pack("vv")
-    data   = [record, zero, zero, zero, zero,
-    zero, unknown, zero, color, zero].pack("vvvvvvvvvv")
-
-    append(header, data)
+    store_simple(record, length, record, zero, zero, zero, zero,
+                 zero, unknown, zero, color, zero)
   end
   private :store_tab_color
 
@@ -5050,7 +5045,6 @@ class Worksheet < BIFFWriter
   def store_defcol   #:nodoc:
     record   = 0x0055      # Record identifier
     length   = 0x0002      # Number of bytes to follow
-
     colwidth = 0x0008      # Default column width
 
     header   = [record, length].pack("vv")
@@ -5319,10 +5313,7 @@ class Worksheet < BIFFWriter
 
     @active_pane = pnnAct # Used in _store_selection
 
-    header = [record, length].pack('vv')
-    data   = [x, y, rwtop, colleft, pnnAct].pack('vvvvv')
-
-    append(header, data)
+    store_simple(record, length, x, y, rwtop, colleft, pnnAct)
   end
   private :store_panes
 
@@ -5549,10 +5540,7 @@ class Worksheet < BIFFWriter
     rwFirst,  rwLast  = rwLast,  rwFirst  if rwFirst  > rwLast
     colFirst, colLast = colLast, colFirst if colFirst > colLast
 
-    header   = [record, length].pack("vv")
-    data     = [cref, rwFirst, rwLast, colFirst, colLast].pack("vvvvv")
-
-    append(header, data)
+    store_simple(record, length, cref, rwFirst, rwLast, colFirst, colLast)
   end
 
   ###############################################################################
@@ -6321,10 +6309,7 @@ class Worksheet < BIFFWriter
     record      = 0x00A0               # Record identifier
     length      = 0x0004               # Bytes to follow
 
-    header      = [record, header].pack("vv")
-    data        = [@zoom, 100].pack("vv")
-
-    append(header, data)
+    store_simple(record, length, @zoom, 100)
   end
   private :store_zoom
 
@@ -8710,7 +8695,7 @@ class Worksheet < BIFFWriter
     end
 
     # Pack the record.
-    data   = [flags].pack('V')            +
+    data   = [flags].pack('V')     +
       input_title                  +
       error_title                  +
       input_message                +
