@@ -146,12 +146,7 @@ class Chart
       pcGap     = 0x0096     # Space between cats.
       grbit     = 0x0000     # Option flags.
 
-      header = [record, length].pack('vv')
-      data  = [pcOverlap].pack('v')
-      data += [pcGap].pack('v')
-      data += [grbit].pack('v')
-
-      append(header, data)
+      store_simple(record, length, pcOverlap, pcGap, grbit)
     end
   end
 end

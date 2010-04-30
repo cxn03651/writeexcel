@@ -145,12 +145,7 @@ class Chart
       bubble_type  = 0x0001     # Bubble type.
       grbit        = 0x0000     # Option flags.
 
-      header = [record, length].pack('vv')
-      data   = [bubble_ratio].pack('v')
-      data  += [bubble_type].pack('v')
-      data  += [grbit].pack('v')
-
-      append(header, data)
+      store_simple(record, length, bubble_ratio, bubble_type, grbit)
     end
 
     ###############################################################################

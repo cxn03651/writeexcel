@@ -141,12 +141,7 @@ class Chart
       donut  = 0x0000     # Donut hole size.
       grbit  = 0x0002     # Option flags.
 
-      header = [record, length].pack('vv')
-      data  = [angle].pack('v')
-      data += [donut].pack('v')
-      data += [grbit].pack('v')
-
-      append(header, data)
+      store_simple(record, length, angle, donut, grbit)
     end
 
     ###############################################################################
