@@ -48,3 +48,17 @@
     append(header, data)
   end
   private :store_simple
+
+  # Convert base26 column string to a number.
+  # All your Base are belong to us.
+  def chars_to_col(chars)
+    expn = 0
+    col  = 0
+    while (!chars.empty?)
+      char = chars.pop   # LS char first
+      col  += (char.ord - "A".ord + 1) * (26 ** expn)
+      expn += 1
+    end
+    col
+  end
+  private :chars_to_col

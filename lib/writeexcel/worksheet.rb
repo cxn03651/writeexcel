@@ -3725,17 +3725,7 @@ class Worksheet < BIFFWriter
     col     = $1
     row     = $2.to_i
 
-    # Convert base26 column string to number
-    # All your Base are belong to us.
-    chars = col.split(//)
-    expn  = 0
-    col   = 0
-
-    while (!chars.empty?)
-      char = chars.pop   # LS char first
-      col += (char.ord - "A".ord + 1) * (26 ** expn)
-      expn += 1
-    end
+    col = chars_to_col($1.split(//))
 
     # Convert 1-index to zero-index
     row -= 1

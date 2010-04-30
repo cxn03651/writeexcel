@@ -640,21 +640,11 @@ class Formula < ExcelFormulaParser       #:nodoc:
     cell =~ /(\$?)([A-I]?[A-Z])(\$?)(\d+)/
 
     col_rel = $1 == "" ? 1 : 0
-    col     = $2
     row_rel = $3 == "" ? 1 : 0
     row     = $4.to_i
 
-    # Convert base26 column string to a number.
-    # All your Base are belong to us.
-    chars  = col.split(//)
-    expn   = 0
-    col    = 0
+    col = chars_to_col($2.split(//))
 
-    while (!chars.empty?)
-      char = chars.pop   # LS char first
-      col  += (char.ord - "A".ord + 1) * (26 ** expn)
-      expn += 1
-    end
     # Convert 1-index to zero-index
     row -= 1
     col -= 1
