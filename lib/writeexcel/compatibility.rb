@@ -89,7 +89,7 @@ class String #:nodoc:
         end
       elsif @encoding == Encoding::BINARY
         case encoding
-        when /ASCII/i
+        when /ASCII/i, /EUCJP/i, /SJIS/i
           if self.ascii_only? || self.mbchar?('UTF8') || self.mbchar?('EUCJP') || self.mbchar?('SJIS')
             raise Encoding::UndefinedConversionError
           else
@@ -99,14 +99,6 @@ class String #:nodoc:
           end
         when /BINARY/i
           self
-        when /EUCJP/i, /SJIS/i
-          if self.ascii_only? || self.mbchar?('UTF8') || self.mbchar?('EUCJP') || self.mbchar?('SJIS')
-            raise Encoding::UndefinedConversionError
-          else
-            str = String.new(self)
-            str.force_encoding(encoding)
-            str
-          end
         when /UTF_8/i, /UTF_16LE/i, /UTF_16BE/i
           raise Encoding::ConverterNotFoundError
         else
