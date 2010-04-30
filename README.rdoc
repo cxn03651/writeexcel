@@ -4,6 +4,10 @@ Write to a cross-platform Excel binary file.
 
 == Recent Changes
 
+v0.4.1
+* Bug fix. Workbook#add_format() doesn't work when received two or more parameters.
+* Bug fix. Worksheet#write_formula() doesn't work when formula contains utf8 string.
+
 v0.4.0
 * works also on Ruby 1.9.1.
 * modify README.rdoc below.

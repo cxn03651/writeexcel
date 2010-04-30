@@ -748,7 +748,7 @@ require 'writeexcel/debug_info'
 #     set_column(first_col, last_col, width, format, hidden, level, collapsed)
 #
 # The following example sets an outline level of 1 for rows 1 and 2
-# (zero-indexed) and columns B to G. The parameters _height_ and _XF_ are
+# (zero-indexed) and columns B to G. The parameters _height_ and _format_ are
 # assigned default values since they are undefined:
 #
 #     worksheet.set_row(1, nil, nil, 0, 1)
@@ -773,9 +773,7 @@ require 'writeexcel/debug_info'
 # compatibility with OpenOffice.org and Gnumeric.
 #
 # For a more complete example see the outline.rb
-#--
 # and outline_collapsed.rb
-#++
 # programs in the examples directory of the distro.
 #
 # Some additional outline properties can be set via the outline_settings()

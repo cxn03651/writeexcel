@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{writeexcel}
-  s.version = "0.4.0"
+  s.version = "0.4.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Hideo NAKAMURA"]
-  s.date = %q{2010-04-11}
+  s.date = %q{2010-04-27}
   s.description = %q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
   s.email = %q{cxn03651@msj.biglobe.ne.jp}
   s.extra_rdoc_files = [
@@ -80,9 +80,11 @@ Gem::Specification.new do |s|
      "examples/stats.rb",
      "examples/stocks.rb",
      "examples/tab_colors.rb",
+     "examples/utf8.rb",
      "examples/write_arrays.rb",
      "lib/writeexcel.rb",
      "lib/writeexcel/biffwriter.rb",
+     "lib/writeexcel/caller_info.rb",
      "lib/writeexcel/chart.rb",
      "lib/writeexcel/charts/area.rb",
      "lib/writeexcel/charts/bar.rb",
@@ -92,7 +94,9 @@ Gem::Specification.new do |s|
      "lib/writeexcel/charts/pie.rb",
      "lib/writeexcel/charts/scatter.rb",
      "lib/writeexcel/charts/stock.rb",
+     "lib/writeexcel/colors.rb",
      "lib/writeexcel/compatibility.rb",
+     "lib/writeexcel/debug_info.rb",
      "lib/writeexcel/excelformula.y",
      "lib/writeexcel/excelformulaparser.rb",
      "lib/writeexcel/format.rb",
@@ -103,6 +107,7 @@ Gem::Specification.new do |s|
      "lib/writeexcel/storage_lite.rb",
      "lib/writeexcel/workbook.rb",
      "lib/writeexcel/worksheet.rb",
+     "lib/writeexcel/write_file.rb",
      "test/excelfile/Chart1.xls",
      "test/excelfile/Chart2.xls",
      "test/excelfile/Chart3.xls",
@@ -165,6 +170,7 @@ Gem::Specification.new do |s|
      "test/perl_output/stocks.xls",
      "test/perl_output/tab_colors.xls",
      "test/perl_output/unicode_cyrillic.xls",
+     "test/perl_output/utf8.xls",
      "test/perl_output/workbook1.xls",
      "test/perl_output/workbook2.xls",
      "test/perl_output/ws_colinfo",
@@ -315,6 +321,7 @@ Gem::Specification.new do |s|
      "examples/stats.rb",
      "examples/stocks.rb",
      "examples/tab_colors.rb",
+     "examples/utf8.rb",
      "examples/write_arrays.rb"
   ]
 

@@ -208,7 +208,7 @@ class BIFFWriter < WriteFile       #:nodoc:
   # Returns the packed record.
   #
   def add_mso_generic(type, version, instance, data, length = nil)
-    length  = length.nil? ? data.bytesize : length
+    length  ||= data.bytesize
 
     # The header contains version and instance info packed into 2 bytes.
     header  = version | (instance << 4)
