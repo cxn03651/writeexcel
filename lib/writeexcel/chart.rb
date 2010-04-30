@@ -1072,24 +1072,7 @@ class Chart < Worksheet
   # Write the FRAME chart substream.
   #
   def store_plotarea_frame_stream   # :nodoc:
-    area = @plotarea
-
-    store_frame(0x00, 0x03)
-    store_begin
-
-    store_lineformat(
-      area[:line_color_rgb], area[:line_pattern],
-      area[:line_weight],    area[:line_options],
-      area[:line_color_index]
-    )
-
-    store_areaformat(
-      area[:fg_color_rgb],   area[:bg_color_rgb],
-      area[:area_pattern],   area[:area_options],
-      area[:fg_color_index], area[:bg_color_index]
-    )
-
-    store_end
+    store_area_frame_stream_common(:plot)
   end
 
   ###############################################################################
@@ -1099,9 +1082,19 @@ class Chart < Worksheet
   # Write the FRAME chart substream for and embedded chart.
   #
   def store_chartarea_frame_stream   # :nodoc:
-    area = @chartarea
+    store_area_frame_stream_common(:chart)
+  end
 
-    store_frame(0x00, 0x02)
+  def store_area_frame_stream_common(type)
+    if type == :plot
+      area  = @plotarea
+      grbit = 0x03
+    else
+      area = @chartarea
+      grbit = 0x02
+    end
+
+    store_frame(0x00, grbit)
     store_begin
 
     store_lineformat(
@@ -1118,6 +1111,7 @@ class Chart < Worksheet
 
     store_end
   end
+  private :store_area_frame_stream_common
 
   ###############################################################################
   #
