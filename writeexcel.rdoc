@@ -1290,7 +1290,7 @@ WriteExcelでチャートを含むエクセルファイルを作る例です。
     workbook  = WriteExcel.new('chart.xls')
     worksheet = workbook.add_worksheet
 
-    chart     = workbook.add_chart(:type => Chart::Column)
+    chart     = workbook.add_chart(:type => 'Chart::Column')
 
     # Configure the chart.
     chart.add_series(
@@ -1312,16 +1312,16 @@ WriteExcelでチャートを含むエクセルファイルを作る例です。
 
 チャートを使う場合、チャートのタイプを指定してWorkbook#add_chartを呼びます。
 
-   chart = workbook.add_chart(:type => Chart::Column)
+   chart = workbook.add_chart(:type => 'Chart::Column')
 
 現在サポートされているのは、次の５つ。
 
-   * Chart::Column: Creates a column style (histogram) chart. See Column.
-   * Chart::Bar: Creates a Bar style (transposed histogram) chart. See Bar.
-   * Chart::Line: Creates a Line style chart. See Line.
-   * Chart::Area: Creates an Area (filled line) style chart. See Area.
-   * Chart::Scatter: Creates an Scatter style chart. See Scatter.
-   * Chart::Stock: Creates an Stock style chart. See Stock.
+   * 'Chart::Column': Creates a column style (histogram) chart. See Column.
+   * 'Chart::Bar': Creates a Bar style (transposed histogram) chart. See Bar.
+   * 'Chart::Line': Creates a Line style chart. See Line.
+   * 'Chart::Area': Creates an Area (filled line) style chart. See Area.
+   * 'Chart::Scatter': Creates an Scatter style chart. See Scatter.
+   * 'Chart::Stock': Creates an Stock style chart. See Stock.
 
 More chart types will be supported in time. See the "TODO" section.
 
