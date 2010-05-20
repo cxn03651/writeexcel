@@ -4,6 +4,13 @@ Write to a cross-platform Excel binary file.
 
 == Recent Changes
 
+v0.4.2
+* use namespace 'Writeexcel::' to Chart(::*), Colors, Format, Formula, Worksheet.
+* add_chart() parameter of :type changed . ex) Chart::Bar => 'Chart::Bar'
+* almost complete japanese document : writeexcel.doc
+* Bug fix. typo in Worksheet#set_zoom()
+* some refactoring.
+
 v0.4.1
 * Bug fix. Workbook#add_format() doesn't work when received two or more parameters.
 * Bug fix. Worksheet#write_formula() doesn't work when formula contains utf8 string.
