@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+module Writeexcel
+
 class Colors
   COLORS = {
     :aqua    => 0x0F,
@@ -56,4 +58,7 @@ class Colors
       0x7FFF
     end
   end
-end
+end  # class Colors
+
+end  # module Writeexcel
+

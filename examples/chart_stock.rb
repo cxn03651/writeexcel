@@ -68,7 +68,7 @@ end
 #            and a title.
 #
 
-chart1 = workbook.add_chart(:type => Chart::Stock)
+chart1 = workbook.add_chart(:type => 'Chart::Stock')
 
 # Add a series for each of the Open-High-Low-Close columns. The categories are
 # the dates in the first column.
@@ -107,7 +107,7 @@ chart1.set_y_axis(:name => 'Share price')
 # Example 2. Same as the previous as an embedded chart.
 #
 
-chart2 = workbook.add_chart(:type => Chart::Stock, :embedded => 1)
+chart2 = workbook.add_chart(:type => 'Chart::Stock', :embedded => 1)
 
 # Add a series for each of the Open-High-Low-Close columns. The categories are
 # the dates in the first column.

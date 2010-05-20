@@ -4,7 +4,7 @@ require 'stringio'
 
 ###############################################################################
 #
-# A test for Spreadsheet::WriteExcel::Chart.
+# A test for Spreadsheet::Writeexcel::Chart.
 #
 # Tests for the Excel Chart.pm format conversion methods.
 #
@@ -17,7 +17,7 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
   def setup
     @io = StringIO.new
     @workbook = WriteExcel.new(@io)
-    @chart = @workbook.add_chart(:type => Chart::Column)
+    @chart = @workbook.add_chart(:type => 'Chart::Column')
     @chart.using_tmpfile = false
     @caption1 = " \tChart: chartarea format - line";
     @caption2 = " \tChart: chartarea format - area";

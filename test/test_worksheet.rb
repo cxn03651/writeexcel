@@ -12,7 +12,7 @@ class TC_Worksheet < Test::Unit::TestCase
     @sheetname = 'test'
     @ws      = @workbook.add_worksheet(@sheetname, 0)
     @perldir = "#{PERL_OUTDIR}/"
-    @format  = Format.new(:color=>"green")
+    @format  = Writeexcel::Format.new(:color=>"green")
   end
 
   def teardown

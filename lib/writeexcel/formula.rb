@@ -14,6 +14,8 @@
 require 'strscan'
 require 'writeexcel/excelformulaparser'
 
+module Writeexcel
+
 class Formula < ExcelFormulaParser       #:nodoc:
   require 'writeexcel/helper'
   private :convert_to_ascii_if_ascii
@@ -1044,4 +1046,6 @@ if $0 ==__FILE__
     end
   end
 
-end
+end  # class Formula
+
+end  # module Writeexcel

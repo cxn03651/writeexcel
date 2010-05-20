@@ -15,6 +15,8 @@
 
 require 'writeexcel'
 
+module Writeexcel
+
 class Chart
 
   # ==SYNOPSIS
@@ -28,7 +30,7 @@ class Chart
   #     workbook  = Spreadsheet::WriteExcel.new('chart.xls')
   #     worksheet = workbook.add_worksheet
   #
-  #     chart     = workbook.add_chart(:type => Chart::Stock)
+  #     chart     = workbook.add_chart(:type => 'Chart::Stock')
   #
   #     # Add a series for each Open-High-Low-Close.
   #     chart.add_series(:categories => '=Sheet1!$A$2:$A$6', :values => '=Sheet1!$B$2:$B$6')
@@ -46,7 +48,7 @@ class Chart
   # This module implements Stock charts for WriteExcel. The chart object
   # is created via the Workbook add_chart() method:
   #
-  #     chart = workbook.add_chart(:type => Chart::Stock)
+  #     chart = workbook.add_chart(:type => 'Chart::Stock')
   #
   # Once the object is created it can be configured via the following methods
   # that are common to all chart classes:
@@ -107,7 +109,7 @@ class Chart
   #     end
   #
   #     # Create a new chart object. In this case an embedded chart.
-  #     chart = workbook.add_chart(:type => Chart::Stock, ::embedded => 1)
+  #     chart = workbook.add_chart(:type => 'Chart::Stock', ::embedded => 1)
   #
   #     # Add a series for each of the Open-High-Low-Close columns.
   #     chart.add_series(
@@ -206,4 +208,6 @@ class Chart
       store_end
     end
   end
-end
+end  # class Chart
+
+end  # module Writeexcel

@@ -4,7 +4,7 @@ require 'stringio'
 
 ###############################################################################
 #
-# A test for Spreadsheet::WriteExcel::Chart.
+# A test for Spreadsheet::Writeexcel::Chart.
 #
 # Tests for the Excel Chart.pm format conversion methods.
 #
@@ -17,7 +17,7 @@ class TC_ChartFormats < Test::Unit::TestCase
   def setup
     @io = StringIO.new
     @workbook = WriteExcel.new(@io)
-    @chart = @workbook.add_chart(:type => Chart::Column)
+    @chart = @workbook.add_chart(:type => 'Chart::Column')
   end
 
   def teardown

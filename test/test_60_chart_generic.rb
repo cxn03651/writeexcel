@@ -17,7 +17,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
   def setup
     io = StringIO.new
     workbook = WriteExcel.new(io)
-    @chart = Chart.new('', 'chart', 0, 0, 0, 0, 0, 0, 0, 0)
+    @chart = Writeexcel::Chart.new('', 'chart', 0, 0, 0, 0, 0, 0, 0, 0)
   end
 
   def teardown

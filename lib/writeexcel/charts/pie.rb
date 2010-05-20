@@ -15,6 +15,8 @@
 
 require 'writeexcel'
 
+module Writeexcel
+
 class Chart
 
   # ==SYNOPSIS
@@ -28,7 +30,7 @@ class Chart
   #     workbook  = Spreadsheet::WriteExcel.new('chart.xls')
   #     worksheet = workbook.add_worksheet
   #
-  #     chart     = workbook.add_chart(:type => Chart::Pie)
+  #     chart     = workbook.add_chart(:type => 'Chart::Pie')
   #
   #     # Configure the chart.
   #     chart.add_series(
@@ -51,7 +53,7 @@ class Chart
   # This module implements Pie charts for Spreadsheet::WriteExcel. The chart
   # object is created via the Workbook add_chart() method:
   #
-  #     chart = workbook.add_chart(:type => Chart::Pie)
+  #     chart = workbook.add_chart(:type => 'Chart::Pie')
   #
   # Once the object is created it can be configured via the following methods
   # that are common to all chart classes:
@@ -97,7 +99,7 @@ class Chart
   #     worksheet.write('A2', data)
   #
   #     # Create a new chart object. In this case an embedded chart.
-  #     chart = workbook.add_chart(:type => Chart::Pie, :embedded => 1)
+  #     chart = workbook.add_chart(:type => 'Chart::Pie', :embedded => 1)
   #
   #     # Configure the series.
   #     chart.add_series(
@@ -162,4 +164,6 @@ class Chart
       store_end
     end
   end
-end
+end  # class Chart
+
+end  # module Writeexcel

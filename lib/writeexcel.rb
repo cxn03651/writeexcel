@@ -1058,7 +1058,7 @@ require 'writeexcel/debug_info'
 #     workbook  = WriteExcel.new('chart.xls')
 #     worksheet = workbook.add_worksheet
 #
-#     chart     = workbook.add_chart(:type => Chart::Column)
+#     chart     = workbook.add_chart(:type => 'Chart::Column')
 #
 #     # Configure the chart.
 #     chart.add_series(
@@ -1085,16 +1085,16 @@ require 'writeexcel/debug_info'
 # The Chart module isn't used directly, a chart object is created via the
 # Workbook add_chart() method where the chart type is specified:
 #
-#    chart = workbook.add_chart(:type => Chart::Column)
+#    chart = workbook.add_chart(:type => 'Chart::Column')
 #
 # Currently the supported chart types are:
 #
-#    * Chart::Column: Creates a column style (histogram) chart. See Column.
-#    * Chart::Bar: Creates a Bar style (transposed histogram) chart. See Bar.
-#    * Chart::Line: Creates a Line style chart. See Line.
-#    * Chart::Area: Creates an Area (filled line) style chart. See Area.
-#    * Chart::Scatter: Creates an Scatter style chart. See Scatter.
-#    * Chart::Stock: Creates an Stock style chart. See Stock.
+#    * 'Chart::Column': Creates a column style (histogram) chart. See Column.
+#    * 'Chart::Bar': Creates a Bar style (transposed histogram) chart. See Bar.
+#    * 'Chart::Line': Creates a Line style chart. See Line.
+#    * 'Chart::Area': Creates an Area (filled line) style chart. See Area.
+#    * 'Chart::Scatter': Creates an Scatter style chart. See Scatter.
+#    * 'Chart::Stock': Creates an Stock style chart. See Stock.
 #
 # More chart types will be supported in time. See the "TODO" section.
 #

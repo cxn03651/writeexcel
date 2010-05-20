@@ -70,7 +70,7 @@ class Workbook < BIFFWriter
     super()
     @file                  = file
     @default_formats       = default_formats
-    @parser                = Formula.new(@byte_order)
+    @parser                = Writeexcel::Formula.new(@byte_order)
     @tempdir               = nil
     @date_1904             = false
     @sheet                 =
@@ -305,7 +305,7 @@ class Workbook < BIFFWriter
                   nil,    # Palette. Not used yet. See add_chart().
                   @sinfo,
     ]
-    worksheet = Worksheet.new(*init_data)
+    worksheet = Writeexcel::Worksheet.new(*init_data)
     @worksheets[index] = worksheet      # Store ref for iterator
     @sheetnames[index] = name           # Store EXTERNSHEET names
     @parser.set_ext_sheets(name, index) # Store names in Formula.rb
@@ -322,7 +322,7 @@ class Workbook < BIFFWriter
   # (the default) or as an embeddable object that can be inserted into a
   # worksheet via the insert_chart() Worksheet method.
   #
-  #     chart = workbook.add_chart(:type => Chart::Column)
+  #     chart = workbook.add_chart(:type => 'Chart::Column')
   #
   # The properties that can be set are:
   #
@@ -334,17 +334,17 @@ class Workbook < BIFFWriter
   #
   #       This is a required parameter. It defines the type of chart that will be created.
   #
-  #           chart = workbook.add_chart(:type => Chart::Line)
+  #           chart = workbook.add_chart(:type => 'Chart::Line')
   #
   #       The available types are:
   #
-  #           Chart::Column
-  #           Chart::Bar
-  #           Chart::Line
-  #           Chart::Area
-  #           Chart::Pie
-  #           Chart::Scatter
-  #           Chart::Stock
+  #           'Chart::Column'
+  #           'Chart::Bar'
+  #           'Chart::Line'
+  #           'Chart::Area'
+  #           'Chart::Pie'
+  #           'Chart::Scatter'
+  #           'Chart::Stock'
   #
   #     * :name
   #
@@ -355,7 +355,7 @@ class Workbook < BIFFWriter
   #        charts.
   #
   #           chart = workbook.add_chart(
-  #                           :type => Chart::Line,
+  #                           :type => 'Chart::Line',
   #                           :name => 'Results Chart'
   #                   )
   #
@@ -365,7 +365,7 @@ class Workbook < BIFFWriter
   #       the insert_chart() Worksheet method. It is an error to try insert a
   #       Chart that doesn't have this flag set.
   #
-  #           chart = workbook.add_chart(:type => Chart::Line, :embedded => 1)
+  #           chart = workbook.add_chart(:type => 'Chart::Line', :embedded => 1)
   #
   #           # Configure the chart.
   #           ...
@@ -407,7 +407,7 @@ class Workbook < BIFFWriter
       @sinfo
     ]
 
-    chart = Chart.factory(type, *init_data)
+    chart = Writeexcel::Chart.factory(type, *init_data)
     # If the chart isn't embedded let the workbook control it.
     if !embedded
       @worksheets[index] = chart          # Store ref for iterator
@@ -451,7 +451,7 @@ class Workbook < BIFFWriter
       @sinfo
     ]
 
-    chart = Chart.factory(self, type, init_data)
+    chart = Writeexcel::Chart.factory(self, type, init_data)
     @worksheets[index] = chart      # Store ref for iterator
     @sheetnames[index] = name           # Store EXTERNSHEET names
     chart
@@ -577,7 +577,7 @@ class Workbook < BIFFWriter
   def add_format(*args)
     formats = {}
     args.each { |arg| formats = formats.merge(arg) }
-    format = Format.new(@xf_index, @default_formats.merge(formats))
+    format = Writeexcel::Format.new(@xf_index, @default_formats.merge(formats))
     @xf_index += 1
     @formats.push format # Store format reference
     format
@@ -1691,21 +1691,21 @@ class Workbook < BIFFWriter
     # chart fonts are set in the FBI record of the chart.
 
     # Index 5. Axis numbers.
-    tmp_format = Format.new(
+    tmp_format = Writeexcel::Format.new(
         nil,
         :font_only => 1
     )
     append(tmp_format.get_font)
 
     # Index 6. Series names.
-    tmp_format = Format.new(
+    tmp_format = Writeexcel::Format.new(
         nil,
         :font_only => 1
     )
     append(tmp_format.get_font)
 
     # Index 7. Title.
-    tmp_format = Format.new(
+    tmp_format = Writeexcel::Format.new(
         nil,
         :font_only => 1,
         :bold      => 1
@@ -1713,7 +1713,7 @@ class Workbook < BIFFWriter
     append(tmp_format.get_font)
 
     # Index 8. Axes.
-    tmp_format = Format.new(
+    tmp_format = Writeexcel::Format.new(
         nil,
         :font_only => 1,
         :bold      => 1
@@ -1721,7 +1721,7 @@ class Workbook < BIFFWriter
     append(tmp_format.get_font)
 
     # Index 9. Comments.
-    tmp_format = Format.new(
+    tmp_format = Writeexcel::Format.new(
         nil,
         :font_only => 1,
         :font      => 'Tahoma',

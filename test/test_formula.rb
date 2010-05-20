@@ -4,7 +4,7 @@ require 'helper'
 class TC_Formula < Test::Unit::TestCase
 
   def setup
-    @formula = Formula.new(0)
+    @formula = Writeexcel::Formula.new(0)
   end
 
   def test_scan

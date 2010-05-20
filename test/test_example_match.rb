@@ -441,7 +441,7 @@ class TC_example_match < Test::Unit::TestCase
     format2b        = workbook2.add_format
 
     # Create a global format object that isn't tied to a workbook
-    global_format   = Format.new
+    global_format   = Writeexcel::Format.new
 
     # Set the formatting
     global_format.set_color('blue')
@@ -1576,7 +1576,7 @@ worksheet.write('A2', data)
 #
 # Example 1. A minimal chart.
 #
-chart1 = workbook.add_chart(:type => Chart::Area)
+chart1 = workbook.add_chart(:type => 'Chart::Area')
 
 # Add values only. Use the default categories.
 chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
@@ -1586,7 +1586,7 @@ chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 # Example 2. A minimal chart with user specified categories (X axis)
 #            and a series name.
 #
-chart2 = workbook.add_chart(:type => Chart::Area)
+chart2 = workbook.add_chart(:type => 'Chart::Area')
 
 # Configure the series.
 chart2.add_series(
@@ -1599,7 +1599,7 @@ chart2.add_series(
 #
 # Example 3. Same as previous chart but with added title and axes labels.
 #
-chart3 = workbook.add_chart(:type => Chart::Area)
+chart3 = workbook.add_chart(:type => 'Chart::Area')
 
 # Configure the series.
 chart3.add_series(
@@ -1617,7 +1617,7 @@ chart3.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 4. Same as previous chart but with an added series
 #
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Area)
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Area')
 
 # Configure the series.
 chart4.add_series(
@@ -1642,7 +1642,7 @@ chart4.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 5. Same as Example 3 but as an embedded chart.
 #
-chart5 = workbook.add_chart(:type => Chart::Area, :embedded => 1)
+chart5 = workbook.add_chart(:type => 'Chart::Area', :embedded => 1)
 
 # Configure the series.
 chart5.add_series(
@@ -1687,7 +1687,7 @@ worksheet.write('A2', data)
 #
 # Example 1. A minimal chart.
 #
-chart1 = workbook.add_chart(:type => Chart::Bar)
+chart1 = workbook.add_chart(:type => 'Chart::Bar')
 
 # Add values only. Use the default categories.
 chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
@@ -1697,7 +1697,7 @@ chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 # Example 2. A minimal chart with user specified categories (X axis)
 #            and a series name.
 #
-chart2 = workbook.add_chart(:type => Chart::Bar)
+chart2 = workbook.add_chart(:type => 'Chart::Bar')
 
 # Configure the series.
 chart2.add_series(
@@ -1710,7 +1710,7 @@ chart2.add_series(
 #
 # Example 3. Same as previous chart but with added title and axes labels.
 #
-chart3 = workbook.add_chart(:type => Chart::Bar)
+chart3 = workbook.add_chart(:type => 'Chart::Bar')
 
 # Configure the series.
 chart3.add_series(
@@ -1728,7 +1728,7 @@ chart3.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 4. Same as previous chart but with an added series
 #
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Bar)
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Bar')
 
 # Configure the series.
 chart4.add_series(
@@ -1753,7 +1753,7 @@ chart4.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 5. Same as Example 3 but as an embedded chart.
 #
-chart5 = workbook.add_chart(:type => Chart::Bar, :embedded => 1)
+chart5 = workbook.add_chart(:type => 'Chart::Bar', :embedded => 1)
 
 # Configure the series.
 chart5.add_series(
@@ -1798,7 +1798,7 @@ worksheet.write('A2', data)
 #
 # Example 1. A minimal chart.
 #
-chart1 = workbook.add_chart(:type => Chart::Column)
+chart1 = workbook.add_chart(:type => 'Chart::Column')
 
 # Add values only. Use the default categories.
 chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
@@ -1808,7 +1808,7 @@ chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 # Example 2. A minimal chart with user specified categories (X axis)
 #            and a series name.
 #
-chart2 = workbook.add_chart(:type => Chart::Column)
+chart2 = workbook.add_chart(:type => 'Chart::Column')
 
 # Configure the series.
 chart2.add_series(
@@ -1821,7 +1821,7 @@ chart2.add_series(
 #
 # Example 3. Same as previous chart but with added title and axes labels.
 #
-chart3 = workbook.add_chart(:type => Chart::Column)
+chart3 = workbook.add_chart(:type => 'Chart::Column')
 
 # Configure the series.
 chart3.add_series(
@@ -1839,7 +1839,7 @@ chart3.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 4. Same as previous chart but with an added series
 #
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Column)
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Column')
 
 # Configure the series.
 chart4.add_series(
@@ -1864,7 +1864,7 @@ chart4.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 5. Same as Example 3 but as an embedded chart.
 #
-chart5 = workbook.add_chart(:type => Chart::Column, :embedded => 1)
+chart5 = workbook.add_chart(:type => 'Chart::Column', :embedded => 1)
 
 # Configure the series.
 chart5.add_series(
@@ -1909,7 +1909,7 @@ worksheet.write('A2', data)
 #
 # Example 1. A minimal chart.
 #
-chart1 = workbook.add_chart(:type => Chart::Line)
+chart1 = workbook.add_chart(:type => 'Chart::Line')
 
 # Add values only. Use the default categories.
 chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
@@ -1919,7 +1919,7 @@ chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 # Example 2. A minimal chart with user specified categories (X axis)
 #            and a series name.
 #
-chart2 = workbook.add_chart(:type => Chart::Line)
+chart2 = workbook.add_chart(:type => 'Chart::Line')
 
 # Configure the series.
 chart2.add_series(
@@ -1932,7 +1932,7 @@ chart2.add_series(
 #
 # Example 3. Same as previous chart but with added title and axes labels.
 #
-chart3 = workbook.add_chart(:type => Chart::Line)
+chart3 = workbook.add_chart(:type => 'Chart::Line')
 
 # Configure the series.
 chart3.add_series(
@@ -1950,7 +1950,7 @@ chart3.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 4. Same as previous chart but with an added series
 #
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => Chart::Line)
+chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Line')
 
 # Configure the series.
 chart4.add_series(
@@ -1975,7 +1975,7 @@ chart4.set_y_axis( :name => 'Sample length (cm)' )
 #
 # Example 5. Same as Example 3 but as an embedded chart.
 #
-chart5 = workbook.add_chart(:type => Chart::Line, :embedded => 1)
+chart5 = workbook.add_chart(:type => 'Chart::Line', :embedded => 1)
 
 # Configure the series.
 chart5.add_series(

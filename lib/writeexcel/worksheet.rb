@@ -30,6 +30,9 @@ end
 #  worksheet1 = workbook.add_worksheet
 #  worksheet2 = workbook.add_worksheet
 #
+
+module Writeexcel
+
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
   private :convert_to_ascii_if_ascii
@@ -5956,7 +5959,7 @@ class Worksheet < BIFFWriter
   # The Chart must be created by the add_chart() Workbook method and it must
   # have the embedded option set.
   #
-  #     chart = workbook.add_chart(:type => Chart::Line, :embedded => 1 )
+  #     chart = workbook.add_chart(:type => 'Chart::Line', :embedded => 1 )
   #
   #     # Configure the chart.
   #     ...
@@ -8793,4 +8796,6 @@ class Worksheet < BIFFWriter
 
     [formula.length, unused].pack('vv') + formula
   end
-end
+end  # class Worksheet
+
+end  # module Writeexcel

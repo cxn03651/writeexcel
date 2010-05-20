@@ -33,22 +33,24 @@ require 'writeexcel/colors'
 # sub-classes.
 #
 #
-#     Spreadsheet::WriteExcel::BIFFwriter
+#     BIFFwriter
 #                     ^
 #                     |
-#     Spreadsheet::WriteExcel::Worksheet
+#     Writeexcel::Worksheet
 #                     ^
 #                     |
-#     Spreadsheet::WriteExcel::Chart
+#     Writeexcel::Chart
 #                     ^
 #                     |
-#     Spreadsheet::WriteExcel::Chart::* (sub-types)
+#     Writeexcel::Chart::* (sub-types)
 #
 
 #
 # = Chart
 # Chart - A writer class for Excel Charts.
 #
+module Writeexcel
+
 class Chart < Worksheet
   require 'writeexcel/helper'
   private :convert_to_ascii_if_ascii
@@ -59,7 +61,25 @@ class Chart < Worksheet
   #
   # Factory method for returning chart objects based on their class type.
   #
-  def self.factory(klass, *args)       #:nodoc:
+  def self.factory(type, *args)       #:nodoc:
+    klass =
+    case type
+    when 'Chart::Column'
+      Chart::Column
+    when 'Chart::Bar'
+      Chart::Bar
+    when 'Chart::Line'
+      Chart::Line
+    when 'Chart::Area'
+      Chart::Area
+    when 'Chart::Pie'
+      Chart::Pie
+    when 'Chart::Scatter'
+      Chart::Scatter
+    when 'Chart::Stock'
+      Chart::Stock
+    end
+
     klass.new(*args)
   end
 
@@ -2152,4 +2172,6 @@ class Chart < Worksheet
         :y_axis_text     => [ 0x0057, 0x0564, 0xB5, 0x035D, 0x0281, 0x00, 90 ],
     })
   end
-end
+end  # class Chart
+
+end  # module Writeexcel

@@ -15,6 +15,8 @@
 
 require 'writeexcel/chart'
 
+module Writeexcel
+
 class External < Chart # :nodoc:
   ###############################################################################
   #
@@ -59,4 +61,6 @@ class External < Chart # :nodoc:
   def close
     nil
   end
-end
+end  # class Chart
+
+end  # module Writeexcel

@@ -20,6 +20,8 @@
 require 'writeexcel/compatibility'
 require 'writeexcel/colors'
 
+module Writeexcel
+
 class Format < Colors
 
   ###############################################################################
@@ -1592,4 +1594,7 @@ class Format < Colors
     end
     eval s
   end
-end
+end  # class Format
+
+end  # module Writeexcel
+

@@ -9,7 +9,7 @@ class TC_Format < Test::Unit::TestCase
 
   def setup
     @ruby_file = StringIO.new
-    @format = Format.new
+    @format = Writeexcel::Format.new
   end
 
   def teardown
@@ -22,7 +22,7 @@ class TC_Format < Test::Unit::TestCase
     # set_format_properties( propty => val )
     valid_properties = get_valid_format_properties
     valid_properties.each do |k,v|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       before = get_format_property(fmt)
       fmt.set_format_properties(k => v)
       after  = get_format_property(fmt)
@@ -33,7 +33,7 @@ class TC_Format < Test::Unit::TestCase
 
     # set_format_properties( propty_1 => val1, propty_2 => val2)
     valid_properties.each do |k,v|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       before = get_format_property(fmt)
       fmt.set_format_properties(k => v, :bold => 1)
       after  = get_format_property(fmt)
@@ -47,7 +47,7 @@ class TC_Format < Test::Unit::TestCase
     valid_properties = get_valid_format_properties
     valid_properties.each do |k,v|
       arg = {k => v}
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       before = get_format_property(fmt)
       fmt.set_format_properties(arg)
       after  = get_format_property(fmt)
@@ -61,7 +61,7 @@ class TC_Format < Test::Unit::TestCase
     valid_properties.each do |k,v|
       arg  = {k => v}
       arg2 = {:bold => 1}
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       before = get_format_property(fmt)
       fmt.set_format_properties(arg, arg2)
       after  = get_format_property(fmt)
@@ -75,7 +75,7 @@ class TC_Format < Test::Unit::TestCase
     valid_color_string_number = get_valid_color_string_number
     [:color , :bg_color, :fg_color].each do |coltype|
       valid_color_string_number.each do |str, num|
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         before = get_format_property(fmt)
         fmt.set_format_properties(coltype => str)
         after  = get_format_property(fmt)
@@ -107,14 +107,14 @@ Set the font size. Excel adjusts the height of a row to accommodate the largest 
 
     # valid size from low to high
     [1, 100, 100**10].each do |size|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_size(size)
       assert_equal(size, fmt.size, "valid size:#{size} - doesn't match.")
     end
 
     # invalid size  -- size doesn't change
     [-1, 0, 1/2.0, 'hello', true, false, nil, [0,0], {:invalid => "val"}].each do |size|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       default = fmt.size
       fmt.set_size(size)
       assert_equal(default, fmt.size, "size:#{size.inspect} doesn't match.")
@@ -162,7 +162,7 @@ To set the colour of a cell use the set_bg_color() and set_pattern() methods.
     # set by string
     str_num = get_valid_color_string_number
     str_num.each do |str,num|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_color(str)
       assert_equal(num, fmt.color)
     end
@@ -170,14 +170,14 @@ To set the colour of a cell use the set_bg_color() and set_pattern() methods.
     # valid color
     # set by number
     [8, 36, 63].each do |color|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_color(color)
       assert_equal(color, fmt.color)
     end
 
     # invalid color
     ['color', :col, -1, 63.5, 10*10].each do |color|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_color(color)
       assert_equal(default_col, fmt.color, "color : #{color}")
     end
@@ -185,7 +185,7 @@ To set the colour of a cell use the set_bg_color() and set_pattern() methods.
     # invalid color    ...but...
     # 0 <= color < 8  then color += 8 in order to valid value
     [0, 7.5].each do |color|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_color(color)
       assert_equal((color + 8).to_i, fmt.color, "color : #{color}")
     end
@@ -214,18 +214,18 @@ Set the bold property of the font:
     assert_equal(400, @format.bold)
 
     # valid weight
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_bold
     assert_equal(700, fmt.bold)
     {0 => 400, 1 => 700, 100 => 100, 1000 => 1000}.each do |weight, value|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_bold(weight)
       assert_equal(value, fmt.bold)
     end
 
     # invalid weight
     [-1, 99, 1001, 'bold'].each do |weight|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_bold(weight)
       assert_equal(400, fmt.bold, "weight : #{weight}")
     end
@@ -247,11 +247,11 @@ set_italic()
     assert_equal(0, @format.italic)
 
     # valid arg
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_italic
     assert_equal(1, fmt.italic)
     {0=>0, 1=>1}.each do |arg,value|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_italic(arg)
       assert_equal(value, fmt.italic, "arg : #{arg}")
     end
@@ -260,7 +260,7 @@ set_italic()
     [-1, 0.2, 100, 'italic', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_italic(#{arg}) : invalid arg. arg must be 0, 1 or none."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_italic(arg)
       }
     end
@@ -286,12 +286,12 @@ Set the underline property of the font.
     assert_equal(0, @format.underline, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_underline
     assert_equal(1, fmt.underline, "No arg")
 
     [0, 1, 2, 33, 34].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_underline(arg)
       assert_equal(arg, fmt.underline, "arg : #{arg}")
     end
@@ -300,7 +300,7 @@ Set the underline property of the font.
     [-1, 0.2, 100, 'under', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_underline(#{arg}) : arg must be 0, 1 or none, 2, 33, 34."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_underline(arg)
       }
     end
@@ -320,12 +320,12 @@ Set the strikeout property of the font.
     assert_equal(0, @format.font_strikeout, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_font_strikeout
     assert_equal(1, fmt.font_strikeout, "No arg")
 
     [0, 1].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_font_strikeout(arg)
       assert_equal(arg, fmt.font_strikeout, "arg : #{arg}")
     end
@@ -334,7 +334,7 @@ Set the strikeout property of the font.
     [-1, 0.2, 100, 'strikeout', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_font_strikeout(#{arg}) : arg must be 0, 1 or none."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_font_strikeout(arg)
       }
     end
@@ -356,12 +356,12 @@ Set the superscript/subscript property of the font. This format is currently not
     assert_equal(0, @format.font_script, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_font_script
     assert_equal(1, fmt.font_script, "No arg")
 
     [0, 1, 2].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_font_script(arg)
       assert_equal(arg, fmt.font_script, "arg : #{arg}")
     end
@@ -370,7 +370,7 @@ Set the superscript/subscript property of the font. This format is currently not
     [-1, 0.2, 100, 'script', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_font_script(#{arg}) : arg must be 0, 1 or none, or 2."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_font_script(arg)
       }
     end
@@ -391,12 +391,12 @@ Macintosh only.
     assert_equal(0, @format.font_outline, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_font_outline
     assert_equal(1, fmt.font_outline, "No arg")
 
     [0, 1].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_font_outline(arg)
       assert_equal(arg, fmt.font_outline, "arg : #{arg}")
     end
@@ -405,7 +405,7 @@ Macintosh only.
     [-1, 0.2, 100, 'outline', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_font_outline(#{arg}) : arg must be 0, 1 or none."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_font_outline(arg)
       }
     end
@@ -425,12 +425,12 @@ Macintosh only.
     assert_equal(0, @format.font_shadow, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_font_shadow
     assert_equal(1, fmt.font_shadow, "No arg")
 
     [0, 1].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_font_shadow(arg)
       assert_equal(arg, fmt.font_shadow, "arg : #{arg}")
     end
@@ -439,7 +439,7 @@ Macintosh only.
     [-1, 0.2, 100, 'shadow', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_font_shadow(#{arg}) : arg must be 0, 1 or none."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_font_shadow(arg)
       }
     end
@@ -460,14 +460,14 @@ This method is used to define the numerical format of a number in Excel. It cont
 
     # Excel built in Format Index (0 .. 49)
     [0, 49].each do |n|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_num_format(n)
       assert_equal(n, fmt.num_format, "n: #{n}")
     end
 
     # Format string
     ["#,##0", "m/d/yy", "hh:mm:ss"].each do |string|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_num_format(string)
       assert_equal(string, fmt.num_format, "string: #{string}")
     end
@@ -509,12 +509,12 @@ Note: This offers weak protection even with a password,
     assert_equal(1, @format.locked, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_locked
     assert_equal(1, fmt.locked, "No arg")
 
     [0, 1].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_locked(arg)
       assert_equal(arg, fmt.locked, "arg : #{arg}")
     end
@@ -523,7 +523,7 @@ Note: This offers weak protection even with a password,
     [-1, 0.2, 100, 'locked', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_font_shadow(#{arg}) : arg must be 0, 1 or none."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_locked(arg)
       }
     end
@@ -558,12 +558,12 @@ Note: This offers weak protection even with a password,
     assert_equal(0, @format.hidden, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_hidden
     assert_equal(1, fmt.hidden, "No arg")
 
     [0, 1].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_hidden(arg)
       assert_equal(arg, fmt.hidden, "arg : #{arg}")
     end
@@ -572,7 +572,7 @@ Note: This offers weak protection even with a password,
     [-1, 0.2, 100, 'hidden', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_font_shadow(#{arg}) : arg must be 0, 1 or none."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_hidden(arg)
       }
     end
@@ -626,7 +626,7 @@ wraps use the set_text_wrap() method.
       'top'=>0, 'vcenter'=>1, 'vcentre'=>1, 'bottom'=>2,
     'vjustify'=>3 }
     valid_args.each do |arg, value|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_align(arg)
       case arg
       when 'left', 'center', 'centre', 'right', 'fill', 'justify',
@@ -639,7 +639,7 @@ wraps use the set_text_wrap() method.
 
     # invalid arg
     [-1, 0, 1.5, nil, true, false, ['left','top'], {'top'=>0}].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       val = get_format_property(fmt)
       #print val.inspect
       #exit
@@ -697,12 +697,12 @@ set_text_wrap()
     assert_equal(0, @format.text_wrap, "default state")
 
     # valid args
-    fmt = Format.new
+    fmt = Writeexcel::Format.new
     fmt.set_text_wrap
     assert_equal(1, fmt.text_wrap, "No arg")
 
     [0, 1].each do |arg|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_text_wrap(arg)
       assert_equal(arg, fmt.text_wrap, "arg : #{arg}")
     end
@@ -711,7 +711,7 @@ set_text_wrap()
     [-1, 0.2, 100, 'text_wrap', true, false, nil].each do |arg|
       assert_raise(ArgumentError,
       "set_text_wrap(#{arg}) : arg must be 0, 1 or none."){
-        fmt = Format.new
+        fmt = Writeexcel::Format.new
         fmt.set_text_wrap(arg)
       }
     end
@@ -740,7 +740,7 @@ set_rotation()
 
     #      # valid args  -90 <= angle <=  90, 270   angle can be float or double
     #      [-90.0, 89, 0, 89, 90, 270].each do |angle|
-    #         fmt = Format.new
+    #         fmt = Writeexcel::Format.new
     #         fmt.set_rotation(angle)
     #         assert_equal(angle, fmt.rotation, "angle: #{angle}")
     #      end
@@ -770,7 +770,7 @@ with vertical properties.
 
     # valid arg -- Positive integers
     [1, 10000000].each do |indent|
-      fmt = Format.new
+      fmt = Writeexcel::Format.new
       fmt.set_indent(indent)
       assert_equal(indent, fmt.indent, "indent: #{indent}")
     end
@@ -1030,7 +1030,7 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
 
   def test_initialize
     assert_nothing_raised {
-      Format.new(
+      Writeexcel::Format.new(
         :bold => true,
         :size => 10,
         :color => 'black',
@@ -1075,8 +1075,8 @@ Note: this is not a copy constructor, both objects must exist prior to copying.
   end
 
   def test_copy
-    format1 = Format.new
-    format2 = Format.new
+    format1 = Writeexcel::Format.new
+    format2 = Writeexcel::Format.new
 
     format1.set_size(12)
 
