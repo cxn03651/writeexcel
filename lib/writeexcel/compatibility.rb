@@ -11,13 +11,67 @@ unless defined?(Encoding)
     class ConverterNotFoundError < StandardError; end
     class UndefinedConversionError < StandardError; end
 
-    ASCII    = 0
-    BINARY   = 1
-    UTF_8    = 2
-    EUCJP    = 3
-    SJIS     = 4
-    UTF_16LE = 5
-    UTF_16BE = 6
+    def self.const_missing (name)
+      @looked_for ||= {}
+      if !@looked_for.has_key?(name)
+        begin
+          @looked_for[name] = find(name)
+        rescue ArgumentError
+          @looked_for[name] = nil
+        end
+      end
+      @looked_for[name]
+    end
+
+    def self.find (name)
+      result   = try_name name
+      result ||= try_name name.gsub(/-/, '_') if name =~ /-/
+      raise ArgumentError, "unknown encoding name - #{name}" unless result
+      result
+    end
+    def self.try_name (name)
+      dname = name.to_s.downcase
+      sel = SupportedEncodings.select{ |se| dname == se.name.downcase }
+      return sel.first if 1 <= sel.size
+      sel = SupportedEncodings.select{ |se| se.name.downcase =~ Regexp.new(dname) }
+      return sel.first if 1 <= sel.size
+      nil
+    end
+
+    attr_accessor :name, :value
+    def initialize (name, value)
+      @name  = name
+      @value = value
+    end
+
+    def == (other)
+      if other.is_a? Encoding
+        other.value == @value
+      elsif other.is_a? Fixnum
+        other == @value
+      else
+        other == @name
+      end
+    end
+
+    SupportedEncodings = [
+      Encoding.new('ASCII', 0),
+      Encoding.new('US_ASCII', 0),
+      Encoding.new('BINARY', 1),
+      Encoding.new('ASCII_8BIT', 1),
+      Encoding.new('UTF_8', 2),
+      Encoding.new('EUCJP', 3),
+      Encoding.new('SJIS', 4),
+      Encoding.new('UTF_16LE', 5),
+      Encoding.new('UTF_16BE', 6)
+    ]
+    # ASCII    = 0
+    # BINARY   = 1
+    # UTF_8    = 2
+    # EUCJP    = 3
+    # SJIS     = 4
+    # UTF_16LE = 5
+    # UTF_16BE = 6
   end
 end
 
@@ -48,7 +102,7 @@ class String #:nodoc:
       if @encoding == Encoding::UTF_8
         # supported only $KCODE = 'u'. so @encoding.nil? means UTF_8.
         case encoding
-        when /ASCII/i
+        when /ASCII$/i
           if self.mbchar?('UTF8')
             raise Encoding::UndefinedConversionError
           else
@@ -56,7 +110,7 @@ class String #:nodoc:
             str.force_encoding(encoding)
             str
           end
-        when /BINARY/i
+        when /(BINARY|ASCII[-_]8BIT)/i
           if self.mbchar?('UTF8')
             raise Encoding::UndefinedConversionError
           else
@@ -89,7 +143,7 @@ class String #:nodoc:
         end
       elsif @encoding == Encoding::BINARY
         case encoding
-        when /ASCII/i, /EUCJP/i, /SJIS/i
+        when /ASCII$/i, /EUCJP/i, /SJIS/i
           if self.ascii_only? || self.mbchar?('UTF8') || self.mbchar?('EUCJP') || self.mbchar?('SJIS')
             raise Encoding::UndefinedConversionError
           else
@@ -97,7 +151,7 @@ class String #:nodoc:
             str.force_encoding(encoding)
             str
           end
-        when /BINARY/i
+        when /(BINARY|ASCII[-_]8BIT)/i
           self
         when /UTF_8/i, /UTF_16LE/i, /UTF_16BE/i
           raise Encoding::ConverterNotFoundError
@@ -108,7 +162,7 @@ class String #:nodoc:
         type   = @encoding == Encoding::EUCJP ? 'EUCJP' : 'SJIS'
         inenc  = @encoding == Encoding::EUCJP ? 'e' : 's'
         case encoding
-        when /ASCII/i
+        when /ASCII$/i
           if self.mbchar?(type)
             raise Encoding::UndefinedConversionError
           else
@@ -116,7 +170,7 @@ class String #:nodoc:
             str.force_encoding(encoding)
             str
           end
-        when /BINARY/i
+        when /(BINARY|ASCII[-_]8BIT)/i
           if self.mbchar?(type)
             raise Encoding::UndefinedConversionError
           else
@@ -140,7 +194,7 @@ class String #:nodoc:
         enc = @encoding == Encoding::UTF_16LE ? 'L' : 'B'
         utf8 = NKF.nkf("-w -m0 -W16#{enc}", self)
         case encoding
-        when /ASCII/i
+        when /ASCII$/i
           if utf8.mbchar?
             raise Encoding::UndefinedConversionError
           else
@@ -148,7 +202,7 @@ class String #:nodoc:
             str.force_encoding(encoding)
             str
           end
-        when /BINARY/i
+        when /(BINARY|ASCII[-_]8BIT)/i
           if utf8.mbchar?
             raise Encoding::UndefinedConversionError
           else
@@ -172,20 +226,9 @@ class String #:nodoc:
     end
 
     def self_with_encoding(encoding)
-      if encoding =~ /ASCII/i
-        @encoding = Encoding::ASCII
-      elsif encoding =~ /BINARY/i
-        @encoding = Encoding::BINARY
-      elsif encoding =~ /UTF_8/i
-        @encoding = Encoding::UTF_8
-      elsif encoding =~ /EUCJP/i
-        @encoding = Encoding::EUCJP
-      elsif encoding =~ /SJIS/i
-        @encoding = Encoding::SJIS
-      elsif encoding =~ /UTF_16LE/i
-        @encoding = Encoding::UTF_16LE
-      elsif encoding =~ /UTF_16BE/i
-        @encoding = Encoding::UTF_16BE
+      found = Encoding.find(encoding)
+      if found
+        @encoding = found
       else
         raise "Sorry, encoding #{encoding} is not supported by WriteExcel."
       end
@@ -215,39 +258,10 @@ class String #:nodoc:
   unless "".respond_to?(:force_encoding)
     def force_encoding(encoding)
       if encoding.respond_to?(:to_str)
-        @encoding = case encoding
-          when /ASCII/i
-            Encoding::ASCII
-          when /BINARY/i
-            Encoding::BINARY
-          when /UTF[-_]8/i
-            Encoding::UTF_8
-          when /EUCJP/i
-            Encoding::EUCJP
-          when /SJIS/i
-            Encoding::SJIS
-          when /UTF[-_]16LE/i
-            Encoding::UTF_16LE
-          when /UTF[-_]16BE/i
-            Encoding::UTF_16BE
-        end
+        found = Encoding.find(encoding)
+        @encoding = found if found
       else
-        @encoding = case encoding
-          when Encoding::ASCII
-            Encoding::ASCII
-          when Encoding::BINARY
-            Encoding::BINARY
-          when Encoding::UTF_8
-            Encoding::UTF_8
-          when Encoding::EUCJP
-            Encoding::EUCJP
-          when Encoding::SJIS
-            Encoding::SJIS
-          when Encoding::UTF_16LE
-            Encoding::UTF_16LE
-          when Encoding::UTF_16BE
-            Encoding::UTF_16BE
-        end
+        @encoding = encoding if encoding.is_a?(Encoding)
       end
       self
     end
