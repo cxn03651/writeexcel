@@ -214,13 +214,7 @@ class Worksheet < BIFFWriter
     store_filtermode
 
     # Prepend the COLINFO records if they exist
-    unless @colinfo.empty?
-      colinfo = @colinfo.dup
-      while (!colinfo.empty?)
-        arrayref = colinfo.pop
-        store_colinfo(*arrayref)
-      end
-    end
+    prepend_colinfo_records
 
     # Prepend the DEFCOLWIDTH record
     store_defcol
@@ -8796,6 +8790,18 @@ class Worksheet < BIFFWriter
 
     [formula.length, unused].pack('vv') + formula
   end
+
+  private
+
+  def colinfo
+    @colinfo
+  end
+
+  # Prepend the COLINFO records if they exist
+  def prepend_colinfo_records
+    colinfo.reverse.each { |info| store_colinfo(*info) }
+  end
+
 end  # class Worksheet
 
 end  # module Writeexcel
