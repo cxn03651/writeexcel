@@ -746,7 +746,7 @@ class Worksheet < BIFFWriter
     data[0] = ColMax - 1 if data[0] > ColMax - 1
     data[1] = ColMax - 1 if data[1] > ColMax - 1
 
-    @colinfo.push(data)
+    colinfo << data
 
     # Store the col sizes for use when calculating image vertices taking
     # hidden columns into account. Also store the column formats.
@@ -2409,7 +2409,7 @@ class Worksheet < BIFFWriter
   def add_write_handler(regexp, code_ref)
     #       return unless ref $_[1] eq 'CODE';
 
-    @write_match.push([regexp, code_ref])
+    write_match << [regexp, code_ref]
   end
 
   #
@@ -2534,7 +2534,7 @@ class Worksheet < BIFFWriter
     token ||= ''
 
     # First try user defined matches.
-    @write_match.each do |aref|
+    write_match.each do |aref|
       re  = aref[0]
       sub = aref[1]
 
@@ -5824,7 +5824,7 @@ class Worksheet < BIFFWriter
       next unless @table[row] or @row_data[row]
 
       # Store the rows with data.
-      written_rows.push(row)
+      written_rows << row
 
       # Increase the row offset by the length of a ROW record;
       row_offset += 20
@@ -5849,8 +5849,7 @@ class Worksheet < BIFFWriter
       #
       if written_rows.size == 32 or row == @dim_rowmax -1
         # Offsets to the first cell of each row.
-        cell_offsets = []
-        cell_offsets.push(row_offset - 20)
+        cell_offsets = [row_offset - 20]
 
         # Write the cell data in each row and sum their lengths for the
         # cell offsets.
@@ -5867,14 +5866,14 @@ class Worksheet < BIFFWriter
               cell_offset += length
             end
           end
-          cell_offsets.push(cell_offset)
+          cell_offsets << cell_offset
         end
 
         # The last offset isn't required.
         cell_offsets.pop
 
         # Stores the DBCELL offset for use in the INDEX record.
-        @db_indices.push(@datasize)
+        db_indices << @datasize
 
         # Write the DBCELL record.
         store_dbcell(row_offset, cell_offsets)
@@ -5921,7 +5920,7 @@ class Worksheet < BIFFWriter
   def store_index   #:nodoc:
     return if @compatibility == 0
 
-    indices     = @db_indices
+    indices     = db_indices
     reserved    = 0x00000000
     row_min     = @dim_rowmin
     row_max     = @dim_rowmax
@@ -6684,7 +6683,7 @@ class Worksheet < BIFFWriter
     rows.each do |row|
       cols = hash[row].keys.sort
       cols.each do |col|
-        obj.push(hash[row][col])
+        obj << hash[row][col]
         count += 1
       end
     end
@@ -8531,11 +8530,11 @@ class Worksheet < BIFFWriter
     # A (for now) undocumented parameter to pass additional cell ranges.
     if param.has_key?(:other_cells)
 
-      param[:cells].push(param[:other_cells])
+      param[:cells] << param[:other_cells]
     end
 
     # Store the validation information until we close the worksheet.
-    @validations.push(param)
+    validations << param
   end
 
   ###############################################################################
@@ -8548,12 +8547,11 @@ class Worksheet < BIFFWriter
   # handling of the object id at a later stage.
   #
   def store_validation_count   #:nodoc:
-    dv_count = @validations.size
+    return if validations.empty?
+
     obj_id   = -1
 
-    return if dv_count == 0
-
-    store_dval(obj_id , dv_count)
+    store_dval(obj_id, validations.size)
   end
   private :store_validation_count
 
@@ -8564,9 +8562,9 @@ class Worksheet < BIFFWriter
   # Store the data_validation records.
   #
   def store_validations   #:nodoc:
-    return if @validations.size == 0
+    return if validations.empty?
 
-    @validations.each do |param|
+    validations.each do |param|
       store_dv(
         param[:cells],
         param[:validate],
@@ -8795,6 +8793,18 @@ class Worksheet < BIFFWriter
 
   def colinfo
     @colinfo
+  end
+
+  def write_match
+    @write_match
+  end
+
+  def db_indices
+    @db_indices
+  end
+
+  def validations
+    @validations
   end
 
   # Prepend the COLINFO records if they exist
