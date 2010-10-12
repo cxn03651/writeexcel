@@ -1292,7 +1292,7 @@ class Format < Colors
     properties.each do |property|
       property.each do |key, value|
         # Strip leading "-" from Tk style properties e.g. "-color" => 'red'.
-        key.sub!(/^-/, '') if key.respond_to?(:to_str)
+        key = key.sub(/^-/, '') if key.respond_to?(:to_str)
 
         # Create a sub to set the property.
         if value.respond_to?(:to_str) || !value.respond_to?(:+)
