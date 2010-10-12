@@ -286,7 +286,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
     if ((num =~ /^\d+$/) && (num.to_i <= 65535))
       return [@ptg['ptgInt'], num.to_i].pack("Cv")
     else  # A float
-      num = [num].pack("d")
+      num = [num.to_f].pack("d")
       num.reverse! if @byte_order != 0 && @byte_order != ''
       return [@ptg['ptgNum']].pack("C") + num
     end
