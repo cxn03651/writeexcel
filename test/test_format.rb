@@ -736,7 +736,7 @@ set_rotation()
 =end
   def test_set_rotation
     # default state
-    assert(0, @format.rotation)
+    assert_equal(0, @format.rotation)
 
     #      # valid args  -90 <= angle <=  90, 270   angle can be float or double
     #      [-90.0, 89, 0, 89, 90, 270].each do |angle|
