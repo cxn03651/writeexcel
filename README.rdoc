@@ -4,6 +4,12 @@ Write to a cross-platform Excel binary file.
 
 == Recent Changes
 
+v0.5.0
+* use 1.9-compatible Encoding interface for Ruby 1.8 encodings class; support US-ASCII and ASCII-8BIT. by Jeremy Weathers
+  The original project by cxn03651 has its own odd encoding scheme that is not compatible with other
+  software (e.g. nokogiri) that expects strings encodings to be compatible with Ruby 1.9 Encodings.
+  The purpose of this fork is to make the encoding system for Ruby 1.8 compatible with the Ruby 1.9 encoding   system.
+
 v0.4.3
 * test passed under Ruby 1.9.2
 * Bug fix. Format#set_format_properties, Formula#convert_number found under Ruby 1.9.2
