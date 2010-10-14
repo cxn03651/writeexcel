@@ -4,6 +4,12 @@ Write to a cross-platform Excel binary file.
 
 == Recent Changes
 
+v0.5.0
+* use 1.9-compatible Encoding interface for Ruby 1.8 encodings class; support US-ASCII and ASCII-8BIT. by Jeremy Weathers
+  The original project by cxn03651 has its own odd encoding scheme that is not compatible with other
+  software (e.g. nokogiri) that expects strings encodings to be compatible with Ruby 1.9 Encodings.
+  The purpose of this fork is to make the encoding system for Ruby 1.8 compatible with the Ruby 1.9 encoding   system.
+
 v0.4.3
 * test passed under Ruby 1.9.2
 * Bug fix. Format#set_format_properties, Formula#convert_number found under Ruby 1.9.2
@@ -25,30 +31,6 @@ v0.4.0
 * modify README.rdoc below.
  * write source and run in utf8.
  * unary minus supported. but -1 --> -1*1, -SIN() --> -1*SIN()
-
-v0.3.5
-* Bug fix. Worksheet#write_comment() doesn't work when value arg is numeric.
-* Bug fix. TRUE/FALSE in formula was misundarstood as :NAME.
-* Bug fix. Worksheet#close() mis-handled @colinfo.
-* Bug fix. Worksheet#set_row() grbit mis-calculate by param hidden.
-* convert examples.(formula_result, indent, merge6, outline, outline_collapsed, panes, right_to_left, row_wrap)
-
-v0.3.4
-* Bug fix. add_comment doesn't work.
-* convert examples.(chess, colors, comment1, comment2)
-
-v0.3.3
-* add recent change in this document.
-
-v0.3.2
-* Bug fix. defined name doesn't work.
-* use jeweler to maintain gem.
-
-0.3.0
-* Chart support(Area, Bar, Column, Line, Pie, Scatter, Stock).
-* Document added. See rdoc in your installed gem directory.
-* Change Class name from 'Spreadsheet::WriteExcel' to 'WriteExcel'.
-* many bug fix.
 
 == Description
 
