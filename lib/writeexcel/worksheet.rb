@@ -4912,7 +4912,7 @@ class Worksheet < BIFFWriter
 
     prepend(header, data)
   end
-#  private :store_dimensions
+  private :store_dimensions
 
   ###############################################################################
   #

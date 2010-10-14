@@ -47,7 +47,7 @@ class TC_Worksheet < Test::Unit::TestCase
 
   def test_store_dimensions
     file = "delete_this"
-    File.open(file,"w+"){ |f| f.print @ws.store_dimensions }
+    File.open(file,"w+"){ |f| f.print @ws.instance_eval('store_dimensions') }
     pf = @perldir + "ws_store_dimensions"
     p_od = IO.readlines(pf).to_s.dump
     r_od = IO.readlines(file).to_s.dump
