@@ -1199,7 +1199,7 @@ class Worksheet < BIFFWriter
   # NOTE:
   # It isn't sufficient to just specify the filter condition. You must also
   # hide any rows that don't match the filter condition. Rows are hidden using
-  # the set_row() visible parameter. Spreadsheet::WriteExcel cannot do this
+  # the set_row() visible parameter. WriteExcel cannot do this
   # automatically since it isn't part of the file format. See the autofilter.rb
   # program in the examples directory of the distro for an example.
   #
@@ -3036,7 +3036,7 @@ class Worksheet < BIFFWriter
   # the syntax of the function refer to the Excel help files or the
   # following: http://office.microsoft.com/en-us/assistance/CH062528031033.aspx
   #
-  # If your formula doesn't work in Spreadsheet::WriteExcel try the following:
+  # If your formula doesn't work in WriteExcel try the following:
   #
   #     1. Verify that the formula works in Excel (or Gnumeric or OpenOffice.org).
   #     2. Ensure that it isn't on the Caveats list shown above.
@@ -3049,7 +3049,7 @@ class Worksheet < BIFFWriter
   #
   # ==Improving performance when working with formulas
   #
-  # Writing a large number of formulas with Spreadsheet::WriteExcel can be
+  # Writing a large number of formulas with WriteExcel can be
   # slow. This is due to the fact that each formula has to be parsed and
   # with the current implementation this is computationally expensive.
   #

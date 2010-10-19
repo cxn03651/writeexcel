@@ -4,7 +4,7 @@
 #######################################################################
 #
 # chartex - A utility to extract charts from an Excel file for
-# insertion into a Spreadsheet::WriteExcel file.
+# insertion into a WriteExcel file.
 #
 # reverse('ｩ'), September 2007, John McNamara, jmcnamara@cpan.org
 #

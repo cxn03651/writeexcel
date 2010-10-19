@@ -3,9 +3,9 @@
 #
 # Scatter - A writer class for Excel Scatter charts.
 #
-# Used in conjunction with Spreadsheet::WriteExcel::Chart.
+# Used in conjunction with WriteExcel::Chart.
 #
-# See formatting note in Spreadsheet::WriteExcel::Chart.
+# See formatting note in WriteExcel::Chart.
 #
 # Copyright 2000-2010, John McNamara, jmcnamara@cpan.org
 #
@@ -27,7 +27,7 @@ class Chart
   #
   #     require 'writeexcel'
   #
-  #     workbook  = Spreadsheet::WriteExcel.new('chart.xls')
+  #     workbook  = WriteExcel.new('chart.xls')
   #     worksheet = workbook.add_worksheet
   #
   #     chart     = workbook.add_chart(:type => 'Chart::Scatter')
@@ -80,7 +80,7 @@ class Chart
   #
   #     require 'writeexcel'
   #
-  #     workbook  = Spreadsheet::WriteExcel.new('chart_scatter.xls')
+  #     workbook  = WriteExcel.new('chart_scatter.xls')
   #     worksheet = workbook.add_worksheet
   #     bold      = workbook.add_format(:bold => 1)
   #

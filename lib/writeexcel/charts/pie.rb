@@ -3,9 +3,9 @@
 #
 # Pie - A writer class for Excel Pie charts.
 #
-# Used in conjunction with Spreadsheet::WriteExcel::Chart.
+# Used in conjunction with WriteExcel::Chart.
 #
-# See formatting note in Spreadsheet::WriteExcel::Chart.
+# See formatting note in WriteExcel::Chart.
 #
 # Copyright 2000-2010, John McNamara, jmcnamara@cpan.org
 #
@@ -27,7 +27,7 @@ class Chart
   #
   #     require 'writeexcel'
   #
-  #     workbook  = Spreadsheet::WriteExcel.new('chart.xls')
+  #     workbook  = WriteExcel.new('chart.xls')
   #     worksheet = workbook.add_worksheet
   #
   #     chart     = workbook.add_chart(:type => 'Chart::Pie')
@@ -50,7 +50,7 @@ class Chart
   #
   # ==DESCRIPTION
   #
-  # This module implements Pie charts for Spreadsheet::WriteExcel. The chart
+  # This module implements Pie charts for WriteExcel. The chart
   # object is created via the Workbook add_chart() method:
   #
   #     chart = workbook.add_chart(:type => 'Chart::Pie')
@@ -84,7 +84,7 @@ class Chart
   #
   #     require 'writeexcel'
   #
-  #     workbook  = Spreadsheet::WriteExcel.new('chart_pie.xls')
+  #     workbook  = WriteExcel.new('chart_pie.xls')
   #     worksheet = workbook.add_worksheet
   #     bold      = workbook.add_format(:bold => 1)
   #

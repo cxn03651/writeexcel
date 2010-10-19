@@ -846,7 +846,7 @@ require 'writeexcel/debug_info'
 # column is designated by a letter and the row by a number. Columns
 # range from A to IV i.e. 0 to 255, rows range from 1 to 65536.
 #--
-# The Spreadsheet::WriteExcel::Utility module that is included in the distro
+# The WriteExcel::Utility module that is included in the distro
 # contains helper functions for dealing with A1 notation, for example:
 #
 #     use Spreadsheet::WriteExcel::Utility;
@@ -992,7 +992,7 @@ require 'writeexcel/debug_info'
 # syntax of the function refer to the Excel help files or the following:
 # http://office.microsoft.com/en-us/assistance/CH062528031033.aspx.
 #
-# If your formula doesn't work in Spreadsheet::WriteExcel try the following:
+# If your formula doesn't work in WriteExcel try the following:
 #
 #     1. Verify that the formula works in Excel (or Gnumeric or OpenOffice.org).
 #     2. Ensure that it isn't on the Caveats list shown above.
@@ -1005,7 +1005,7 @@ require 'writeexcel/debug_info'
 #
 # ===Improving performance when working with formulas
 #
-# Writing a large number of formulas with Spreadsheet::WriteExcel can be slow.
+# Writing a large number of formulas with WriteExcel can be slow.
 # This is due to the fact that each formula has to be parsed and with the
 # current implementation this is computationally expensive.
 #

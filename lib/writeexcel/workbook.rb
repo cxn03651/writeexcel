@@ -373,7 +373,7 @@ class Workbook < BIFFWriter
   #           # Insert the chart into the a worksheet.
   #           worksheet.insert_chart('E2', chart)
   #
-  # See Spreadsheet::WriteExcel::Chart for details on how to configure the
+  # See WriteExcel::Chart for details on how to configure the
   # chart object once it is created. See also the chart_*.pl programs in the
   # examples directory of the distro.
   #
