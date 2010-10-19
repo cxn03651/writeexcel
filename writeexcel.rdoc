@@ -74,7 +74,7 @@ WriteExcelは、エクセルの機能へのできるだけ多くのインター�
 
  require 'writeexcel'                                    # Step 0
 
- workbook  = Spreadsheet::WriteExcel.new('ruby.xls')     # Step 1
+ workbook  = WriteExcel.new('ruby.xls')     # Step 1
  worksheet = workbook.add_worksheet                      # Step 2
  worksheet.write('A1', 'Hi Excel!')                      # Step 3
  workbook.close                                          # Step 4
@@ -85,7 +85,7 @@ WriteExcelは、エクセルの機能へのできるだけ多くのインター�
 
 = Workbook メソッド
 
-Spreadsheet::WriteExcel ライブラリは新規のワークブックへのオブジェクト指向のインターフェイスを提供します。新たなワークブックに対して次のメソッドを使用することが出来ます。
+WriteExcel ライブラリは新規のワークブックへのオブジェクト指向のインターフェイスを提供します。新たなワークブックに対して次のメソッドを使用することが出来ます。
 
  new
  add_worksheet
@@ -105,24 +105,24 @@ Spreadsheet::WriteExcel ライブラリは新規のワークブックへのオ�
 
 new コンストラクタは新しいエクセルワークブックを作成します。パラメータとしてファイル名かファイルハンドルを受け取ります。（※ファイル名しか対応していません）
 
- workbook  = Spreadsheet::WriteExcel.new('filename.xls')
+ workbook  = WriteExcel.new('filename.xls')
  worksheet = workbook.add_worksheet
  worksheet.write(0, 0, 'Hi Excel!')
 
 ※ また、デフォルトのフォーマットを指定することもできます。例えば、ＭＳＰ ゴシックで１１ポイントなど。
 
- workbook  = Spreadsheet::WriteExcel.new('filename.xls', :font => 'ＭＳＰ ゴシック', :size = 11)
+ workbook  = WriteExcel.new('filename.xls', :font => 'ＭＳＰ ゴシック', :size = 11)
 
 ファイル名を使った別の使用例です。
 
- workbook = Spreadsheet::WriteExcel.new(filename)
- workbook = Spreadsheet::WriteExcel.new('/tmp/filename.xls')
- workbook = Spreadsheet::WriteExcel.new("c:\\tmp\\filename.xls")
- workbook = Spreadsheet::WriteExcel.new('c:\tmp\filename.xls')
+ workbook = WriteExcel.new(filename)
+ workbook = WriteExcel.new('/tmp/filename.xls')
+ workbook = WriteExcel.new("c:\\tmp\\filename.xls")
+ workbook = WriteExcel.new('c:\tmp\filename.xls')
 
 最後の２つの例は、DOSやWindowsでディレクトリの区切りの「\」をエスケープするか、シングルクォートで囲んでそのまま指定していするかの例です。
 
-new() コンストラクタは、Spreadsheet::WriteExcelオブジェクト（ワークブックオブジェクト）を返し、これにワークシートを加えデータを書き込みます。
+new() コンストラクタは、WriteExcelオブジェクト（ワークブックオブジェクト）を返し、これにワークシートを加えデータを書き込みます。
 
 == add_worksheet([sheetname])
 
@@ -164,7 +164,7 @@ add_format()メソッドは、セルに書式を設定するのに使用する�
 
 == set_tempdir()
 
-速度と効率のため、ワークブックのデータを最後に組み立てる前に、Spreadsheet::WriteExcelはワークシートのデータをテンポラリファイルに置きます。テンポラリファイルを作ることが出来ない場合はメモリ上で作業します。この場合、大きなファイルになると遅くなることがあります。
+速度と効率のため、ワークブックのデータを最後に組み立てる前に、WriteExcelはワークシートのデータをテンポラリファイルに置きます。テンポラリファイルを作ることが出来ない場合はメモリ上で作業します。この場合、大きなファイルになると遅くなることがあります。
 この問題はWindows上でIISと併せて使っているときに主として発生しますが、UNIXシステムでも起こることがあります。
 この問題は概して、既定の一時ファイルディレクトリがC:\やその他IISが書き込みを提供していないディレクトリに設定されているのが原因で発生します。
 この問題を避けるために、set_tempdir()メソッドを使って一時ファイルを作成できるディレクトリを指定します。
@@ -250,7 +250,7 @@ sheets()メソッドはワークブック内のワークシートの全リスト
 
 エクセルは日付を実数で格納しています。その整数部分は「epoch」からの日数を、小数部分は１日のうちのパーセンテージを格納しています。「epoch」は、Windowsのエクセルでは1900年、マッキントッシュのエクセルでは1904年です。ですが、どちらのプラットフォームでもエクセルは自動的にシステム間の相違をコンバートして扱います。
 
-Spreadsheet::WriteExcelではデフォルトで1900年を用います。もしも変更したいのであれば、workbookに対してset_1904()メソッドを呼んでください。現在の値を問い合わせるにはget_1904()を呼びます。これは、1900ならば0を、1904ならば1を返します。
+WriteExcelではデフォルトで1900年を用います。もしも変更したいのであれば、workbookに対してset_1904()メソッドを呼んでください。現在の値を問い合わせるにはget_1904()を呼びます。これは、1900ならば0を、1904ならば1を返します。
 
 エクセルの日付の取り扱いについては、"DATES AND TIME IN EXCEL"も見てください。
 
@@ -258,9 +258,9 @@ Spreadsheet::WriteExcelではデフォルトで1900年を用います。もし�
 
 == set_codepage(codepage)
 
-Spreadsheet::WriteExcelで使われるデフォルトのコードページ、文字セットはANSIです。これはWindowsのエクセルの既定値でもあります。しかしながら、たまにコードページを変更する必要が生じたときは、set_codepage()メソッドを使って変更します。
+WriteExcelで使われるデフォルトのコードページ、文字セットはANSIです。これはWindowsのエクセルの既定値でもあります。しかしながら、たまにコードページを変更する必要が生じたときは、set_codepage()メソッドを使って変更します。
 
-コードページの変更は、マッキントッシュ上でSpreadsheet::WriteExcelを使用していて、ASCII 128以外の文字セットを使いたい場合に必要になることがあります。
+コードページの変更は、マッキントッシュ上でWriteExcelを使用していて、ASCII 128以外の文字セットを使いたい場合に必要になることがあります。
 
  workbook.set_codepage(1)  # ANSI, MS Windows
  workbook.set_codepage(2)  # Apple Macintosh
@@ -617,7 +617,7 @@ URLの形式は４つ(http://, https://, ftp://, mailto:)をサポートして�
 
  worksheet.write_url('A15', 'external:c;\temp\foo.xls#my_name')
 
-注：現在のSpreadsheet::WriteExcelでは、名前付け範囲の設定は対応していません。
+注：現在のWriteExcelでは、名前付け範囲の設定は対応していません。
 
 エクセルでは、シート名に空白や非英数字が含まれる場合、'Sales Data'!A1のようにクォートで囲む必要があります。この場合、シート名に含まれる文字は必要であればエスケープしてください。 'c:\temp' はダブルクォートでは"c:\\temp"とします。
 
