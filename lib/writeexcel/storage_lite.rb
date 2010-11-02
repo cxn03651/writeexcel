@@ -510,7 +510,7 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
   def _savePpsWk(rh_info)
     #1. Write PPS
     file = rh_info[:fileh]
-    file.write( [
+    data = [
           @name,
           ("\x00" * (64 - @name.bytesize)),  #64
           [@name.bytesize + 2].pack("v"),    #66
@@ -526,7 +526,10 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
           "\x00\x00\x00\x00",                #100
           localDate2OLE(@time_1st),          #108
           localDate2OLE(@time_2nd)           #116
-        ].collect { |d| d.force_encoding(Encoding::BINARY) }.join('')
+      ]
+    file.write(
+      ruby_18 { data.join('') } ||
+      ruby_19 { data.collect { |d| d.force_encoding(Encoding::BINARY) }.join('') }
       )
     if @start_block != 0
       file.write([@start_block].pack('V'))
@@ -677,7 +680,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
     #print "iBdCnt = iBdCnt \n"
 
     #1.Save Header
-    file.write( [
+    data = [
           "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1",
           "\x00\x00\x00\x00" * 4,
           [0x3b].pack("v"),
@@ -693,7 +696,10 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
           [0x1000].pack("V"),
           [0].pack("V"),                     #Small Block Depot
           [1].pack("V")
-        ].collect { |d| d.force_encoding(Encoding::BINARY) }.join('')
+      ]
+    file.write(
+      ruby_18 { data.join('') } ||
+      ruby_19 { data.collect { |d| d.force_encoding(Encoding::BINARY) }.join('') }
       )
     #2. Extra BDList Start, Count
     if iAll <= i1stBdMax

@@ -190,7 +190,9 @@ end
 #
 def pack_VT_LPSTR(str, codepage)       #:nodoc:
     type        = 0x001E
-    string      = str.force_encoding('BINARY') + "\0".encode('BINARY')
+    string      =
+      ruby_18 { "#{str}\0" } ||
+      ruby_19 { str.force_encoding('BINARY') + "\0".encode('BINARY') }
 
     if codepage == 0x04E4
       # Latin1

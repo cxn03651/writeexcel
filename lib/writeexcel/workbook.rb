@@ -25,7 +25,8 @@ require 'writeexcel/compatibility'
 class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
-  private :convert_to_ascii_if_ascii
+
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
 
   BOF = 11  # :nodoc:
   EOF = 4   # :nodoc:
@@ -486,7 +487,7 @@ class Workbook < BIFFWriter
       end
     end
 
-    name = convert_to_ascii_if_ascii(name)
+    ruby_19 { name = convert_to_ascii_if_ascii(name) }
 
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
     raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
@@ -513,9 +514,17 @@ class Workbook < BIFFWriter
     end
 
     # Handle utf8 strings
-    if name.encoding == Encoding::UTF_8
-      name = utf8_to_16be(name)
-      encoding = 1
+    ruby_18 do
+      if name =~ NonAscii
+        name = utf8_to_16be(name)
+        encoding = 1
+      end
+    end
+    ruby_19 do
+      if name.encoding == Encoding::UTF_8
+        name = utf8_to_16be(name)
+        encoding = 1
+      end
     end
 
     # Check that the worksheet name doesn't already exist since this is a fatal
@@ -1101,7 +1110,8 @@ class Workbook < BIFFWriter
     else
       strings.each do |string|
         next unless params.has_key?(string.to_sym)
-        return 0xFDE9 if params[string.to_sym].encoding == Encoding::UTF_8
+        ruby_18 { return 0xFDE9 if params[string.to_sym] =~ NonAscii }
+        ruby_19 { return 0xFDE9 if params[string.to_sym].encoding == Encoding::UTF_8 }
       end
       return 0x04E4; # Default codepage, Latin 1.
     end
@@ -2073,12 +2083,20 @@ class Workbook < BIFFWriter
     # Char length of format string
     cch = format.bytesize
 
-    format = convert_to_ascii_if_ascii(format)
+    ruby_19 { format = convert_to_ascii_if_ascii(format) }
 
     # Handle utf8 strings
-    if format.encoding == Encoding::UTF_8
-      format = utf8_to_16be(format)
-      encoding = 1
+    ruby_18 do
+      if format =~ NonAscii
+        format = utf8_to_16be(format)
+        encoding = 1
+      end
+    end
+    ruby_19 do
+      if format.encoding == Encoding::UTF_8
+        format = utf8_to_16be(format)
+        encoding = 1
+      end
     end
 
     # Handle Unicode format strings.
@@ -2184,7 +2202,7 @@ class Workbook < BIFFWriter
   #       and _store_name_long().
   #
   def store_name(name, encoding, sheet_index, formula)  # :nodoc:
-    formula = convert_to_ascii_if_ascii(formula)
+    ruby_19 { formula = convert_to_ascii_if_ascii(formula) }
 
     record          = 0x0018        # Record identifier
 

@@ -53,7 +53,8 @@ module Writeexcel
 
 class Chart < Worksheet
   require 'writeexcel/helper'
-  private :convert_to_ascii_if_ascii
+
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
 
   ###############################################################################
   #
@@ -687,12 +688,20 @@ class Chart < Worksheet
     # Return if encoding is set, i.e., string has been manually encoded.
     #return ( undef, undef ) if $string == 1;
 
-    string = convert_to_ascii_if_ascii(string)
+    ruby_19 { string = convert_to_ascii_if_ascii(string) }
 
     # Handle utf8 strings.
-    if string.encoding == Encoding::UTF_8
-      utf8_to_16be(string)
-      encoding = 1
+    ruby_18 do
+      if string =~ NonAscii
+        string = utf8_to_16be(string)
+        encoding = 1
+      end
+    end
+    ruby_19 do
+      if string.encoding == Encoding::UTF_8
+        string = utf8_to_16be(string)
+        encoding = 1
+      end
     end
 
     # Chart strings are limited to 255 characters.
@@ -1237,7 +1246,7 @@ class Chart < Worksheet
     # format_index            # Num format index.
     grbit        = 0x0000     # Option flags.
 
-    formula = convert_to_ascii_if_ascii(formula)
+    ruby_19 { formula = convert_to_ascii_if_ascii(formula) }
 
     formula_length  = formula.bytesize
     length += formula_length
@@ -1249,9 +1258,13 @@ class Chart < Worksheet
     data  += [format_index].pack('v')
     data  += [formula_length].pack('v')
     if formula.respond_to?(:to_array)
-      data += formula[0].encode('BINARY')
+      data +=
+        ruby_18 { formula[0] } ||
+        ruby_19 { formula[0].encode('BINARY') }
     else
-      data += formula.encode('BINARY') unless formula.nil?
+      data +=
+        ruby_18 { formula                  unless formula.nil? } ||
+        ruby_19 { formula.encode('BINARY') unless formula.nil? }
     end
 
     append(header, data)
@@ -1866,7 +1879,7 @@ class Chart < Worksheet
   # Write the SERIESTEXT chart BIFF record.
   #
   def store_seriestext(str, encoding)  # :nodoc:
-    str = convert_to_ascii_if_ascii(str)
+    ruby_19 { str = convert_to_ascii_if_ascii(str) }
 
     record   = 0x100D          # Record identifier.
     length   = 0x0000          # Number of bytes to follow.

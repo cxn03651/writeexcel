@@ -18,7 +18,8 @@ module Writeexcel
 
 class Formula < ExcelFormulaParser       #:nodoc:
   require 'writeexcel/helper'
-  private :convert_to_ascii_if_ascii
+
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
 
   attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
@@ -299,7 +300,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # Convert a string to a ptg Str.
   #
   def convert_string(str)
-    str = convert_to_ascii_if_ascii(str)
+    ruby_19 { str = convert_to_ascii_if_ascii(str) }
 
     encoding = 0
 
@@ -312,10 +313,19 @@ class Formula < ExcelFormulaParser       #:nodoc:
              ruby_19 { str.length }
 
     # Handle utf8 strings
-    if str.encoding == Encoding::UTF_8
-      str = utf8_to_16le(str)
-      str.force_encoding('BINARY')
-      encoding = 1
+    ruby_18 do
+      if str =~ NonAscii
+        str = utf8_to_16le(str)
+        ruby_19 { str.force_encoding('BINARY') }
+        encoding = 1
+      end
+    end
+    ruby_19 do
+      if str.encoding == Encoding::UTF_8
+        str = utf8_to_16le(str)
+        ruby_19 { str.force_encoding('BINARY') }
+        encoding = 1
+      end
     end
 
     exit "String in formula has more than 255 chars\n" if length > 255
@@ -500,11 +510,18 @@ class Formula < ExcelFormulaParser       #:nodoc:
   # sheet names is updated by the add_worksheet() method of the Workbook class.
   #
   def get_sheet_index(sheet_name)
-    sheet_name = convert_to_ascii_if_ascii(sheet_name)
+    ruby_19 { sheet_name = convert_to_ascii_if_ascii(sheet_name) }
 
     # Handle utf8 sheetnames
-    if sheet_name.encoding == Encoding::UTF_8
-      sheet_name = sheet_name.encode('UTF-16BE')
+    ruby_18 do
+      if sheet_name =~ NonAscii
+        sheet_name = utf8_to_16be(sheet_name)
+      end
+    end
+    ruby_19 do
+      if sheet_name.encoding == Encoding::UTF_8
+        sheet_name = sheet_name.encode('UTF-16BE')
+      end
     end
 
     if @ext_sheets[sheet_name].nil?

@@ -19,9 +19,12 @@ class Test::Unit::TestCase
   # target   : io (ex) string io object where stored data.
   def compare_file(expected, target)
     # target is StringIO object.
+    result =
+      ruby_18 { target.string } ||
+      ruby_19 { target.string.force_encoding('BINARY') }
     assert_equal(
       File.binread(expected),
-      target.string.force_encoding('BINARY'),
+      result,
       "#{File.basename(expected)} doesn't match."
     )
   end

@@ -8,7 +8,9 @@ class WriteFile
   # General storage function
   #
   def prepend(*args)
-    data = args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join
+    data =
+      ruby_18 { args.join } ||
+      ruby_19 { args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join }
     data = add_continue(data) if data.bytesize > @limit
 
     @datasize += data.bytesize
@@ -24,7 +26,9 @@ class WriteFile
   # General storage function
   #
   def append(*args)
-    data = args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join
+    data =
+      ruby_18 { args.join } ||
+      ruby_19 { args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join }
     # Add CONTINUE records if necessary
     data = add_continue(data) if data.bytesize > @limit
     if @using_tmpfile

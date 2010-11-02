@@ -6,15 +6,12 @@
   def convert_to_ascii_if_ascii(str)
     return nil if str.nil?
     ruby_18 do
-      enc = str.encoding
-      begin
-        str = str.encode('ASCII')
-      rescue
-        str.force_encoding(enc)
+      unless str =~ /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
+        str = String.new(str)
       end
     end ||
     ruby_19 do
-      if !str.nil? && str.ascii_only?
+      if str.ascii_only?
         str = [str].pack('a*')
       end
     end
@@ -24,20 +21,27 @@
 
 
   def utf8_to_16be(utf8)
-    utf16be = NKF.nkf('-w16B0 -m0 -W', utf8)
-    utf16be.force_encoding('UTF-16BE')
+    ruby_18 { NKF.nkf('-w16B0 -m0 -W', utf8) } ||
+    ruby_19 do
+      utf16be = NKF.nkf('-w16B0 -m0 -W', utf8)
+      utf16be.force_encoding('UTF-16BE')
+    end
   end
   private :utf8_to_16be
 
   def utf8_to_16le(utf8)
-    utf16le = NKF.nkf('-w16L0 -m0 -W', utf8)
-    utf16le.force_encoding('UTF-16LE')
+    ruby_18 { NKF.nkf('-w16L0 -m0 -W', utf8) } ||
+    ruby_19 do
+      utf16le = NKF.nkf('-w16L0 -m0 -W', utf8)
+      utf16le.force_encoding('UTF-16LE')
+    end
   end
   private :utf8_to_16le
 
   def ascii_to_16be(ascii)
     ascii.unpack("C*").pack("n*")
-    ascii.force_encoding('UTF-16BE')
+    ruby_19 { ascii.force_encoding('UTF-16BE') }
+    ascii
   end
   private :ascii_to_16be
 

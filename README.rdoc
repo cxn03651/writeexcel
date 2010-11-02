@@ -2,36 +2,6 @@
 
 Write to a cross-platform Excel binary file.
 
-== Recent Changes
-
-v0.5.0
-* use 1.9-compatible Encoding interface for Ruby 1.8 encodings class; support US-ASCII and ASCII-8BIT. by Jeremy Weathers
-  The original project by cxn03651 has its own odd encoding scheme that is not compatible with other
-  software (e.g. nokogiri) that expects strings encodings to be compatible with Ruby 1.9 Encodings.
-  The purpose of this fork is to make the encoding system for Ruby 1.8 compatible with the Ruby 1.9 encoding   system.
-
-v0.4.3
-* test passed under Ruby 1.9.2
-* Bug fix. Format#set_format_properties, Formula#convert_number found under Ruby 1.9.2
-* Bug fix in test_set_rolation().
-
-v0.4.2
-* use namespace 'Writeexcel::' to Chart(::*), Colors, Format, Formula, Worksheet.
-* add_chart() parameter of :type changed . ex) Chart::Bar => 'Chart::Bar'
-* almost complete japanese document : writeexcel.doc
-* Bug fix. typo in Worksheet#set_zoom()
-* some refactoring.
-
-v0.4.1
-* Bug fix. Workbook#add_format() doesn't work when received two or more parameters.
-* Bug fix. Worksheet#write_formula() doesn't work when formula contains utf8 string.
-
-v0.4.0
-* works also on Ruby 1.9.1.
-* modify README.rdoc below.
- * write source and run in utf8.
- * unary minus supported. but -1 --> -1*1, -SIN() --> -1*SIN()
-
 == Description
 
 This library is converted from  Spreadsheet::WriteExcel module of Perl.
@@ -107,7 +77,40 @@ when use urf8 string data.
 
 == Dependencies
 
-* ruby 1.8, ruby 1.9.1
+* ruby 1.8, ruby 1.9.1, ruby 1.9.2
+
+== Recent Changes
+
+v0.6.0
+* Bug fix. to avoid destroy to_json method when using with Rails 3
+
+v0.5.0
+* use 1.9-compatible Encoding interface for Ruby 1.8 encodings class; support US-ASCII and ASCII-8BIT. by Jeremy Weathers
+  The original project by cxn03651 has its own odd encoding scheme that is not compatible with other
+  software (e.g. nokogiri) that expects strings encodings to be compatible with Ruby 1.9 Encodings.
+  The purpose of this fork is to make the encoding system for Ruby 1.8 compatible with the Ruby 1.9 encoding   system.
+
+v0.4.3
+* test passed under Ruby 1.9.2
+* Bug fix. Format#set_format_properties, Formula#convert_number found under Ruby 1.9.2
+* Bug fix in test_set_rolation().
+
+v0.4.2
+* use namespace 'Writeexcel::' to Chart(::*), Colors, Format, Formula, Worksheet.
+* add_chart() parameter of :type changed . ex) Chart::Bar => 'Chart::Bar'
+* almost complete japanese document : writeexcel.doc
+* Bug fix. typo in Worksheet#set_zoom()
+* some refactoring.
+
+v0.4.1
+* Bug fix. Workbook#add_format() doesn't work when received two or more parameters.
+* Bug fix. Worksheet#write_formula() doesn't work when formula contains utf8 string.
+
+v0.4.0
+* works also on Ruby 1.9.1.
+* modify README.rdoc below.
+ * write source and run in utf8.
+ * unary minus supported. but -1 --> -1*1, -SIN() --> -1*SIN()
 
 == Author
 

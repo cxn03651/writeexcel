@@ -7,13 +7,17 @@ if defined?($debug)
     include CallerInfo
 
     def append(*args)
-      data = args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join
+      data =
+        ruby_18 { args.join } ||
+        ruby_19 { args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join }
       print_caller_info(data, :method => 'append')
       super
     end
 
     def prepend(*args)
-      data = args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join
+      data =
+        ruby_18 { args.join } ||
+        ruby_19 { args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join }
       print_caller_info(data, :method => 'prepend')
       super
     end

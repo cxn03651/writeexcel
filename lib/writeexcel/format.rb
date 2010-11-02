@@ -23,6 +23,7 @@ require 'writeexcel/colors'
 module Writeexcel
 
 class Format < Colors
+  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
 
   ###############################################################################
   #
@@ -369,12 +370,20 @@ class Format < Colors
     rgch       = @font
     encoding   = @font_encoding
 
-    rgch = convert_to_ascii_if_ascii(rgch)
+    ruby_19 { rgch = convert_to_ascii_if_ascii(rgch) }
 
     # Handle utf8 strings
-    if rgch.encoding == Encoding::UTF_8
-      rgch = utf8_to_16be(rgch)
-      encoding = 1
+    ruby_18 do
+      if rgch =~ NonAscii
+        rgch = utf8_to_16be(rgch)
+        encoding = 1
+      end
+    end
+    ruby_19 do
+      if rgch.encoding == Encoding::UTF_8
+        rgch = utf8_to_16be(rgch)
+        encoding = 1
+      end
     end
 
     cch = rgch.bytesize
