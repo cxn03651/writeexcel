@@ -81,6 +81,9 @@ when use urf8 string data.
 
 == Recent Changes
 
+v0.6.1
+* Bug fix. to avoid output stack trace for debug when defined $debug such as Rails 2.3.8 development console.
+
 v0.6.0
 * Bug fix. to avoid destroy to_json method when using with Rails 3
 
