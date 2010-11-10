@@ -2,7 +2,7 @@
 
 require 'writeexcel/caller_info'
 
-if defined?($debug)
+if defined?($writeexcel_debug)
   class BIFFWriter
     include CallerInfo
 
