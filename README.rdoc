@@ -81,6 +81,9 @@ when use urf8 string data.
 
 == Recent Changes
 
+v0.6.3
+* Bug fix. endless loop when inserted image size > 8224.
+
 v0.6.1
 * Bug fix. to avoid output stack trace for debug when defined $debug such as Rails 2.3.8 development console.
 
