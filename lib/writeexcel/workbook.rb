@@ -2972,8 +2972,8 @@ class Workbook < BIFFWriter
     end
 
     # Change length field of the first MSODRAWINGGROUP block. Case 2 and 3.
-    tmp = data.dup
-    tmp[0, limit + 4] = ""
+    tmp = data[0, limit + 4]
+    data[0, limit + 4] = ""
     tmp[2, 2] = [limit].pack('v')
     append(tmp)
 
