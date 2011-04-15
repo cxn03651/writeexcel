@@ -71,6 +71,11 @@ class TC_Workbook < Test::Unit::TestCase
     end
   end
 
+  def test_check_unicode_bytes_even
+    assert_nothing_raised(RuntimeError){ @workbook.add_worksheet('ab', 1)}
+    assert_raise(RuntimeError){ @workbook.add_worksheet('abc', 1)}
+  end
+
   def test_raise_set_compatibility_after_sheet_creation
     @workbook.add_worksheet
     assert_raise(RuntimeError) { @workbook.compatibility_mode }
