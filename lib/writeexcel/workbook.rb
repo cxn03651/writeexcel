@@ -88,7 +88,6 @@ class Workbook < BIFFWriter
     @codepage              = 0x04E4
     @country               = 1
     @worksheets            = []
-    @sheetnames            = []
     @formats               = []
     @palette               = []
     @biff_only             = 0
@@ -292,7 +291,6 @@ class Workbook < BIFFWriter
     ]
     worksheet = Writeexcel::Worksheet.new(*init_data)
     @worksheets[index] = worksheet      # Store ref for iterator
-    @sheetnames[index] = name           # Store EXTERNSHEET names
     @parser.set_ext_sheets(name, index) # Store names in Formula.rb
     worksheet
   end
@@ -396,7 +394,6 @@ class Workbook < BIFFWriter
     # If the chart isn't embedded let the workbook control it.
     if !embedded
       @worksheets[index] = chart          # Store ref for iterator
-      @sheetnames[index] = name           # Store EXTERNSHEET names
     else
       # Set index to 0 so that the activate() and set_first_sheet() methods
       # point back to the first worksheet if used for embedded charts.
@@ -438,7 +435,6 @@ class Workbook < BIFFWriter
 
     chart = Writeexcel::Chart.factory(self, type, init_data)
     @worksheets[index] = chart      # Store ref for iterator
-    @sheetnames[index] = name           # Store EXTERNSHEET names
     chart
   end
 
