@@ -2972,8 +2972,7 @@ class Workbook < BIFFWriter
     end
 
     # Change length field of the first MSODRAWINGGROUP block. Case 2 and 3.
-    tmp = data[0, limit + 4]
-    data[0, limit + 4] = ""
+    tmp, data = devide_string(data, limit + 4)
     tmp[2, 2] = [limit].pack('v')
     append(tmp)
 
@@ -2988,8 +2987,7 @@ class Workbook < BIFFWriter
         header = [continue, limit].pack("vv")
       end
 
-      tmp = data.dup
-      tmp[0, limit] = ''
+      tmp, data = devide_string(data, limit)
       append(header, tmp)
     end
 
@@ -3001,6 +2999,13 @@ class Workbook < BIFFWriter
     @ignore_continue = 0
   end
   private :add_mso_drawing_group_continue
+
+  def devide_string(string, nth)
+    first_string = string[0, nth]
+    latter_string = string[nth, string.size - nth]
+    [first_string, latter_string]
+  end
+  private :devide_string
 
   ###############################################################################
   #
