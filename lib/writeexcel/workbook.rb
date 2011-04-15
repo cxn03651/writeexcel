@@ -447,7 +447,6 @@ class Workbook < BIFFWriter
   #
   def check_sheetname(name, encoding = 0, chart = 0)       #:nodoc:
     encoding ||= 0
-    limit           = encoding != 0 ? 62 : 31
     invalid_char    = %r![\[\]:*?/\\]!
 
     # Increment the Sheet/Chart number used for default sheet names below.
@@ -468,10 +467,7 @@ class Workbook < BIFFWriter
     end
 
     ruby_19 { name = convert_to_ascii_if_ascii(name) }
-
-    # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
-    raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
-
+    check_sheetname_length(name, encoding)
     # Check that Unicode sheetname has an even number of bytes
     if encoding == 1 && (name.bytesize % 2 != 0)
       raise "Odd number of bytes in Unicode worksheet name: #{name}"
@@ -552,6 +548,13 @@ class Workbook < BIFFWriter
     [name,  encoding]
   end
   private :check_sheetname
+
+  def check_sheetname_length(name, encoding)
+    # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
+    limit           = encoding != 0 ? 62 : 31
+    raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
+  end
+  private :check_sheetname_length
 
   #
   # The add_format method can be used to create new Format objects which are
