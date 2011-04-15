@@ -81,6 +81,9 @@ when use urf8 string data.
 
 == Recent Changes
 
+v0.6.4
+* Bug fix. endless loop when inserted image size > 8224bytes.
+
 v0.6.3
 * Bug fix. endless loop when inserted image size > 8224.
 
