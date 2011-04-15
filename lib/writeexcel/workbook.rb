@@ -233,11 +233,7 @@ class Workbook < BIFFWriter
     if args.empty?
       @worksheets
     else
-      ary = []
-      args.each do |i|
-        ary << @worksheets[i]
-      end
-      ary
+      args.collect{|i| @worksheets[i] }
     end
   end
 
