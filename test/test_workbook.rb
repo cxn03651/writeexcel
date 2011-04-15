@@ -48,41 +48,35 @@ class TC_Workbook < Test::Unit::TestCase
     }
   end
 
-=begin
-#
-# Comment out because Workbook#check_sheetname was set to private method.
-#
   def test_check_sheetname
-    valids   = valid_sheetname
-    invalids = invalid_sheetname
     worksheet1 = @workbook.add_worksheet              # implicit name 'Sheet1'
     worksheet2 = @workbook.add_worksheet              # implicit name 'Sheet2'
     worksheet3 = @workbook.add_worksheet 'Sheet3'     # implicit name 'Sheet3'
     worksheet1 = @workbook.add_worksheet 'Sheetz'     # implicit name 'Sheetz'
 
-    valids.each do |test|
+    valid_sheetnames.each do |test|
       target    = test[0]
       sheetname = test[1]
       caption   = test[2]
-      assert_nothing_raised { @workbook.check_sheetname(sheetname) }
+      assert_nothing_raised { @workbook.add_worksheet(sheetname) }
     end
-    invalids.each do |test|
+
+    invalid_sheetnames.each do |test|
       target    = test[0]
       sheetname = test[1]
       caption   = test[2]
       assert_raise(RuntimeError, "sheetname: #{sheetname}") {
-          @workbook.check_sheetname(sheetname)
+          @workbook.add_worksheet(sheetname)
         }
     end
   end
-=end
 
   def test_raise_set_compatibility_after_sheet_creation
     @workbook.add_worksheet
     assert_raise(RuntimeError) { @workbook.compatibility_mode }
   end
 
-  def valid_sheetname
+  def valid_sheetnames
     [
       # Tests for valid names
       [ 'PASS', nil,        'No worksheet name'           ],
@@ -92,7 +86,7 @@ class TC_Workbook < Test::Unit::TestCase
     ]
   end
 
-  def invalid_sheetname
+  def invalid_sheetnames
     [
       # Tests for invalid names
       [ 'FAIL', 'Sheet1',   'Caught duplicate name'       ],
