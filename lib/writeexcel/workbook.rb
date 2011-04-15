@@ -33,11 +33,11 @@ class Workbook < BIFFWriter
   SheetName = "Sheet"  # :nodoc:
 
   #
-  # file is a filename (as string) or io object where to out spreadsheet data.
-  # you can set default format of workbook using default_formats.
+  # _file_ is a filename (as string) or io object where to out spreadsheet data.
+  # you can set default format of workbook using _default_formats_.
   #
   # A new Excel workbook is created using the new() constructor which accepts
-  # either a filename or a filehandle as a parameter. The following example
+  # either a filename or an IO object as a parameter. The following example
   # creates a new Excel file based on a filename:
   #
   #     workbook  = WriteExcel.new('filename.xls')
@@ -165,7 +165,7 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
-  # _get_checksum_method.
+  # get_checksum_method.
   #
   # Check for modules available to calculate image checksum. Excel uses MD4 but
   # MD5 will also work.
@@ -182,24 +182,12 @@ class Workbook < BIFFWriter
   # Calls finalization methods and explicitly close the OLEwriter files
   # handle.
   #
-  # In general your Excel file will be closed automatically when your program
-  # ends or when the Workbook object goes out of scope, however the close method
-  # can be used to explicitly close an Excel file.
-  #
-  #     workbook.close
-  #
   # An explicit close() is required if the file must be closed prior to performing
   # some external action on it such as copying it, reading its size or attaching
   # it to an email.
   #
   # In general, if you create a file with a size of 0 bytes or you fail to create
   # a file you need to call close().
-  #
-  # The return value of close() is the same as that returned by perl when it
-  # closes the file created by new(). This allows you to handle error conditions
-  # in the usual way:
-  #
-  #     $workbook.close() or die "Error closing file: $!";
   #
   def close
     return if @fileclosed  # Prevent close() from being called twice.
@@ -266,7 +254,7 @@ class Workbook < BIFFWriter
   #     worksheet3 = workbook.add_worksheet('Data')    # Data
   #     worksheet4 = workbook.add_worksheet            # Sheet4
   #
-  # If sheetname is not specified the default Excel convention will be followed,
+  # If _sheetname_ is not specified the default Excel convention will be followed,
   # i.e. Sheet1, Sheet2, etc. The utf_16_be parameter is optional, see below.
   #
   # The worksheet name must be a valid Excel worksheet name, i.e. it cannot
