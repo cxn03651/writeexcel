@@ -114,7 +114,6 @@ class Workbook < BIFFWriter
     @hideobj               = 0
     @compatibility         = 0
 
-    @add_doc_properties    = 0
     @summary               = ''
     @doc_summary           = ''
     @localtime             = Time.now
@@ -1045,8 +1044,13 @@ class Workbook < BIFFWriter
       create_doc_summary_property_set(property_sets(properties, params))
 
     # Set a flag for when the files is written.
-    @add_doc_properties = 1
+    add_doc_properties = true
   end
+
+  private
+  attr_accessor :add_doc_properties
+
+  public
 
   def property_set(property, params)
     valid_properties[property][0..1] + [params[property]]
@@ -1212,7 +1216,7 @@ class Workbook < BIFFWriter
     maxsize = 7_087_104
 #    maxsize = 1
 
-    if @add_doc_properties == 0 && @biffsize <= maxsize
+    if !add_doc_properties && @biffsize <= maxsize
       # Write the OLE file using OLEwriter if data <= 7MB
       ole  = OLEWriter.new(@fh_out)
 
@@ -1256,7 +1260,7 @@ class Workbook < BIFFWriter
       streams << workbook
 
       # Create the properties streams, if any.
-      if @add_doc_properties != 0
+      if add_doc_properties
         stream  = "\5SummaryInformation".unpack('C*').pack('v*')
         summary = OLEStorageLitePPSFile.new(stream, @summary)
         streams << summary
