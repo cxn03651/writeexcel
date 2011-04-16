@@ -30,6 +30,13 @@ class Workbook < BIFFWriter
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:
 
+  private
+
+  attr_accessor :add_doc_properties
+  attr_reader :formats, :defined_names
+
+  public
+
   #
   # _file_ is a filename (as string) or io object where to out spreadsheet data.
   # you can set default format of workbook using _default_formats_.
@@ -933,7 +940,7 @@ class Workbook < BIFFWriter
     # Parse the tokens into a formula string.
     formula = parser.parse_tokens(tokens)
 
-    @defined_names.push(
+    defined_names.push(
        {
          :name        => name,
          :encoding    => encoding,
@@ -942,7 +949,7 @@ class Workbook < BIFFWriter
        }
      )
 
-    index = @defined_names.size
+    index = defined_names.size
 
     parser.set_ext_name(name, index)
   end
@@ -1046,13 +1053,6 @@ class Workbook < BIFFWriter
     # Set a flag for when the files is written.
     add_doc_properties = true
   end
-
-  private
-
-  attr_accessor :add_doc_properties
-  attr_reader :formats
-
-  public
 
   def property_set(property, params)
     valid_properties[property][0..1] + [params[property]]
@@ -1857,7 +1857,7 @@ class Workbook < BIFFWriter
   #
   def store_names  # :nodoc:
     # Create the user defined names.
-    @defined_names.each do |defined_name|
+    defined_names.each do |defined_name|
       store_name(
         defined_name[:name],
         defined_name[:encoding],
@@ -2457,14 +2457,14 @@ class Workbook < BIFFWriter
     length          = 0
     index           = 0
 
-    unless @defined_names.empty?
+    unless defined_names.empty?
       index   = 0
       key     = "#{index}:#{index}"
 
       add_ext_refs(ext_refs, key) unless ext_refs.has_key?(key)
     end
 
-    @defined_names.each do |defined_name|
+    defined_names.each do |defined_name|
       length += 19 + defined_name[:name].bytesize + defined_name[:formula].bytesize
     end
 
