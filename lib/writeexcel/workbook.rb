@@ -1008,11 +1008,7 @@ class Workbook < BIFFWriter
     end
 
     # Check for valid input parameters.
-    params.each_key do |k|
-      unless properties.has_key?(k)
-        raise "Unknown parameter '#{k}' in set_properties()";
-      end
-    end
+    check_valid_params_for_properties(params)
 
     # Set the creation time unless specified by the user.
     unless params.has_key?(:created)
@@ -1084,6 +1080,15 @@ class Workbook < BIFFWriter
     }
   end
   private :valid_properties
+
+  def check_valid_params_for_properties(params)
+    params.each_key do |k|
+      unless valid_properties.has_key?(k)
+        raise "Unknown parameter '#{k}' in set_properties()";
+      end
+    end
+  end
+  private :check_valid_params_for_properties
 
   ###############################################################################
   #
