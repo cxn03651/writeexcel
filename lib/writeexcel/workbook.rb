@@ -1851,7 +1851,7 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
-  # _store_names()
+  # store_names()
   #
   # Write the NAME record to define the print area and the repeat rows and cols.
   #
@@ -1868,20 +1868,28 @@ class Workbook < BIFFWriter
 
     # Sort the worksheets into alphabetical order by name. This is a
     # requirement for some non-English language Excel patch levels.
-    worksheets = @worksheets.sort_by{ |x| x.name }
+    sorted_worksheets = @worksheets.sort_by{ |x| x.name }
 
     # Create the autofilter NAME records
-    worksheets.each do |worksheet|
+    create_autofilter_name_records(sorted_worksheets)
+
+    # Create the print area NAME records
+    create_print_area_name_records(sorted_worksheets)
+
+    # Create the print title NAME records
+    create_print_title_name_records(sorted_worksheets)
+  end
+
+  def create_autofilter_name_records(sorted_worksheets)
+    sorted_worksheets.each do |worksheet|
       index = worksheet.index
-      key = "#{index}:#{index}"
-      ref = @ext_refs[key]
 
       # Write a Name record if Autofilter has been defined
       if worksheet.filter_count != 0
         store_name_short(
           worksheet.index,
           0x0D, # NAME type = Filter Database
-          ref,
+          @ext_refs["#{index}:#{index}"],
           worksheet.filter_area[0],
           worksheet.filter_area[1],
           worksheet.filter_area[2],
@@ -1890,19 +1898,19 @@ class Workbook < BIFFWriter
         )
       end
     end
+  end
+  private :create_autofilter_name_records
 
-    # Create the print area NAME records
-    worksheets.each do |worksheet|
+  def create_print_area_name_records(sorted_worksheets)
+    sorted_worksheets.each do |worksheet|
       index  = worksheet.index
-      key = "#{index}:#{index}"
-      ref = @ext_refs[key]
 
       # Write a Name record if the print area has been defined
       if !worksheet.print_rowmin.nil?
         store_name_short(
           worksheet.index,
           0x06, # NAME type = Print_Area
-          ref,
+          @ext_refs["#{index}:#{index}"],
           worksheet.print_rowmin,
           worksheet.print_rowmax,
           worksheet.print_colmin,
@@ -1910,9 +1918,11 @@ class Workbook < BIFFWriter
         )
       end
     end
+  end
+  private :create_print_area_name_records
 
-    # Create the print title NAME records
-    worksheets.each do |worksheet|
+  def create_print_title_name_records(sorted_worksheets)
+    sorted_worksheets.each do |worksheet|
       index = worksheet.index
       rowmin = worksheet.title_rowmin
       rowmax = worksheet.title_rowmax
@@ -1963,6 +1973,7 @@ class Workbook < BIFFWriter
       end
     end
   end
+  private :create_print_title_name_records
 
   ###############################################################################
   ###############################################################################
