@@ -23,7 +23,7 @@ require 'writeexcel/colors'
 module Writeexcel
 
 class Format < Colors
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
+  require 'writeexcel/helper'
 
   ###############################################################################
   #

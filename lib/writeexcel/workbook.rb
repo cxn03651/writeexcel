@@ -26,8 +26,6 @@ class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
 
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
-
   BOF = 11  # :nodoc:
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:

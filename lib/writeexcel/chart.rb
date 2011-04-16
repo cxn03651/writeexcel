@@ -54,8 +54,6 @@ module Writeexcel
 class Chart < Worksheet
   require 'writeexcel/helper'
 
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
-
   ###############################################################################
   #
   # factory()

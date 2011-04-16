@@ -36,8 +36,6 @@ module Writeexcel
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
-
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:

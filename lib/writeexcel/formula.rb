@@ -19,8 +19,6 @@ module Writeexcel
 class Formula < ExcelFormulaParser       #:nodoc:
   require 'writeexcel/helper'
 
-  NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
-
   attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
   def initialize(byte_order)
