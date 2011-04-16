@@ -438,7 +438,7 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
-  # _check_sheetname($name, $encoding)
+  # check_sheetname(name, encoding)
   #
   # Check for valid worksheet names. We check the length, if it contains any
   # invalid characters and if the name is unique in the workbook.
