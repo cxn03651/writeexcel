@@ -468,10 +468,7 @@ class Workbook < BIFFWriter
 
     ruby_19 { name = convert_to_ascii_if_ascii(name) }
     check_sheetname_length(name, encoding)
-    # Check that Unicode sheetname has an even number of bytes
-    if encoding == 1 && (name.bytesize % 2 != 0)
-      raise "Odd number of bytes in Unicode worksheet name: #{name}"
-    end
+    check_sheetname_even(name) if encoding == 1
 
     # Check that sheetname doesn't contain any invalid characters
     if encoding != 1 && name =~ invalid_char
@@ -555,6 +552,14 @@ class Workbook < BIFFWriter
     raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
   end
   private :check_sheetname_length
+
+  def check_sheetname_even(name)
+    # Check that Unicode sheetname has an even number of bytes
+    if (name.bytesize % 2 != 0)
+      raise "Odd number of bytes in Unicode worksheet name: #{name}"
+    end
+  end
+  private :check_sheetname_even
 
   #
   # The add_format method can be used to create new Format objects which are
