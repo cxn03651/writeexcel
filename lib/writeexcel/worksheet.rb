@@ -1678,17 +1678,9 @@ class Worksheet < BIFFWriter
     limit    = encoding != 0 ? 255 *2 : 255
 
     # Handle utf8 strings
-    ruby_18 do
-      if string =~ NonAscii
-        string = utf8_to_16be(string)
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if string.encoding == Encoding::UTF_8
-        string = utf8_to_16be(string)
-        encoding = 1
-      end
+    if is_utf8?(string)
+      string = utf8_to_16be(string)
+      encoding = 1
     end
 
     if string.bytesize >= limit
@@ -2705,17 +2697,9 @@ class Worksheet < BIFFWriter
     ruby_19 {str = convert_to_ascii_if_ascii(str) }
 
     # Handle utf8 strings
-    ruby_18 do
-      if str =~ NonAscii
-        str_utf16le = utf8_to_16le(str)
-        return write_utf16le_string(row, col, str_utf16le, args[3])
-      end
-    end
-    ruby_19 do
-      if str.encoding == Encoding::UTF_8
-        str_utf16le = utf8_to_16le(str)
-        return write_utf16le_string(row, col, str_utf16le, args[3])
-      end
+    if is_utf8?(str)
+      str_utf16le = utf8_to_16le(str)
+      return write_utf16le_string(row, col, str_utf16le, args[3])
     end
 
     # Check that row and col are valid and store max and min values
@@ -3870,17 +3854,9 @@ class Worksheet < BIFFWriter
     encoding  = 0              # String encoding.
 
     # Handle utf8 strings.
-    ruby_18 do
-      if string =~ NonAscii
-        string = utf8_to_16be(string)
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if string.encoding == Encoding::UTF_8
-        string = utf8_to_16be(string)
-        encoding = 1
-      end
+    if is_utf8?(string)
+      string = utf8_to_16be(string)
+      encoding = 1
     end
 
     length    = 0x03 + string.bytesize  # Length of the record data
@@ -4358,19 +4334,12 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    ruby_18 do
-      if url =~ NonAscii
-        url = utf8_to_16be(url)
-        url += "\0\0"                              # URL is null terminated.
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if url.encoding == Encoding::UTF_8
-        url = url.encode('UTF-16BE')
-        url += "\0\0".force_encoding('UTF-16BE')   # URL is null terminated.
-        encoding = 1
-      end
+    if is_utf8?(url)
+      url = utf8_to_16be(url)
+      # URL is null terminated.
+      ruby_18 { url += "\0\0" } ||
+      ruby_19 { url += "\0\0".force_encoding('UTF-16BE') }
+      encoding = 1
     end
 
     # Convert an Ascii URL type and to a null terminated wchar string.
@@ -4438,21 +4407,13 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    ruby_18 do
-      if str =~ NonAscii
-        # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
-        url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
-        url = utf8_to_16be(url) + "\0\0"  # URL is null terminated.
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if str.encoding == Encoding::UTF_8
-        # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
-        url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
-        url = url.encode('UTF-16LE') + "\0\0".encode('UTF-16LE')  # URL is null terminated.
-        encoding = 1
-      end
+    if is_utf8?(str)
+      # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
+      url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
+      # URL is null terminated.
+      ruby_18 { url = utf8_to_16be(url) + "\0\0" } ||
+      ruby_19 { url = url.encode('UTF-16LE') + "\0\0".encode('UTF-16LE') }
+      encoding = 1
     end
 
     # Convert an Ascii URL type and to a null terminated wchar string.
@@ -6603,17 +6564,9 @@ class Worksheet < BIFFWriter
       length   = string.bytesize
 
       # Handle utf8 strings
-      ruby_18 do
-        if string =~ NonAscii
-          string = utf8_to_16be(string)
-          encodign = 1
-        end
-      end
-      ruby_19 do
-        if string.encoding == Encoding::UTF_8
-          string = utf8_to_16be(string)
-          encodign = 1
-        end
+      if is_utf8?(string)
+        string = utf8_to_16be(string)
+        encodign = 1
       end
 
       string =
@@ -7832,18 +7785,10 @@ class Worksheet < BIFFWriter
       string = string.unpack('n*').pack('v*')
     # Handle utf8 strings
     else
-      ruby_18 do
-        if string =~ NonAscii
-          string = NKF.nkf('-w16L0 -m0 -W', string)
-          params[:encoding] = 1
-        end
-      end
-      ruby_19 do
-        if string.encoding == Encoding::UTF_8
-          string = NKF.nkf('-w16L0 -m0 -W', string)
-          string.force_encoding('UTF-16LE')
-          params[:encoding] = 1
-        end
+      if is_utf8?(string)
+        string = NKF.nkf('-w16L0 -m0 -W', string)
+        ruby_19 { string.force_encoding('UTF-16LE') }
+        params[:encoding] = 1
       end
     end
 
@@ -7855,18 +7800,10 @@ class Worksheet < BIFFWriter
       # Change from UTF-16BE to UTF-16LE
       params[:author] = params[:author].unpack('n*').pack('v*')
     else
-      ruby_18 do
-        if params[:author] =~ NonAscii
-          params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
-          params[:author_encoding] = 1
-        end
-      end
-      ruby_19 do
-        if params[:author].encoding == Encoding::UTF_8
-          params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
-          params[:author].force_encoding('UTF-16LE')
-          params[:author_encoding] = 1
-        end
+      if is_utf8?(params[:author])
+        params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
+        ruby_19 { params[:author].force_encoding('UTF-16LE') }
+        params[:author_encoding] = 1
       end
     end
 
@@ -8809,19 +8746,10 @@ class Worksheet < BIFFWriter
     ruby_19 { string = convert_to_ascii_if_ascii(string) }
 
     # Handle utf8 strings
-    ruby_18 do
-      if string =~ NonAscii
-        str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
-        string = utf8_to_16le(string)
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if string.encoding == Encoding::UTF_8
-        str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
-        string = utf8_to_16le(string)
-        encoding = 1
-      end
+    if is_utf8?(string)
+      str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
+      string = utf8_to_16le(string)
+      encoding = 1
     end
 
     ruby_18 { [str_length, encoding].pack('vC') + string } ||

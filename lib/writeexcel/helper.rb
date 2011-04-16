@@ -67,6 +67,9 @@
   end
   private :chars_to_col
 
-  #
   NonAscii = /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/
 
+  def is_utf8?(str)
+    ruby_18 { str =~ NonAscii } ||
+    ruby_19 { str.encoding == Encoding::UTF_8 }
+  end

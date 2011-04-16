@@ -373,17 +373,9 @@ class Format < Colors
     ruby_19 { rgch = convert_to_ascii_if_ascii(rgch) }
 
     # Handle utf8 strings
-    ruby_18 do
-      if rgch =~ NonAscii
-        rgch = utf8_to_16be(rgch)
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if rgch.encoding == Encoding::UTF_8
-        rgch = utf8_to_16be(rgch)
-        encoding = 1
-      end
+    if is_utf8?(rgch)
+      rgch = utf8_to_16be(rgch)
+      encoding = 1
     end
 
     cch = rgch.bytesize

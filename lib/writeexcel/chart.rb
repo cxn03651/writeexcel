@@ -689,17 +689,9 @@ class Chart < Worksheet
     ruby_19 { string = convert_to_ascii_if_ascii(string) }
 
     # Handle utf8 strings.
-    ruby_18 do
-      if string =~ NonAscii
-        string = utf8_to_16be(string)
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if string.encoding == Encoding::UTF_8
-        string = utf8_to_16be(string)
-        encoding = 1
-      end
+    if is_utf8?(string)
+      string = utf8_to_16be(string)
+      encoding = 1
     end
 
     # Chart strings are limited to 255 characters.

@@ -311,19 +311,10 @@ class Formula < ExcelFormulaParser       #:nodoc:
              ruby_19 { str.length }
 
     # Handle utf8 strings
-    ruby_18 do
-      if str =~ NonAscii
-        str = utf8_to_16le(str)
-        ruby_19 { str.force_encoding('BINARY') }
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if str.encoding == Encoding::UTF_8
-        str = utf8_to_16le(str)
-        ruby_19 { str.force_encoding('BINARY') }
-        encoding = 1
-      end
+    if is_utf8?(str)
+      str = utf8_to_16le(str)
+      ruby_19 { str.force_encoding('BINARY') }
+      encoding = 1
     end
 
     exit "String in formula has more than 255 chars\n" if length > 255
@@ -511,15 +502,9 @@ class Formula < ExcelFormulaParser       #:nodoc:
     ruby_19 { sheet_name = convert_to_ascii_if_ascii(sheet_name) }
 
     # Handle utf8 sheetnames
-    ruby_18 do
-      if sheet_name =~ NonAscii
-        sheet_name = utf8_to_16be(sheet_name)
-      end
-    end
-    ruby_19 do
-      if sheet_name.encoding == Encoding::UTF_8
-        sheet_name = sheet_name.encode('UTF-16BE')
-      end
+    if is_utf8?(sheet_name)
+      ruby_18 { sheet_name = utf8_to_16be(sheet_name) } ||
+      ruby_19 { sheet_name = sheet_name.encode('UTF-16BE') }
     end
 
     if @ext_sheets[sheet_name].nil?

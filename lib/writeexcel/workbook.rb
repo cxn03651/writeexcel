@@ -469,17 +469,9 @@ class Workbook < BIFFWriter
     check_sheetname_valid_chars(name, encoding)
 
     # Handle utf8 strings
-    ruby_18 do
-      if name =~ NonAscii
-        name = utf8_to_16be(name)
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if name.encoding == Encoding::UTF_8
-        name = utf8_to_16be(name)
-        encoding = 1
-      end
+    if is_utf8?(name)
+      name = utf8_to_16be(name)
+      encoding = 1
     end
 
     # Check that the worksheet name doesn't already exist since this is a fatal
@@ -1100,8 +1092,7 @@ class Workbook < BIFFWriter
     else
       strings.each do |string|
         next unless params.has_key?(string.to_sym)
-        ruby_18 { return 0xFDE9 if params[string.to_sym] =~ NonAscii }
-        ruby_19 { return 0xFDE9 if params[string.to_sym].encoding == Encoding::UTF_8 }
+        return 0xFDE9 if is_utf8?(params[string.to_sym])
       end
       return 0x04E4; # Default codepage, Latin 1.
     end
@@ -2076,17 +2067,9 @@ class Workbook < BIFFWriter
     ruby_19 { format = convert_to_ascii_if_ascii(format) }
 
     # Handle utf8 strings
-    ruby_18 do
-      if format =~ NonAscii
-        format = utf8_to_16be(format)
-        encoding = 1
-      end
-    end
-    ruby_19 do
-      if format.encoding == Encoding::UTF_8
-        format = utf8_to_16be(format)
-        encoding = 1
-      end
+    if is_utf8?(format)
+      format = utf8_to_16be(format)
+      encoding = 1
     end
 
     # Handle Unicode format strings.
