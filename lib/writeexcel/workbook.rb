@@ -26,7 +26,7 @@ class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
 
-  BOF = 11  # :nodoc:
+  BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:
 
@@ -1294,9 +1294,6 @@ class Workbook < BIFFWriter
   # Calculate Worksheet BOF offsets records for use in the BOUNDSHEET records.
   #
   def calc_sheet_offsets       #:nodoc:
-    _bof     = 12
-    _eof     = 4
-
     offset  = @datasize
 
     # Add the length of the COUNTRY record
@@ -1318,10 +1315,10 @@ class Workbook < BIFFWriter
     offset   += mso_size
 
     @worksheets.each do |sheet|
-      offset += _bof + sheet.name.bytesize
+      offset += BOF + sheet.name.bytesize
     end
 
-    offset += _eof
+    offset += EOF
     @worksheets.each do |sheet|
       sheet.offset = offset
       sheet.close
