@@ -474,48 +474,7 @@ class Workbook < BIFFWriter
       encoding = 1
     end
 
-    # Check that the worksheet name doesn't already exist since this is a fatal
-    # error in Excel 97. The check must also exclude case insensitive matches
-    # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
-    # to take the encoding into account.
-    #
-    @worksheets.each do |worksheet|
-      name_a  = name
-      encd_a  = encoding
-      name_b  = worksheet.name
-      encd_b  = worksheet.encoding
-      error   = 0;
-
-      if    encd_a == 0 and encd_b == 0
-        error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 0 and encd_b == 1
-        name_a = ascii_to_16be(name_a)
-        error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 1 and encd_b == 0
-        name_b = ascii_to_16be(name_b)
-        error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 1 and encd_b == 1
-        # TODO : not converted yet.
-
-        #  We can't easily do a case insensitive test of the UTF16 names.
-        # As a special case we check if all of the high bytes are nulls and
-        # then do an ASCII style case insensitive test.
-        #
-        # Strip out the high bytes (funkily).
-        # my $hi_a = grep {ord} $name_a =~ /(.)./sg;
-        # my $hi_b = grep {ord} $name_b =~ /(.)./sg;
-        #
-        # if ($hi_a or $hi_b) {
-        #    $error  = 1 if    $name_a  eq    $name_b;
-        # }
-        # else {
-        #    $error  = 1 if lc($name_a) eq lc($name_b);
-        # }
-      end
-      if error
-        raise "Worksheet name '#{name}', with case ignored, is already in use"
-      end
-    end
+    check_sheetname_uniq(name, encoding)
     [name,  encoding]
   end
   private :check_sheetname
@@ -554,6 +513,52 @@ class Workbook < BIFFWriter
     end
   end
   private :check_sheetname_valid_chars
+
+  # Check that the worksheet name doesn't already exist since this is a fatal
+  # error in Excel 97. The check must also exclude case insensitive matches
+  # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
+  # to take the encoding into account.
+  #
+  def check_sheetname_uniq(name, encoding)
+    @worksheets.each do |worksheet|
+      name_a  = name
+      encd_a  = encoding
+      name_b  = worksheet.name
+      encd_b  = worksheet.encoding
+      error   = 0
+
+      if    encd_a == 0 and encd_b == 0
+        error  = (name_a.downcase == name_b.downcase)
+      elsif encd_a == 0 and encd_b == 1
+        name_a = ascii_to_16be(name_a)
+        error  = (name_a.downcase == name_b.downcase)
+      elsif encd_a == 1 and encd_b == 0
+        name_b = ascii_to_16be(name_b)
+        error  = (name_a.downcase == name_b.downcase)
+      elsif encd_a == 1 and encd_b == 1
+        # TODO : not converted yet.
+
+        #  We can't easily do a case insensitive test of the UTF16 names.
+        # As a special case we check if all of the high bytes are nulls and
+        # then do an ASCII style case insensitive test.
+        #
+        # Strip out the high bytes (funkily).
+        # my $hi_a = grep {ord} $name_a =~ /(.)./sg;
+        # my $hi_b = grep {ord} $name_b =~ /(.)./sg;
+        #
+        # if ($hi_a or $hi_b) {
+        #    $error  = 1 if    $name_a  eq    $name_b;
+        # }
+        # else {
+        #    $error  = 1 if lc($name_a) eq lc($name_b);
+        # }
+      end
+      if error
+        raise "Worksheet name '#{name}', with case ignored, is already in use"
+      end
+    end
+  end
+  private :check_sheetname_uniq
 
   #
   # The add_format method can be used to create new Format objects which are
