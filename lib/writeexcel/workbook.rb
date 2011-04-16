@@ -447,7 +447,6 @@ class Workbook < BIFFWriter
   #
   def check_sheetname(name, encoding = 0, chart = 0)       #:nodoc:
     encoding ||= 0
-    invalid_char    = %r![\[\]:*?/\\]!
 
     # Increment the Sheet/Chart number used for default sheet names below.
     if chart != 0
@@ -469,22 +468,7 @@ class Workbook < BIFFWriter
     ruby_19 { name = convert_to_ascii_if_ascii(name) }
     check_sheetname_length(name, encoding)
     check_sheetname_even(name) if encoding == 1
-
-    # Check that sheetname doesn't contain any invalid characters
-    if encoding != 1 && name =~ invalid_char
-      # Check ASCII names
-      raise "Invalid character []:*?/\\ in worksheet name: #{name}"
-    else
-      # Extract any 8bit clean chars from the UTF16 name and validate them.
-      str = name.dup
-      while str =~ /../m
-        hi, lo = $~[0].unpack('aa')
-        if hi == "\0" and lo =~ invalid_char
-          raise 'Invalid character []:*?/\\ in worksheet name: ' + name
-        end
-        str = $~.post_match
-      end
-    end
+    check_sheetname_valid_chars(name, encoding)
 
     # Handle utf8 strings
     ruby_18 do
@@ -560,6 +544,26 @@ class Workbook < BIFFWriter
     end
   end
   private :check_sheetname_even
+
+  def check_sheetname_valid_chars(name, encoding)
+    # Check that sheetname doesn't contain any invalid characters
+    invalid_char    = %r![\[\]:*?/\\]!
+    if encoding != 1 && name =~ invalid_char
+      # Check ASCII names
+      raise "Invalid character []:*?/\\ in worksheet name: #{name}"
+    else
+      # Extract any 8bit clean chars from the UTF16 name and validate them.
+      str = name.dup
+      while str =~ /../m
+        hi, lo = $~[0].unpack('aa')
+        if hi == "\0" and lo =~ invalid_char
+          raise 'Invalid character []:*?/\\ in worksheet name: ' + name
+        end
+        str = $~.post_match
+      end
+    end
+  end
+  private :check_sheetname_valid_chars
 
   #
   # The add_format method can be used to create new Format objects which are
