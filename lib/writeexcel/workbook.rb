@@ -1091,23 +1091,20 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
-  # _get_property_set_codepage()
+  # get_property_set_codepage()
   #
   # Get the character codepage used by the strings in a property set. If one of
   # the strings used is utf8 then the codepage is marked as utf8. Otherwise
   # Latin 1 is used (although in our case this is limited to 7bit ASCII).
   #
-  def get_property_set_codepage(params, strings)       #:nodoc:
+  def get_property_set_codepage(params, properties)       #:nodoc:
     # Allow for manually marked utf8 strings.
-    unless params[:utf8].nil?
-      return 0xFDE9
-    else
-      strings.each do |string|
-        next unless params.has_key?(string.to_sym)
-        return 0xFDE9 if is_utf8?(params[string.to_sym])
-      end
-      return 0x04E4; # Default codepage, Latin 1.
+    return 0xFDE9 unless params[:utf8].nil?
+    properties.each do |property|
+      next unless params.has_key?(property.to_sym)
+      return 0xFDE9 if is_utf8?(params[property.to_sym])
     end
+    return 0x04E4; # Default codepage, Latin 1.
   end
   private :get_property_set_codepage
 
