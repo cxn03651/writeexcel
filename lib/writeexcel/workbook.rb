@@ -1011,56 +1011,55 @@ class Workbook < BIFFWriter
     check_valid_params_for_properties(params)
 
     # Set the creation time unless specified by the user.
-    unless params.has_key?(:created)
-      params[:created] = @localtime
-    end
+    params[:created] = @localtime unless params.has_key?(:created)
 
     #
     # Create the SummaryInformation property set.
     #
 
     # Get the codepage of the strings in the property set.
-    strings = ["title", "subject", "author", "keywords",  "comments", "last_author"]
-    params[:codepage] = get_property_set_codepage(params, strings)
+    properties = [:title, :subject, :author, :keywords,  :comments, :last_author]
+    params[:codepage] = get_property_set_codepage(params, properties)
 
     # Create an array of property set values.
-    property_sets = []
-    strings.unshift("codepage")
-    strings.push("created")
-    strings.each do |string|
-      property = string.to_sym
-      property_sets.push(property_set(valid_properties, property, params)) if params[property]
-    end
+    properties.unshift(:codepage)
+    properties.push(:created)
 
     # Pack the property sets.
-    @summary = create_summary_property_set(property_sets)
+    @summary =
+      create_summary_property_set(property_sets(properties, params))
 
     #
     # Create the DocSummaryInformation property set.
     #
 
     # Get the codepage of the strings in the property set.
-    strings = ["category", "manager", "company"]
-    params[:codepage] = get_property_set_codepage(params, strings)
+    properties = [:category, :manager, :company]
+    params[:codepage] = get_property_set_codepage(params, properties)
 
     # Create an array of property set values.
-    property_sets = []
-
-    [:codepage, :category, :manager, :company].each do |property|
-      property_sets.push(property_set(valid_properties, property, params)) if params[property]
-    end
+    properties.unshift(:codepage)
 
     # Pack the property sets.
-    @doc_summary = create_doc_summary_property_set(property_sets)
+    @doc_summary =
+      create_doc_summary_property_set(property_sets(properties, params))
 
     # Set a flag for when the files is written.
     @add_doc_properties = 1
   end
 
-  def property_set(properties, property, params)
-    [ properties[property][0], properties[property][1], params[property] ]
+  def property_set(property, params)
+    valid_properties[property][0..1] + [params[property]]
   end
   private :property_set
+
+  def property_sets(properties, params)
+    properties.select { |property| params[property.to_sym] }.
+      collect do |property|
+        property_set(property.to_sym, params)
+      end
+  end
+  private :property_sets
 
   # List of valid input parameters.
   def valid_properties
