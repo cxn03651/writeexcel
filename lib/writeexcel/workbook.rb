@@ -570,11 +570,11 @@ class Workbook < BIFFWriter
   # See the "CELL FORMATTING" section for more details about Format properties and how to set them.
   #
   def add_format(*args)
-    formats = {}
-    args.each { |arg| formats = formats.merge(arg) }
-    format = Writeexcel::Format.new(@xf_index, @default_formats.merge(formats))
+    fmts = {}
+    args.each { |arg| fmts = fmts.merge(arg) }
+    format = Writeexcel::Format.new(@xf_index, @default_formats.merge(fmts))
     @xf_index += 1
-    @formats.push format # Store format reference
+    formats.push format # Store format reference
     format
   end
 
@@ -1048,7 +1048,9 @@ class Workbook < BIFFWriter
   end
 
   private
+
   attr_accessor :add_doc_properties
+  attr_reader :formats
 
   public
 
@@ -1682,7 +1684,7 @@ class Workbook < BIFFWriter
   # Store the Excel FONT records.
   #
   def store_all_fonts       #:nodoc:
-    format  = @formats[15]   # The default cell format.
+    format  = formats[15]   # The default cell format.
     font    = format.get_font
 
     # Fonts are 0-indexed. According to the SDK there is no index 4,
@@ -1745,7 +1747,7 @@ class Workbook < BIFFWriter
     # Fonts that are marked as '_font_only' are always stored. These are used
     # mainly for charts and may not have an associated XF record.
 
-    @formats.each do |fmt|
+    formats.each do |fmt|
       key = fmt.get_font_key
       if fmt.font_only == 0 and !fonts[key].nil?
         # FONT has already been used
@@ -1779,7 +1781,7 @@ class Workbook < BIFFWriter
     # Iterate through the XF objects and write a FORMAT record if it isn't a
     # built-in format type and if the FORMAT string hasn't already been used.
     #
-    @formats.each do |format|
+    formats.each do |format|
       num_format = format.num_format
       encoding   = format.num_format_enc
 
@@ -1812,7 +1814,7 @@ class Workbook < BIFFWriter
   # Write all XF records.
   #
   def store_all_xfs       #:nodoc:
-    @formats.each do |format|
+    formats.each do |format|
       xf = format.get_xf
       append(xf)
     end
