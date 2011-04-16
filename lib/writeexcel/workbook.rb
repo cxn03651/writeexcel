@@ -1006,21 +1006,6 @@ class Workbook < BIFFWriter
     params.each do |k, v|
       params[k] = convert_to_ascii_if_ascii(v) if v.respond_to?(:to_str)
     end
-    # List of valid input parameters.
-    properties = {
-      :codepage      => [0x0001, 'VT_I2'      ],
-      :title         => [0x0002, 'VT_LPSTR'   ],
-      :subject       => [0x0003, 'VT_LPSTR'   ],
-      :author        => [0x0004, 'VT_LPSTR'   ],
-      :keywords      => [0x0005, 'VT_LPSTR'   ],
-      :comments      => [0x0006, 'VT_LPSTR'   ],
-      :last_author   => [0x0008, 'VT_LPSTR'   ],
-      :created       => [0x000C, 'VT_FILETIME'],
-      :category      => [0x0002, 'VT_LPSTR'   ],
-      :manager       => [0x000E, 'VT_LPSTR'   ],
-      :company       => [0x000F, 'VT_LPSTR'   ],
-      :utf8          => 1
-    }
 
     # Check for valid input parameters.
     params.each_key do |k|
@@ -1048,7 +1033,7 @@ class Workbook < BIFFWriter
     strings.push("created")
     strings.each do |string|
       property = string.to_sym
-      property_sets.push(property_set(properties, property, params)) if params[property]
+      property_sets.push(property_set(valid_properties, property, params)) if params[property]
     end
 
     # Pack the property sets.
@@ -1066,7 +1051,7 @@ class Workbook < BIFFWriter
     property_sets = []
 
     [:codepage, :category, :manager, :company].each do |property|
-      property_sets.push(property_set(properties, property, params)) if params[property]
+      property_sets.push(property_set(valid_properties, property, params)) if params[property]
     end
 
     # Pack the property sets.
@@ -1080,6 +1065,25 @@ class Workbook < BIFFWriter
     [ properties[property][0], properties[property][1], params[property] ]
   end
   private :property_set
+
+  # List of valid input parameters.
+  def valid_properties
+    {
+      :codepage      => [0x0001, 'VT_I2'      ],
+      :title         => [0x0002, 'VT_LPSTR'   ],
+      :subject       => [0x0003, 'VT_LPSTR'   ],
+      :author        => [0x0004, 'VT_LPSTR'   ],
+      :keywords      => [0x0005, 'VT_LPSTR'   ],
+      :comments      => [0x0006, 'VT_LPSTR'   ],
+      :last_author   => [0x0008, 'VT_LPSTR'   ],
+      :created       => [0x000C, 'VT_FILETIME'],
+      :category      => [0x0002, 'VT_LPSTR'   ],
+      :manager       => [0x000E, 'VT_LPSTR'   ],
+      :company       => [0x000F, 'VT_LPSTR'   ],
+      :utf8          => 1
+    }
+  end
+  private :valid_properties
 
   ###############################################################################
   #
