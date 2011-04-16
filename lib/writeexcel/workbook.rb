@@ -806,7 +806,6 @@ class Workbook < BIFFWriter
       [0x33, 0x33, 0x99, 0x00],   # 62
       [0x33, 0x33, 0x33, 0x00]    # 63
     ]
-    0
   end
   private :set_palette_xl97
 
