@@ -2691,7 +2691,7 @@ class Workbook < BIFFWriter
     end
     [header_length, space_remaining, align, split_string]
   end
-  private :_split_string_setup
+  private :split_string_setup
 
   ###############################################################################
   #
