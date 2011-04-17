@@ -305,7 +305,7 @@ class Worksheet < BIFFWriter
     store_bof(0x0010)
   end
 
-  def cleanup
+  def cleanup  # :nodoc:
     super
   end
 
@@ -1671,7 +1671,7 @@ class Worksheet < BIFFWriter
     set_header_footer_common(:footer, string, margin, encoding)
   end
 
-  def set_header_footer_common(type, string, margin, encoding)
+  def set_header_footer_common(type, string, margin, encoding)  # :nodoc:
     ruby_19 { string = convert_to_ascii_if_ascii(string) }
 
     limit    = encoding != 0 ? 255 *2 : 255
@@ -2730,7 +2730,7 @@ class Worksheet < BIFFWriter
     str_error
   end
 
-  def store_with_compatibility(row, col, data)
+  def store_with_compatibility(row, col, data)  # :nodoc:
     if @compatibility != 0
       store_to_table(row, col, data)
     else
@@ -2739,7 +2739,7 @@ class Worksheet < BIFFWriter
   end
   private :store_with_compatibility
 
-  def store_to_table(row, col, data)
+  def store_to_table(row, col, data)  # :nodoc:
     tmp = []
     tmp[col] = data
     @table[row] = tmp
@@ -4105,7 +4105,7 @@ class Worksheet < BIFFWriter
     0
   end
 
-  def store_formula_common(row, col, xf, value, formula)
+  def store_formula_common(row, col, xf, value, formula)  # :nodoc:
     # Excel normally stores the last calculated value of the formula in $num.
     # Clearly we are not in a position to calculate this "a priori". Instead
     # we set $num to zero and set the option flags in $grbit to ensure
@@ -4606,7 +4606,7 @@ class Worksheet < BIFFWriter
   # parameters accordingly.
   # Split the dir name and sheet name (if it exists)
   #
-  def analyze_link(url, absolute = nil)
+  def analyze_link(url, absolute = nil)  # :nodoc:
     dir_long , sheet = url.split(/\#/)
     link_type = absolute ? (0x01 | absolute) : 0x0103
 
@@ -5400,7 +5400,7 @@ class Worksheet < BIFFWriter
   #
   # type :  :header / :footer
   #
-  def store_header_footer_common(type)
+  def store_header_footer_common(type)  # :nodoc:
     if type == :header
       record   = 0x0014
       str      = @header
@@ -5498,7 +5498,7 @@ class Worksheet < BIFFWriter
   # length     : bytes to follow
   # margin     : Margin in inches
   #
-  def store_margin_common(record, length, margin)
+  def store_margin_common(record, length, margin)  # :nodoc:
     header  = [record, length].pack('vv')
     data    = [margin].pack('d')
 
@@ -5563,7 +5563,7 @@ class Worksheet < BIFFWriter
   end
   private :store_print_gridlines
 
-  def store_biff_common(type)
+  def store_biff_common(type)  # :nodoc:
     case type
     when :hcenter
       record = 0x0083
@@ -5702,7 +5702,7 @@ class Worksheet < BIFFWriter
   end
   private :store_vbreak
 
-  def store_breaks_common(breaks)
+  def store_breaks_common(breaks)  # :nodoc:
     unless breaks.empty?
       record  = breaks == @vbreaks ? 0x001a : 0x001b # Record identifier
       cbrk    = breaks.size   # Number of page breaks
@@ -5743,7 +5743,7 @@ class Worksheet < BIFFWriter
   end
   private :store_obj_protect
 
-  def store_protect_common(type = nil)
+  def store_protect_common(type = nil)  # :nodoc:
     if @protect != 0
       record = if type == :obj      # Record identifier
         0x0063                      # store_obj_protect
@@ -6225,7 +6225,7 @@ class Worksheet < BIFFWriter
     ]
   end
 
-  def adjust_col_position(x, col)
+  def adjust_col_position(x, col)  # :nodoc:
     while x >= size_col(col)
       x -= size_col(col)
       col += 1
@@ -6234,7 +6234,7 @@ class Worksheet < BIFFWriter
   end
   private :adjust_col_position
 
-  def adjust_row_position(y, row)
+  def adjust_row_position(y, row)  # :nodoc:
     while y >= size_row(row)
       y -= size_row(row)
       row += 1
@@ -6682,7 +6682,7 @@ class Worksheet < BIFFWriter
   end
 #  private :prepare_charts
 
-  def prepare_common(param)
+  def prepare_common(param)  # :nodoc:
     hash = {
       :images => @images, :comments => @comments, :charts => @charts
     }[param]
@@ -6803,7 +6803,7 @@ class Worksheet < BIFFWriter
   end
   private :store_images
 
-  def store_parent_mso_record(dg_length, ids, spgr_length, spid)
+  def store_parent_mso_record(dg_length, ids, spgr_length, spid)  # :nodoc:
     store_mso_dg_container(dg_length)      +
     store_mso_dg(*ids)                     +
     store_mso_spgr_container(spgr_length)  +
@@ -6813,7 +6813,7 @@ class Worksheet < BIFFWriter
   end
   private :store_parent_mso_record
 
-  def store_child_mso_record(spid, *vertices)
+  def store_child_mso_record(spid, *vertices)  # :nodoc:
     store_mso_sp_container(88)             +
     store_mso_sp(201, spid, 0x0A00)        +
     store_mso_opt_filter                   +
@@ -6913,12 +6913,12 @@ class Worksheet < BIFFWriter
   end
   private :store_charts
 
-  def store_mso_sp_container_sp(spid)
+  def store_mso_sp_container_sp(spid)  # :nodoc:
     store_mso_sp_container(112) + store_mso_sp(201, spid, 0x0A00)
   end
   private :store_mso_sp_container_sp
 
-  def store_mso_opt_chart_client_anchor_client_data(*vertices)
+  def store_mso_opt_chart_client_anchor_client_data(*vertices)  # :nodoc:
     store_mso_opt_chart                   +
     store_mso_client_anchor(0, *vertices) +
     store_mso_client_data
@@ -7014,7 +7014,7 @@ class Worksheet < BIFFWriter
   end
   private :store_filters
 
-  def unpack_record(data)
+  def unpack_record(data)  # :nodoc:
     data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
   private :unpack_record
@@ -7312,7 +7312,7 @@ class Worksheet < BIFFWriter
   end
 #  private :store_mso_opt_filter
 
-  def store_mso_protection_and_text
+  def store_mso_protection_and_text  # :nodoc:
     [0x007F].pack('v')       +        # Protection -> fLockAgainstGrouping
     [0x01040104].pack('V')   +
     [0x00BF].pack('v')       +        # Text -> fFitTextToShape
