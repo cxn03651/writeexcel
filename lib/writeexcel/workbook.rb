@@ -32,8 +32,8 @@ class Workbook < BIFFWriter
 
   private
 
-  attr_accessor :add_doc_properties
-  attr_reader :formats, :defined_names
+  attr_accessor :add_doc_properties       #:nodoc:
+  attr_reader :formats, :defined_names    #:nodoc:
 
   public
 
@@ -486,14 +486,14 @@ class Workbook < BIFFWriter
   end
   private :check_sheetname
 
-  def check_sheetname_length(name, encoding)
+  def check_sheetname_length(name, encoding)       #:nodoc:
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
     limit           = encoding != 0 ? 62 : 31
     raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
   end
   private :check_sheetname_length
 
-  def check_sheetname_even(name)
+  def check_sheetname_even(name)       #:nodoc:
     # Check that Unicode sheetname has an even number of bytes
     if (name.bytesize % 2 != 0)
       raise "Odd number of bytes in Unicode worksheet name: #{name}"
@@ -501,7 +501,7 @@ class Workbook < BIFFWriter
   end
   private :check_sheetname_even
 
-  def check_sheetname_valid_chars(name, encoding)
+  def check_sheetname_valid_chars(name, encoding)       #:nodoc:
     # Check that sheetname doesn't contain any invalid characters
     invalid_char    = %r![\[\]:*?/\\]!
     if encoding != 1 && name =~ invalid_char
@@ -526,7 +526,7 @@ class Workbook < BIFFWriter
   # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
   # to take the encoding into account.
   #
-  def check_sheetname_uniq(name, encoding)
+  def check_sheetname_uniq(name, encoding)       #:nodoc:
     @worksheets.each do |worksheet|
       name_a  = name
       encd_a  = encoding
@@ -1055,12 +1055,12 @@ class Workbook < BIFFWriter
     add_doc_properties = true
   end
 
-  def property_set(property, params)
+  def property_set(property, params)       #:nodoc:
     valid_properties[property][0..1] + [params[property]]
   end
   private :property_set
 
-  def property_sets(properties, params)
+  def property_sets(properties, params)       #:nodoc:
     properties.select { |property| params[property.to_sym] }.
       collect do |property|
         property_set(property.to_sym, params)
@@ -1069,7 +1069,7 @@ class Workbook < BIFFWriter
   private :property_sets
 
   # List of valid input parameters.
-  def valid_properties
+  def valid_properties       #:nodoc:
     {
       :codepage      => [0x0001, 'VT_I2'      ],
       :title         => [0x0002, 'VT_LPSTR'   ],
@@ -1087,7 +1087,7 @@ class Workbook < BIFFWriter
   end
   private :valid_properties
 
-  def check_valid_params_for_properties(params)
+  def check_valid_params_for_properties(params)       #:nodoc:
     params.each_key do |k|
       unless valid_properties.has_key?(k)
         raise "Unknown parameter '#{k}' in set_properties()";
@@ -1881,7 +1881,7 @@ class Workbook < BIFFWriter
     create_print_title_name_records(sorted_worksheets)
   end
 
-  def create_autofilter_name_records(sorted_worksheets)
+  def create_autofilter_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
       index = worksheet.index
 
@@ -1902,7 +1902,7 @@ class Workbook < BIFFWriter
   end
   private :create_autofilter_name_records
 
-  def create_print_area_name_records(sorted_worksheets)
+  def create_print_area_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
       index  = worksheet.index
 
@@ -1922,7 +1922,7 @@ class Workbook < BIFFWriter
   end
   private :create_print_area_name_records
 
-  def create_print_title_name_records(sorted_worksheets)
+  def create_print_title_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
       index = worksheet.index
       rowmin = worksheet.title_rowmin
@@ -2449,7 +2449,7 @@ class Workbook < BIFFWriter
   end
   private :store_hideobj
 
-  def store_common(record, length, *data)
+  def store_common(record, length, *data)       #:nodoc:
     header = [record, length].pack("vv")
     add_data   = [*data].pack("v*")
 
@@ -2532,7 +2532,7 @@ class Workbook < BIFFWriter
     length
   end
 
-  def add_ext_refs(ext_refs, key)
+  def add_ext_refs(ext_refs, key)       #:nodoc:
     ext_refs[key] = ext_refs.keys.size
   end
   private :add_ext_refs
@@ -2664,7 +2664,7 @@ class Workbook < BIFFWriter
   end
   private :calculate_shared_string_sizes
 
-  def _split_string_setup(encoding, split_string, continue_limit, written, continue)
+  def _split_string_setup(encoding, split_string, continue_limit, written, continue)       #:nodoc:
     # We need to avoid the case where a string is continued in the first
     # n bytes that contain the string header information.
     header_length   = 3 # Min string + header size -1
@@ -2997,7 +2997,7 @@ class Workbook < BIFFWriter
   end
   private :add_mso_drawing_group_continue
 
-  def devide_string(string, nth)
+  def devide_string(string, nth)       #:nodoc:
     first_string = string[0, nth]
     latter_string = string[nth, string.size - nth]
     [first_string, latter_string]
@@ -3205,8 +3205,9 @@ class Workbook < BIFFWriter
   end
   private :store_mso_split_menu_colors
 
-  def cleanup
+  def cleanup       #:nodoc:
     super
     sheets.each { |sheet| sheet.cleanup }
   end
+  private :cleanup
 end
