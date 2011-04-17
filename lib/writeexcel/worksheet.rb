@@ -2308,6 +2308,7 @@ class Worksheet < BIFFWriter
     @first_col = col
   end
 
+  #--
   #
   # Allow the user to add their own matches and handlers to the write() method.
   #
@@ -2400,11 +2401,12 @@ class Worksheet < BIFFWriter
   # See the write_handler 1-4 programs in the examples directory for further
   # examples.
   #
-  def add_write_handler(regexp, code_ref)
-    #       return unless ref $_[1] eq 'CODE';
-
-    @write_match.push([regexp, code_ref])
-  end
+  #++
+#  def add_write_handler(regexp, code_ref)
+#    #       return unless ref $_[1] eq 'CODE';
+#
+#    @write_match.push([regexp, code_ref])
+#  end
 
   #
   # :call-seq:
