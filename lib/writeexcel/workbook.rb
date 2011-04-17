@@ -369,7 +369,7 @@ class Workbook < BIFFWriter
 
     # Type must be specified so we can create the required chart instance.
     type = params[:type]
-    print "Must define chart type in add_chart()" if type.nil?
+    raise "Must define chart type in add_chart()" if type.nil?
 
     # Ensure that the chart defaults to non embedded.
     embedded = params[:embedded]
