@@ -79,8 +79,6 @@ class Workbook < BIFFWriter
     @parser                = Writeexcel::Formula.new(@byte_order)
     @tempdir               = nil
     @date_1904             = false
-    @sheet                 =
-
     @selected              = 0
     @xf_index              = 0
     @fileclosed            = false
