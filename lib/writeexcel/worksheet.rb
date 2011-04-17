@@ -19,6 +19,8 @@ require 'writeexcel/compatibility'
 class MaxSizeError < StandardError   #:nodoc:
 end
 
+module Writeexcel
+
 #
 # = class Worksheet
 #
@@ -30,9 +32,6 @@ end
 #  worksheet1 = workbook.add_worksheet
 #  worksheet2 = workbook.add_worksheet
 #
-
-module Writeexcel
-
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
