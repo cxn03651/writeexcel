@@ -721,7 +721,7 @@ class Worksheet < BIFFWriter
   # programs in the examples directory of the distro.
   #
   # Excel allows up to 7 outline levels. Therefore the _level_ parameter
-  # should be in the range 0 <= $level <= 7.
+  # should be in the range 0 <= level <= 7.
   #
   def set_column(*args)
     data = args
@@ -731,12 +731,12 @@ class Worksheet < BIFFWriter
     if cell =~ /^\D/
       data = substitute_cellref(*args)
 
-      # Returned values $row1 and $row2 aren't required here. Remove them.
-      data.shift        # $row1
-      data.delete_at(1) # $row2
+      # Returned values row1 and row2 aren't required here. Remove them.
+      data.shift        # row1
+      data.delete_at(1) # row2
     end
 
-    return if data.size < 3  # Ensure at least $firstcol, $lastcol and $width
+    return if data.size < 3  # Ensure at least firstcol, lastcol and width
     return if data[0].nil?   # Columns must be defined.
     return if data[1].nil?
 
@@ -924,7 +924,7 @@ class Worksheet < BIFFWriter
   # position of the split. The units for _y_ and _x_ are the same as those
   # used by Excel to specify row height and column width. However, the
   # vertical and horizontal units are different from each other. Therefore you
-  # must specify the $y and $x parameters in terms of the row heights and
+  # must specify the _y_ and _x_ parameters in terms of the row heights and
   # column widths that you have set or the default values which are 12.75 for
   # a row and 8.43 for a column.
   #
@@ -1060,7 +1060,7 @@ class Worksheet < BIFFWriter
   end
 
   #
-  # Set the worksheet zoom factor in the range 10 <= $scale <= 400:
+  # Set the worksheet zoom factor in the range 10 <= scale <= 400:
   #
   #     worksheet1.set_zoom(50)
   #     worksheet2.set_zoom(75)
@@ -1076,7 +1076,7 @@ class Worksheet < BIFFWriter
   def set_zoom(scale = 100)
     # Confine the scale to Excel's range
     if scale < 10 or scale > 400
-      #           carp "Zoom factor $scale outside range: 10 <= zoom <= 400";
+      #           carp "Zoom factor scale outside range: 10 <= zoom <= 400";
       scale = 100
     end
 
@@ -1743,9 +1743,9 @@ class Worksheet < BIFFWriter
     if args[0] =~ /^\D/
       args = substitute_cellref(*args)
 
-      # Returned values $row1 and $row2 aren't required here. Remove them.
-      args.shift        # $row1
-      args.delete_at(1) # $row2
+      # Returned values row1 and row2 aren't required here. Remove them.
+      args.shift        # row1
+      args.delete_at(1) # row2
     end
 
     @title_colmin  = args[0]
@@ -1938,7 +1938,7 @@ class Worksheet < BIFFWriter
   def set_print_scale(scale = 100)
     # Confine the scale to Excel's range
     if scale < 10 or scale > 400
-      #           carp "Print scale $scale outside range: 10 <= zoom <= 400";
+      #           carp "Print scale scale outside range: 10 <= zoom <= 400";
       scale = 100
     end
 
@@ -2005,7 +2005,7 @@ class Worksheet < BIFFWriter
 
   ###############################################################################
   #
-  # extract_filter_tokens($expression)
+  # extract_filter_tokens(expression)
   #
   # Extract the tokens from the filter expression. The tokens are mainly non-
   # whitespace groups. The only tricky part is to extract string tokens that
@@ -2019,8 +2019,6 @@ class Worksheet < BIFFWriter
   #
   def extract_filter_tokens(expression = nil)   #:nodoc:
     return [] unless expression
-
-    #  @tokens = ($expression  =~ /"(?:[^"]|"")*"|\S+/g); #"
 
     tokens = []
     str = expression
@@ -2200,15 +2198,15 @@ class Worksheet < BIFFWriter
   #    worksheet.write('A1', '01209')
   #
   #    # Write a zero padded number using a format: 01209
-  #    my $format1 = $workbook.add_format(:num_format => '00000')
-  #    $worksheet.write('A2', '01209', format1)
+  #    format1 = workbook.add_format(:num_format => '00000')
+  #    worksheet.write('A2', '01209', format1)
   #
   #    # Write explicitly as a string: 01209
-  #    $worksheet.write_string('A3', '01209')
+  #    worksheet.write_string('A3', '01209')
   #
   #    # Write implicitly as a string: 01209
-  #    $worksheet.keep_leading_zeros()
-  #    $worksheet.write('A4', '01209')
+  #    worksheet.keep_leading_zeros()
+  #    worksheet.write('A4', '01209')
   #
   # The above code would generate a worksheet that looked like the following:
   #
