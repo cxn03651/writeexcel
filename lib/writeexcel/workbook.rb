@@ -379,7 +379,7 @@ class Workbook < BIFFWriter
     # Check the worksheet name for non-embedded charts.
     unless embedded
       name, encoding =
-        check_sheetname(properties[:name], properties[:encoding], 1)
+        check_sheetname(properties[:name], properties[:encoding], true)
     end
 
     init_data = [
@@ -450,11 +450,11 @@ class Workbook < BIFFWriter
   # Check for valid worksheet names. We check the length, if it contains any
   # invalid characters and if the name is unique in the workbook.
   #
-  def check_sheetname(name, encoding = 0, chart = 0)       #:nodoc:
+  def check_sheetname(name, encoding = 0, chart = nil)       #:nodoc:
     encoding ||= 0
 
     # Increment the Sheet/Chart number used for default sheet names below.
-    if chart != 0
+    if chart
       @chart_count += 1
     else
       @sheet_count += 1
@@ -463,7 +463,7 @@ class Workbook < BIFFWriter
     # Supply default Sheet/Chart name if none has been defined.
     if name.nil? || name == ""
       encoding = 0
-      if chart != 0
+      if chart
         name = @chart_name + @chart_count.to_s
       else
         name = @sheet_name + @sheet_count.to_s
