@@ -2462,27 +2462,27 @@ class Worksheet < BIFFWriter
   #
   # The "looks like" rule is defined by regular expressions:
   #
-  # write_number() if _token_ is a number based on the following regex:
-  # token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/.
+  # * write_number() if _token_ is a number based on the following regex:
+  #   token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/.
   #
-  # write_string() if keep_leading_zeros() is set and _token_ is an integer
-  # with leading zeros based on the following regex: token =~ /^0\d+$/.
+  # * write_string() if keep_leading_zeros() is set and _token_ is an integer
+  #   with leading zeros based on the following regex: token =~ /^0\d+$/.
   #
-  # write_blank() if _token_ is undef or a blank string: undef, "" or ''.
+  # * write_blank() if _token_ is undef or a blank string: undef, "" or ''.
   #
-  # write_url() if _token_ is a http, https, ftp or mailto URL based on the
-  # following regexes: token =~ m|^[fh]tt?ps?://| or $token =~ m|^mailto:|.
+  # * write_url() if _token_ is a http, https, ftp or mailto URL based on the
+  #   following regexes: token =~ m|^[fh]tt?ps?://| or $token =~ m|^mailto:|.
   #
-  # write_url() if _token_ is an internal or external sheet reference based
-  # on the following regex: token =~ m[^(in|ex)ternal:].
+  # * write_url() if _token_ is an internal or external sheet reference based
+  #   on the following regex: token =~ m[^(in|ex)ternal:].
   #
-  # write_formula() if the first character of _token_ is "=".
+  # * write_formula() if the first character of _token_ is "=".
   #
-  # write_row() if _token_ is an array.
+  # * write_row() if _token_ is an array.
   #
-  # write_col() if _token+ is an array of array.
+  # * write_col() if _token+ is an array of array.
   #
-  # write_string() if none of the previous conditions apply.
+  # * write_string() if none of the previous conditions apply.
   #
   # The format parameter is optional. It should be a valid Format object, see
   # "CELL FORMATTING":
@@ -7860,8 +7860,8 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
-  #    data_validation(row, col, {...})
-  #    data_validation(first_row, first_col, last_row, last_col, {...})
+  #    data_validation(row, col, params)
+  #    data_validation(first_row, first_col, last_row, last_col, params)
   #
   # This method handles the interface to Excel data validation.
   # Somewhat ironically the this requires a lot of validation code since the
@@ -7968,70 +7968,71 @@ class Worksheet < BIFFWriter
   #     length
   #     custom
   #
-  #     * any is used to specify that the type of data is unrestricted. This
-  # is the same as not applying a data validation. It is only provided for
-  # completeness and isn't used very often in the context of WriteExcel.
+  # * any is used to specify that the type of data is unrestricted. This
+  #   is the same as not applying a data validation. It is only provided for
+  #   completeness and isn't used very often in the context of WriteExcel.
   #
-  #     * integer restricts the cell to integer values. Excel refers to this
-  # as 'whole number'.
+  # * integer restricts the cell to integer values. Excel refers to this
+  #   as 'whole number'.
   #
-  #           :validate => 'integer',
-  #           :criteria => '>',
-  #           :value    => 100,
+  #     :validate => 'integer',
+  #     :criteria => '>',
+  #     :value    => 100,
   #
-  #     * decimal restricts the cell to decimal values.
+  # * decimal restricts the cell to decimal values.
   #
-  #           :validate => 'decimal',
-  #           :criteria => '>',
-  #           :value    => 38.6,
+  #     :validate => 'decimal',
+  #     :criteria => '>',
+  #     :value    => 38.6,
   #
-  #     * list restricts the cell to a set of user specified values. These
-  # can be passed in an array ref or as a cell range (named ranges aren't
-  # currently supported):
+  # * list restricts the cell to a set of user specified values. These
+  #   can be passed in an array ref or as a cell range (named ranges aren't
+  #   currently supported):
   #
-  #           :validate => 'list',
-  #           :value    => ['open', 'high', 'close'],
-  #           # Or like this:
-  #           :value    => 'B1:B3',
+  #     :validate => 'list',
+  #     :value    => ['open', 'high', 'close'],
+  #     # Or like this:
+  #     :value    => 'B1:B3',
   #
-  #       Excel requires that range references are only to cells on the
+  # Excel requires that range references are only to cells on the
   # same worksheet.
-  #     * date restricts the cell to date values. Dates in Excel are expressed
-  # as integer values but you can also pass an ISO860 style string as used in
-  # write_date_time(). See also "DATES AND TIME IN EXCEL" for more information
-  # about working with Excel's dates.
   #
-  #           :validate => 'date',
-  #           :criteria => '>',
-  #           :value    => 39653, # 24 July 2008
-  #           # Or like this:
-  #           :value    => '2008-07-24T',
+  # * date restricts the cell to date values. Dates in Excel are expressed
+  #   as integer values but you can also pass an ISO860 style string as used in
+  #   write_date_time(). See also "DATES AND TIME IN EXCEL" for more information
+  #   about working with Excel's dates.
   #
-  #     * time restricts the cell to time values. Times in Excel are expressed
-  # as decimal values but you can also pass an ISO860 style string as used in
-  # write_date_time(). See also "DATES AND TIME IN EXCEL" for more information
-  # about working with Excel's times.
+  #     :validate => 'date',
+  #     :criteria => '>',
+  #     :value    => 39653, # 24 July 2008
+  #     # Or like this:
+  #     :value    => '2008-07-24T',
   #
-  #           :validate => 'time',
-  #           :criteria => '>',
-  #           :value    => 0.5, # Noon
-  #           # Or like this:
-  #           :value    => 'T12:00:00',
+  # * time restricts the cell to time values. Times in Excel are expressed
+  #   as decimal values but you can also pass an ISO860 style string as used in
+  #   write_date_time(). See also "DATES AND TIME IN EXCEL" for more information
+  #   about working with Excel's times.
   #
-  #     * length restricts the cell data based on an integer string length.
-  # Excel refers to this as 'Text length'.
+  #     :validate => 'time',
+  #     :criteria => '>',
+  #     :value    => 0.5, # Noon
+  #     # Or like this:
+  #     :value    => 'T12:00:00',
   #
-  #           :validate => 'length',
-  #           :criteria => '>',
-  #           :value    => 10,
+  # * length restricts the cell data based on an integer string length.
+  #   Excel refers to this as 'Text length'.
   #
-  #     * custom restricts the cell based on an external Excel formula that
-  # returns a TRUE/FALSE value.
+  #     :validate => 'length',
+  #     :criteria => '>',
+  #     :value    => 10,
   #
-  #           :validate => 'custom',
-  #           :value    => '=IF(A10>B10,TRUE,FALSE)',
+  # * custom restricts the cell based on an external Excel formula that
+  #   returns a TRUE/FALSE value.
   #
-  # criteria
+  #     :validate => 'custom',
+  #     :value    => '=IF(A10>B10,TRUE,FALSE)',
+  #
+  # ===criteria
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8069,7 +8070,7 @@ class Worksheet < BIFFWriter
   #     :validate => 'custom',
   #     :value    => '=IF(A10>B10,TRUE,FALSE)',
   #
-  # ====value | minimum | source
+  # ===value | minimum | source
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8093,7 +8094,7 @@ class Worksheet < BIFFWriter
   #     :validate => 'list',
   #     :source   => 'B1:B3',
   #
-  # ====maximum
+  # ===maximum
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8105,7 +8106,7 @@ class Worksheet < BIFFWriter
   #     :minimum  => 1,
   #     :maximum  => 100,
   #
-  # ====ignore_blank
+  # ===ignore_blank
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8116,7 +8117,7 @@ class Worksheet < BIFFWriter
   #
   #     :ignore_blank => 0,  # Turn the option off
   #
-  # ====dropdown
+  # ===dropdown
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8126,7 +8127,7 @@ class Worksheet < BIFFWriter
   #
   #     :dropdown => 0,      # Turn the option off
   #
-  # ====input_title
+  # ===input_title
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8140,7 +8141,7 @@ class Worksheet < BIFFWriter
   # The maximum title length is 32 characters. UTF8 strings are handled
   # automatically.
   #
-  # ====input_message
+  # ===input_message
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8162,7 +8163,7 @@ class Worksheet < BIFFWriter
   # The maximum message length is 255 characters. UTF8 strings are handled
   # automatically.
   #
-  # ====show_input
+  # ===show_input
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8173,7 +8174,7 @@ class Worksheet < BIFFWriter
   #
   #     :show_input => 0,      # Turn the option off
   #
-  # ====error_title
+  # ===error_title
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8186,7 +8187,7 @@ class Worksheet < BIFFWriter
   # The maximum title length is 32 characters. UTF8 strings are handled
   # automatically.
   #
-  # ====error_message
+  # ===error_message
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8210,7 +8211,7 @@ class Worksheet < BIFFWriter
   # The maximum message length is 255 characters. UTF8 strings are handled
   # automatically.
   #
-  # ====error_type
+  # ===error_type
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8223,7 +8224,7 @@ class Worksheet < BIFFWriter
   #
   # The default is 'stop'.
   #
-  # ====show_error
+  # ===show_error
   #
   # This parameter is passed in a hash ref to data_validation().
   #
@@ -8234,7 +8235,7 @@ class Worksheet < BIFFWriter
   #
   #     :show_error => 0,      # Turn the option off
   #
-  # Examples
+  # ===Examples
   #
   # Example 1. Limiting input to an integer greater than a fixed value.
   #
