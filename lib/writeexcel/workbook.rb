@@ -297,9 +297,6 @@ class Workbook < BIFFWriter
     worksheet
   end
 
-  ###############################################################################
-  #
-  # add_chart(params)
   #
   # Create a chart for embedding or as as new sheet.
   #
@@ -311,55 +308,60 @@ class Workbook < BIFFWriter
   #
   # The properties that can be set are:
   #
-  #     :type     (required)
-  #     :name     (optional)
-  #     :embedded (optional)
+  #   :type      (required)
+  #   :name      (optional)
+  #   :encoding  (optional)
+  #   :embedded  (optional)
   #
-  #     * type
+  # * type
   #
-  #       This is a required parameter. It defines the type of chart that will be created.
+  # This is a required parameter. It defines the type of chart that will be created.
   #
-  #           chart = workbook.add_chart(:type => 'Chart::Line')
+  #   chart = workbook.add_chart(:type => 'Chart::Line')
   #
-  #       The available types are:
+  # The available types are:
   #
-  #           'Chart::Column'
-  #           'Chart::Bar'
-  #           'Chart::Line'
-  #           'Chart::Area'
-  #           'Chart::Pie'
-  #           'Chart::Scatter'
-  #           'Chart::Stock'
+  #   'Chart::Column'
+  #   'Chart::Bar'
+  #   'Chart::Line'
+  #   'Chart::Area'
+  #   'Chart::Pie'
+  #   'Chart::Scatter'
+  #   'Chart::Stock'
   #
-  #     * :name
+  # * :name
   #
-  #       Set the name for the chart sheet. The name property is optional and
-  #       if it isn't supplied will default to Chart1 .. n. The name must be
-  #        a valid Excel worksheet name. See add_worksheet() for more details
-  #        on valid sheet names. The name property can be omitted for embedded
-  #        charts.
+  # Set the name for the chart sheet. The name property is optional and
+  # if it isn't supplied will default to Chart1 .. n. The name must be
+  # a valid Excel worksheet name. See add_worksheet() for more details
+  # on valid sheet names. The name property can be omitted for embedded
+  # charts.
   #
-  #           chart = workbook.add_chart(
-  #                           :type => 'Chart::Line',
-  #                           :name => 'Results Chart'
-  #                   )
+  #   chart = workbook.add_chart(
+  #              :type => 'Chart::Line',
+  #              :name => 'Results Chart'
+  #           )
   #
-  #     * :embedded
+  # * :encoding
   #
-  #       Specifies that the Chart object will be inserted in a worksheet via
-  #       the insert_chart() Worksheet method. It is an error to try insert a
-  #       Chart that doesn't have this flag set.
+  # if :name is UTF-16BE format, pass 1 as :encoding.
   #
-  #           chart = workbook.add_chart(:type => 'Chart::Line', :embedded => 1)
+  # * :embedded
   #
-  #           # Configure the chart.
-  #           ...
+  # Specifies that the Chart object will be inserted in a worksheet via
+  # the insert_chart() Worksheet method. It is an error to try insert a
+  # Chart that doesn't have this flag set.
   #
-  #           # Insert the chart into the a worksheet.
-  #           worksheet.insert_chart('E2', chart)
+  #   chart = workbook.add_chart(:type => 'Chart::Line', :embedded => 1)
+  #
+  #   # Configure the chart.
+  #   ...
+  #
+  #   # Insert the chart into the a worksheet.
+  #   worksheet.insert_chart('E2', chart)
   #
   # See WriteExcel::Chart for details on how to configure the
-  # chart object once it is created. See also the chart_*.pl programs in the
+  # chart object once it is created. See also the chart_*.rb programs in the
   # examples directory of the distro.
   #
   def add_chart(params)
