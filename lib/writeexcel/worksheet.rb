@@ -796,9 +796,8 @@ class Worksheet < BIFFWriter
   #
   def set_selection(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
+
     @selection = args
   end
 
@@ -897,9 +896,8 @@ class Worksheet < BIFFWriter
   #
   def freeze_panes(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
+
     # Extra flag indicated a split and freeze.
     @frozen_no_split = 0 if !args[4].nil? && args[4] != 0
 
@@ -1009,9 +1007,8 @@ class Worksheet < BIFFWriter
   #
   def merge_range(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
+
     raise "Incorrect number of arguments" if args.size != 6 and args.size != 7
     raise "Format argument is not a format object" unless args[5].respond_to?(:xf_index)
 
@@ -1160,9 +1157,7 @@ class Worksheet < BIFFWriter
   #
   def autofilter(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return if args.size != 4 # Require 4 parameters
 
@@ -1286,10 +1281,9 @@ class Worksheet < BIFFWriter
     #      raise "Incorrect number of arguments to filter_column()" unless @_ == 2
 
     # Check for a column reference in A1 notation and substitute.
-    if col =~ /^\D/
-      # Convert col ref to a cell ref and then to a col number.
-      no_use, col = substitute_cellref(col + '1')
-    end
+    # Convert col ref to a cell ref and then to a col number.
+    no_use, col = substitute_cellref(col + '1') if col =~ /^\D/
+
     col_first = @filter_area[2]
     col_last  = @filter_area[3]
 
@@ -1855,9 +1849,7 @@ class Worksheet < BIFFWriter
   #
   def print_area(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return if args.size != 4 # Require 4 parameters
 
@@ -2528,9 +2520,7 @@ class Worksheet < BIFFWriter
   #
   def write(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     token = args[2]
 
@@ -2598,9 +2588,7 @@ class Worksheet < BIFFWriter
   #
   def write_number(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return -1 if args.size < 3                # Check the number of args
 
@@ -2676,9 +2664,7 @@ class Worksheet < BIFFWriter
   #
   def write_string(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return -1 if (args.size < 3)                # Check the number of args
 
@@ -2783,9 +2769,7 @@ class Worksheet < BIFFWriter
   #
   def write_blank(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     # Check the number of args
     return -1 if args.size < 2
@@ -3092,9 +3076,7 @@ class Worksheet < BIFFWriter
   # ++
   def write_formula(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if (args[0] =~ /^\D/)
-      args = substitute_cellref(args)
-    end
+    args = row_col_notation(args)
 
     return -1 if args.size < 3   # Check the number of args
 
@@ -3197,9 +3179,7 @@ class Worksheet < BIFFWriter
   #
   def write_row(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     # Catch non array refs passed by user.
     unless args[2].respond_to?(:to_ary)
@@ -3301,9 +3281,7 @@ class Worksheet < BIFFWriter
   #
   def write_col(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     # Catch non array refs passed by user.
     unless args[2].respond_to?(:to_ary)
@@ -3514,9 +3492,7 @@ class Worksheet < BIFFWriter
   #
   def write_comment(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return -1 if args.size < 3   # Check the number of args
 
@@ -4049,9 +4025,7 @@ class Worksheet < BIFFWriter
   #
   def repeat_formula(*args)       #:nodoc:
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(args)
-    end
+    args = row_col_notation(args)
 
     return -1 if (args.size < 2)   # Check the number of args
 
@@ -4224,9 +4198,7 @@ class Worksheet < BIFFWriter
   #
   def write_url(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     # Check the number of args
     return -1 if args.size < 3
@@ -4270,9 +4242,7 @@ class Worksheet < BIFFWriter
   #
   def write_url_range(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     # Check the number of args
     return -1 if args.size < 5
@@ -4674,9 +4644,7 @@ class Worksheet < BIFFWriter
   #
   def write_date_time(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return -1 if (args.size < 3)                 # Check the number of args
 
@@ -5517,9 +5485,7 @@ class Worksheet < BIFFWriter
   #
   def merge_cells(*args) #:nodoc:
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     record  = 0x00E5                    # Record identifier
     length  = 0x000A                    # Bytes to follow
@@ -6005,9 +5971,7 @@ class Worksheet < BIFFWriter
   #
   def insert_chart(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     row         = args[0]
     col         = args[1]
@@ -6090,9 +6054,7 @@ class Worksheet < BIFFWriter
   #
   def insert_image(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     row         = args[0]
     col         = args[1]
@@ -6323,9 +6285,7 @@ class Worksheet < BIFFWriter
   #
   def write_utf16be_string(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return -1 if (args.size < 3)                     # Check the number of args
 
@@ -6391,9 +6351,7 @@ class Worksheet < BIFFWriter
   #
   def write_utf16le_string(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     return -1 if (args.size < 3)                     # Check the number of args
 
@@ -8350,9 +8308,7 @@ class Worksheet < BIFFWriter
   #
   def data_validation(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-    end
+    args = row_col_notation(args)
 
     # Check for a valid number of args.
     return -1 if args.size != 5 && args.size != 3
@@ -8813,6 +8769,16 @@ class Worksheet < BIFFWriter
 
     [formula.length, unused].pack('vv') + formula
   end
+
+  # Check for a cell reference in A1 notation and substitute row and column
+  def row_col_notation(args)   # :nodoc:
+    if args[0] =~ /^\D/
+      substitute_cellref(*args)
+    else
+      args
+    end
+  end
+  private :row_col_notation
 end  # class Worksheet
 
 end  # module Writeexcel
