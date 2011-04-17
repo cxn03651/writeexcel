@@ -364,21 +364,22 @@ class Workbook < BIFFWriter
   # chart object once it is created. See also the chart_*.rb programs in the
   # examples directory of the distro.
   #
-  def add_chart(params)
+  def add_chart(properties)
     name = ''
     encoding = 0
     index    = @worksheets.size
 
     # Type must be specified so we can create the required chart instance.
-    type = params[:type]
+    type = properties[:type]
     raise "Must define chart type in add_chart()" if type.nil?
 
     # Ensure that the chart defaults to non embedded.
-    embedded = params[:embedded]
+    embedded = properties[:embedded]
 
     # Check the worksheet name for non-embedded charts.
     unless embedded
-      name, encoding = check_sheetname(params[:name], params[:name_encoding], 1)
+      name, encoding =
+        check_sheetname(properties[:name], properties[:encoding], 1)
     end
 
     init_data = [
