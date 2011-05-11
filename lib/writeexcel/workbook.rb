@@ -529,7 +529,7 @@ class Workbook < BIFFWriter
       encd_a  = encoding
       name_b  = worksheet.name
       encd_b  = worksheet.encoding
-      error   = 0
+      error   = false
 
       if    encd_a == 0 and encd_b == 0
         error  = (name_a.downcase == name_b.downcase)
