@@ -51,8 +51,8 @@ class TC_Workbook < Test::Unit::TestCase
   def test_check_sheetname
     worksheet1 = @workbook.add_worksheet              # implicit name 'Sheet1'
     worksheet2 = @workbook.add_worksheet              # implicit name 'Sheet2'
-    worksheet3 = @workbook.add_worksheet 'Sheet3'     # implicit name 'Sheet3'
-    worksheet1 = @workbook.add_worksheet 'Sheetz'     # implicit name 'Sheetz'
+    worksheet3 = @workbook.add_worksheet 'Sheet3'     # explicit name 'Sheet3'
+    worksheet4 = @workbook.add_worksheet 'Sheetz'     # explicit name 'Sheetz'
 
     valid_sheetnames.each do |test|
       target    = test[0]
@@ -68,6 +68,12 @@ class TC_Workbook < Test::Unit::TestCase
       assert_raise(RuntimeError, "sheetname: #{sheetname}") {
           @workbook.add_worksheet(sheetname)
         }
+    end
+  end
+
+  def test_check_sheetname_utf8_only
+    ['Лист 1', 'Лист 2', 'Лист 3'].each do |sheetname|
+      assert_nothing_raised { @workbook.add_worksheet sheetname }
     end
   end
 
@@ -90,7 +96,7 @@ class TC_Workbook < Test::Unit::TestCase
       [ 'PASS', 'a' * 31,   'Valid 31 char name'          ]
     ]
   end
-
+    
   def invalid_sheetnames
     [
       # Tests for invalid names
