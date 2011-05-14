@@ -73,7 +73,7 @@ class TC_Workbook < Test::Unit::TestCase
 
   def test_check_sheetname_utf8_only
     ['Лист 1', 'Лист 2', 'Лист 3'].each do |sheetname|
-      assert_nothing_raised { @workbook.add_worksheet sheetname }
+      assert_nothing_raised { @workbook.add_worksheet(sheetname) }
     end
   end
 
@@ -96,7 +96,7 @@ class TC_Workbook < Test::Unit::TestCase
       [ 'PASS', 'a' * 31,   'Valid 31 char name'          ]
     ]
   end
-    
+
   def invalid_sheetnames
     [
       # Tests for invalid names
