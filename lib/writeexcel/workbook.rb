@@ -30,12 +30,6 @@ class Workbook < BIFFWriter
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:
 
-  private
-
-  attr_reader :formats, :defined_names    #:nodoc:
-
-  public
-
   #
   # _file_ is a filename (as string) or io object where to out spreadsheet data.
   # you can set default format of workbook using _default_formats_.
@@ -3215,5 +3209,13 @@ class Workbook < BIFFWriter
 
   def add_doc_properties=(val)
     @add_doc_properties = val
+  end
+
+  def formats
+    @formats
+  end
+
+  def defined_names
+    @defined_names
   end
 end
