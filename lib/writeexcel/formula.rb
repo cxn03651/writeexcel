@@ -595,7 +595,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
     if (args >= 0)
       # Check that the number of args is valid.
       if (args != num_args)
-        raise "Incorrect number of arguments for #{token}() in formula\n";
+        raise "Incorrect number of arguments for #{token}() in formula\n"
       else
         return [@ptg['ptgFuncV'], @functions[token][0]].pack("Cv")
       end
@@ -779,7 +779,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       'ptgArea3dA'        => 0x7B,
       'ptgRefErr3dA'      => 0x7C,
       'ptgAreaErr3d'      => 0x7D
-    };
+    }
 
     # Thanks to Michael Meeks and Gnumeric for the initial arg values.
     #
