@@ -80,6 +80,9 @@ when use urf8 string data.
 * ruby 1.8, ruby 1.9.1, ruby 1.9.2
 
 == Recent Changes
+v0.6.6
+* add private method to avoid warning: private attribute?
+
 v0.6.5
 * Bug fix. if workbook already has worksheet of utf8 name, Workbook#add_worksheet, Workbook#add_chart, Workbook#add_chart_ext raise exception when add new worksheet of utf8 name.
 
