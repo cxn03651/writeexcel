@@ -32,7 +32,6 @@ class Workbook < BIFFWriter
 
   private
 
-  attr_accessor :add_doc_properties       #:nodoc:
   attr_reader :formats, :defined_names    #:nodoc:
 
   public
@@ -3207,4 +3206,14 @@ class Workbook < BIFFWriter
     sheets.each { |sheet| sheet.cleanup }
   end
   private :cleanup
+
+  private
+
+  def add_doc_properties
+    @add_doc_properties
+  end
+
+  def add_doc_properties=(val)
+    @add_doc_properties = val
+  end
 end
