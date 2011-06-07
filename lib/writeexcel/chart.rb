@@ -1040,7 +1040,7 @@ class Chart < Worksheet
     end
 
     if !@y_axis_name.nil? || !@y_axis_formula.nil?
-      store_y_axis_text_stream();
+      store_y_axis_text_stream
     end
 
     if @plotarea[:visible] != 0

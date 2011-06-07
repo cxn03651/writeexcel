@@ -1290,7 +1290,7 @@ class Worksheet < BIFFWriter
     # Reject column if it is outside filter range.
     if (col < col_first or col > col_last)
       raise "Column '#{col}' outside autofilter() column range " +
-      "(#{col_first} .. #{col_last})";
+      "(#{col_first} .. #{col_last})"
     end
 
     tokens = extract_filter_tokens(expression)
@@ -3183,7 +3183,7 @@ class Worksheet < BIFFWriter
 
     # Catch non array refs passed by user.
     unless args[2].respond_to?(:to_ary)
-      raise "Not an array ref in call to write_row() #{$!}";
+      raise "Not an array ref in call to write_row() #{$!}"
     end
 
     row, col, tokens, options = args
@@ -3285,7 +3285,7 @@ class Worksheet < BIFFWriter
 
     # Catch non array refs passed by user.
     unless args[2].respond_to?(:to_ary)
-      raise "Not an array ref in call to write_row()";
+      raise "Not an array ref in call to write_row()"
     end
 
     row, col, tokens, options = args
@@ -3769,7 +3769,7 @@ class Worksheet < BIFFWriter
   # Encode the user supplied result for a formula.
   #
   def encode_formula_result(value = nil)       #:nodoc:
-    is_string = 0;          # Formula evaluates to str.
+    is_string = 0                 # Formula evaluates to str.
     # my $num;                    # Current value of formula.
     # my $grbit;                  # Option flags.
 
@@ -4378,7 +4378,7 @@ class Worksheet < BIFFWriter
     # Convert an Utf8 URL type and to a null terminated wchar string.
     if is_utf8?(str)
       # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
-      url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/;
+      url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/
       # URL is null terminated.
       ruby_18 { url = utf8_to_16be(url) + "\0\0" } ||
       ruby_19 { url = url.encode('UTF-16LE') + "\0\0".encode('UTF-16LE') }

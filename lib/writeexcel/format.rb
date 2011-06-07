@@ -994,7 +994,7 @@ class Format < Colors
   # method to differentiate between the vertical and horizontal properties.
   #
   def set_valign(alignment)  # :nodoc:
-    set_align(alignment);
+    set_align(alignment)
   end
 
   #
@@ -1187,10 +1187,10 @@ class Format < Colors
   # 'Borders' worksheet created by formats.rb.
   #
   def set_border_color(color)
-    set_bottom_color(color);
-    set_top_color(color);
-    set_left_color(color);
-    set_right_color(color);
+    set_bottom_color(color)
+    set_top_color(color)
+    set_left_color(color)
+    set_right_color(color)
   end
 
   #
@@ -1263,7 +1263,7 @@ class Format < Colors
       rotation = 0
     end
 
-    @rotation = rotation;
+    @rotation = rotation
   end
 
 

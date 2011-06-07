@@ -720,14 +720,14 @@ class Workbook < BIFFWriter
 
     # Check that the colour index is the right range
     if index < 8 || index > 64
-      raise "Color index #{index} outside range: 8 <= index <= 64";
+      raise "Color index #{index} outside range: 8 <= index <= 64"
     end
 
     # Check that the colour components are in the right range
     if (red   < 0 || red   > 255) ||
       (green < 0 || green > 255) ||
       (blue  < 0 || blue  > 255)
-      raise "Color component outside range: 0 <= color <= 255";
+      raise "Color component outside range: 0 <= color <= 255"
     end
 
     index -=8       # Adjust colour index (wingless dragonfly)
@@ -909,7 +909,7 @@ class Workbook < BIFFWriter
 
     if name =~ /^(.*)!(.*)$/
       sheetname   = $1
-      name        = $2;
+      name        = $2
       sheet_index = 1 + @parser.get_sheet_index(sheetname)
     end
 
@@ -977,9 +977,9 @@ class Workbook < BIFFWriter
   #
   # You can also pass UTF-8 strings as properties.
   #
-  #     $workbook->set_properties(
-  #         :subject => "住所録",
-  #     );
+  #     workbook.set_properties(
+  #         :subject => "住所録"
+  #     )
   #
   # Usually WriteExcel allows you to use UTF-16. However, document properties
   # don't support UTF-16 for these type of strings.
@@ -1080,7 +1080,7 @@ class Workbook < BIFFWriter
   def check_valid_params_for_properties(params)       #:nodoc:
     params.each_key do |k|
       unless valid_properties.has_key?(k)
-        raise "Unknown parameter '#{k}' in set_properties()";
+        raise "Unknown parameter '#{k}' in set_properties()"
       end
     end
   end
@@ -1101,7 +1101,7 @@ class Workbook < BIFFWriter
       next unless params.has_key?(property.to_sym)
       return 0xFDE9 if is_utf8?(params[property.to_sym])
     end
-    return 0x04E4; # Default codepage, Latin 1.
+    return 0x04E4  # Default codepage, Latin 1.
   end
   private :get_property_set_codepage
 
@@ -1419,8 +1419,8 @@ class Workbook < BIFFWriter
     images_seen     = {}
     image_data      = []
     previous_images = []
-    image_id        = 1;
-    images_size     = 0;
+    image_id        = 1
+    images_size     = 0
 
     @worksheets.each do |sheet|
       next unless sheet.sheet_type == 0x0000
@@ -1503,8 +1503,8 @@ class Workbook < BIFFWriter
           checksum1, checksum2])
 
           # Keep track of overall data size.
-          images_size       += size +61; # Size for bstore container.
-          image_mso_size    += size +69; # Size for dgg container.
+          images_size       += size +61  # Size for bstore container.
+          image_mso_size    += size +69  # Size for dgg container.
 
           images_seen[filename] = image_id
           image_id += 1
@@ -1635,7 +1635,7 @@ class Workbook < BIFFWriter
   def process_jpg(data, filename) # :nodoc:
     type     = 5  # Excel Blip type (MSOBLIPTYPE).
 
-    offset = 2;
+    offset = 2
     data_length = data.bytesize
 
     # Search through the image data to find the 0xFFC0 marker. The height and
