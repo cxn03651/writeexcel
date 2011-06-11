@@ -76,8 +76,6 @@ class Workbook < BIFFWriter
     @xf_index              = 0
     @fileclosed            = false
     @biffsize              = 0
-    @sheet_name            = "Sheet"
-    @chart_name            = "Chart"
     @sheet_count           = 0
     @chart_count           = 0
     @url_format            = ''
@@ -454,9 +452,9 @@ class Workbook < BIFFWriter
     if name.nil? || name == ""
       encoding = 0
       if chart
-        name = @chart_name + @chart_count.to_s
+        name = "Chart#{@chart_count}"
       else
-        name = @sheet_name + @sheet_count.to_s
+        name = "Sheet#{@sheet_count}"
       end
     end
 
