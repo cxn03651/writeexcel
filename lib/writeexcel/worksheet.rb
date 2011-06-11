@@ -46,13 +46,13 @@ class Worksheet < BIFFWriter
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
-  def initialize(name, index, encoding, url_format, parser, tempdir,
+  def initialize(name, index, name_utf16be, url_format, parser, tempdir,
                  date_1904, compatibility, palette, sinfo)                     # :nodoc:
     super()
 
     @name                = name
     @index               = index
-    @encoding            = encoding
+    @name_utf16be        = name_utf16be
     @url_format          = url_format
     @parser              = parser
     @tempdir             = tempdir
@@ -3513,8 +3513,14 @@ class Worksheet < BIFFWriter
     @active = val
   end
 
-  def encoding  # :nodoc:
-    @encoding
+  def is_name_utf16be?  # :nodoc:
+    if @name_utf16be == 0
+      false
+    elsif @name_utf16be == 1
+      true
+    else
+      !!@name_utf16be
+    end
   end
 
   def index  # :nodoc:

@@ -521,7 +521,7 @@ class Workbook < BIFFWriter
       name_a  = name
       encd_a  = encoding
       name_b  = worksheet.name
-      encd_b  = worksheet.encoding
+      encd_b  = worksheet.is_name_utf16be? ? 1 : 0
       error   = false
 
       if    encd_a == 0 and encd_b == 0
@@ -1145,13 +1145,7 @@ class Workbook < BIFFWriter
 
     # Add BOUNDSHEET records.
     @worksheets.each do |sheet|
-      store_boundsheet(
-          sheet.name,
-          sheet.offset,
-          sheet.sheet_type,
-          sheet.hidden,
-          sheet.encoding
-        )
+      store_boundsheet(sheet)
     end
 
     # NOTE: If any records are added between here and EOF the
@@ -2018,7 +2012,13 @@ class Workbook < BIFFWriter
   #
   # Writes Excel BIFF BOUNDSHEET record.
   #
-  def store_boundsheet(sheetname, offset, type, hidden, encoding)       #:nodoc:
+  def store_boundsheet(sheet)       #:nodoc:
+    sheetname = sheet.name
+    offset    = sheet.offset
+    type      = sheet.sheet_type
+    hidden    = sheet.hidden
+    encoding  = sheet.is_name_utf16be? ? 1 : 0
+
     record    = 0x0085                      # Record identifier
     length    = 0x08 + sheetname.bytesize   # Number of bytes to follow
 
