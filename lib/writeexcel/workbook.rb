@@ -301,7 +301,7 @@ class Workbook < BIFFWriter
   #
   #   :type      (required)
   #   :name      (optional)
-  #   :encoding  (optional)
+  #   :name_utf16be  (optional)
   #   :embedded  (optional)
   #
   # * type
@@ -439,7 +439,7 @@ class Workbook < BIFFWriter
 
   ###############################################################################
   #
-  # check_sheetname(name, encoding)
+  # check_sheetname(name, name_utf16be)
   #
   # Check for valid worksheet names. We check the length, if it contains any
   # invalid characters and if the name is unique in the workbook.
@@ -520,7 +520,7 @@ class Workbook < BIFFWriter
   # Check that the worksheet name doesn't already exist since this is a fatal
   # error in Excel 97. The check must also exclude case insensitive matches
   # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
-  # to take the encoding into account.
+  # to take the name_utf16be into account.
   #
   def check_sheetname_uniq(name, name_utf16be)       #:nodoc:
     @worksheets.each do |worksheet|
