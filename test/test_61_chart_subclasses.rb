@@ -24,7 +24,7 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_column
-    chart = Writeexcel::Chart.factory('Chart::Column', nil, nil, nil, nil, nil, nil,
+    chart = Writeexcel::Chart.factory('Chart::Column', @workbook, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
     expected = %w(
         17 10 06 00 00 00 96 00 00 00
@@ -34,7 +34,7 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_bar
-    chart = Writeexcel::Chart.factory('Chart::Bar', nil, nil, nil, nil, nil, nil,
+    chart = Writeexcel::Chart.factory('Chart::Bar', @workbook, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
     expected = %w(
         17 10 06 00 00 00 96 00 01 00
@@ -44,7 +44,7 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_line
-    chart = Writeexcel::Chart.factory('Chart::Line', nil, nil, nil, nil, nil, nil,
+    chart = Writeexcel::Chart.factory('Chart::Line', @workbook, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
     expected = %w(
         18 10 02 00 00 00
@@ -54,7 +54,7 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_area
-    chart = Writeexcel::Chart.factory('Chart::Area', nil, nil, nil, nil, nil, nil,
+    chart = Writeexcel::Chart.factory('Chart::Area', @workbook, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
     expected = %w(
         1A 10 02 00 01 00
@@ -64,7 +64,7 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_pie
-    chart = Writeexcel::Chart.factory('Chart::Pie', nil, nil, nil, nil, nil, nil,
+    chart = Writeexcel::Chart.factory('Chart::Pie', @workbook, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
     expected = %w(
         19 10 06 00 00 00 00 00 02 00
@@ -74,7 +74,7 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_scatter
-    chart = Writeexcel::Chart.factory('Chart::Scatter', nil, nil, nil, nil, nil, nil,
+    chart = Writeexcel::Chart.factory('Chart::Scatter', @workbook, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
     expected = %w(
         1B 10 06 00 64 00 01 00 00 00
@@ -84,7 +84,7 @@ class TC_chart_subclasses < Test::Unit::TestCase
   end
 
   def test_store_chart_type_of_stock
-    chart = Writeexcel::Chart.factory('Chart::Stock', nil, nil, nil, nil, nil, nil,
+    chart = Writeexcel::Chart.factory('Chart::Stock', @workbook, nil, nil, nil, nil, nil, nil,
                                          nil, nil, nil, nil)
     expected = %w(
         18 10 02 00 00 00

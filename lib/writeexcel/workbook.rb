@@ -275,6 +275,7 @@ class Workbook < BIFFWriter
     # language.
     #
     init_data = [
+                  self,
                   name,
                   index,
                   name_utf16be,
@@ -384,6 +385,7 @@ class Workbook < BIFFWriter
     end
 
     init_data = [
+      self,
       name,
       index,
       name_utf16be,
