@@ -1024,6 +1024,10 @@ class Formula < ExcelFormulaParser       #:nodoc:
     }
 
   end
+
+  def inspect
+    to_s
+  end
 end
 
 if $0 ==__FILE__

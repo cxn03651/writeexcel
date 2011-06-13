@@ -58,6 +58,10 @@ class Colors
       0x7FFF
     end
   end
+
+  def inspect
+    to_s
+  end
 end  # class Colors
 
 end  # module Writeexcel
