@@ -232,7 +232,7 @@ class Workbook < BIFFWriter
   #
   # Add a new worksheet to the Excel workbook.
   #
-  # if _sheetname_ is UTF-16BE format, pass 1 as _encoding_.
+  # if _sheetname_ is UTF-16BE format, pass true as _name_utf16be_.
   #
   # At least one worksheet should be added to a new workbook. A worksheet is
   # used to write data into cells:
@@ -257,12 +257,12 @@ class Workbook < BIFFWriter
   # UTF-16BE worksheet names using an additional optional parameter:
   #
   #     name = [0x263a].pack('n')
-  #     worksheet = workbook.add_worksheet(name, 1)   # Smiley
+  #     worksheet = workbook.add_worksheet(name, true)   # Smiley
   #
-  def add_worksheet(sheetname = '', encoding = 0)
+  def add_worksheet(sheetname = '', name_utf16be = false)
     index = @worksheets.size
 
-    name, encoding = check_sheetname(sheetname, encoding)
+    name, name_utf16be = check_sheetname(sheetname, name_utf16be)
 
     # Porters take note, the following scheme of passing references to Workbook
     # data (in the \$self->{_foo} cases) instead of a reference to the Workbook
@@ -273,7 +273,7 @@ class Workbook < BIFFWriter
     init_data = [
                   name,
                   index,
-                  encoding,
+                  name_utf16be,
                   @url_format,
                   @parser,
                   @tempdir,
@@ -333,9 +333,14 @@ class Workbook < BIFFWriter
   #              :name => 'Results Chart'
   #           )
   #
+  # * :name_utf16be
+  #
+  # if :name is UTF-16BE format, pass true as :name_utf16be
+  #
   # * :encoding
   #
   # if :name is UTF-16BE format, pass 1 as :encoding.
+  # This key is obsolete in v0.7 or later. Use :name_utf16be instead.
   #
   # * :embedded
   #
@@ -357,7 +362,7 @@ class Workbook < BIFFWriter
   #
   def add_chart(properties)
     name = ''
-    encoding = 0
+    name_utf16be = false
     index    = @worksheets.size
 
     # Type must be specified so we can create the required chart instance.
@@ -369,14 +374,15 @@ class Workbook < BIFFWriter
 
     # Check the worksheet name for non-embedded charts.
     unless embedded
-      name, encoding =
-        check_sheetname(properties[:name], properties[:encoding], true)
+      properties[:name_utf16be] = true if properties[:encoding] == 1
+      name, name_utf16be =
+        check_sheetname(properties[:name], properties[:name_utf16be], true)
     end
 
     init_data = [
       name,
       index,
-      encoding,
+      name_utf16be,
       @url_format,
       @parser,
       @tempdir,
@@ -412,17 +418,17 @@ class Workbook < BIFFWriter
   # using add_chart(). Read external_charts.txt in the external_charts
   # directory of the distro for a full explanation.
   #
-  def add_chart_ext(filename, name, encoding = 0)
+  def add_chart_ext(filename, name, name_utf16be = false)
     index    = @worksheets.size
     type = 'extarnal'
 
-    name, encoding = check_sheetname(name, encoding)
+    name, name_utf16be = check_sheetname(name, name_utf16be)
 
     init_data = [
       filename,
       name,
       index,
-      encoding,
+      name_utf16be,
       @sinfo
     ]
 
@@ -438,8 +444,10 @@ class Workbook < BIFFWriter
   # Check for valid worksheet names. We check the length, if it contains any
   # invalid characters and if the name is unique in the workbook.
   #
-  def check_sheetname(name, encoding = 0, chart = nil)       #:nodoc:
-    encoding ||= 0
+  def check_sheetname(name, name_utf16be = false, chart = nil)       #:nodoc:
+    # name_utf16be parameter may set 0/1 in v0.6.6 or earlier
+    name_utf16be = false if name_utf16be == 0
+    name_utf16be = true  if name_utf16be == 1
 
     # Increment the Sheet/Chart number used for default sheet names below.
     if chart
@@ -450,7 +458,7 @@ class Workbook < BIFFWriter
 
     # Supply default Sheet/Chart name if none has been defined.
     if name.nil? || name == ""
-      encoding = 0
+      name_utf16be = false
       if chart
         name = "Chart#{@chart_count}"
       else
@@ -459,24 +467,24 @@ class Workbook < BIFFWriter
     end
 
     ruby_19 { name = convert_to_ascii_if_ascii(name) }
-    check_sheetname_length(name, encoding)
-    check_sheetname_even(name) if encoding == 1
-    check_sheetname_valid_chars(name, encoding)
+    check_sheetname_length(name, name_utf16be)
+    check_sheetname_even(name) if name_utf16be
+    check_sheetname_valid_chars(name, name_utf16be)
 
     # Handle utf8 strings
     if is_utf8?(name)
       name = utf8_to_16be(name)
-      encoding = 1
+      name_utf16be = true
     end
 
-    check_sheetname_uniq(name, encoding)
-    [name,  encoding]
+    check_sheetname_uniq(name, name_utf16be)
+    [name,  name_utf16be]
   end
   private :check_sheetname
 
-  def check_sheetname_length(name, encoding)       #:nodoc:
+  def check_sheetname_length(name, name_utf16be)       #:nodoc:
     # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
-    limit           = encoding != 0 ? 62 : 31
+    limit           = name_utf16be ? 62 : 31
     raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
   end
   private :check_sheetname_length
@@ -489,10 +497,10 @@ class Workbook < BIFFWriter
   end
   private :check_sheetname_even
 
-  def check_sheetname_valid_chars(name, encoding)       #:nodoc:
+  def check_sheetname_valid_chars(name, name_utf16be)       #:nodoc:
     # Check that sheetname doesn't contain any invalid characters
     invalid_char    = %r![\[\]:*?/\\]!
-    if encoding != 1 && name =~ invalid_char
+    if !name_utf16be && name =~ invalid_char
       # Check ASCII names
       raise "Invalid character []:*?/\\ in worksheet name: #{name}"
     else
@@ -514,23 +522,24 @@ class Workbook < BIFFWriter
   # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
   # to take the encoding into account.
   #
-  def check_sheetname_uniq(name, encoding)       #:nodoc:
+  def check_sheetname_uniq(name, name_utf16be)       #:nodoc:
     @worksheets.each do |worksheet|
       name_a  = name
-      encd_a  = encoding
+      encd_a  = name_utf16be
       name_b  = worksheet.name
-      encd_b  = worksheet.is_name_utf16be? ? 1 : 0
+      encd_b  = worksheet.is_name_utf16be?
       error   = false
 
-      if    encd_a == 0 and encd_b == 0
+      if    !encd_a and !encd_b
         error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 0 and encd_b == 1
+      elsif !encd_a and encd_b
         name_a = ascii_to_16be(name_a)
         error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 1 and encd_b == 0
+      elsif encd_a and !encd_b
         name_b = ascii_to_16be(name_b)
         error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 1 and encd_b == 1
+      elsif encd_a and encd_b
+        error  = (name_a.downcase == name_b.downcase)
         # TODO : not converted yet.
 
         #  We can't easily do a case insensitive test of the UTF16 names.
