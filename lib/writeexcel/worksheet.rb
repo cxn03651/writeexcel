@@ -71,7 +71,6 @@ class Worksheet < BIFFWriter
     @panes               = []
     @active_pane         = 3
     @frozen_no_split     = 1
-    @hidden              = 0
     @active              = 0
     @tab_color           = 0
 
@@ -330,7 +329,7 @@ class Worksheet < BIFFWriter
   # method will also appear as selected.
   #
   def select
-    @hidden         = 0  # Selected worksheet can't be hidden.
+    @hidden   = false  # Selected worksheet can't be hidden.
     @selected = true
   end
 
@@ -355,7 +354,7 @@ class Worksheet < BIFFWriter
   # The default active worksheet is the first worksheet.
   #
   def activate
-    @hidden      = 0  # Active worksheet can't be hidden.
+    @hidden   = false  # Active worksheet can't be hidden.
     @selected = true
     sinfo[:activesheet] = @index
   end
@@ -380,7 +379,7 @@ class Worksheet < BIFFWriter
   #     worksheet1.hide
   #
   def hide
-    @hidden         = 1
+    @hidden = true
 
     # A hidden worksheet shouldn't be active or selected.
     @selected  = false
@@ -411,7 +410,7 @@ class Worksheet < BIFFWriter
   # worksheet.
   #
   def set_first_sheet
-    @hidden      = 0  # Active worksheet can't be hidden.
+    @hidden = false        # Active worksheet can't be hidden.
     set_firstsheet(@index)
   end
 
@@ -3590,7 +3589,7 @@ class Worksheet < BIFFWriter
     @selected = val
   end
 
-  def hidden  # :nodoc:
+  def hidden?  # :nodoc:
     @hidden
   end
 

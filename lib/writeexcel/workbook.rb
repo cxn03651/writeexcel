@@ -2011,7 +2011,7 @@ class Workbook < BIFFWriter
     sheetname = sheet.name
     offset    = sheet.offset
     type      = sheet.sheet_type
-    hidden    = sheet.hidden
+    hidden    = sheet.hidden? ? 1 : 0
     encoding  = sheet.is_name_utf16be? ? 1 : 0
 
     record    = 0x0085                      # Record identifier
