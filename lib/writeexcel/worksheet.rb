@@ -46,23 +46,13 @@ class Worksheet < BIFFWriter
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
-  def initialize(workbook, name, index, name_utf16be, url_format, parser, tempdir,
-                 date_1904, compatibility, palette, sinfo)                     # :nodoc:
+  def initialize(workbook, name, index, name_utf16be)    # :nodoc:
     super()
 
     @workbook            = workbook
     @name                = name
     @index               = index
     @name_utf16be        = name_utf16be
-    @url_format          = url_format
-    @parser              = parser
-    @tempdir             = tempdir
-
-    @date_1904           = date_1904
-    @compatibility       = compatibility
-    @palette             = palette
-    @sinfo               = sinfo
-    # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
 
     @sheet_type          = 0x0000
     @ext_sheets          = []
@@ -369,7 +359,7 @@ class Worksheet < BIFFWriter
   def activate
     @hidden      = 0  # Active worksheet can't be hidden.
     @selected    = 1
-    @sinfo[:activesheet] = @index
+    sinfo[:activesheet] = @index
   end
 
 
@@ -396,8 +386,8 @@ class Worksheet < BIFFWriter
 
     # A hidden worksheet shouldn't be active or selected.
     @selected    = 0
-    @sinfo[:activesheet] = 0
-    @sinfo[:firstsheet]  = 0
+    sinfo[:activesheet] = 0
+    sinfo[:firstsheet]  = 0
   end
 
 
@@ -607,7 +597,7 @@ class Worksheet < BIFFWriter
     data   = [row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe].pack("vvvvvvvv")
 
     # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
+    if compatibility?
       @row_data[row] = header + data
     else
       append(header, data)
@@ -2597,7 +2587,7 @@ class Worksheet < BIFFWriter
     xl_double.reverse! if @byte_order != 0 && @byte_order != ''
 
     # Store the data or write immediately depending on the compatibility mode.
-    if @compatibility != 0
+    if compatibility?
       tmp = []
       tmp[col] = header + data + xl_double
       @table[row] = tmp
@@ -2687,15 +2677,15 @@ class Worksheet < BIFFWriter
     str_header  = [str.length, encoding].pack('vC')
     str         = str_header + str
 
-    if @sinfo[:str_table][str].nil?
-      @sinfo[:str_table][str] = @sinfo[:str_unique]
-      @sinfo[:str_unique] += 1
+    if sinfo[:str_table][str].nil?
+      sinfo[:str_table][str] = sinfo[:str_unique]
+      sinfo[:str_unique] += 1
     end
 
-    @sinfo[:str_total] += 1
+    sinfo[:str_total] += 1
 
     header = [record, length].pack('vv')
-    data   = [row, col, xf, @sinfo[:str_table][str]].pack('vvvV')
+    data   = [row, col, xf, sinfo[:str_table][str]].pack('vvvV')
 
     # Store the data or write immediately depending on the compatibility mode.
     store_with_compatibility(row, col, header + data)
@@ -2704,7 +2694,7 @@ class Worksheet < BIFFWriter
   end
 
   def store_with_compatibility(row, col, data)  # :nodoc:
-    if @compatibility != 0
+    if compatibility?
       store_to_table(row, col, data)
     else
       append(data)
@@ -3083,7 +3073,7 @@ class Worksheet < BIFFWriter
     # Parse the formula using the parser in Formula.pm
     # nakamura add:  to get byte_stream, set second arg TRUE
     # because ruby doesn't have Perl's "wantarray"
-    formula = @parser.parse_formula(formula, true)
+    formula = parser.parse_formula(formula, true)
 
     store_formula_common(row, col, xf, value, formula)
     0
@@ -3522,12 +3512,24 @@ class Worksheet < BIFFWriter
     @sheet_type
   end
 
+  def compatibility?
+    compatibility = @workbook.compatibility
+    if compatibility == 0 || !compatibility
+      false
+    else
+      true
+    end
+  end
+  protected :compatibility?
+
+  # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
+  def sinfo
+    @workbook.sinfo
+  end
+  protected :sinfo
+
   def images_array  # :nodoc:
     @images_array
-  end
-
-  def date_1904=(val)  # :nodoc:
-    @date_1904 = val
   end
 
   def filter_area  # :nodoc:
@@ -3880,7 +3882,7 @@ class Worksheet < BIFFWriter
     # In order to raise formula errors from the point of view of the calling
     # program we use an eval block and re-raise the error from here.
     #
-    tokens = @parser.parse_formula(formula)
+    tokens = parser.parse_formula(formula)
 
     #       if ($@) {
     #           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
@@ -4059,7 +4061,7 @@ class Worksheet < BIFFWriter
     end
 
     # Change the parameters in the formula cached by the Formula.pm object
-    formula   = @parser.parse_tokens(tokens)
+    formula   = parser.parse_tokens(tokens)
 
     raise "Unrecognised token in formula" unless formula
 
@@ -4276,7 +4278,7 @@ class Worksheet < BIFFWriter
     record = 0x01B8                       # Record identifier
     length = 0x00000                      # Bytes to follow
 
-    xf     = format || @url_format        # The cell format
+    xf     = format || url_format        # The cell format
 
     # Write the visible label but protect against url recursion in write().
     str          = url if str.nil?
@@ -4347,7 +4349,7 @@ class Worksheet < BIFFWriter
     record = 0x01B8                       # Record identifier
     length = 0x00000                      # Bytes to follow
 
-    xf     = format || @url_format        # The cell format
+    xf     = format || url_format        # The cell format
 
     # Strip URL type
     url.sub!(/^internal:/, '')
@@ -4423,7 +4425,7 @@ class Worksheet < BIFFWriter
     record      = 0x01B8                       # Record identifier
     length      = 0x00000                      # Bytes to follow
 
-    xf     = format || @url_format        # The cell format
+    xf     = format || url_format        # The cell format
 
     # Strip URL type and change Unix dir separator to Dos style (if needed)
     #
@@ -4514,7 +4516,7 @@ class Worksheet < BIFFWriter
     record      = 0x01B8                       # Record identifier
     length      = 0x00000                      # Bytes to follow
 
-    xf          = format || @url_format  # The cell format
+    xf          = format || url_format  # The cell format
 
     # Strip URL type and change Unix dir separator to Dos style (if needed)
     #
@@ -4564,6 +4566,11 @@ class Worksheet < BIFFWriter
     error
   end
   private :write_url_external_net
+
+  def url_format
+    @workbook.url_format
+  end
+  protected :url_format
 
   # Determine if the link contains a sheet reference and change some of the
   # parameters accordingly.
@@ -4735,7 +4742,7 @@ class Worksheet < BIFFWriter
 
     # Set the epoch as 1900 or 1904. Defaults to 1900.
     # Special cases for Excel.
-    unless @date_1904
+    unless date_1904?
       return      seconds if date == '1899-12-31' # Excel 1900 epoch
       return      seconds if date == '1900-01-00' # Excel 1900 epoch
       return 60 + seconds if date == '1900-02-29' # Excel false leapday
@@ -4747,8 +4754,8 @@ class Worksheet < BIFFWriter
     # days by normalising the year in relation to the epoch. Thus the year 2000
     # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
     #
-    epoch   = @date_1904 ? 1904 : 1900
-    offset  = @date_1904 ?    4 :    0
+    epoch   = date_1904? ? 1904 : 1900
+    offset  = date_1904? ?    4 :    0
     norm    = 300
     range   = year -epoch
 
@@ -4775,10 +4782,15 @@ class Worksheet < BIFFWriter
     days -= leap                             # Already counted above
 
     # Adjust for Excel erroneously treating 1900 as a leap year.
-    days += 1 if !@date_1904 and days > 59
+    days += 1 if !date_1904? and days > 59
 
     days + seconds
   end
+
+  def date_1904?     # :nodoc:
+    @workbook.date_1904
+  end
+  protected :date_1904?
 
   ###############################################################################
   #
@@ -5777,7 +5789,7 @@ class Worksheet < BIFFWriter
   # change) in the Excel SDK and in the OOo Excel file format doc.
   #
   def store_table   #:nodoc:
-    return if @compatibility == 0
+    return unless compatibility?
 
     # Offset from the DBCELL record back to the first ROW of the 32 row block.
     row_offset = 0
@@ -5888,7 +5900,7 @@ class Worksheet < BIFFWriter
   # This is only used when compatibity_mode() is in operation.
   #
   def store_index   #:nodoc:
-    return if @compatibility == 0
+    return unless compatibility?
 
     indices     = @db_indices
     reserved    = 0x00000000
@@ -6315,15 +6327,15 @@ class Worksheet < BIFFWriter
     str_header  = [num_chars, encoding].pack("vC")
     str         = str_header + str
 
-    unless @sinfo[:str_table][str]
-      @sinfo[:str_table][str] = @sinfo[:str_unique]
-      @sinfo[:str_unique] += 1
+    unless sinfo[:str_table][str]
+      sinfo[:str_table][str] = sinfo[:str_unique]
+      sinfo[:str_unique] += 1
     end
 
-    @sinfo[:str_total] += 1
+    sinfo[:str_total] += 1
 
     header = [record, length].pack("vv")
-    data   = [row, col, xf, @sinfo[:str_table][str]].pack("vvvV")
+    data   = [row, col, xf, sinfo[:str_table][str]].pack("vvvV")
 
     # Store the data or write immediately depending on the compatibility mode.
     store_with_compatibility(row, col, header + data)
@@ -8736,9 +8748,6 @@ class Worksheet < BIFFWriter
     formula = formula.to_s unless formula.respond_to?(:to_str)
     formula.sub!(/^=/, '')
 
-    # Parse the formula using the parser in Formula.pm
-    parser  = @parser
-
     # In order to raise formula errors from the point of view of the calling
     # program we use an eval block and re-raise the error from here.
     #
@@ -8763,6 +8772,11 @@ class Worksheet < BIFFWriter
 
     [formula.length, unused].pack('vv') + formula
   end
+
+  def parser   # :nodoc:
+    @workbook.parser
+  end
+  protected :parser
 
   # Check for a cell reference in A1 notation and substitute row and column
   def row_col_notation(args)   # :nodoc:

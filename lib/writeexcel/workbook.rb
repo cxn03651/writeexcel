@@ -26,6 +26,9 @@ class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
 
+  attr_reader :url_format, :parser, :tempdir, :date_1904
+  attr_reader :compatibility, :palette, :sinfo
+
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
   SheetName = "Sheet"  # :nodoc:
@@ -107,7 +110,6 @@ class Workbook < BIFFWriter
     @mso_size              = 0
 
     @hideobj               = 0
-    @compatibility         = 0
 
     @summary               = ''
     @doc_summary           = ''
@@ -268,24 +270,11 @@ class Workbook < BIFFWriter
 
     name, name_utf16be = check_sheetname(sheetname, name_utf16be)
 
-    # Porters take note, the following scheme of passing references to Workbook
-    # data (in the \$self->{_foo} cases) instead of a reference to the Workbook
-    # itself is a workaround to avoid circular references between Workbook and
-    # Worksheet objects. Feel free to implement this in any way the suits your
-    # language.
-    #
     init_data = [
                   self,
                   name,
                   index,
-                  name_utf16be,
-                  @url_format,
-                  @parser,
-                  @tempdir,
-                  @date_1904,
-                  @compatibility,
-                  nil,    # Palette. Not used yet. See add_chart().
-                  @sinfo,
+                  name_utf16be
     ]
     worksheet = Writeexcel::Worksheet.new(*init_data)
     @worksheets[index] = worksheet      # Store ref for iterator
@@ -388,14 +377,7 @@ class Workbook < BIFFWriter
       self,
       name,
       index,
-      name_utf16be,
-      @url_format,
-      @parser,
-      @tempdir,
-      @date_1904 ? 1 : 0,
-      @compatibility,
-      @palette,
-      @sinfo
+      name_utf16be
     ]
 
     chart = Writeexcel::Chart.factory(type, *init_data)
@@ -638,7 +620,7 @@ class Workbook < BIFFWriter
   # about to be written. This incurs a memory and speed penalty and may not be
   # suitable for very large files.
   #
-  def compatibility_mode(mode = 1)
+  def compatibility_mode(mode = true)
     unless sheets.empty?
       raise "compatibility_mode() must be called before add_worksheet()"
     end

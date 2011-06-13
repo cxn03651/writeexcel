@@ -642,9 +642,6 @@ class Chart < Worksheet
     # Strip the = sign at the beginning of the formula string
     formula = formula.sub(/^=/, '')
 
-    # Parse the formula using the parser in Formula.pm
-    parser = @parser
-
     # In order to raise formula errors from the point of view of the calling
     # program we use an eval block and re-raise the error from here.
     #
@@ -734,9 +731,14 @@ class Chart < Worksheet
     # Adjust colour index from 8-63 (user range) to 0-55 (Excel range).
     index -= 8
 
-    red_green_blue = @palette[index]
+    red_green_blue = palette[index]
     red_green_blue.pack('C*').unpack('V')[0]
   end
+
+  def palette
+    @workbook.palette
+  end
+  protected :palette
 
   ###############################################################################
   #
