@@ -599,7 +599,7 @@ class Chart < Worksheet
     fArabic        = 0                      # 6
     fDspGuts       = 0                      # 7
     fFrozenNoSplit = 0                      # 0 - bit
-    fSelected      = @selected              # 1
+    fSelected      = selected? ? 1 : 0      # 1
     fPaged         = 0                      # 2
     fBreakPreview  = 0                      # 3
 

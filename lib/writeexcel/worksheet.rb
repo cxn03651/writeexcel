@@ -71,7 +71,6 @@ class Worksheet < BIFFWriter
     @panes               = []
     @active_pane         = 3
     @frozen_no_split     = 1
-    @selected            = 0
     @hidden              = 0
     @active              = 0
     @tab_color           = 0
@@ -332,7 +331,7 @@ class Worksheet < BIFFWriter
   #
   def select
     @hidden         = 0  # Selected worksheet can't be hidden.
-    @selected       = 1
+    @selected = true
   end
 
 
@@ -357,7 +356,7 @@ class Worksheet < BIFFWriter
   #
   def activate
     @hidden      = 0  # Active worksheet can't be hidden.
-    @selected    = 1
+    @selected = true
     sinfo[:activesheet] = @index
   end
 
@@ -384,7 +383,7 @@ class Worksheet < BIFFWriter
     @hidden         = 1
 
     # A hidden worksheet shouldn't be active or selected.
-    @selected    = 0
+    @selected  = false
     sinfo[:activesheet] = 0
     sinfo[:firstsheet]  = 0
   end
@@ -3583,7 +3582,7 @@ class Worksheet < BIFFWriter
     @offset = val
   end
 
-  def selected  # :nodoc:
+  def selected?  # :nodoc:
     @selected
   end
 
@@ -4930,7 +4929,7 @@ class Worksheet < BIFFWriter
     fArabic        = @display_arabic   # 6
     fDspGuts       = @outline_on       # 7
     fFrozenNoSplit = @frozen_no_split  # 0 - bit
-    fSelected      = @selected         # 1
+    fSelected      = selected? ? 1 : 0 # 1
     fPaged         = @active           # 2
     fBreakPreview  = 0                # 3
 

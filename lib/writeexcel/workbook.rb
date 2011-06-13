@@ -1119,7 +1119,7 @@ class Workbook < BIFFWriter
 
     # Calculate the number of selected sheet tabs and set the active sheet.
     @worksheets.each do |sheet|
-      @selected    += 1 if sheet.selected != 0
+      @selected    += 1 if sheet.selected?
       sheet.active  = 1 if sheet.index == @sinfo[:activesheet]
     end
 
