@@ -115,7 +115,26 @@ class Workbook < BIFFWriter
 
     @defined_names         = []
 
-    # Add the in-built style formats and the default cell format.
+    setup_built_in_formats(default_formats)
+
+    # Add the default format for hyperlinks
+    @url_format = add_format(:color => 'blue', :underline => 1)
+
+    if file.respond_to?(:to_str) && file != ''
+      @fh_out      = open(file, "wb")
+      @internal_fh = 1
+    else
+      @fh_out = file
+    end
+
+    # Set colour palette.
+    set_palette_xl97
+
+    get_checksum_method
+  end
+
+  # Add the in-built style formats and the default cell format.
+  def setup_built_in_formats(default_formats)   # :nodoc:
     add_format(:type => 1)                        #  0 Normal
     add_format(:type => 1)                        #  1 RowLevel 1
     add_format(:type => 1)                        #  2 RowLevel 2
@@ -137,22 +156,8 @@ class Workbook < BIFFWriter
     add_format(:type => 1, :num_format => 0x2C)   # 18 Currency
     add_format(:type => 1, :num_format => 0x2A)   # 19 Currency[0]
     add_format(:type => 1, :num_format => 0x09)   # 20 Percent
-
-    # Add the default format for hyperlinks
-    @url_format = add_format(:color => 'blue', :underline => 1)
-
-    if file.respond_to?(:to_str) && file != ''
-      @fh_out      = open(file, "wb")
-      @internal_fh = 1
-    else
-      @fh_out = file
-    end
-
-    # Set colour palette.
-    set_palette_xl97
-
-    get_checksum_method
   end
+  private :setup_built_in_formats
 
   ###############################################################################
   #
