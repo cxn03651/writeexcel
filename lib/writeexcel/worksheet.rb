@@ -70,7 +70,6 @@ class Worksheet < BIFFWriter
     @selection           = [0, 0]
     @panes               = []
     @active_pane         = 3
-    @frozen              = 0
     @frozen_no_split     = 1
     @selected            = 0
     @hidden              = 0
@@ -878,10 +877,14 @@ class Worksheet < BIFFWriter
     # Extra flag indicated a split and freeze.
     @frozen_no_split = 0 if !args[4].nil? && args[4] != 0
 
-    @frozen = 1
+    @frozen = true
     @panes  = args
   end
 
+  def frozen?
+    @frozen
+  end
+  protected :frozen?
 
   #
   # :call-seq:
@@ -924,7 +927,7 @@ class Worksheet < BIFFWriter
   # Note:
   #
   def split_panes(*args)
-    @frozen            = 0
+    @frozen            = false
     @frozen_no_split   = 0
     @panes             = args
   end
@@ -4921,7 +4924,7 @@ class Worksheet < BIFFWriter
     fDspFmla       = @display_formulas # 0 - bit
     fDspGrid       = @screen_gridlines # 1
     fDspRwCol      = @display_headers  # 2
-    fFrozen        = @frozen           # 3
+    fFrozen        = frozen? ? 1 : 0   # 3
     fDspZeros      = @display_zeros    # 4
     fDefaultHdr    = 1                 # 5
     fArabic        = @display_arabic   # 6
@@ -5252,7 +5255,7 @@ class Worksheet < BIFFWriter
     length      = 0x000A       # Number of bytes to follow
 
     # Code specific to frozen or thawed panes.
-    if @frozen != 0
+    if frozen?
       # Set default values for $rwTop and $colLeft
       rwtop   = y if rwtop.nil?
       colleft = x if colleft.nil?
