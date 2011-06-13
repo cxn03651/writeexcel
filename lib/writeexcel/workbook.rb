@@ -78,7 +78,6 @@ class Workbook < BIFFWriter
     @biffsize              = 0
     @sheet_count           = 0
     @chart_count           = 0
-    @url_format            = ''
     @codepage              = 0x04E4
     @country               = 1
     @worksheets            = []
