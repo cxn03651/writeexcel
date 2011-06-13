@@ -310,20 +310,6 @@ class Worksheet < BIFFWriter
     super
   end
 
-  ###############################################################################
-  #
-  # compatibility_mode()
-  #
-  # Set the compatibility mode.
-  #
-  # See the explanation in Workbook::compatibility_mode(). This private method
-  # is mainly used for test purposes.
-  #
-  def compatibility_mode(compatibility = 1)   # :nodoc:
-    @compatibility = compatibility
-  end
-  private :compatibility_mode
-
   #
   # The name() method is used to retrieve the name of a worksheet. For example:
   #
