@@ -123,7 +123,6 @@ class Worksheet < BIFFWriter
     @hbreaks             = []
     @vbreaks             = []
 
-    @protect             = 0
     @password            = nil
 
     @col_sizes           = {}
@@ -464,7 +463,7 @@ class Worksheet < BIFFWriter
   # WriteExcel.
   #
   def protect(password = nil)
-    @protect   = 1
+    @protect   = true
     @password  = encode_password(password) unless password.nil?
   end
 
@@ -5704,6 +5703,11 @@ class Worksheet < BIFFWriter
   end
   private :store_protect
 
+  def protect?
+    @protect
+  end
+  protected :protect?
+
   ###############################################################################
   #
   # store_obj_protect()
@@ -5716,7 +5720,7 @@ class Worksheet < BIFFWriter
   private :store_obj_protect
 
   def store_protect_common(type = nil)  # :nodoc:
-    if @protect != 0
+    if protect?
       record = if type == :obj      # Record identifier
         0x0063                      # store_obj_protect
       else
@@ -5724,7 +5728,7 @@ class Worksheet < BIFFWriter
       end
       length = 0x0002               # Bytes to follow
 
-      fLock  = @protect             # Worksheet is protected
+      fLock  = protect? ? 1 : 0     # Worksheet is protected
 
       header = [record, length].pack("vv")
       data   = [fLock].pack("v")
@@ -5743,7 +5747,7 @@ class Worksheet < BIFFWriter
   #
   def store_password   #:nodoc:
     # Exit unless sheet protection and password have been specified
-    return if (@protect == 0 or @password.nil?)
+    return if (!protect? or @password.nil?)
 
     record      = 0x0013               # Record identifier
     length      = 0x0002               # Bytes to follow
