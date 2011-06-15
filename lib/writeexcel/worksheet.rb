@@ -726,7 +726,7 @@ class Worksheet < BIFFWriter
 
     width  ||= 0                    # Ensure width isn't undef.
     hidden ||= 0
-    width = 0 if hidden > 1         # Set width to zero if col is hidden
+    width = 0 if hidden == 1        # Set width to zero if col is hidden
 
     (firstcol .. lastcol).each do |col|
       @col_sizes[col]   = width
