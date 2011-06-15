@@ -3141,4 +3141,21 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/utf8.xls", @file)
   end
+
+  def test_hide_zero
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet
+    worksheet.write(0, 0, 'C2, E2 value is zero, not displayed')
+    worksheet.write(1, 0, 1)
+    worksheet.write(1, 1, 2)
+    worksheet.write(1, 2, 0)
+    worksheet.write(1, 3, 4)
+    worksheet.write(1, 4, 0)
+
+    worksheet.hide_zero
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/hide_zero.xls", @file)
+  end
 end
