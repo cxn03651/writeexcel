@@ -79,16 +79,9 @@ class Worksheet < BIFFWriter
     @display_formulas    = 0
     @display_headers     = 1
     @display_zeros       = 1
-    @display_arabic      = 0
 
     @paper_size          = 0x0
     @orientation         = 0x1
-    @header              = ''
-    @footer              = ''
-    @header_encoding     = 0
-    @footer_encoding     = 0
-    @hcenter             = 0
-    @vcenter             = 0
     @margin_header       = 0.50
     @margin_footer       = 0.50
     @margin_left         = 0.75
@@ -107,7 +100,6 @@ class Worksheet < BIFFWriter
 
     @print_gridlines     = 1
     @screen_gridlines    = 1
-    @print_headers       = 0
 
     @page_order          = 0
     @black_white         = 0
@@ -4914,9 +4906,9 @@ class Worksheet < BIFFWriter
     fDspGrid       = @screen_gridlines # 1
     fDspRwCol      = @display_headers  # 2
     fFrozen        = frozen? ? 1 : 0   # 3
-    fDspZeros      = @display_zeros    # 4
+    fDspZeros      = @display_zeros || 0   # 4
     fDefaultHdr    = 1                 # 5
-    fArabic        = @display_arabic   # 6
+    fArabic        = @display_arabic || 0  # 6
     fDspGuts       = @outline_on       # 7
     fFrozenNoSplit = @frozen_no_split  # 0 - bit
     fSelected      = selected? ? 1 : 0 # 1
@@ -5368,12 +5360,12 @@ class Worksheet < BIFFWriter
   def store_header_footer_common(type)  # :nodoc:
     if type == :header
       record   = 0x0014
-      str      = @header
-      encoding = @header_encoding
+      str      = @header || ''
+      encoding = @header_encoding || 0
     else
       record   = 0x0015
-      str      = @footer
-      encoding = @footer_encoding
+      str      = @footer || ''
+      encoding = @footer_encoding || 0
     end
     cch         = str.bytesize        # Length of header/footer string
 
@@ -5530,13 +5522,13 @@ class Worksheet < BIFFWriter
     case type
     when :hcenter
       record = 0x0083
-      flag   = @hcenter
+      flag   = @hcenter || 0
     when :vcenter
       record = 0x0084
-      flag   = @vcenter
+      flag   = @vcenter || 0
     when :print_headers
       record = 0x002a
-      flag   = @print_headers
+      flag   = @print_headers || 0
     when :print_gridlines
       record = 0x002b
       flag   = @print_gridlines
