@@ -697,38 +697,32 @@ class Worksheet < BIFFWriter
   # should be in the range 0 <= level <= 7.
   #
   def set_column(*args)
-    data = args
-    cell = data[0]
-
     # Check for a cell reference in A1 notation and substitute row and column
-    if cell =~ /^\D/
-      data = substitute_cellref(*args)
-
-      # Returned values row1 and row2 aren't required here. Remove them.
-      data.shift        # row1
-      data.delete_at(1) # row2
+    if args[0] =~ /^\D/
+      row1, firstcol, row2, lastcol, *data = substitute_cellref(*args)
+    else
+      firstcol, lastcol, *data = args
     end
 
-    return if data.size < 3  # Ensure at least firstcol, lastcol and width
-    return if data[0].nil?   # Columns must be defined.
-    return if data[1].nil?
+    # Ensure at least firstcol, lastcol and width
+    return if firstcol.nil? || lastcol.nil? || data.empty?
 
     # Assume second column is the same as first if 0. Avoids KB918419 bug.
-    data[1] = data[0] if data[1] == 0
+    lastcol = firstcol if lastcol == 0
 
     # Ensure 2nd col is larger than first. Also for KB918419 bug.
-    data[0], data[1] = data[1], data[0] if data[0] > data[1]
+    firstcol, lastcol = lastcol, firstcol if firstcol > lastcol
 
     # Limit columns to Excel max of 255.
-    data[0] = ColMax - 1 if data[0] > ColMax - 1
-    data[1] = ColMax - 1 if data[1] > ColMax - 1
+    firstcol = ColMax - 1 if firstcol > ColMax - 1
+    lastcol  = ColMax - 1 if lastcol  > ColMax - 1
 
-    @colinfo.push(data)
+    @colinfo.push([firstcol, lastcol, *data])
 
     # Store the col sizes for use when calculating image vertices taking
     # hidden columns into account. Also store the column formats.
     #
-    firstcol, lastcol, width, format, hidden = data
+    width, format, hidden = data
 
     width  ||= 0                    # Ensure width isn't undef.
     hidden ||= 0
