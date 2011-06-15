@@ -1110,7 +1110,7 @@ class Worksheet < BIFFWriter
   # In Excel this option is found under Tools->Options->View.
   #
   def hide_zero
-    @display_zeros = 1
+    @display_zeros = 0
   end
 
   #
