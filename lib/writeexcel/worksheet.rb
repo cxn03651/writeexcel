@@ -1688,7 +1688,7 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
-  #   repeat_columns(first_col[, last_col])
+  #   repeat_columns(firstcol[, lastcol])
   #   repeat_columns(A1_notation)
   #
   # Set the columns to repeat at the left hand side of each printed page.
@@ -1699,7 +1699,7 @@ class Worksheet < BIFFWriter
   # For large Excel documents it is often desirable to have the first column
   # or columns of the worksheet print out at the left hand side of each page.
   # This can be achieved by using the repeat_columns() method. The parameters
-  # _first_column_ and _last_column_ are zero based. The _last_column_
+  # _firstcolumn_ and _lastcolumn_ are zero based. The _last_column_
   # parameter is optional if you only wish to specify one column. You can also
   # specify the columns using A1 column notation, see the note about
   # "Cell notation".
@@ -1712,15 +1712,13 @@ class Worksheet < BIFFWriter
   def repeat_columns(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0] =~ /^\D/
-      args = substitute_cellref(*args)
-
-      # Returned values row1 and row2 aren't required here. Remove them.
-      args.shift        # row1
-      args.delete_at(1) # row2
+      row1, firstcol, row2, lastcol = substitute_cellref(*args)
+    else
+      firstcol, lastcol = args
     end
 
-    @title_colmin  = args[0]
-    @title_colmax  = args[1] || args[0] # Second col is optional
+    @title_colmin  = firstcol
+    @title_colmax  = lastcol || firstcol # Second col is optional
   end
 
   #
