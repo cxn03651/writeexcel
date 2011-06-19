@@ -3158,4 +3158,18 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/hide_zero.xls", @file)
   end
+
+  def test_set_first_sheet
+    workbook = WriteExcel.new(@file)
+    20.times { workbook.add_worksheet }
+    worksheet21 = workbook.add_worksheet
+    worksheet22 = workbook.add_worksheet
+
+    worksheet21.set_first_sheet
+    worksheet22.activate
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/set_first_sheet.xls", @file)
+  end
 end

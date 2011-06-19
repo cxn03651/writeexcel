@@ -437,7 +437,7 @@ class Worksheet < BIFFWriter
   #
   def set_first_sheet
     @hidden      = 0  # Active worksheet can't be hidden.
-    set_firstsheet(@index)
+    @sinfo[:firstsheet] = @index
   end
 
 
