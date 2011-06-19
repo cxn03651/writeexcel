@@ -78,7 +78,6 @@ class Worksheet < BIFFWriter
     @first_col           = 0
     @display_formulas    = 0
     @display_headers     = 1
-    @display_zeros       = 1
 
     @paper_size          = 0x0
     @orientation         = 0x1
@@ -1073,8 +1072,13 @@ class Worksheet < BIFFWriter
   # In Excel this option is found under Tools->Options->View.
   #
   def hide_zero
-    @display_zeros = 1
+    @hide_zeros = true
   end
+
+  def display_zeros?
+    !@hide_zeros
+  end
+  protected :display_zeros?
 
   #
   # Set the colour of the worksheet colour.
@@ -4906,7 +4910,7 @@ class Worksheet < BIFFWriter
     fDspGrid       = @screen_gridlines # 1
     fDspRwCol      = @display_headers  # 2
     fFrozen        = frozen? ? 1 : 0   # 3
-    fDspZeros      = @display_zeros || 0   # 4
+    fDspZeros      = display_zeros? ? 1 : 0   # 4
     fDefaultHdr    = 1                 # 5
     fArabic        = @display_arabic || 0  # 6
     fDspGuts       = @outline_on       # 7
