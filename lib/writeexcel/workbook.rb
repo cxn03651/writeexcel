@@ -1042,7 +1042,7 @@ class Workbook < BIFFWriter
       create_doc_summary_property_set(property_sets(properties, params))
 
     # Set a flag for when the files is written.
-    add_doc_properties = true
+    @add_doc_properties = true
   end
 
   def property_set(property, params)       #:nodoc:
@@ -3204,11 +3204,7 @@ class Workbook < BIFFWriter
   private
 
   def add_doc_properties
-    @add_doc_properties
-  end
-
-  def add_doc_properties=(val)
-    @add_doc_properties = val
+    @add_doc_properties ||= false
   end
 
   def formats
