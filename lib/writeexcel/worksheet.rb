@@ -575,7 +575,7 @@ class Worksheet < BIFFWriter
     #
     grbit |= level
     grbit |= 0x0010 if collapsed != 0
-    grbit |= 0x0020 if !hidden.nil? && hidden != 0
+    grbit |= 0x0020 if hidden && hidden != 0
     grbit |= 0x0040
     grbit |= 0x0080 unless format.nil?
     grbit |= 0x0100
@@ -716,8 +716,7 @@ class Worksheet < BIFFWriter
     width, format, hidden = data
 
     width  ||= 0                    # Ensure width isn't undef.
-    hidden ||= 0
-    width = 0 if hidden == 1        # Set width to zero if col is hidden
+    width = 0 if hidden && hidden != 0  # Set width to zero if col is hidden
 
     (firstcol .. lastcol).each do |col|
       @col_sizes[col]   = width
@@ -5060,7 +5059,7 @@ class Worksheet < BIFFWriter
 
 
     # Set the options flags. (See set_row() for more details).
-    grbit |= 0x0001 if hidden != 0
+    grbit |= 0x0001 if hidden && hidden != 0
     grbit |= level << 8
     grbit |= 0x1000 if collapsed != 0
 
