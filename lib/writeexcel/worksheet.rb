@@ -574,7 +574,7 @@ class Worksheet < BIFFWriter
     # 0x80: The fGhostDirty flag indicates that the row has been formatted.
     #
     grbit |= level
-    grbit |= 0x0010 if collapsed != 0
+    grbit |= 0x0010 if collapsed && collapsed != 0
     grbit |= 0x0020 if hidden && hidden != 0
     grbit |= 0x0040
     grbit |= 0x0080 unless format.nil?
@@ -5061,7 +5061,7 @@ class Worksheet < BIFFWriter
     # Set the options flags. (See set_row() for more details).
     grbit |= 0x0001 if hidden && hidden != 0
     grbit |= level << 8
-    grbit |= 0x1000 if collapsed != 0
+    grbit |= 0x1000 if collapsed && collapsed != 0
 
     header = [record, length].pack("vv")
     data   = [firstcol, lastcol, coldx,
