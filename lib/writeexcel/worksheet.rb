@@ -462,7 +462,7 @@ class Worksheet < BIFFWriter
   #          row       : Row Number
   #          height    : Format object
   #          format    : Format object
-  #          hidden    : Hidden flag
+  #          hidden    : Hidden boolean flag
   #          level     : Outline level
   #          collapsed : Collapsed row
   #
@@ -492,11 +492,11 @@ class Worksheet < BIFFWriter
   # before any calls to write(). Calling it afterwards will overwrite any format
   # that was previously specified.
   #
-  # The hidden parameter should be set to 1 if you wish to hide a row. This can
+  # The hidden parameter should be set to true if you wish to hide a row. This can
   # be used, for example, to hide intermediary steps in a complicated calculation:
   #
-  #     worksheet.set_row(0, 20,    format, 1)
-  #     worksheet.set_row(1, undef, nil,    1)
+  #     worksheet.set_row(0, 20,    format, true)
+  #     worksheet.set_row(1, undef, nil,    true)
   #
   # The level parameter is used to set the outline level of the row. Outlines
   # are described in "OUTLINES AND GROUPING IN EXCEL". Adjacent rows with the
@@ -505,19 +505,19 @@ class Worksheet < BIFFWriter
   # The following example sets an outline level of 1 for rows 1 and 2
   # (zero-indexed):
   #
-  #     worksheet.set_row(1, nil, nil, 0, 1)
-  #     worksheet.set_row(2, nil, nil, 0, 1)
+  #     worksheet.set_row(1, nil, nil, false, 1)
+  #     worksheet.set_row(2, nil, nil, false, 1)
   #
   # The hidden parameter can also be used to hide collapsed outlined rows when
   # used in conjunction with the level parameter.
   #
-  #     worksheet.set_row(1, nil, nil, 1, 1)
-  #     worksheet.set_row(2, nil, nil, 1, 1)
+  #     worksheet.set_row(1, nil, nil, true, 1)
+  #     worksheet.set_row(2, nil, nil, true, 1)
   #
   # For collapsed outlines you should also indicate which row has the
   # collapsed + symbol using the optional collapsed parameter.
   #
-  #     worksheet.set_row(3, nil, nil, 0, 0, 1)
+  #     worksheet.set_row(3, nil, nil, false, 0, true)
   #
   # For a more complete example see the outline.pl and outline_collapsed.rb
   # programs in the examples directory of the distro.
@@ -525,7 +525,7 @@ class Worksheet < BIFFWriter
   # Excel allows up to 7 outline levels. Therefore the level parameter should
   # be in the range 0 <= level <= 7.
   #
-  def set_row(row, height = nil, format = nil, hidden = 0, level = 0, collapsed = 0)
+  def set_row(row, height = nil, format = nil, hidden = false, level = 0, collapsed = false)
     record      = 0x0208               # Record identifier
     length      = 0x0010               # Number of bytes to follow
 
@@ -655,12 +655,12 @@ class Worksheet < BIFFWriter
   #     worksheet.write('A1', 'Hello')              # Defaults to format1
   #     worksheet.write('A2', 'Hello')              # Defaults to format2
   #
-  # The _hidden_ parameter should be set to 1 if you wish to hide a column.
+  # The _hidden_ parameter should be set to true if you wish to hide a column.
   # This can be used, for example, to hide intermediary steps in a complicated
   # calculation:
   #
-  #     worksheet.set_column('D:D', 20,  format, 1)
-  #     worksheet.set_column('E:E', nil, nil,    1)
+  #     worksheet.set_column('D:D', 20,  format, true)
+  #     worksheet.set_column('E:E', nil, nil,    true)
   #
   # The _level_ parameter is used to set the outline level of the column.
   # Outlines are described in "OUTLINES AND GROUPING IN EXCEL". Adjacent
@@ -669,17 +669,17 @@ class Worksheet < BIFFWriter
   #
   # The following example sets an outline level of 1 for columns B to G:
   #
-  #     worksheet.set_column('B:G', nil, nil, 0, 1)
+  #     worksheet.set_column('B:G', nil, nil, true, 1)
   #
   # The _hidden_ parameter can also be used to hide collapsed outlined columns
   # when used in conjunction with the _level_ parameter.
   #
-  #     worksheet.set_column('B:G', nil, nil, 1, 1)
+  #     worksheet.set_column('B:G', nil, nil, true, 1)
   #
   # For collapsed outlines you should also indicate which row has the
   # collapsed + symbol using the optional _collapsed_ parameter.
   #
-  #     worksheet.set_column('H:H', nil, nil, 0, 0, 1)
+  #     worksheet.set_column('H:H', nil, nil, true, 0, true)
   #
   # For a more complete example see the outline.pl and outline_collapsed.rb
   # programs in the examples directory of the distro.
@@ -5026,7 +5026,7 @@ class Worksheet < BIFFWriter
   # Note: The SDK says the record length is 0x0B but Excel writes a 0x0C
   # length record.
   #
-  def store_colinfo(firstcol=0, lastcol=0, width=8.43, format=nil, hidden=0, level=0, collapsed=0)  #:nodoc:
+  def store_colinfo(firstcol=0, lastcol=0, width=8.43, format=nil, hidden=false, level=0, collapsed=false)  #:nodoc:
     record   = 0x007D          # Record identifier
     length   = 0x000B          # Number of bytes to follow
 
