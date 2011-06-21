@@ -19,7 +19,7 @@ class TC_27_autofilter < Test::Unit::TestCase
     @tests.each do |test|
       expression = test[0]
       expected   = test[1]
-      result     = @worksheet.extract_filter_tokens(expression)
+      result     = @worksheet.__send__("extract_filter_tokens", expression)
 
       testname   = expression || 'none'
 

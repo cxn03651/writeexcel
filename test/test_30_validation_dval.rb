@@ -34,7 +34,7 @@ class TC_validation_dval < Test::Unit::TestCase
                    00 00 01 00 00 00
                  ).join(' ')
 
-    result     = unpack_record(@worksheet.store_dval(obj_id, dv_count))
+    result     = unpack_record(@worksheet.__send__("store_dval", obj_id, dv_count))
     assert_equal(target, result, caption)
   end
 
@@ -48,7 +48,7 @@ class TC_validation_dval < Test::Unit::TestCase
                    FF FF 01 00 00 00
                  ).join(' ')
 
-    result     = unpack_record(@worksheet.store_dval(obj_id, dv_count))
+    result     = unpack_record(@worksheet.__send__("store_dval", obj_id, dv_count))
     assert_equal(target, result, caption)
   end
 
@@ -62,7 +62,7 @@ class TC_validation_dval < Test::Unit::TestCase
                    00 00 02 00 00 00
                  ).join(' ')
 
-    result     = unpack_record(@worksheet.store_dval(obj_id, dv_count))
+    result     = unpack_record(@worksheet.__send__("store_dval", obj_id, dv_count))
     assert_equal(target, result, caption)
   end
 

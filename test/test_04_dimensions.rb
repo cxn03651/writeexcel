@@ -29,7 +29,7 @@ class TC_dimensions < Test::Unit::TestCase
   end
 
   def test_no_worksheet_cell_data
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -43,7 +43,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_data_in_cell_0_0
     @worksheet.write(0, 0, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -57,7 +57,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_data_in_cell_0_255
     @worksheet.write(0, 255, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -71,7 +71,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_data_in_cell_65535_0
     @worksheet.write(65535, 0, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -85,7 +85,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_data_in_cell_65535_255
     @worksheet.write(65535, 255, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -99,7 +99,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_set_row_for_row_4
     @worksheet.set_row(4, 20)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -115,7 +115,7 @@ class TC_dimensions < Test::Unit::TestCase
     @worksheet.set_row(4, 20)
     @worksheet.set_row(5, 20)
     @worksheet.set_row(6, 20)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -129,7 +129,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_set_column_for_row_4
     @worksheet.set_column(4, 4, 20)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -144,7 +144,7 @@ class TC_dimensions < Test::Unit::TestCase
   def test_data_in_cell_0_0_and_set_row_for_row_4
     @worksheet.write(0, 0, 'Test')
     @worksheet.set_row(4, 20)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -159,7 +159,7 @@ class TC_dimensions < Test::Unit::TestCase
   def test_data_in_cell_0_0_and_set_row_for_row_4_reverse_order
     @worksheet.set_row(4, 20)
     @worksheet.write(0, 0, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -174,7 +174,7 @@ class TC_dimensions < Test::Unit::TestCase
   def test_data_in_cell_5_3_and_set_row_for_row_4
     @worksheet.write(5, 3, 'Test')
     @worksheet.set_row(4, 20)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -188,7 +188,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_comment_in_cell_5_3
     @worksheet.write_comment(5, 3, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -202,7 +202,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_nil_value_for_row
     error = @worksheet.write_string(nil, 1, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -218,7 +218,7 @@ class TC_dimensions < Test::Unit::TestCase
   def test_data_in_cell_5_3_and_10_1
     @worksheet.write( 5, 3, 'Test')
     @worksheet.write(10, 1, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -233,7 +233,7 @@ class TC_dimensions < Test::Unit::TestCase
   def test_data_in_cell_5_3_and_10_5
     @worksheet.write( 5, 3, 'Test')
     @worksheet.write(10, 5, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -247,7 +247,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_string
     @worksheet.write_string(5, 3, 'Test')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -261,7 +261,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_number
     @worksheet.write_number(5, 3, 5)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -275,7 +275,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_url
     @worksheet.write_url(5, 3, 'http://www.ruby.com')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -289,7 +289,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_formula
     @worksheet.write_formula(5, 3, ' 1 + 2')
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -303,7 +303,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_blank
     @worksheet.write_string(5, 3, @format)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -317,7 +317,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_blank_no_format
     @worksheet.write_string(5, 3)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -331,7 +331,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_utf16be_string
     @worksheet.write_utf16be_string(5, 3, @smiley)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -345,7 +345,7 @@ class TC_dimensions < Test::Unit::TestCase
 
   def test_write_utf16le_string
     @worksheet.write_utf16le_string(5, 3, @smiley)
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -361,7 +361,7 @@ class TC_dimensions < Test::Unit::TestCase
     formula = @worksheet.store_formula('=A1 * 3 + 50')
     @worksheet.repeat_formula(5, 3, formula, @format, 'A1', 'A2')
 
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)
@@ -377,7 +377,7 @@ class TC_dimensions < Test::Unit::TestCase
     formula = @worksheet.store_formula('=A1 * 3 + 50')
     @worksheet.merge_range('C6:E8', 'Test', @format)
 
-    data     = @worksheet.store_dimensions
+    data     = @worksheet.__send__("store_dimensions")
 
     vals     = data.unpack('x4 VVvv')
     alist    = @dims.zip(vals)

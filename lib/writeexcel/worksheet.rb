@@ -2007,7 +2007,7 @@ class Worksheet < BIFFWriter
 
     tokens
   end
-#  private :extract_filter_tokens
+  private :extract_filter_tokens
 
   ###############################################################################
   #
@@ -2041,7 +2041,7 @@ class Worksheet < BIFFWriter
       parse_filter_tokens(expression, tokens)
     end
   end
-#  private :parse_filter_expression
+  private :parse_filter_expression
 
   ###############################################################################
   #
@@ -4882,7 +4882,7 @@ class Worksheet < BIFFWriter
 
     prepend(header, data)
   end
-#  private :store_dimensions
+  private :store_dimensions
 
   ###############################################################################
   #
@@ -5069,7 +5069,7 @@ class Worksheet < BIFFWriter
 
     prepend(header, data)
   end
-#  private :store_colinfo
+  private :store_colinfo
 
   ###############################################################################
   #
@@ -5089,7 +5089,7 @@ class Worksheet < BIFFWriter
 
     prepend(header)
   end
-#  private :store_filtermode
+  private :store_filtermode
 
   ###############################################################################
   #
@@ -5152,7 +5152,7 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-#  private :store_selection
+  private :store_selection
 
   ###############################################################################
   #
@@ -6488,7 +6488,7 @@ class Worksheet < BIFFWriter
 
     prepend(header, data)
   end
-#  private :store_autofilter
+  private :store_autofilter
 
   ###############################################################################
   #
@@ -7067,7 +7067,7 @@ class Worksheet < BIFFWriter
     data        = ''
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_dg_container
+  private :store_mso_dg_container
 
   ###############################################################################
   #
@@ -7083,7 +7083,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_dg
+  private :store_mso_dg
 
   ###############################################################################
   #
@@ -7099,7 +7099,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_spgr_container
+  private :store_mso_spgr_container
 
   ###############################################################################
   #
@@ -7115,7 +7115,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_sp_container
+  private :store_mso_sp_container
 
   ###############################################################################
   #
@@ -7132,7 +7132,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_spgr
+  private :store_mso_spgr
 
   ###############################################################################
   #
@@ -7149,7 +7149,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_sp
+  private :store_mso_sp
 
   ###############################################################################
   #
@@ -7182,7 +7182,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_opt_comment
+  private :store_mso_opt_comment
 
   ###############################################################################
   #
@@ -7206,7 +7206,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_opt_image
+  private :store_mso_opt_image
 
   ###############################################################################
   #
@@ -7240,7 +7240,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_opt_chart
+  private :store_mso_opt_chart
 
   ###############################################################################
   #
@@ -7265,7 +7265,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_opt_filter
+  private :store_mso_opt_filter
 
   def store_mso_protection_and_text  # :nodoc:
     [0x007F].pack('v')       +        # Protection -> fLockAgainstGrouping
@@ -7304,7 +7304,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_client_anchor
+  private :store_mso_client_anchor
 
   ###############################################################################
   #
@@ -7321,7 +7321,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_client_data
+  private :store_mso_client_data
 
   ###############################################################################
   #
@@ -7366,7 +7366,7 @@ class Worksheet < BIFFWriter
     append(header, data)
 
   end
-#  private :store_obj_comment
+  private :store_obj_comment
 
   ###############################################################################
   #
@@ -7417,7 +7417,7 @@ class Worksheet < BIFFWriter
     append(header, data)
 
   end
-#  private :store_obj_image
+  private :store_obj_image
 
   ###############################################################################
   #
@@ -7456,7 +7456,7 @@ class Worksheet < BIFFWriter
     append(header, data)
 
   end
-#  private :store_obj_chart
+  private :store_obj_chart
 
   ###############################################################################
   #
@@ -7515,7 +7515,7 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-#  private :store_obj_filter
+  private :store_obj_filter
 
   ###############################################################################
   #
@@ -7532,7 +7532,7 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-#  private :store_mso_drawing_text_box
+  private :store_mso_drawing_text_box
 
   ###############################################################################
   #
@@ -7549,7 +7549,7 @@ class Worksheet < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-#  private :store_mso_client_text_box
+  private :store_mso_client_text_box
 
   ###############################################################################
   #
@@ -7574,7 +7574,7 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-#  private :store_txo
+  private :store_txo
 
   ###############################################################################
   #
@@ -7617,7 +7617,7 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-#  private :store_txo_continue_1
+  private :store_txo_continue_1
 
   ###############################################################################
   #
@@ -7643,7 +7643,7 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-#  private :store_txo_continue_2
+  private :store_txo_continue_2
 
   ###############################################################################
   #
@@ -7691,7 +7691,7 @@ class Worksheet < BIFFWriter
 
     append(header, data, author)
   end
-#  private :store_note
+  private :store_note
 
   ###############################################################################
   #
@@ -7849,7 +7849,7 @@ class Worksheet < BIFFWriter
       vertices
     ]
   end
-#  private :comment_params
+  private :comment_params
 
   #
   # DATA VALIDATION
@@ -8585,7 +8585,7 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-#  private :store_dval
+  private :store_dval
 
   ###############################################################################
   #
@@ -8708,7 +8708,7 @@ class Worksheet < BIFFWriter
     ruby_18 { [str_length, encoding].pack('vC') + string } ||
     ruby_19 { [str_length, encoding].pack('vC') + string.force_encoding('BINARY') }
   end
-#  private :pack_dv_string
+  private :pack_dv_string
 
   ###############################################################################
   #
