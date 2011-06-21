@@ -271,7 +271,7 @@ class Worksheet < BIFFWriter
     store_window2
     store_page_view
     store_zoom
-    store_panes(*@panes) if !@panes.nil? && !@panes.empty?
+    store_panes(*@panes) if @panes && !@panes.empty?
     store_selection(*@selection)
     store_validation_count
     store_validations
@@ -537,7 +537,7 @@ class Worksheet < BIFFWriter
     grbit       = 0x0000               # Option flags
     # ixfe;                            # XF index
 
-    return if row.nil?
+    return unless row
 
     # Check that row and col are valid and store max and min values
     return -2 if check_dimensions(row, 0, 0, 1) != 0
@@ -696,7 +696,7 @@ class Worksheet < BIFFWriter
     end
 
     # Ensure at least firstcol, lastcol and width
-    return if firstcol.nil? || lastcol.nil? || data.empty?
+    return unless firstcol && lastcol && !data.empty?
 
     # Assume second column is the same as first if 0. Avoids KB918419 bug.
     lastcol = firstcol if lastcol == 0
@@ -856,7 +856,7 @@ class Worksheet < BIFFWriter
     args = row_col_notation(args)
 
     # Extra flag indicated a split and freeze.
-    @frozen_no_split = 0 if !args[4].nil? && args[4] != 0
+    @frozen_no_split = 0 if args[4] && args[4] != 0
 
     @frozen = true
     @panes  = args
@@ -1748,7 +1748,7 @@ class Worksheet < BIFFWriter
   # set_header() section.
   #
   def print_row_col_headers(option = nil)
-    if option.nil?
+    unless option
       @print_headers = 1
     else
       @print_headers = option
@@ -2023,7 +2023,7 @@ class Worksheet < BIFFWriter
   #
   #
   def show_comments(val = nil)
-    @comments_visible = val.nil? ? 1 : val
+    @comments_visible = val ? val : 1
   end
 
   ###############################################################################
@@ -2457,7 +2457,7 @@ class Worksheet < BIFFWriter
     str_header  = [str.length, encoding].pack('vC')
     str         = str_header + str
 
-    if sinfo[:str_table][str].nil?
+    unless sinfo[:str_table][str]
       sinfo[:str_table][str] = sinfo[:str_unique]
       sinfo[:str_unique] += 1
     end
@@ -2613,7 +2613,7 @@ class Worksheet < BIFFWriter
     return -1 if args.size < 2
 
     # Don't write a blank cell unless it has a format
-    return 0 if args[2].nil?
+    return 0 unless args[2]
 
     record  = 0x0201                        # Record identifier
     length  = 0x0006                        # Number of bytes to follow
@@ -4432,7 +4432,7 @@ class Worksheet < BIFFWriter
 
     # Make the last row/col the same as the first if not defined.
     row1, col1, row2, col2 = args
-    if row2.nil?
+    unless row2
       row2 = row1
       col2 = col1
     end
@@ -4589,7 +4589,7 @@ class Worksheet < BIFFWriter
     if param[:validate] == 4 || param[:validate] == 5
       if param[:value] =~ /T/
         date_time = convert_date_time(param[:value])
-        if date_time.nil?
+        unless date_time
           #                   carp "Invalid date/time value '$param->{value}' " .
           #                        "in data_validation()";
           return -3
@@ -4597,10 +4597,10 @@ class Worksheet < BIFFWriter
           param[:value] = date_time
         end
       end
-      if !param[:maximum].nil? && param[:maximum] =~ /T/
+      if param[:maximum] && param[:maximum] =~ /T/
         date_time = convert_date_time(param[:maximum])
 
-        if date_time.nil?
+        unless date_time
           #                   carp "Invalid date/time value '$param->{maximum}' " .
           #                        "in data_validation()";
           return -3
@@ -4611,10 +4611,10 @@ class Worksheet < BIFFWriter
     end
 
     # Set some defaults if they haven't been defined by the user.
-    param[:ignore_blank]  = 1 if param[:ignore_blank].nil?
-    param[:dropdown]      = 1 if param[:dropdown].nil?
-    param[:show_input]    = 1 if param[:show_input].nil?
-    param[:show_error]    = 1 if param[:show_error].nil?
+    param[:ignore_blank]  = 1 unless param[:ignore_blank]
+    param[:dropdown]      = 1 unless param[:dropdown]
+    param[:show_input]    = 1 unless param[:show_input]
+    param[:show_error]    = 1 unless param[:show_error]
 
     # These are the cells to which the validation is applied.
     param[:cells] = [[row1, col1, row2, col2]]
@@ -5279,7 +5279,7 @@ class Worksheet < BIFFWriter
     xf     = format || url_format        # The cell format
 
     # Write the visible label but protect against url recursion in write().
-    str          = url if str.nil?
+    str          = url unless str
     @writing_url = 1
     error        = write(row1, col1, str, xf)
     @writing_url = 0
@@ -5352,7 +5352,7 @@ class Worksheet < BIFFWriter
     url.sub!(/^internal:/, '')
 
     # Write the visible label but protect against url recursion in write().
-    str          = url if str.nil?
+    str          = url unless str
     @writing_url = 1
     error        = write(row1, col1, str, xf)
     @writing_url = 0
@@ -5430,7 +5430,7 @@ class Worksheet < BIFFWriter
 
 
     # Write the visible label but protect against url recursion in write().
-    str = url.sub!(/\#/, ' - ') if str.nil?
+    str = url.sub!(/\#/, ' - ') unless str
     @writing_url = 1
     error        = write(row1, col1, str, xf)
     @writing_url = 0
@@ -5519,7 +5519,7 @@ class Worksheet < BIFFWriter
     url.gsub!(%r|/|, '\\')
 
     # Write the visible label but protect against url recursion in write().
-    str = url.sub!(/\#/, ' - ') if str.nil?
+    str = url.sub!(/\#/, ' - ') unless str
     @writing_url = 1
     error        = write(row1, col1, str, xf)
     @writing_url = 0
@@ -5746,30 +5746,20 @@ class Worksheet < BIFFWriter
   # The ignore flags are use by set_row() and data_validate.
   #
   def check_dimensions(row, col, ignore_row = 0, ignore_col = 0)       #:nodoc:
-    return -2 if row.nil?
+    return -2 unless row
     return -2 if row >= @xls_rowmax
 
-    return -2 if col.nil?
+    return -2 unless col
     return -2 if col >= @xls_colmax
 
     if ignore_row == 0
-      if @dim_rowmin.nil? or row < @dim_rowmin
-        @dim_rowmin = row
-      end
-
-      if @dim_rowmax.nil? or row > @dim_rowmax
-        @dim_rowmax = row
-      end
+      @dim_rowmin = row if !@dim_rowmin || (row < @dim_rowmin)
+      @dim_rowmax = row if !@dim_rowmax || (row > @dim_rowmax)
     end
 
     if ignore_col == 0
-      if @dim_colmin.nil? or col < @dim_colmin
-        @dim_colmin = col
-      end
-
-      if @dim_colmax.nil? or col > @dim_colmax
-        @dim_colmax =col
-      end
+      @dim_colmin = col if !@dim_colmin || (col < @dim_colmin)
+      @dim_colmax = col if !@dim_colmax || (col > @dim_colmax)
     end
 
     0
@@ -5792,10 +5782,10 @@ class Worksheet < BIFFWriter
     length    = 0x000E         # Number of bytes to follow
     reserved  = 0x0000         # Reserved by Excel
 
-    row_min = @dim_rowmin.nil? ? 0 : @dim_rowmin
-    row_max = @dim_rowmax.nil? ? 0 : @dim_rowmax + 1
-    col_min = @dim_colmin.nil? ? 0 : @dim_colmin
-    col_max = @dim_colmax.nil? ? 0 : @dim_colmax + 1
+    row_min = @dim_rowmin ? @dim_rowmin     : 0
+    row_max = @dim_rowmax ? @dim_rowmax + 1 : 0
+    col_min = @dim_colmin ? @dim_colmin     : 0
+    col_max = @dim_colmax ? @dim_colmax + 1 : 0
 
     # Set member data to the new max/min value for use by store_table().
     @dim_rowmin = row_min
@@ -5968,7 +5958,7 @@ class Worksheet < BIFFWriter
     reserved = 0x00                 # Reserved
 
     # Check for a format object
-    if !format.nil? && format.respond_to?(:xf_index)
+    if format && format.respond_to?(:xf_index)
       ixfe = format.xf_index
     else
       ixfe = 0x0F
@@ -6156,12 +6146,12 @@ class Worksheet < BIFFWriter
     # Code specific to frozen or thawed panes.
     if frozen?
       # Set default values for $rwTop and $colLeft
-      rwtop   = y if rwtop.nil?
-      colleft = x if colleft.nil?
+      rwtop   = y unless rwtop
+      colleft = x unless colleft
     else
       # Set default values for $rwTop and $colLeft
-      rwtop   = 0  if rwtop.nil?
-      colleft = 0  if colleft.nil?
+      rwtop   = 0  unless rwtop
+      colleft = 0  unless colleft
 
       # Convert Excel's row and column units to the internal units.
       # The default row height is 12.75
@@ -6176,7 +6166,7 @@ class Worksheet < BIFFWriter
     # Determine which pane should be active. There is also the undocumented
     # option to override this should it be necessary: may be removed later.
     #
-    if pnnAct.nil?
+    unless pnnAct
       pnnAct = 0 if (x != 0 && y != 0) # Bottom right
       pnnAct = 1 if (x != 0 && y == 0) # Top right
       pnnAct = 2 if (x == 0 && y != 0) # Bottom left
@@ -6624,7 +6614,7 @@ class Worksheet < BIFFWriter
   #
   def store_password   #:nodoc:
     # Exit unless sheet protection and password have been specified
-    return if (!protect? or @password.nil?)
+    return  unless protect? && @password
 
     record      = 0x0013               # Record identifier
     length      = 0x0002               # Bytes to follow
@@ -7051,12 +7041,12 @@ class Worksheet < BIFFWriter
     string_2    = ''
 
     # Excel used an optimisation in the case of a simple equality.
-    optimised_1 = 1 if                      operator_1 == 2
-    optimised_2 = 1 if !operator_2.nil? and operator_2 == 2
+    optimised_1 = 1 if               operator_1 == 2
+    optimised_2 = 1 if operator_2 && operator_2 == 2
 
     # Convert non-simple equalities back to type 2. See  parse_filter_tokens().
-    operator_1 = 2 if                      operator_1 == 22
-    operator_2 = 2 if !operator_2.nil? and operator_2 == 22
+    operator_1 = 2 if               operator_1 == 22
+    operator_2 = 2 if operator_2 && operator_2 == 22
 
     # Handle a "Top" style expression.
     if operator_1 >= 30
@@ -7095,10 +7085,10 @@ class Worksheet < BIFFWriter
     doper_1, string_1 = pack_doper(operator_1, token_1)
     doper_2, string_2 = pack_doper(operator_2, token_2)
 
-    doper_1  = '' if doper_1.nil?
-    doper_2  = '' if doper_2.nil?
-    string_1 = '' if string_1.nil?
-    string_2 = '' if string_2.nil?
+    doper_1  = '' unless doper_1
+    doper_2  = '' unless doper_2
+    string_1 = '' unless string_1
+    string_2 = '' unless string_2
 
     data = [index].pack('v')
     data += [grbit].pack('v')
@@ -7122,7 +7112,7 @@ class Worksheet < BIFFWriter
     string      = ''
 
     # Return default doper for non-defined filters.
-    if operator.nil?
+    unless operator
       return pack_unused_doper, string
     end
 
@@ -7505,7 +7495,7 @@ class Worksheet < BIFFWriter
       vertices = [ col1 + i,    0, row1   , 0,
       col1 +i +1, 0, row1 + 1, 0]
 
-      if i == 0 and !num_objects.nil?
+      if i == 0 && num_objects
         # Write the parent MSODRAWIING record.
         dg_length   = 168 + 96 * (num_filters -1)
         spgr_length = 144 + 96 * (num_filters -1)
@@ -7731,7 +7721,7 @@ class Worksheet < BIFFWriter
     # Use the visible flag if set by the user or else use the worksheet value.
     # Note that the value used is the opposite of store_note().
     #
-    if !visible.nil?
+    if visible
       visible = visible != 0           ? 0x0000 : 0x0002
     else
       visible = @comments_visible != 0 ? 0x0000 : 0x0002
@@ -8210,13 +8200,13 @@ class Worksheet < BIFFWriter
     record      = 0x001C               # Record identifier
     length      = 0x000C               # Bytes to follow
 
-    author     = @comments_author     if author.nil?
-    author_enc = @comments_author_enc if author_enc.nil?
+    author     = @comments_author     unless author
+    author_enc = @comments_author_enc unless author_enc
 
     # Use the visible flag if set by the user or else use the worksheet value.
     # The flag is also set in store_mso_opt_comment() but with the opposite
     # value.
-    if !visible.nil?
+    if visible
       visible = visible != 0           ? 0x0002 : 0x0000
     else
       visible = @comments_visible != 0 ? 0x0002 : 0x0000
@@ -8224,7 +8214,7 @@ class Worksheet < BIFFWriter
 
     # Get the number of chars in the author string (not bytes).
     num_chars  = author.bytesize
-    num_chars  = num_chars / 2 if author_enc != 0 && !author_enc.nil?
+    num_chars  = num_chars / 2 if author_enc != 0 && author_enc
 
     # Null terminate the author string.
     author =
@@ -8275,8 +8265,8 @@ class Worksheet < BIFFWriter
     params.update(options)
 
     # Ensure that a width and height have been set.
-    params[:width]  = default_width  if params[:width].nil? || params[:width] == 0
-    params[:height] = default_height if params[:height].nil? || params[:height] == 0
+    params[:width]  = default_width  unless params[:width] && params[:width] != 0
+    params[:height] = default_height unless params[:height] && params[:height] != 0
 
     # Check that utf16 strings have an even number of bytes.
     if params[:encoding] != 0
@@ -8331,7 +8321,7 @@ class Worksheet < BIFFWriter
     # generally fixed in relation to the parent cell. However there are
     # some edge cases for cells at the, er, edges.
     #
-    if params[:start_row].nil?
+    unless params[:start_row]
       case row
       when 0     then params[:start_row] = 0
       when 65533 then params[:start_row] = 65529
@@ -8341,7 +8331,7 @@ class Worksheet < BIFFWriter
       end
     end
 
-    if params[:y_offset].nil?
+    unless params[:y_offset]
       case row
       when 0     then params[:y_offset]  = 2
       when 65533 then params[:y_offset]  = 4
@@ -8351,7 +8341,7 @@ class Worksheet < BIFFWriter
       end
     end
 
-    if params[:start_col].nil?
+    unless params[:start_col]
       case col
       when 253   then params[:start_col] = 250
       when 254   then params[:start_col] = 251
@@ -8360,7 +8350,7 @@ class Worksheet < BIFFWriter
       end
     end
 
-    if params[:x_offset].nil?
+    unless params[:x_offset]
       case col
       when 253   then params[:x_offset] = 49
       when 254   then params[:x_offset] = 49
@@ -8564,7 +8554,7 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # The default empty string is "\0".
-    if string.nil? || string == ''
+    unless string && string != ''
       string =
         ruby_18 { "\0" } || ruby_19 { "\0".encode('BINARY') }
     end
@@ -8605,9 +8595,7 @@ class Worksheet < BIFFWriter
     tokens      = []
 
     # Return a default structure for unused formulas.
-    if formula.nil? || formula == ''
-      return [0, unused].pack('vv')
-    end
+    return [0, unused].pack('vv') unless formula && formula != ''
 
     # Pack a list array ref as a null separated string.
     if formula.respond_to?(:to_ary)
