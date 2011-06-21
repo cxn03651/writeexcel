@@ -865,7 +865,7 @@ class Worksheet < BIFFWriter
   def frozen?
     @frozen
   end
-  protected :frozen?
+  private :frozen?
 
   #
   # :call-seq:
@@ -1077,7 +1077,7 @@ class Worksheet < BIFFWriter
   def display_zeros?
     !@hide_zeros
   end
-  protected :display_zeros?
+  private :display_zeros?
 
   #
   # Set the colour of the worksheet colour.
@@ -3507,13 +3507,13 @@ class Worksheet < BIFFWriter
       true
     end
   end
-  protected :compatibility?
+  private :compatibility?
 
   # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
   def sinfo
     @workbook.sinfo
   end
-  protected :sinfo
+  private :sinfo
 
   def images_array  # :nodoc:
     @images_array
@@ -4557,7 +4557,7 @@ class Worksheet < BIFFWriter
   def url_format
     @workbook.url_format
   end
-  protected :url_format
+  private :url_format
 
   # Determine if the link contains a sheet reference and change some of the
   # parameters accordingly.
@@ -4777,7 +4777,7 @@ class Worksheet < BIFFWriter
   def date_1904?     # :nodoc:
     @workbook.date_1904
   end
-  protected :date_1904?
+  private :date_1904?
 
   ###############################################################################
   #
@@ -5693,7 +5693,7 @@ class Worksheet < BIFFWriter
   def protect?
     @protect
   end
-  protected :protect?
+  private :protect?
 
   ###############################################################################
   #
@@ -8768,7 +8768,7 @@ class Worksheet < BIFFWriter
   def parser   # :nodoc:
     @workbook.parser
   end
-  protected :parser
+  private :parser
 
   # Check for a cell reference in A1 notation and substitute row and column
   def row_col_notation(args)   # :nodoc:

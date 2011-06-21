@@ -738,7 +738,7 @@ class Chart < Worksheet
   def palette
     @workbook.palette
   end
-  protected :palette
+  private :palette
 
   ###############################################################################
   #
