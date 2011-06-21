@@ -455,7 +455,7 @@ class Worksheet < BIFFWriter
   #
   def protect(password = nil)
     @protect   = true
-    @password  = encode_password(password) unless password.nil?
+    @password  = encode_password(password) if password
   end
 
   #
@@ -552,7 +552,7 @@ class Worksheet < BIFFWriter
     # Set the row height in units of 1/20 of a point. Note, some heights may
     # not be obtained exactly due to rounding in Excel.
     #
-    unless height.nil?
+    if height
       miyRw = height *20
     else
       miyRw = 0xff # The default row height
@@ -577,7 +577,7 @@ class Worksheet < BIFFWriter
     grbit |= 0x0010 if collapsed && collapsed != 0
     grbit |= 0x0020 if hidden && hidden != 0
     grbit |= 0x0040
-    grbit |= 0x0080 unless format.nil?
+    grbit |= 0x0080 if format
     grbit |= 0x0100
 
     header = [record, length].pack("vv")
@@ -593,7 +593,7 @@ class Worksheet < BIFFWriter
     # Store the row sizes for use when calculating image vertices.
     # Also store the column formats.
     @row_sizes[row]   = height
-    @row_formats[row] = format unless format.nil?
+    @row_formats[row] = format if format
   end
 
   #
@@ -720,7 +720,7 @@ class Worksheet < BIFFWriter
 
     (firstcol .. lastcol).each do |col|
       @col_sizes[col]   = width
-      @col_formats[col] = format unless format.nil?
+      @col_formats[col] = format if format
     end
   end
 
@@ -2498,7 +2498,7 @@ class Worksheet < BIFFWriter
 
       if token =~ Regexp.new(re)
         match = eval("#{sub} self, args")
-        return match unless match.nil?
+        return match if match
       end
     end
 
@@ -3152,7 +3152,7 @@ class Worksheet < BIFFWriter
 
     row, col, tokens, options = args
     error   = 0
-    unless tokens.nil?
+    if tokens
       tokens.each do |token|
         # Check for nested arrays
         if token.respond_to?(:to_ary)
@@ -3254,7 +3254,7 @@ class Worksheet < BIFFWriter
 
     row, col, tokens, options = args
     error   = 0
-    unless tokens.nil?
+    if tokens
       tokens.each do |token|
         # write() will deal with any nested arrays
         ret = write(row, col, token, options)
@@ -4567,7 +4567,7 @@ class Worksheet < BIFFWriter
     dir_long , sheet = url.split(/\#/)
     link_type = absolute ? (0x01 | absolute) : 0x0103
 
-    unless sheet.nil?
+    if sheet
       link_type |= 0x08
       sheet_len  = [sheet.bytesize + 0x01].pack("V")
       sheet      = sheet.split('').join("\0") + "\0\0\0"
@@ -4645,7 +4645,7 @@ class Worksheet < BIFFWriter
     error     = 0
     date_time = convert_date_time(str)
 
-    unless date_time.nil?
+    if date_time
       error = write_number(row, col, date_time, args[3])
     else
       # The date isn't valid so write it as a string.
@@ -4696,7 +4696,7 @@ class Worksheet < BIFFWriter
     date, time = date_time.split(/T/)
 
     # We allow the time portion of the input DateTime to be optional.
-    unless time.nil?
+    if time
       # Match hh:mm:ss.sss+ where the seconds are optional
       if time =~ /^(\d\d):(\d\d)(:(\d\d(\.\d+)?))?/
         hour   = $1.to_i
@@ -6212,7 +6212,7 @@ class Worksheet < BIFFWriter
   #
   def size_col(col)   #:nodoc:
     # Look up the cell value to see if it has been changed
-    unless @col_sizes[col].nil?
+    if @col_sizes[col]
       width = @col_sizes[col]
 
       # The relationship is different for user units less than 1.
@@ -6238,7 +6238,7 @@ class Worksheet < BIFFWriter
   #
   def size_row(row)   #:nodoc:
     # Look up the cell value to see if it has been changed
-    unless @row_sizes[row].nil?
+    if @row_sizes[row]
       if @row_sizes[row] == 0
         0
       else
@@ -7776,7 +7776,7 @@ class Worksheet < BIFFWriter
     params[:color] = color
 
     # Convert a cell reference to a row and column.
-    unless params[:start_cell].nil?
+    if params[:start_cell]
       params[:start_row], params[:start_col] = substitute_cellref(params[:start_cell])
     end
 
@@ -8360,8 +8360,8 @@ class Worksheet < BIFFWriter
     end
 
     # Map alternative parameter names 'source' or 'minimum' to 'value'.
-    param[:value] = param[:source]  unless param[:source].nil?
-    param[:value] = param[:minimum] unless param[:minimum].nil?
+    param[:value] = param[:source]  if param[:source]
+    param[:value] = param[:minimum] if param[:minimum]
 
     # 'validate' is a required parameter.
     unless param.has_key?(:validate)
