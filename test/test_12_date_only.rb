@@ -31,7 +31,7 @@ class TC_data_only < Test::Unit::TestCase
       workbook = WriteExcel.new(StringIO.new)
       workbook.set_1904 if (201 <= count && count <= 400) || (411 <= count)
       worksheet = workbook.add_worksheet
-      number = worksheet.convert_date_time(date)
+      number = worksheet.__send__("convert_date_time", date)
       number = -1 if number.nil?
       assert_equal(result.to_i, number,
         "Testing convert_date_time: #{date} #{result}")

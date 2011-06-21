@@ -358,7 +358,7 @@ class TC_dimensions < Test::Unit::TestCase
   end
 
   def test_repeat_formula
-    formula = @worksheet.store_formula('=A1 * 3 + 50')
+    formula = @worksheet.__send__("store_formula", '=A1 * 3 + 50')
     @worksheet.repeat_formula(5, 3, formula, @format, 'A1', 'A2')
 
     data     = @worksheet.__send__("store_dimensions")
@@ -374,7 +374,7 @@ class TC_dimensions < Test::Unit::TestCase
   end
 
   def test_merge_range
-    formula = @worksheet.store_formula('=A1 * 3 + 50')
+    formula = @worksheet.__send__("store_formula", '=A1 * 3 + 50')
     @worksheet.merge_range('C6:E8', 'Test', @format)
 
     data     = @worksheet.__send__("store_dimensions")
