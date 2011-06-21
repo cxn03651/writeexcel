@@ -15,6 +15,7 @@ require 'writeexcel/biffwriter'
 require 'writeexcel/format'
 require 'writeexcel/formula'
 require 'writeexcel/compatibility'
+require 'writeexcel/image'
 
 class MaxSizeError < StandardError   #:nodoc:
 end
@@ -3946,22 +3947,12 @@ class Worksheet < BIFFWriter
   def insert_image(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
-
-    row         = args[0]
-    col         = args[1]
-    image       = args[2]
-    x_offset    = args[3] || 0
-    y_offset    = args[4] || 0
-    scale_x     = args[5] || 1
-    scale_y     = args[6] || 1
-
+    # args = [row, col, filename, x_offset, y_offset, scale_x, scale_y]
+    image = Image.new(*args)
     raise "Insufficient arguments in insert_image()" unless args.size >= 3
-    raise "Couldn't locate #{image}: $!"             unless test(?e, image)
+    raise "Couldn't locate #{image.filename}: $!"    unless test(?e, image.filename)
 
-    @images[row] = {
-      col => [ row, col, image, x_offset, y_offset, scale_x, scale_y]
-    }
-
+    @images[image.row] = { image.col => image }
   end
 
   # Older method name for backwards compatibility.
@@ -7265,17 +7256,17 @@ class Worksheet < BIFFWriter
     return if num_images == 0
 
     (0 .. num_images-1).each do |i|
-      row         =   images[i][0]
-      col         =   images[i][1]
-      name        =   images[i][2]
-      x_offset    =   images[i][3]
-      y_offset    =   images[i][4]
-      scale_x     =   images[i][5]
-      scale_y     =   images[i][6]
-      image_id    =   images[i][7]
-      type        =   images[i][8]
-      width       =   images[i][9]
-      height      =   images[i][10]
+      row         =   images[i].row
+      col         =   images[i].col
+      name        =   images[i].filename
+      x_offset    =   images[i].x_offset
+      y_offset    =   images[i].y_offset
+      scale_x     =   images[i].scale_x
+      scale_y     =   images[i].scale_y
+      image_id    =   images[i].id
+      type        =   images[i].type
+      width       =   images[i].width
+      height      =   images[i].height
 
       width  = width  * scale_x unless scale_x == 0
       height = height * scale_y unless scale_y == 0

@@ -1408,233 +1408,48 @@ class Workbook < BIFFWriter
       image_mso_size  = 0
 
       sheet.images_array.each do |image|
-        filename = image[2]
         num_images += 1
-
-        #
-        # For each Worksheet image we get a structure like this
-        # [
-        #   row,
-        #   col,
-        #   name,
-        #   x_offset,
-        #   y_offset,
-        #   scale_x,
-        #   scale_y
-        # ]
-        #
-        # And we add additional information:
-        #
-        #   image_id,
-        #   type,
-        #   width,
-        #   height
-
-        if images_seen[filename].nil?
+        unless images_seen[image.filename]
           # TODO should also match seen images based on checksum.
+          image.id = image_id
+          image.import
 
-          # Open the image file and import the data.
-          File.open(filename, "rb") do |fh|
-            raise "Couldn't import #{filename}: #{$!}" unless fh
+          # Also store new data for use in duplicate images.
+          previous_images.push(image)
 
-            # Slurp the file into a string and do some size calcs.
-            #             my $data        = do {local $/; <$fh>};
-            data = fh.read
-            size        = data.bytesize
-            checksum1   = image_checksum(data, image_id)
-            checksum2   = checksum1
+          # Store information required by the Workbook.
+          image_data.push([ref_count, image.type, image.data, image.size, image.checksum1, image.checksum2])
 
-            # Process the image and extract dimensions.
-            # Test for PNGs...
-            if  data.unpack('x A3')[0] ==  'PNG'
-              type, width, height = process_png(data)
-              # Test for JFIF and Exif JPEGs...
-            elsif ( data.unpack('n')[0] == 0xFFD8 &&
-              (data.unpack('x6 A4')[0] == 'JFIF' ||
-              data.unpack('x6 A4')[0] == 'Exif')
-              )
-              type, width, height = process_jpg(data, filename)
-              # Test for BMPs...
-            elsif data.unpack('A2')[0] == 'BM'
-              type, width, height = process_bmp(data, filename)
-              # The 14 byte header of the BMP is stripped off.
-              data[0, 13] = ''
+          # Keep track of overall data size.
+          images_size       += image.size + 61  # Size for bstore container.
+          image_mso_size    += image.size + 69  # Size for dgg container.
 
-              # A checksum of the new image data is also required.
-              checksum2  = image_checksum(data, image_id, image_id)
-
-              # Adjust size -14 (header) + 16 (extra checksum).
-              size += 2
-            else
-              raise "Unsupported image format for file: #{filename}\n"
-            end
-
-            # Push the new data back into the Worksheet array;
-            image.push(image_id, type, width, height)
-
-            # Also store new data for use in duplicate images.
-            previous_images.push([image_id, type, width, height])
-
-            # Store information required by the Workbook.
-            image_data.push([ref_count, type, data, size, checksum1, checksum2])
-
-            # Keep track of overall data size.
-            images_size       += size + 61  # Size for bstore container.
-            image_mso_size    += size + 69  # Size for dgg container.
-
-            images_seen[filename] = image_id
-            image_id += 1
-          end
+          images_seen[image.filename] = image_id
+          image_id += 1
         else
           # We've processed this file already.
-          index = images_seen[filename] -1
+          index = images_seen[image.filename] -1
 
           # Increase image reference count.
           image_data[index][0] += 1
 
           # Add previously calculated data back onto the Worksheet array.
-          # $image_id, $type, $width, $height
-          a_ref = sheet.images_array[index]
-          image.concat(previous_images[index])
+          # image_id, type, width, height
+          image.id = previous_images[index].id
+          image.type = previous_images[index].type
+          image.width = previous_images[index].width
+          image.height = previous_images[index].height
         end
       end
 
       # Store information required by the Worksheet.
       sheet.num_images     = num_images
       sheet.image_mso_size = image_mso_size
-
     end
-
 
     # Store information required by the Workbook.
     @images_size = images_size
     @images_data = image_data     # Store the data for MSODRAWINGGROUP.
-  end
-
-  ###############################################################################
-  #
-  # image_checksum()
-  #
-  # Generate a checksum for the image using whichever module is available..The
-  # available modules are checked in get_checksum_method(). Excel uses an MD4
-  # checksum but any other will do. In the event of no checksum module being
-  # available we simulate a checksum using the image index.
-  #
-  def image_checksum(data, index1, index2 = 0)       #:nodoc:
-    if    @checksum_method == 1
-      # Digest::MD4
-      #           return Digest::MD4::md4_hex($data);
-    elsif @checksum_method == 2
-      # Digest::Perl::MD4
-      #           return Digest::Perl::MD4::md4_hex($data);
-    elsif @checksum_method == 3
-      # Digest::MD5
-      return Digest::MD5.hexdigest(data)
-    else
-      # Default
-      return sprintf('%016X%016X', index2, index1)
-    end
-  end
-
-  ###############################################################################
-  #
-  # process_png()
-  #
-  # Extract width and height information from a PNG file.
-  #
-  def process_png(data)       #:nodoc:
-    type    = 6 # Excel Blip type (MSOBLIPTYPE).
-    width   = data[16, 4].unpack("N")[0]
-    height  = data[20, 4].unpack("N")[0]
-
-    [type, width, height]
-  end
-
-  ###############################################################################
-  #
-  # process_bmp()
-  #
-  # Extract width and height information from a BMP file.
-  #
-  # Most of these checks came from the old Worksheet::_process_bitmap() method.
-  #
-  def process_bmp(data, filename)       #:nodoc:
-    type     = 7   # Excel Blip type (MSOBLIPTYPE).
-
-    # Check that the file is big enough to be a bitmap.
-    if data.bytesize  <= 0x36
-      raise "#{filename} doesn't contain enough data."
-    end
-
-    # Read the bitmap width and height. Verify the sizes.
-    width, height = data.unpack("x18 V2")
-
-    if width > 0xFFFF
-      raise "#{filename}: largest image width #{width} supported is 65k."
-    end
-
-    if height > 0xFFFF
-      raise "#{filename}: largest image height supported is 65k."
-    end
-
-    # Read the bitmap planes and bpp data. Verify them.
-    planes, bitcount = data.unpack("x26 v2")
-
-    if bitcount != 24
-      raise "#{filename} isn't a 24bit true color bitmap."
-    end
-
-    if planes != 1
-      raise "#{filename}: only 1 plane supported in bitmap image."
-    end
-
-    # Read the bitmap compression. Verify compression.
-    compression = data.unpack("x30 V")
-
-    if compression != 0
-      raise "#{filename}: compression not supported in bitmap image."
-    end
-
-    [type, width, height]
-  end
-
-  ###############################################################################
-  #
-  # process_jpg()
-  #
-  # Extract width and height information from a JPEG file.
-  #
-  def process_jpg(data, filename) # :nodoc:
-    type     = 5  # Excel Blip type (MSOBLIPTYPE).
-
-    offset = 2
-    data_length = data.bytesize
-
-    # Search through the image data to find the 0xFFC0 marker. The height and
-    # width are contained in the data for that sub element.
-    while offset < data_length
-      marker  = data[offset,   2].unpack("n")
-      marker = marker[0]
-      length  = data[offset+2, 2].unpack("n")
-      length = length[0]
-
-      if marker == 0xFFC0 || marker == 0xFFC2
-        height = data[offset+5, 2].unpack("n")
-        height = height[0]
-        width  = data[offset+7, 2].unpack("n")
-        width  = width[0]
-        break
-      end
-
-      offset += length + 2
-      break if marker == 0xFFDA
-    end
-
-    if height.nil?
-      raise "#{filename}: no size data found in jpeg image.\n"
-    end
-
-    [type, width, height]
   end
 
   ###############################################################################
