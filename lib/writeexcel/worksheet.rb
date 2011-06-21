@@ -862,11 +862,6 @@ class Worksheet < BIFFWriter
     @panes  = args
   end
 
-  def frozen?
-    @frozen
-  end
-  private :frozen?
-
   #
   # :call-seq:
   #   split_panes(y, x, top_row, left_col)
@@ -1073,11 +1068,6 @@ class Worksheet < BIFFWriter
   def hide_zero
     @hide_zeros = true
   end
-
-  def display_zeros?
-    !@hide_zeros
-  end
-  private :display_zeros?
 
   #
   # Set the colour of the worksheet colour.
@@ -1631,34 +1621,6 @@ class Worksheet < BIFFWriter
     set_header_footer_common(:footer, string, margin, encoding)
   end
 
-  def set_header_footer_common(type, string, margin, encoding)  # :nodoc:
-    ruby_19 { string = convert_to_ascii_if_ascii(string) }
-
-    limit    = encoding != 0 ? 255 *2 : 255
-
-    # Handle utf8 strings
-    if is_utf8?(string)
-      string = utf8_to_16be(string)
-      encoding = 1
-    end
-
-    if string.bytesize >= limit
-      #           carp 'Header string must be less than 255 characters';
-      return
-    end
-
-    if type == :header
-      @header          = string
-      @margin_header   = margin
-      @header_encoding = encoding
-    else
-      @footer          = string
-      @margin_footer   = margin
-      @footer_encoding = encoding
-    end
-  end
-  private :set_header_footer_common
-
   #
   # Set the rows to repeat at the top of each printed page.
   #--
@@ -1966,175 +1928,6 @@ class Worksheet < BIFFWriter
   def set_v_pagebreaks(breaks)
     @vbreaks += breaks.respond_to?(:to_ary) ? breaks : [breaks]
   end
-
-  ###############################################################################
-  #
-  # extract_filter_tokens(expression)
-  #
-  # Extract the tokens from the filter expression. The tokens are mainly non-
-  # whitespace groups. The only tricky part is to extract string tokens that
-  # contain whitespace and/or quoted double quotes (Excel's escaped quotes).
-  #
-  # Examples: 'x <  2000'
-  #           'x >  2000 and x <  5000'
-  #           'x = "foo"'
-  #           'x = "foo bar"'
-  #           'x = "foo "" bar"'
-  #
-  def extract_filter_tokens(expression = nil)   #:nodoc:
-    return [] unless expression
-
-    tokens = []
-    str = expression
-    while str =~ /"(?:[^"]|"")*"|\S+/
-      tokens << $&
-      str = $~.post_match
-    end
-
-    # Remove leading and trailing quotes and unescape other quotes
-    tokens.map! do |token|
-      token.sub!(/^"/, '')
-      token.sub!(/"$/, '')
-      token.gsub!(/""/, '"')
-
-      # if token is number, convert to numeric.
-      if token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
-        token.to_f == token.to_i ? token.to_i : token.to_f
-      else
-        token
-      end
-    end
-
-    tokens
-  end
-  private :extract_filter_tokens
-
-  ###############################################################################
-  #
-  # parse_filter_expression(expression, @token)
-  #
-  # Converts the tokens of a possibly conditional expression into 1 or 2
-  # sub expressions for further parsing.
-  #
-  # Examples:
-  #          ('x', '==', 2000) -> exp1
-  #          ('x', '>',  2000, 'and', 'x', '<', 5000) -> exp1 and exp2
-  #
-  def parse_filter_expression(expression, tokens)   #:nodoc:
-    # The number of tokens will be either 3 (for 1 expression)
-    # or 7 (for 2  expressions).
-    #
-    if (tokens.size == 7)
-      conditional = tokens[3]
-      if conditional =~ /^(and|&&)$/
-        conditional = 0
-      elsif conditional =~ /^(or|\|\|)$/
-        conditional = 1
-      else
-        raise "Token '#{conditional}' is not a valid conditional " +
-        "in filter expression '#{expression}'"
-      end
-      expression_1 = parse_filter_tokens(expression, tokens[0..2])
-      expression_2 = parse_filter_tokens(expression, tokens[4..6])
-      [expression_1, conditional, expression_2].flatten
-    else
-      parse_filter_tokens(expression, tokens)
-    end
-  end
-  private :parse_filter_expression
-
-  ###############################################################################
-  #
-  # parse_filter_tokens(@token)  # (@expression, @token)
-  #
-  # Parse the 3 tokens of a filter expression and return the operator and token.
-  #
-  def parse_filter_tokens(expression, tokens)     #:nodoc:
-    operators = {
-      '==' => 2,
-      '='  => 2,
-      '=~' => 2,
-      'eq' => 2,
-
-      '!=' => 5,
-      '!~' => 5,
-      'ne' => 5,
-      '<>' => 5,
-
-      '<'  => 1,
-      '<=' => 3,
-      '>'  => 4,
-      '>=' => 6,
-    }
-
-    operator = operators[tokens[1]]
-    token    = tokens[2]
-
-    # Special handling of "Top" filter expressions.
-    if tokens[0] =~ /^top|bottom$/i
-      value = tokens[1]
-      if (value =~ /\D/ or value.to_i < 1 or value.to_i > 500)
-        raise "The value '#{value}' in expression '#{expression}' " +
-        "must be in the range 1 to 500"
-      end
-      token.downcase!
-      if (token != 'items' and token != '%')
-        raise "The type '#{token}' in expression '#{expression}' " +
-        "must be either 'items' or '%'"
-      end
-
-      if (tokens[0] =~ /^top$/i)
-        operator = 30
-      else
-        operator = 32
-      end
-
-      if (tokens[2] == '%')
-        operator += 1
-      end
-
-      token    = value
-    end
-
-    if (not operator and tokens[0])
-      raise "Token '#{tokens[1]}' is not a valid operator " +
-      "in filter expression '#{expression}'"
-    end
-
-    # Special handling for Blanks/NonBlanks.
-    if (token =~ /^blanks|nonblanks$/i)
-      # Only allow Equals or NotEqual in this context.
-      if (operator != 2 and operator != 5)
-        raise "The operator '#{tokens[1]}' in expression '#{expression}' " +
-        "is not valid in relation to Blanks/NonBlanks'"
-      end
-
-      token.downcase!
-
-      # The operator should always be 2 (=) to flag a "simple" equality in
-      # the binary record. Therefore we convert <> to =.
-      if (token == 'blanks')
-        if (operator == 5)
-          operator = 2
-          token    = 'nonblanks'
-        end
-      else
-        if (operator == 5)
-          operator = 2
-          token    = 'blanks'
-        end
-      end
-    end
-
-    # if the string token contains an Excel match character then change the
-    # operator type to indicate a non "simple" equality.
-    if (operator == 2 and token =~ /[*?]/)
-      operator = 22
-    end
-
-    [operator, token]
-  end
-  private :parse_filter_tokens
 
   #
   # Causes the write() method to treat integers with a leading zero as a string.
@@ -2680,21 +2473,102 @@ class Worksheet < BIFFWriter
     str_error
   end
 
-  def store_with_compatibility(row, col, data)  # :nodoc:
-    if compatibility?
-      store_to_table(row, col, data)
-    else
-      append(data)
-    end
-  end
-  private :store_with_compatibility
+  ###############################################################################
+  #
+  # write_utf16be_string($row, $col, $string, $format)
+  #
+  # Write a Unicode string to the specified row and column (zero indexed).
+  # $format is optional.
+  # Returns  0 : normal termination
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #         -3 : long string truncated to 255 chars
+  #
+  def write_utf16be_string(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
 
-  def store_to_table(row, col, data)  # :nodoc:
-    tmp = []
-    tmp[col] = data
-    @table[row] = tmp
+    return -1 if (args.size < 3)                     # Check the number of args
+
+    record      = 0x00FD                        # Record identifier
+    length      = 0x000A                        # Bytes to follow
+
+    row         = args[0]                         # Zero indexed row
+    col         = args[1]                         # Zero indexed column
+    strlen      = args[2].bytesize
+    str         = args[2]
+    xf          = xf_record_index(row, col, args[3]) # The cell format
+    encoding    = 0x1
+    str_error   = 0
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    # Limit the utf16 string to the max number of chars (not bytes).
+    if strlen > 32767* 2
+      str       = str[0..32767*2]
+      str_error = -3
+    end
+
+    num_bytes = str.bytesize
+    num_chars = (num_bytes / 2).to_i
+
+    # Check for a valid 2-byte char string.
+    raise "Uneven number of bytes in Unicode string" if num_bytes % 2 != 0
+
+    # Change from UTF16 big-endian to little endian
+    str = str.unpack('n*').pack('v*')
+
+    # Add the encoding and length header to the string.
+    str_header  = [num_chars, encoding].pack("vC")
+    str         = str_header + str
+
+    unless sinfo[:str_table][str]
+      sinfo[:str_table][str] = sinfo[:str_unique]
+      sinfo[:str_unique] += 1
+    end
+
+    sinfo[:str_total] += 1
+
+    header = [record, length].pack("vv")
+    data   = [row, col, xf, sinfo[:str_table][str]].pack("vvvV")
+
+    # Store the data or write immediately depending on the compatibility mode.
+    store_with_compatibility(row, col, header + data)
+
+    str_error
   end
-  private :store_to_table
+
+  ###############################################################################
+  #
+  # write_utf16le_string($row, $col, $string, $format)
+  #
+  # Write a UTF-16LE string to the specified row and column (zero indexed).
+  # $format is optional.
+  # Returns  0 : normal termination
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #         -3 : long string truncated to 255 chars
+  #
+  def write_utf16le_string(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
+
+    return -1 if (args.size < 3)                     # Check the number of args
+
+    record      = 0x00FD                          # Record identifier
+    length      = 0x000A                          # Bytes to follow
+
+    row         = args[0]                         # Zero indexed row
+    col         = args[1]                         # Zero indexed column
+    str         = args[2]
+    format      = args[3]                         # The cell format
+
+    # Change from UTF16 big-endian to little endian
+    str = str.unpack('n*').pack("v*")
+
+    write_utf16be_string(row, col, str, format)
+  end
 
   #
   # :call-seq:
@@ -3068,765 +2942,6 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
-  #   write_row(row, col   , array[, format])
-  #   write_row(A1_notation, array[, format])
-  #
-  # Write a row of data starting from (row, col). Call write_col() if any of
-  # the elements of the array are in turn array. This allows the writing of
-  # 1D or 2D arrays of data in one go.
-  #
-  # Returns: the first encountered error value or zero for no errors
-  #
-  #
-  # The write_row() method can be used to write a 1D or 2D array of data in
-  # one go. This is useful for converting the results of a database query into
-  # an Excel worksheet. You must pass a reference to the array of data rather
-  # than the array itself. The write() method is then called for each element
-  # of the data. For example:
-  #
-  #    array      = ['awk', 'gawk', 'mawk']
-  #
-  #    worksheet.write_row(0, 0, array_ref)
-  #
-  #    # The above example is equivalent to:
-  #    worksheet.write(0, 0, array[0])
-  #    worksheet.write(0, 1, array[1])
-  #    worksheet.write(0, 2, array[2])
-  #
-  # Note: For convenience the write() method behaves in the same way as
-  # write_row() if it is passed an array. Therefore the following two method
-  # calls are equivalent:
-  #
-  #    worksheet.write_row('A1', array) # Write a row of data
-  #    worksheet.write(    'A1', array) # Same thing
-  #
-  # As with all of the write methods the format parameter is optional. If a
-  # format is specified it is applied to all the elements of the data array.
-  #
-  # Array references within the data will be treated as columns. This allows you
-  # to write 2D arrays of data in one go. For example:
-  #
-  #    eec =  [
-  #                ['maggie', 'milly', 'molly', 'may'  ],
-  #                [13,       14,      15,      16     ],
-  #                ['shell',  'star',  'crab',  'stone']
-  #           ]
-  #
-  #    worksheet.write_row('A1', eec)
-  #
-  # Would produce a worksheet as follows:
-  #
-  #     -----------------------------------------------------------
-  #    |   |    A    |    B    |    C    |    D    |    E    | ...
-  #     -----------------------------------------------------------
-  #    | 1 | maggie  | 13      | shell   | ...     |  ...    | ...
-  #    | 2 | milly   | 14      | star    | ...     |  ...    | ...
-  #    | 3 | molly   | 15      | crab    | ...     |  ...    | ...
-  #    | 4 | may     | 16      | stone   | ...     |  ...    | ...
-  #    | 5 | ...     | ...     | ...     | ...     |  ...    | ...
-  #    | 6 | ...     | ...     | ...     | ...     |  ...    | ...
-  #
-  # To write the data in a row-column order refer to the write_col() method
-  # below.
-  #
-  # Any +nil+ values in the data will be ignored unless a format is applied
-  # to the data, in which case a formatted blank cell will be written. In
-  # either case the appropriate row or column value will still be
-  # incremented.
-  #
-  # The write_row() method returns the first error encountered when
-  # writing the elements of the data or zero if no errors were encountered.
-  # See the return values described for the write() method above.
-  #
-  # See also the write_arrays.rb program in the examples directory of the
-  # distro.
-  #
-  def write_row(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    args = row_col_notation(args)
-
-    # Catch non array refs passed by user.
-    unless args[2].respond_to?(:to_ary)
-      raise "Not an array ref in call to write_row() #{$!}"
-    end
-
-    row, col, tokens, options = args
-    error   = 0
-    if tokens
-      tokens.each do |token|
-        # Check for nested arrays
-        if token.respond_to?(:to_ary)
-          ret = write_col(row, col, token, options)
-        else
-          ret = write(row, col, token, options)
-        end
-
-        # Return only the first error encountered, if any.
-        error ||= ret
-        col += 1
-      end
-    end
-    error
-  end
-
-
-  #
-  # :call-seq:
-  #   write_column(row, col   , array[, format])
-  #   write_column(A1_notation, array[, format])
-  #
-  # Write a column of data starting from (row, col). Call write_row() if any of
-  # the elements of the array are in turn array. This allows the writing
-  # of 1D or 2D arrays of data in one go.
-  #
-  # Returns: the first encountered error value or zero for no errors
-  #
-  #
-  # The write_col() method can be used to write a 1D or 2D array of data in one
-  # go. This is useful for converting the results of a database query into an
-  # Excel worksheet. The write() method is then called for each element of the
-  # data. For example:
-  #
-  #    array      = ['awk', 'gawk', 'mawk']
-  #
-  #    worksheet.write_col(0, 0, array)
-  #
-  #    # The above example is equivalent to:
-  #    worksheet.write(0, 0, array[0])
-  #    worksheet.write(1, 0, array[1])
-  #    worksheet.write(2, 0, array[2])
-  #
-  # As with all of the write methods the format parameter is optional. If a
-  # format is specified it is applied to all the elements of the data array.
-  #
-  # Array within the data will be treated as rows. This allows you to write
-  # 2D arrays of data in one go. For example:
-  #
-  #    eec =  [
-  #                ['maggie', 'milly', 'molly', 'may'  ],
-  #                [13,       14,      15,      16     ],
-  #                ['shell',  'star',  'crab',  'stone']
-  #            ]
-  #
-  #    worksheet.write_col('A1', eec)
-  #
-  # Would produce a worksheet as follows:
-  #
-  #     -----------------------------------------------------------
-  #    |   |    A    |    B    |    C    |    D    |    E    | ...
-  #     -----------------------------------------------------------
-  #    | 1 | maggie  | milly   | molly   | may     |  ...    | ...
-  #    | 2 | 13      | 14      | 15      | 16      |  ...    | ...
-  #    | 3 | shell   | star    | crab    | stone   |  ...    | ...
-  #    | 4 | ...     | ...     | ...     | ...     |  ...    | ...
-  #    | 5 | ...     | ...     | ...     | ...     |  ...    | ...
-  #    | 6 | ...     | ...     | ...     | ...     |  ...    | ...
-  #
-  # To write the data in a column-row order refer to the write_row() method
-  # above.
-  #
-  # Any +nil+ values in the data will be ignored unless a format is applied to
-  # the data, in which case a formatted blank cell will be written. In either
-  # case the appropriate row or column value will still be incremented.
-  #
-  # As noted above the write() method can be used as a synonym for write_row()
-  # and write_row() handles nested array as columns. Therefore, the following
-  # two method calls are equivalent although the more explicit call to
-  # write_col() would be preferable for maintainability:
-  #
-  #    worksheet.write_col('A1', array)     # Write a column of data
-  #    worksheet.write(    'A1', [ array ]) # Same thing
-  #
-  # The write_col() method returns the first error encountered when writing
-  # the elements of the data or zero if no errors were encountered. See the
-  # return values described for the write() method above.
-  #
-  # See also the write_arrays.pl program in the examples directory of the distro.
-  #
-  def write_col(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    args = row_col_notation(args)
-
-    # Catch non array refs passed by user.
-    unless args[2].respond_to?(:to_ary)
-      raise "Not an array ref in call to write_row()"
-    end
-
-    row, col, tokens, options = args
-    error   = 0
-    if tokens
-      tokens.each do |token|
-        # write() will deal with any nested arrays
-        ret = write(row, col, token, options)
-
-        # Return only the first error encountered, if any.
-        error ||= ret
-        row += 1
-      end
-    end
-    error
-  end
-
-  #
-  # :call-seq:
-  #   write_comment(row, col,    comment[, optionhash(es)])  -> Fixnum
-  #   write_comment(A1_notation, comment[, optionhash(es)])  -> Fixnum
-  #
-  # Write a comment to the specified row and column (zero indexed).
-  #
-  # Returns  0 : normal termination
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #
-  # The write_comment() method is used to add a comment to a cell. A cell
-  # comment is indicated in Excel by a small red triangle in the upper
-  # right-hand corner of the cell. Moving the cursor over the red triangle
-  # will reveal the comment.
-  #
-  # The following example shows how to add a comment to a cell:
-  #
-  #     worksheet.write        (2, 2, 'Hello')
-  #     worksheet.write_comment(2, 2, 'This is a comment.')
-  #
-  # As usual you can replace the row and column parameters with an A1 cell
-  # reference. See the note about "Cell notation".
-  #
-  #     worksheet.write        ('C3', 'Hello')
-  #     worksheet.write_comment('C3', 'This is a comment.')
-  #
-  # On systems with perl 5.8 and later the write_comment() method will also
-  # handle strings in UTF-8 format.
-  #
-  #     worksheet.write_comment('C3', "\x{263a}")       # Smiley
-  #     worksheet.write_comment('C4', 'Comment ca va?')
-  #
-  # In addition to the basic 3 argument form of write_comment() you can pass in
-  # several optional key/value pairs to control the format of the comment.
-  # For example:
-  #
-  #     worksheet.write_comment('C3', 'Hello', :visible => 1, :author => 'Ruby')
-  #
-  # Most of these options are quite specific and in general the default comment
-  # behaviour will be all that you need. However, should you need greater
-  # control over the format of the cell comment the following options are
-  # available:
-  #
-  #     encoding
-  #     author
-  #     author_encoding
-  #     visible
-  #     x_scale
-  #     width
-  #     y_scale
-  #     height
-  #     color
-  #     start_cell
-  #     start_row
-  #     start_col
-  #     x_offset
-  #     y_offset
-  #
-  # Option: encoding
-  #
-  #   This option is used to indicate that the comment string is encoded as
-  #   UTF-16BE.
-  #
-  #     comment = [0x263a].pack('n')     # UTF-16BE Smiley symbol
-  #
-  #     worksheet.write_comment('C3', comment, :encoding => 1)
-  #
-  # Option: author
-  #
-  #   This option is used to indicate who the author of the comment is. Excel
-  #   displays the author of the comment in the status bar at the bottom of
-  #   the worksheet. This is usually of interest in corporate environments
-  #   where several people might review and provide comments to a workbook.
-  #
-  #     worksheet.write_comment('C3', 'Atonement', :author => 'Ian McEwan')
-  #
-  # Option: author_encoding
-  #
-  #   This option is used to indicate that the author string is encoded as UTF-16BE.
-  #
-  # Option: visible
-  #
-  #   This option is used to make a cell comment visible when the worksheet
-  #   is opened. The default behaviour in Excel is that comments are initially
-  #   hidden. However, it is also possible in Excel to make individual or all
-  #   comments visible. In WriteExcel individual comments can be made visible
-  #   as follows:
-  #
-  #     worksheet.write_comment('C3', 'Hello', :visible => 1)
-  #
-  #   It is possible to make all comments in a worksheet visible using the show
-  #   comments() worksheet method (see below). Alternatively, if all of the cell
-  #   comments have been made visible you can hide individual comments:
-  #
-  #     worksheet.write_comment('C3', 'Hello', :visible => 0)
-  #
-  # Option: x_scale
-  #
-  #   This option is used to set the width of the cell comment box as a factor
-  #   of the default width.
-  #
-  #     worksheet.write_comment('C3', 'Hello', :x_scale => 2)
-  #     worksheet.write_comment('C4', 'Hello', :x_scale => 4.2)
-  #
-  # Option: width
-  #
-  #   This option is used to set the width of the cell comment box
-  #   explicitly in pixels.
-  #
-  #     worksheet.write_comment('C3', 'Hello', :width => 200)
-  #
-  # Option: y_scale
-  #
-  #   This option is used to set the height of the cell comment box as a
-  #   factor of the default height.
-  #
-  #     worksheet.write_comment('C3', 'Hello', :y_scale => 2)
-  #     worksheet.write_comment('C4', 'Hello', :y_scale => 4.2)
-  #
-  # Option: height
-  #
-  #   This option is used to set the height of the cell comment box
-  #   explicitly in pixels.
-  #
-  #     worksheet.write_comment('C3', 'Hello', :height => 200)
-  #
-  # Option: color
-  #
-  #   This option is used to set the background colour of cell comment box.
-  #   You can use one of the named colours recognised by WriteExcel or a colour
-  #   index. See "COLOURS IN EXCEL".
-  #
-  #     worksheet.write_comment('C3', 'Hello', :color => 'green')
-  #     worksheet.write_comment('C4', 'Hello', :color => 0x35)    # Orange
-  #
-  # Option: start_cell
-  #
-  #   This option is used to set the cell in which the comment will appear.
-  #   By default Excel displays comments one cell to the right and one cell
-  #   above the cell to which the comment relates. However, you can change
-  #   this behaviour if you wish. In the following example the comment which
-  #   would appear by default in cell D2 is moved to E2.
-  #
-  #     worksheet.write_comment('C3', 'Hello', :start_cell => 'E2')
-  #
-  # Option: start_row
-  #
-  #   This option is used to set the row in which the comment will appear.
-  #   See the start_cell option above. The row is zero indexed.
-  #
-  #     worksheet.write_comment('C3', 'Hello', :start_row => 0)
-  #
-  # Option: start_col
-  #
-  #   This option is used to set the column in which the comment will appear.
-  #   See the start_cell option above. The column is zero indexed.
-  #
-  #     worksheet.write_comment('C3', 'Hello', :start_col => 4)
-  #
-  # Option: x_offset
-  #
-  #   This option is used to change the x offset, in pixels, of a comment
-  #   within a cell:
-  #
-  #     worksheet.write_comment('C3', comment, :x_offset => 30)
-  #
-  # Option: y_offset
-  #
-  #   This option is used to change the y offset, in pixels, of a comment
-  #   within a cell:
-  #
-  #     worksheet.write_comment('C3', comment, :x_offset => 30)
-  #
-  # You can apply as many of these options as you require.
-  #
-  # ==Note about row height and comments.
-  #
-  # If you specify the height of a row that contains a comment then WriteExcel
-  # will adjust the height of the comment to maintain the default or user
-  # specified dimensions. However, the height of a row can also be adjusted
-  # automatically by Excel if the text wrap property is set or large fonts are
-  # used in the cell. This means that the height of the row is unknown to
-  # WriteExcel at run time and thus the comment box is stretched with the row.
-  # Use the set_row() method to specify the row height explicitly and avoid
-  # this problem.
-  #
-  def write_comment(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    args = row_col_notation(args)
-
-    return -1 if args.size < 3   # Check the number of args
-
-    row = args[0]
-    col = args[1]
-
-    # Check for pairs of optional arguments, i.e. an odd number of args.
-    # raise "Uneven number of additional arguments" if args.size % 2 == 0
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
-    # We have to avoid duplicate comments in cells or else Excel will complain.
-    @comments[row] = { col => comment_params(*args) }
-  end
-
-  def active=(val)  # :nodoc:
-    @active = val
-  end
-
-  def is_name_utf16be?  # :nodoc:
-    if @name_utf16be == 0
-      false
-    elsif @name_utf16be == 1
-      true
-    else
-      !!@name_utf16be
-    end
-  end
-
-  def index  # :nodoc:
-    @index
-  end
-
-  def index=(val)  # :nodoc:
-    @index = val
-  end
-
-  def sheet_type  # :nodoc:
-    @sheet_type
-  end
-
-  def compatibility?
-    compatibility = @workbook.compatibility
-    if compatibility == 0 || !compatibility
-      false
-    else
-      true
-    end
-  end
-  private :compatibility?
-
-  # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
-  def sinfo
-    @workbook.sinfo
-  end
-  private :sinfo
-
-  def images_array  # :nodoc:
-    @images_array
-  end
-
-  def filter_area  # :nodoc:
-    @filter_area
-  end
-
-  def filter_count  # :nodoc:
-    @filter_count
-  end
-
-  def title_rowmin  # :nodoc:
-    @title_rowmin
-  end
-
-  def title_rowmax  # :nodoc:
-    @title_rowmax
-  end
-
-  def title_colmin  # :nodoc:
-    @title_colmin
-  end
-
-  def title_colmax  # :nodoc:
-    @title_colmax
-  end
-
-  def print_rowmin  # :nodoc:
-    @print_rowmin
-  end
-
-  def print_rowmax  # :nodoc:
-    @print_rowmax
-  end
-
-  def print_colmin  # :nodoc:
-    @print_colmin
-  end
-
-  def print_colmax  # :nodoc:
-    @print_colmax
-  end
-
-  def offset  # :nodoc:
-    @offset
-  end
-
-  def offset=(val)  # :nodoc:
-    @offset = val
-  end
-
-  def selected?  # :nodoc:
-    @selected
-  end
-
-  def selected=(val)  # :nodoc:
-    @selected = val
-  end
-
-  def hidden?  # :nodoc:
-    @hidden
-  end
-
-  def hidden=(val)  # :nodoc:
-    @hidden = val
-  end
-
-  def object_ids=(val)  # :nodoc:
-    @object_ids = val
-  end
-
-  def num_images  # :nodoc:
-    @num_images
-  end
-
-  def num_images=(val)  # :nodoc:
-    @num_images = val
-  end
-
-  def image_mso_size  # :nodoc:
-    @image_mso_size
-  end
-
-  def image_mso_size=(val)  # :nodoc:
-    @image_mso_size = val
-  end
-
-  ###############################################################################
-  #
-  # xf_record_index()
-  #
-  # Returns an index to the XF record in the workbook.
-  #
-  # Note: this is a function, not a method.
-  #
-  def xf_record_index(row, col, xf=nil)       #:nodoc:
-    if xf.respond_to?(:xf_index)
-      xf.xf_index
-    elsif @row_formats.has_key?(row)
-      @row_formats[row].xf_index
-    elsif @col_formats.has_key?(col)
-      @col_formats[col].xf_index
-    else
-      0x0F
-    end
-  end
-  private :xf_record_index
-
-  ###############################################################################
-  ###############################################################################
-  #
-  # Internal methods
-  #
-
-  ###############################################################################
-  #
-  # substitute_cellref()
-  #
-  # Substitute an Excel cell reference in A1 notation for  zero based row and
-  # column values in an argument list.
-  #
-  # Ex: ("A4", "Hello") is converted to (3, 0, "Hello").
-  #
-  def substitute_cellref(cell, *args)       #:nodoc:
-    return [*args] if cell.respond_to?(:coerce) # Numeric
-
-    cell.upcase!
-
-    # Convert a column range: 'A:A' or 'B:G'.
-    # A range such as A:A is equivalent to A1:65536, so add rows as required
-    if cell =~ /\$?([A-I]?[A-Z]):\$?([A-I]?[A-Z])/
-      row1, col1 =  cell_to_rowcol($1 +'1')
-      row2, col2 =  cell_to_rowcol($2 +'65536')
-      return [row1, col1, row2, col2, *args]
-    end
-
-    # Convert a cell range: 'A1:B7'
-    if cell =~ /\$?([A-I]?[A-Z]\$?\d+):\$?([A-I]?[A-Z]\$?\d+)/
-      row1, col1 =  cell_to_rowcol($1)
-      row2, col2 =  cell_to_rowcol($2)
-      return [row1, col1, row2, col2, *args]
-    end
-
-    # Convert a cell reference: 'A1' or 'AD2000'
-    if (cell =~ /\$?([A-I]?[A-Z]\$?\d+)/)
-      row1, col1 =  cell_to_rowcol($1)
-      return [row1, col1, *args]
-
-    end
-
-    raise("Unknown cell reference #{cell}")
-  end
-  private :substitute_cellref
-
-  ###############################################################################
-  #
-  # cell_to_rowcol($cell_ref)
-  #
-  # Convert an Excel cell reference in A1 notation to a zero based row and column
-  # reference; converts C1 to (0, 2).
-  #
-  # Returns: row, column
-  #
-  def cell_to_rowcol(cell)       #:nodoc:
-    cell =~ /\$?([A-I]?[A-Z])\$?(\d+)/
-    col     = $1
-    row     = $2.to_i
-
-    col = chars_to_col($1.split(//))
-
-    # Convert 1-index to zero-index
-    row -= 1
-    col -= 1
-
-    [row, col]
-  end
-  private :cell_to_rowcol
-
-  ###############################################################################
-  #
-  # sort_pagebreaks()
-  #
-  #
-  # This is an internal method that is used to filter elements of the array of
-  # pagebreaks used in the store_hbreak() and store_vbreak() methods. It:
-  #   1. Removes duplicate entries from the list.
-  #   2. Sorts the list.
-  #   3. Removes 0 from the list if present.
-  #
-  def sort_pagebreaks(breaks)       #:nodoc:
-    breaks.uniq.sort!
-    breaks.shift if breaks[0] == 0
-
-    # 1000 vertical pagebreaks appears to be an internal Excel 5 limit.
-    # It is slightly higher in Excel 97/200, approx. 1026
-    breaks.size > 1000 ? breaks[0..999] : breaks
-  end
-  private :sort_pagebreaks
-
-  ###############################################################################
-  #
-  # encode_password($password)
-  #
-  # Based on the algorithm provided by Daniel Rentz of OpenOffice.
-  #
-  #
-  def encode_password(password)       #:nodoc:
-    i = 0
-    chars = password.split(//)
-    count = chars.size
-
-    chars.each do |char|
-      i += 1
-      char     = char[0] << i
-      low_15   = char & 0x7fff
-      high_15  = char & 0x7fff << 15
-      high_15  = high_15 >> 15
-      char     = low_15 | high_15
-    end
-
-    encoded_password  = 0x0000
-    chars.each { |c| encoded_password ^= c }
-    encoded_password ^= count
-    encoded_password ^= 0xCE4B
-  end
-  private :encode_password
-
-  ###############################################################################
-  #
-  # encode_formula_result()
-  #     my $value     = $_[0];      # Result to be encoded.
-  #
-  # Encode the user supplied result for a formula.
-  #
-  def encode_formula_result(value = nil)       #:nodoc:
-    is_string = 0                 # Formula evaluates to str.
-    # my $num;                    # Current value of formula.
-    # my $grbit;                  # Option flags.
-
-    unless value
-      grbit  = 0x03
-      num    = [0].pack("d")
-    else
-      # The user specified the result of the formula. We turn off the recalc
-      # flag and check the result type.
-      grbit  = 0x00
-
-      if value.to_s =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
-        # Value is a number.
-        num = [value].pack("d")
-      else
-        bools = {
-          'TRUE'    => [1,  1],
-          'FALSE'   => [1,  0],
-          '#NULL!'  => [2,  0],
-          '#DIV/0!' => [2,  7],
-          '#VALUE!' => [2, 15],
-          '#REF!'   => [2, 23],
-          '#NAME?'  => [2, 29],
-          '#NUM!'   => [2, 36],
-          '#N/A'    => [2, 42]
-        }
-
-        if bools[value]
-          # Value is a boolean.
-          num = [bools[value][0], bools[value][1], 0, 0xFFFF].pack("vvvv")
-        else
-          # Value is a string.
-          num = [0, 0, 0, 0xFFFF].pack("vvvv")
-          is_string = 1
-        end
-      end
-    end
-
-    [num, grbit, is_string]
-  end
-  private :encode_formula_result
-
-  ###############################################################################
-  #
-  # get_formula_string()
-  #
-  # Pack the string value when a formula evaluates to a string. The value cannot
-  # be calculated by the module and thus must be supplied by the user.
-  #
-  def get_formula_string(string)       #:nodoc:
-    ruby_19 { string = convert_to_ascii_if_ascii(string) }
-
-    record    = 0x0207         # Record identifier
-    length    = 0x00           # Bytes to follow
-    # string                   # Formula string.
-    strlen    = string.bytesize  # Length of the formula string (chars).
-    encoding  = 0              # String encoding.
-
-    # Handle utf8 strings.
-    if is_utf8?(string)
-      string = utf8_to_16be(string)
-      encoding = 1
-    end
-
-    length    = 0x03 + string.bytesize  # Length of the record data
-
-    header    = [record, length].pack("vv")
-    data      = [strlen, encoding].pack("vC")
-
-    header + data + string
-  end
-  private :get_formula_string
-
-  #
-  # :call-seq:
   #   store_formula(formula)  # formula : text string of formula
   #
   # Pre-parse a formula. This is used in conjunction with repeat_formula()
@@ -4061,38 +3176,487 @@ class Worksheet < BIFFWriter
     0
   end
 
-  def store_formula_common(row, col, xf, value, formula)  # :nodoc:
-    # Excel normally stores the last calculated value of the formula in $num.
-    # Clearly we are not in a position to calculate this "a priori". Instead
-    # we set $num to zero and set the option flags in $grbit to ensure
-    # automatic calculation of the formula when the file is opened.
-    # As a workaround for some non-Excel apps we also allow the user to
-    # specify the result of the formula.
-    #
-    # is_string                                # Formula evaluates to str
-    # num                                      # Current value of formula
-    # grbit                                    # Option flags
-    num, grbit, is_string = encode_formula_result(value)
+  #
+  # :call-seq:
+  #   write_row(row, col   , array[, format])
+  #   write_row(A1_notation, array[, format])
+  #
+  # Write a row of data starting from (row, col). Call write_col() if any of
+  # the elements of the array are in turn array. This allows the writing of
+  # 1D or 2D arrays of data in one go.
+  #
+  # Returns: the first encountered error value or zero for no errors
+  #
+  #
+  # The write_row() method can be used to write a 1D or 2D array of data in
+  # one go. This is useful for converting the results of a database query into
+  # an Excel worksheet. You must pass a reference to the array of data rather
+  # than the array itself. The write() method is then called for each element
+  # of the data. For example:
+  #
+  #    array      = ['awk', 'gawk', 'mawk']
+  #
+  #    worksheet.write_row(0, 0, array_ref)
+  #
+  #    # The above example is equivalent to:
+  #    worksheet.write(0, 0, array[0])
+  #    worksheet.write(0, 1, array[1])
+  #    worksheet.write(0, 2, array[2])
+  #
+  # Note: For convenience the write() method behaves in the same way as
+  # write_row() if it is passed an array. Therefore the following two method
+  # calls are equivalent:
+  #
+  #    worksheet.write_row('A1', array) # Write a row of data
+  #    worksheet.write(    'A1', array) # Same thing
+  #
+  # As with all of the write methods the format parameter is optional. If a
+  # format is specified it is applied to all the elements of the data array.
+  #
+  # Array references within the data will be treated as columns. This allows you
+  # to write 2D arrays of data in one go. For example:
+  #
+  #    eec =  [
+  #                ['maggie', 'milly', 'molly', 'may'  ],
+  #                [13,       14,      15,      16     ],
+  #                ['shell',  'star',  'crab',  'stone']
+  #           ]
+  #
+  #    worksheet.write_row('A1', eec)
+  #
+  # Would produce a worksheet as follows:
+  #
+  #     -----------------------------------------------------------
+  #    |   |    A    |    B    |    C    |    D    |    E    | ...
+  #     -----------------------------------------------------------
+  #    | 1 | maggie  | 13      | shell   | ...     |  ...    | ...
+  #    | 2 | milly   | 14      | star    | ...     |  ...    | ...
+  #    | 3 | molly   | 15      | crab    | ...     |  ...    | ...
+  #    | 4 | may     | 16      | stone   | ...     |  ...    | ...
+  #    | 5 | ...     | ...     | ...     | ...     |  ...    | ...
+  #    | 6 | ...     | ...     | ...     | ...     |  ...    | ...
+  #
+  # To write the data in a row-column order refer to the write_col() method
+  # below.
+  #
+  # Any +nil+ values in the data will be ignored unless a format is applied
+  # to the data, in which case a formatted blank cell will be written. In
+  # either case the appropriate row or column value will still be
+  # incremented.
+  #
+  # The write_row() method returns the first error encountered when
+  # writing the elements of the data or zero if no errors were encountered.
+  # See the return values described for the write() method above.
+  #
+  # See also the write_arrays.rb program in the examples directory of the
+  # distro.
+  #
+  def write_row(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
 
-    record    = 0x0006       # Record identifier
-    chn       = 0x0000       # Must be zero
+    # Catch non array refs passed by user.
+    unless args[2].respond_to?(:to_ary)
+      raise "Not an array ref in call to write_row() #{$!}"
+    end
 
-    formlen   = formula.bytesize     # Length of the binary string
-    length    = 0x16 + formlen       # Length of the record data
+    row, col, tokens, options = args
+    error   = 0
+    if tokens
+      tokens.each do |token|
+        # Check for nested arrays
+        if token.respond_to?(:to_ary)
+          ret = write_col(row, col, token, options)
+        else
+          ret = write(row, col, token, options)
+        end
 
-    header    = [record, length].pack("vv")
-    data      = [row, col, xf].pack("vvv") +
-                num                        +
-                [grbit, chn, formlen].pack('vVv')
-
-    # The STRING record if the formula evaluates to a string.
-    string  = ''
-    string  = get_formula_string(value) if is_string != 0
-
-    # Store the data or write immediately depending on the compatibility mode.
-    store_with_compatibility(row, col, header + data + formula + string)
+        # Return only the first error encountered, if any.
+        error ||= ret
+        col += 1
+      end
+    end
+    error
   end
-  private :store_formula_common
+
+
+  #
+  # :call-seq:
+  #   write_column(row, col   , array[, format])
+  #   write_column(A1_notation, array[, format])
+  #
+  # Write a column of data starting from (row, col). Call write_row() if any of
+  # the elements of the array are in turn array. This allows the writing
+  # of 1D or 2D arrays of data in one go.
+  #
+  # Returns: the first encountered error value or zero for no errors
+  #
+  #
+  # The write_col() method can be used to write a 1D or 2D array of data in one
+  # go. This is useful for converting the results of a database query into an
+  # Excel worksheet. The write() method is then called for each element of the
+  # data. For example:
+  #
+  #    array      = ['awk', 'gawk', 'mawk']
+  #
+  #    worksheet.write_col(0, 0, array)
+  #
+  #    # The above example is equivalent to:
+  #    worksheet.write(0, 0, array[0])
+  #    worksheet.write(1, 0, array[1])
+  #    worksheet.write(2, 0, array[2])
+  #
+  # As with all of the write methods the format parameter is optional. If a
+  # format is specified it is applied to all the elements of the data array.
+  #
+  # Array within the data will be treated as rows. This allows you to write
+  # 2D arrays of data in one go. For example:
+  #
+  #    eec =  [
+  #                ['maggie', 'milly', 'molly', 'may'  ],
+  #                [13,       14,      15,      16     ],
+  #                ['shell',  'star',  'crab',  'stone']
+  #            ]
+  #
+  #    worksheet.write_col('A1', eec)
+  #
+  # Would produce a worksheet as follows:
+  #
+  #     -----------------------------------------------------------
+  #    |   |    A    |    B    |    C    |    D    |    E    | ...
+  #     -----------------------------------------------------------
+  #    | 1 | maggie  | milly   | molly   | may     |  ...    | ...
+  #    | 2 | 13      | 14      | 15      | 16      |  ...    | ...
+  #    | 3 | shell   | star    | crab    | stone   |  ...    | ...
+  #    | 4 | ...     | ...     | ...     | ...     |  ...    | ...
+  #    | 5 | ...     | ...     | ...     | ...     |  ...    | ...
+  #    | 6 | ...     | ...     | ...     | ...     |  ...    | ...
+  #
+  # To write the data in a column-row order refer to the write_row() method
+  # above.
+  #
+  # Any +nil+ values in the data will be ignored unless a format is applied to
+  # the data, in which case a formatted blank cell will be written. In either
+  # case the appropriate row or column value will still be incremented.
+  #
+  # As noted above the write() method can be used as a synonym for write_row()
+  # and write_row() handles nested array as columns. Therefore, the following
+  # two method calls are equivalent although the more explicit call to
+  # write_col() would be preferable for maintainability:
+  #
+  #    worksheet.write_col('A1', array)     # Write a column of data
+  #    worksheet.write(    'A1', [ array ]) # Same thing
+  #
+  # The write_col() method returns the first error encountered when writing
+  # the elements of the data or zero if no errors were encountered. See the
+  # return values described for the write() method above.
+  #
+  # See also the write_arrays.pl program in the examples directory of the distro.
+  #
+  def write_col(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
+
+    # Catch non array refs passed by user.
+    unless args[2].respond_to?(:to_ary)
+      raise "Not an array ref in call to write_row()"
+    end
+
+    row, col, tokens, options = args
+    error   = 0
+    if tokens
+      tokens.each do |token|
+        # write() will deal with any nested arrays
+        ret = write(row, col, token, options)
+
+        # Return only the first error encountered, if any.
+        error ||= ret
+        row += 1
+      end
+    end
+    error
+  end
+
+  #
+  # :call-seq:
+  #   write_date_time(row, col   , date_string[, format])
+  #   write_date_time(A1_notation, date_string[, format])
+  #
+  # Write a datetime string in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format as a
+  # number representing an Excel date. format is optional.
+  #
+  # Returns  0 : normal termination
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #         -3 : Invalid date_time, written as string
+  #
+  # The write_date_time() method can be used to write a date or time to the
+  # cell specified by row and column:
+  #
+  #     worksheet.write_date_time('A1', '2004-05-13T23:20', date_format)
+  #
+  # The date_string should be in the following format:
+  #
+  #     yyyy-mm-ddThh:mm:ss.sss
+  #
+  # This conforms to an ISO8601 date but it should be noted that the full
+  # range of ISO8601 formats are not supported.
+  #
+  # The following variations on the date_string parameter are permitted:
+  #
+  #     yyyy-mm-ddThh:mm:ss.sss         # Standard format
+  #     yyyy-mm-ddT                     # No time
+  #               Thh:mm:ss.sss         # No date
+  #     yyyy-mm-ddThh:mm:ss.sssZ        # Additional Z (but not time zones)
+  #     yyyy-mm-ddThh:mm:ss             # No fractional seconds
+  #     yyyy-mm-ddThh:mm                # No seconds
+  #
+  # Note that the T is required in all cases.
+  #
+  # A date should always have a format, otherwise it will appear as a number,
+  # see "DATES AND TIME IN EXCEL" and "CELL FORMATTING". Here is a typical
+  # example:
+  #
+  #     date_format = workbook.add_format(:num_format => 'mm/dd/yy')
+  #     worksheet.write_date_time('A1', '2004-05-13T23:20', date_format)
+  #
+  # Valid dates should be in the range 1900-01-01 to 9999-12-31, for the 1900
+  # epoch and 1904-01-01 to 9999-12-31, for the 1904 epoch. As with Excel,
+  # dates outside these ranges will be written as a string.
+  #
+  # See also the date_time.rb program in the examples directory of the distro.
+  #
+  def write_date_time(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
+
+    return -1 if (args.size < 3)                 # Check the number of args
+
+    row       = args[0]                           # Zero indexed row
+    col       = args[1]                           # Zero indexed column
+    str       = args[2]
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    error     = 0
+    date_time = convert_date_time(str)
+
+    if date_time
+      error = write_number(row, col, date_time, args[3])
+    else
+      # The date isn't valid so write it as a string.
+      write_string(row, col, str, args[3])
+      error = -3
+    end
+    error
+  end
+
+  #
+  # :call-seq:
+  #   write_comment(row, col,    comment[, optionhash(es)])  -> Fixnum
+  #   write_comment(A1_notation, comment[, optionhash(es)])  -> Fixnum
+  #
+  # Write a comment to the specified row and column (zero indexed).
+  #
+  # Returns  0 : normal termination
+  #         -1 : insufficient number of arguments
+  #         -2 : row or column out of range
+  #
+  # The write_comment() method is used to add a comment to a cell. A cell
+  # comment is indicated in Excel by a small red triangle in the upper
+  # right-hand corner of the cell. Moving the cursor over the red triangle
+  # will reveal the comment.
+  #
+  # The following example shows how to add a comment to a cell:
+  #
+  #     worksheet.write        (2, 2, 'Hello')
+  #     worksheet.write_comment(2, 2, 'This is a comment.')
+  #
+  # As usual you can replace the row and column parameters with an A1 cell
+  # reference. See the note about "Cell notation".
+  #
+  #     worksheet.write        ('C3', 'Hello')
+  #     worksheet.write_comment('C3', 'This is a comment.')
+  #
+  # On systems with perl 5.8 and later the write_comment() method will also
+  # handle strings in UTF-8 format.
+  #
+  #     worksheet.write_comment('C3', "\x{263a}")       # Smiley
+  #     worksheet.write_comment('C4', 'Comment ca va?')
+  #
+  # In addition to the basic 3 argument form of write_comment() you can pass in
+  # several optional key/value pairs to control the format of the comment.
+  # For example:
+  #
+  #     worksheet.write_comment('C3', 'Hello', :visible => 1, :author => 'Ruby')
+  #
+  # Most of these options are quite specific and in general the default comment
+  # behaviour will be all that you need. However, should you need greater
+  # control over the format of the cell comment the following options are
+  # available:
+  #
+  #     encoding
+  #     author
+  #     author_encoding
+  #     visible
+  #     x_scale
+  #     width
+  #     y_scale
+  #     height
+  #     color
+  #     start_cell
+  #     start_row
+  #     start_col
+  #     x_offset
+  #     y_offset
+  #
+  # Option: encoding
+  #
+  #   This option is used to indicate that the comment string is encoded as
+  #   UTF-16BE.
+  #
+  #     comment = [0x263a].pack('n')     # UTF-16BE Smiley symbol
+  #
+  #     worksheet.write_comment('C3', comment, :encoding => 1)
+  #
+  # Option: author
+  #
+  #   This option is used to indicate who the author of the comment is. Excel
+  #   displays the author of the comment in the status bar at the bottom of
+  #   the worksheet. This is usually of interest in corporate environments
+  #   where several people might review and provide comments to a workbook.
+  #
+  #     worksheet.write_comment('C3', 'Atonement', :author => 'Ian McEwan')
+  #
+  # Option: author_encoding
+  #
+  #   This option is used to indicate that the author string is encoded as UTF-16BE.
+  #
+  # Option: visible
+  #
+  #   This option is used to make a cell comment visible when the worksheet
+  #   is opened. The default behaviour in Excel is that comments are initially
+  #   hidden. However, it is also possible in Excel to make individual or all
+  #   comments visible. In WriteExcel individual comments can be made visible
+  #   as follows:
+  #
+  #     worksheet.write_comment('C3', 'Hello', :visible => 1)
+  #
+  #   It is possible to make all comments in a worksheet visible using the show
+  #   comments() worksheet method (see below). Alternatively, if all of the cell
+  #   comments have been made visible you can hide individual comments:
+  #
+  #     worksheet.write_comment('C3', 'Hello', :visible => 0)
+  #
+  # Option: x_scale
+  #
+  #   This option is used to set the width of the cell comment box as a factor
+  #   of the default width.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :x_scale => 2)
+  #     worksheet.write_comment('C4', 'Hello', :x_scale => 4.2)
+  #
+  # Option: width
+  #
+  #   This option is used to set the width of the cell comment box
+  #   explicitly in pixels.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :width => 200)
+  #
+  # Option: y_scale
+  #
+  #   This option is used to set the height of the cell comment box as a
+  #   factor of the default height.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :y_scale => 2)
+  #     worksheet.write_comment('C4', 'Hello', :y_scale => 4.2)
+  #
+  # Option: height
+  #
+  #   This option is used to set the height of the cell comment box
+  #   explicitly in pixels.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :height => 200)
+  #
+  # Option: color
+  #
+  #   This option is used to set the background colour of cell comment box.
+  #   You can use one of the named colours recognised by WriteExcel or a colour
+  #   index. See "COLOURS IN EXCEL".
+  #
+  #     worksheet.write_comment('C3', 'Hello', :color => 'green')
+  #     worksheet.write_comment('C4', 'Hello', :color => 0x35)    # Orange
+  #
+  # Option: start_cell
+  #
+  #   This option is used to set the cell in which the comment will appear.
+  #   By default Excel displays comments one cell to the right and one cell
+  #   above the cell to which the comment relates. However, you can change
+  #   this behaviour if you wish. In the following example the comment which
+  #   would appear by default in cell D2 is moved to E2.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :start_cell => 'E2')
+  #
+  # Option: start_row
+  #
+  #   This option is used to set the row in which the comment will appear.
+  #   See the start_cell option above. The row is zero indexed.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :start_row => 0)
+  #
+  # Option: start_col
+  #
+  #   This option is used to set the column in which the comment will appear.
+  #   See the start_cell option above. The column is zero indexed.
+  #
+  #     worksheet.write_comment('C3', 'Hello', :start_col => 4)
+  #
+  # Option: x_offset
+  #
+  #   This option is used to change the x offset, in pixels, of a comment
+  #   within a cell:
+  #
+  #     worksheet.write_comment('C3', comment, :x_offset => 30)
+  #
+  # Option: y_offset
+  #
+  #   This option is used to change the y offset, in pixels, of a comment
+  #   within a cell:
+  #
+  #     worksheet.write_comment('C3', comment, :x_offset => 30)
+  #
+  # You can apply as many of these options as you require.
+  #
+  # ==Note about row height and comments.
+  #
+  # If you specify the height of a row that contains a comment then WriteExcel
+  # will adjust the height of the comment to maintain the default or user
+  # specified dimensions. However, the height of a row can also be adjusted
+  # automatically by Excel if the text wrap property is set or large fonts are
+  # used in the cell. This means that the height of the row is unknown to
+  # WriteExcel at run time and thus the comment box is stretched with the row.
+  # Use the set_row() method to specify the row height explicitly and avoid
+  # this problem.
+  #
+  def write_comment(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
+
+    return -1 if args.size < 3   # Check the number of args
+
+    row = args[0]
+    col = args[1]
+
+    # Check for pairs of optional arguments, i.e. an odd number of args.
+    # raise "Uneven number of additional arguments" if args.size % 2 == 0
+
+    # Check that row and col are valid and store max and min values
+    return -2 if check_dimensions(row, col) != 0
+
+    # We have to avoid duplicate comments in cells or else Excel will complain.
+    @comments[row] = { col => comment_params(*args) }
+  end
 
   #
   # :call-seq:
@@ -4242,1676 +3806,6 @@ class Worksheet < BIFFWriter
     return write_url_external(*args) if url =~ /^external:/
     write_url_web(*args)
   end
-
-  ###############################################################################
-  #
-  # write_url_web($row1, $col1, $row2, $col2, $url, $string, $format)
-  #    row1        = $_[0];                        # Start row
-  #    col1        = $_[1];                        # Start column
-  #    row2        = $_[2];                        # End row
-  #    col2        = $_[3];                        # End column
-  #    url         = $_[4];                        # URL string
-  #    str         = $_[5];                        # Alternative label
-  #
-  # Used to write http, ftp and mailto hyperlinks.
-  # The link type ($options) is 0x03 is the same as absolute dir ref without
-  # sheet. However it is differentiated by the $unknown2 data stream.
-  #
-  # See also write_url() above for a general description and return values.
-  #
-  def write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
-    ruby_19 { url = convert_to_ascii_if_ascii(url) }
-
-    record = 0x01B8                       # Record identifier
-    length = 0x00000                      # Bytes to follow
-
-    xf     = format || url_format        # The cell format
-
-    # Write the visible label but protect against url recursion in write().
-    str          = url if str.nil?
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
-    return error if error == -2
-
-    # Pack the undocumented parts of the hyperlink stream
-    unknown1    = ["D0C9EA79F9BACE118C8200AA004BA90B02000000"].pack("H*")
-    unknown2    = ["E0C9EA79F9BACE118C8200AA004BA90B"].pack("H*")
-
-    # Pack the option flags
-    options     = [0x03].pack("V")
-
-    # URL encoding.
-    encoding    = 0
-
-    # Convert an Utf8 URL type and to a null terminated wchar string.
-    if is_utf8?(url)
-      url = utf8_to_16be(url)
-      # URL is null terminated.
-      ruby_18 { url += "\0\0" } ||
-      ruby_19 { url += "\0\0".force_encoding('UTF-16BE') }
-      encoding = 1
-    end
-
-    # Convert an Ascii URL type and to a null terminated wchar string.
-    if encoding == 0
-      url  =
-        ruby_18 { url + "\0" } ||
-        ruby_19 { url.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
-      url  = url.unpack('c*').pack('v*')
-    end
-
-    # Pack the length of the URL
-    url_len     = [url.bytesize].pack("V")
-
-    # Calculate the data length
-    length         = 0x34 + url.bytesize
-
-    # Pack the header data
-    header      = [record, length].pack("vv")
-    data        = [row1, row2, col1, col2].pack("vvvv")
-
-    # Write the packed data
-    append( header, data,unknown1,options,unknown2,url_len,url)
-
-    error
-  end
-  private :write_url_web
-
-  ###############################################################################
-  #
-  # write_url_internal($row1, $col1, $row2, $col2, $url, $string, $format)
-  #    row1        = $_[0];                        # Start row
-  #    col1        = $_[1];                        # Start column
-  #    row2        = $_[2];                        # End row
-  #    col2        = $_[3];                        # End column
-  #    url         = $_[4];                        # URL string
-  #    str         = $_[5];                        # Alternative label
-  #
-  # Used to write internal reference hyperlinks such as "Sheet1!A1".
-  #
-  # See also write_url() above for a general description and return values.
-  #
-  def write_url_internal(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
-    record = 0x01B8                       # Record identifier
-    length = 0x00000                      # Bytes to follow
-
-    xf     = format || url_format        # The cell format
-
-    # Strip URL type
-    url.sub!(/^internal:/, '')
-
-    # Write the visible label but protect against url recursion in write().
-    str          = url if str.nil?
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
-    return error if error == -2
-
-    # Pack the undocumented parts of the hyperlink stream
-    unknown1    = ["D0C9EA79F9BACE118C8200AA004BA90B02000000"].pack("H*")
-
-    # Pack the option flags
-    options     = [0x08].pack("V")
-
-    # URL encoding.
-    encoding    = 0
-
-    # Convert an Utf8 URL type and to a null terminated wchar string.
-    if is_utf8?(str)
-      # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
-      url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/
-      # URL is null terminated.
-      ruby_18 { url = utf8_to_16be(url) + "\0\0" } ||
-      ruby_19 { url = url.encode('UTF-16LE') + "\0\0".encode('UTF-16LE') }
-      encoding = 1
-    end
-
-    # Convert an Ascii URL type and to a null terminated wchar string.
-    if encoding == 0
-      url += "\0"
-      url = url.unpack('c*').pack('v*')
-    end
-
-    # Pack the length of the URL as chars (not wchars)
-    url_len     = [(url.length/2).to_i].pack("V")
-
-    # Calculate the data length
-    length         = 0x24 + url.bytesize
-
-    # Pack the header data
-    header      = [record, length].pack("vv")
-    data        = [row1, row2, col1, col2].pack("vvvv")
-
-    # Write the packed data
-    append( header, data, unknown1, options, url_len, url)
-
-    error
-  end
-  private :write_url_internal
-
-  ###############################################################################
-  #
-  # write_url_external($row1, $col1, $row2, $col2, $url, $string, $format)
-  #
-  # Write links to external directory names such as 'c:\foo.xls',
-  # c:\foo.xls#Sheet1!A1', '../../foo.xls'. and '../../foo.xls#Sheet1!A1'.
-  #
-  # Note: Excel writes some relative links with the $dir_long string. We ignore
-  # these cases for the sake of simpler code.
-  #
-  # See also write_url() above for a general description and return values.
-  #
-  def write_url_external(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
-    # Network drives are different. We will handle them separately
-    # MS/Novell network drives and shares start with \\
-    if url =~ /^external:\\\\/
-      return write_url_external_net(row1, col1, row2, col2, url, str, format)
-    end
-
-    record      = 0x01B8                       # Record identifier
-    length      = 0x00000                      # Bytes to follow
-
-    xf     = format || url_format        # The cell format
-
-    # Strip URL type and change Unix dir separator to Dos style (if needed)
-    #
-    url.sub!(/^external:/, '')
-    url.gsub!(%r|/|, '\\')
-
-
-    # Write the visible label but protect against url recursion in write().
-    str = url.sub!(/\#/, ' - ') if str.nil?
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
-    return error if error == -2
-
-    # Determine if the link is relative or absolute:
-    # Absolute if link starts with DOS drive specifier like C:
-    # Otherwise default to 0x00 for relative link.
-    #
-    absolute    = 0x00
-    absolute    = 0x02  if url =~ /^[A-Za-z]:/
-
-    dir_long, link_type, sheet_len, sheet = analyze_link(url, absolute)
-
-    # Pack the link type
-    link_type      = link_type.pack("V")
-
-    # Calculate the up-level dir count e.g. (..\..\..\ == 3)
-    up_count    = 0
-    while dir_long.sub!(/^\.\.\\/, '')
-      up_count += 1
-    end
-    up_count    = [up_count].pack("v")
-
-    # Store the short dos dir name (null terminated)
-    dir_short   = dir_long + "\0"
-
-    # Store the long dir name as a wchar string (non-null terminated)
-    dir_long = dir_long.split('').join("\0") + "\0"
-
-    # Pack the lengths of the dir strings
-    dir_short_len = [dir_short.bytesize].pack("V")
-    dir_long_len  = [dir_long.bytesize].pack("V")
-    stream_len    = [dir_long.bytesize + 0x06].pack("V")
-
-    # Pack the undocumented parts of the hyperlink stream
-    unknown1 = ['D0C9EA79F9BACE118C8200AA004BA90B02000000'].pack("H*")
-    unknown2 = ['0303000000000000C000000000000046'].pack("H*")
-    unknown3 = ['FFFFADDE000000000000000000000000000000000000000'].pack("H*")
-    unknown4 = [0x03].pack("v")
-
-    # Pack the main data stream
-    data        = [row1, row2, col1, col2].pack("vvvv") +
-    unknown1     +
-    link_type    +
-    unknown2     +
-    up_count     +
-    dir_short_len+
-    dir_short    +
-    unknown3     +
-    stream_len   +
-    dir_long_len +
-    unknown4     +
-    dir_long     +
-    sheet_len    +
-    sheet
-
-    # Pack the header data
-    length      = data.bytesize
-    header      = [record, length].pack("vv")
-
-    # Write the packed data
-    append(header, data)
-
-    error
-  end
-  private :write_url_external
-
-  ###############################################################################
-  #
-  # write_url_external_net($row1, $col1, $row2, $col2, $url, $string, $format)
-  #
-  # Write links to external MS/Novell network drives and shares such as
-  # '//NETWORK/share/foo.xls' and '//NETWORK/share/foo.xls#Sheet1!A1'.
-  #
-  # See also write_url() above for a general description and return values.
-  #
-  def write_url_external_net(row1, col1, row2, col2, url, str, format)       #:nodoc:
-    record      = 0x01B8                       # Record identifier
-    length      = 0x00000                      # Bytes to follow
-
-    xf          = format || url_format  # The cell format
-
-    # Strip URL type and change Unix dir separator to Dos style (if needed)
-    #
-    url.sub!(/^external:/, '')
-    url.gsub!(%r|/|, '\\')
-
-    # Write the visible label but protect against url recursion in write().
-    str = url.sub!(/\#/, ' - ') if str.nil?
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
-    return error if error == -2
-
-    dir_long, link_type, sheet_len, sheet = analyze_link(url)
-
-    # Pack the link type
-    link_type      = [link_type].pack("V")
-
-    # Make the string null terminated
-    dir_long      += "\0"
-
-    # Pack the lengths of the dir string
-    dir_long_len  = [dir_long.bytesize].pack("V")
-
-    # Store the long dir name as a wchar string (non-null terminated)
-    dir_long = dir_long.split('').join("\0") + "\0"
-
-    # Pack the undocumented part of the hyperlink stream
-    unknown1    = ['D0C9EA79F9BACE118C8200AA004BA90B02000000'].pack("H*")
-
-    # Pack the main data stream
-    data         = [row1, row2, col1, col2].pack("vvvv") +
-    unknown1     +
-    link_type    +
-    dir_long_len +
-    dir_long     +
-    sheet_len    +
-    sheet
-
-    # Pack the header data
-    length      = data.bytesize
-    header      = [record, length].pack("vv")
-
-    # Write the packed data
-    append(header, data)
-
-    error
-  end
-  private :write_url_external_net
-
-  def url_format
-    @workbook.url_format
-  end
-  private :url_format
-
-  # Determine if the link contains a sheet reference and change some of the
-  # parameters accordingly.
-  # Split the dir name and sheet name (if it exists)
-  #
-  def analyze_link(url, absolute = nil)  # :nodoc:
-    dir_long , sheet = url.split(/\#/)
-    link_type = absolute ? (0x01 | absolute) : 0x0103
-
-    if sheet
-      link_type |= 0x08
-      sheet_len  = [sheet.bytesize + 0x01].pack("V")
-      sheet      = sheet.split('').join("\0") + "\0\0\0"
-    else
-      sheet_len   = ''
-      sheet       = ''
-    end
-
-    [dir_long, link_type, sheet_len, sheet]
-  end
-  private :analyze_link
-
-  #
-  # :call-seq:
-  #   write_date_time(row, col   , date_string[, format])
-  #   write_date_time(A1_notation, date_string[, format])
-  #
-  # Write a datetime string in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format as a
-  # number representing an Excel date. format is optional.
-  #
-  # Returns  0 : normal termination
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #         -3 : Invalid date_time, written as string
-  #
-  # The write_date_time() method can be used to write a date or time to the
-  # cell specified by row and column:
-  #
-  #     worksheet.write_date_time('A1', '2004-05-13T23:20', date_format)
-  #
-  # The date_string should be in the following format:
-  #
-  #     yyyy-mm-ddThh:mm:ss.sss
-  #
-  # This conforms to an ISO8601 date but it should be noted that the full
-  # range of ISO8601 formats are not supported.
-  #
-  # The following variations on the date_string parameter are permitted:
-  #
-  #     yyyy-mm-ddThh:mm:ss.sss         # Standard format
-  #     yyyy-mm-ddT                     # No time
-  #               Thh:mm:ss.sss         # No date
-  #     yyyy-mm-ddThh:mm:ss.sssZ        # Additional Z (but not time zones)
-  #     yyyy-mm-ddThh:mm:ss             # No fractional seconds
-  #     yyyy-mm-ddThh:mm                # No seconds
-  #
-  # Note that the T is required in all cases.
-  #
-  # A date should always have a format, otherwise it will appear as a number,
-  # see "DATES AND TIME IN EXCEL" and "CELL FORMATTING". Here is a typical
-  # example:
-  #
-  #     date_format = workbook.add_format(:num_format => 'mm/dd/yy')
-  #     worksheet.write_date_time('A1', '2004-05-13T23:20', date_format)
-  #
-  # Valid dates should be in the range 1900-01-01 to 9999-12-31, for the 1900
-  # epoch and 1904-01-01 to 9999-12-31, for the 1904 epoch. As with Excel,
-  # dates outside these ranges will be written as a string.
-  #
-  # See also the date_time.rb program in the examples directory of the distro.
-  #
-  def write_date_time(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    args = row_col_notation(args)
-
-    return -1 if (args.size < 3)                 # Check the number of args
-
-    row       = args[0]                           # Zero indexed row
-    col       = args[1]                           # Zero indexed column
-    str       = args[2]
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
-    error     = 0
-    date_time = convert_date_time(str)
-
-    if date_time
-      error = write_number(row, col, date_time, args[3])
-    else
-      # The date isn't valid so write it as a string.
-      write_string(row, col, str, args[3])
-      error = -3
-    end
-    error
-  end
-
-  #
-  # The function takes a date and time in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format
-  # and converts it to a decimal number representing a valid Excel date.
-  #
-  # Dates and times in Excel are represented by real numbers. The integer part of
-  # the number stores the number of days since the epoch and the fractional part
-  # stores the percentage of the day in seconds. The epoch can be either 1900 or
-  # 1904.
-  #
-  # Parameter: Date and time string in one of the following formats:
-  #               yyyy-mm-ddThh:mm:ss.ss  # Standard
-  #               yyyy-mm-ddT             # Date only
-  #                         Thh:mm:ss.ss  # Time only
-  #
-  # Returns:
-  #            A decimal number representing a valid Excel date, or
-  #            undef if the date is invalid.
-  #
-  def convert_date_time(date_time_string)       #:nodoc:
-    date_time = date_time_string
-
-    days      = 0 # Number of days since epoch
-    seconds   = 0 # Time expressed as fraction of 24h hours in seconds
-
-    # Strip leading and trailing whitespace.
-    date_time.sub!(/^\s+/, '')
-    date_time.sub!(/\s+$/, '')
-
-    # Check for invalid date char.
-    return nil if date_time =~ /[^0-9T:\-\.Z]/
-
-    # Check for "T" after date or before time.
-    return nil unless date_time =~ /\dT|T\d/
-
-    # Strip trailing Z in ISO8601 date.
-    date_time.sub!(/Z$/, '')
-
-    # Split into date and time.
-    date, time = date_time.split(/T/)
-
-    # We allow the time portion of the input DateTime to be optional.
-    if time
-      # Match hh:mm:ss.sss+ where the seconds are optional
-      if time =~ /^(\d\d):(\d\d)(:(\d\d(\.\d+)?))?/
-        hour   = $1.to_i
-        min    = $2.to_i
-        sec    = $4.to_f || 0
-      else
-        return nil # Not a valid time format.
-      end
-
-      # Some boundary checks
-      return nil if hour >= 24
-      return nil if min  >= 60
-      return nil if sec  >= 60
-
-      # Excel expresses seconds as a fraction of the number in 24 hours.
-      seconds = (hour * 60* 60 + min * 60 + sec) / (24.0 * 60 * 60)
-    end
-
-    # We allow the date portion of the input DateTime to be optional.
-    return seconds if date == ''
-
-    # Match date as yyyy-mm-dd.
-    if date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/
-      year   = $1.to_i
-      month  = $2.to_i
-      day    = $3.to_i
-    else
-      return nil  # Not a valid date format.
-    end
-
-    # Set the epoch as 1900 or 1904. Defaults to 1900.
-    # Special cases for Excel.
-    unless date_1904?
-      return      seconds if date == '1899-12-31' # Excel 1900 epoch
-      return      seconds if date == '1900-01-00' # Excel 1900 epoch
-      return 60 + seconds if date == '1900-02-29' # Excel false leapday
-    end
-
-
-    # We calculate the date by calculating the number of days since the epoch
-    # and adjust for the number of leap days. We calculate the number of leap
-    # days by normalising the year in relation to the epoch. Thus the year 2000
-    # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
-    #
-    epoch   = date_1904? ? 1904 : 1900
-    offset  = date_1904? ?    4 :    0
-    norm    = 300
-    range   = year -epoch
-
-    # Set month days and check for leap year.
-    mdays   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    leap    = 0
-    leap    = 1  if year % 4 == 0 && year % 100 != 0 || year % 400 == 0
-    mdays[1]   = 29 if leap != 0
-
-    # Some boundary checks
-    return nil if year  < epoch or year  > 9999
-    return nil if month < 1     or month > 12
-    return nil if day   < 1     or day   > mdays[month -1]
-
-    # Accumulate the number of days since the epoch.
-    days = day                               # Add days for current month
-    (0 .. month-2).each do |m|
-      days += mdays[m]                      # Add days for past months
-    end
-    days += range *365                       # Add days for past years
-    days += ((range)                /  4)    # Add leapdays
-    days -= ((range + offset)       /100)    # Subtract 100 year leapdays
-    days += ((range + offset + norm)/400)    # Add 400 year leapdays
-    days -= leap                             # Already counted above
-
-    # Adjust for Excel erroneously treating 1900 as a leap year.
-    days += 1 if !date_1904? and days > 59
-
-    days + seconds
-  end
-
-  def date_1904?     # :nodoc:
-    @workbook.date_1904
-  end
-  private :date_1904?
-
-  ###############################################################################
-  #
-  # write_row_default()
-  #        row    : Row Number
-  #        colMic : First defined column
-  #        colMac : Last defined column
-  #
-  # Write a default row record, in compatibility mode, for rows that don't have
-  # user specified values..
-  #
-  def write_row_default(row, colMic, colMac)       #:nodoc:
-
-    record      = 0x0208               # Record identifier
-    length      = 0x0010               # Number of bytes to follow
-
-    miyRw       = 0xFF                 # Row height
-    irwMac      = 0x0000               # Used by Excel to optimise loading
-    reserved    = 0x0000               # Reserved
-    grbit       = 0x0100               # Option flags
-    ixfe        = 0x0F                 # XF index
-
-    store_simple(record, length,
-                 row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe)
-  end
-  private :write_row_default
-
-  ###############################################################################
-  #
-  # check_dimensions($row, $col, $ignore_row, $ignore_col)
-  #
-  # Check that $row and $col are valid and store max and min values for use in
-  # DIMENSIONS record. See, store_dimensions().
-  #
-  # The $ignore_row/$ignore_col flags is used to indicate that we wish to
-  # perform the dimension check without storing the value.
-  #
-  # The ignore flags are use by set_row() and data_validate.
-  #
-  def check_dimensions(row, col, ignore_row = 0, ignore_col = 0)       #:nodoc:
-    return -2 if row.nil?
-    return -2 if row >= @xls_rowmax
-
-    return -2 if col.nil?
-    return -2 if col >= @xls_colmax
-
-    if ignore_row == 0
-      if @dim_rowmin.nil? or row < @dim_rowmin
-        @dim_rowmin = row
-      end
-
-      if @dim_rowmax.nil? or row > @dim_rowmax
-        @dim_rowmax = row
-      end
-    end
-
-    if ignore_col == 0
-      if @dim_colmin.nil? or col < @dim_colmin
-        @dim_colmin = col
-      end
-
-      if @dim_colmax.nil? or col > @dim_colmax
-        @dim_colmax =col
-      end
-    end
-
-    0
-  end
-  private :check_dimensions
-
-  ###############################################################################
-  #
-  # store_dimensions()
-  #
-  # Writes Excel DIMENSIONS to define the area in which there is cell data.
-  #
-  # Notes:
-  #   Excel stores the max row/col as row/col +1.
-  #   Max and min values of 0 are used to indicate that no cell data.
-  #   We set the undef member data to 0 since it is used by store_table().
-  #   Inserting images or charts doesn't change the DIMENSION data.
-  #
-  def store_dimensions   #:nodoc:
-    record    = 0x0200         # Record identifier
-    length    = 0x000E         # Number of bytes to follow
-    reserved  = 0x0000         # Reserved by Excel
-
-    row_min = @dim_rowmin.nil? ? 0 : @dim_rowmin
-    row_max = @dim_rowmax.nil? ? 0 : @dim_rowmax + 1
-    col_min = @dim_colmin.nil? ? 0 : @dim_colmin
-    col_max = @dim_colmax.nil? ? 0 : @dim_colmax + 1
-
-    # Set member data to the new max/min value for use by store_table().
-    @dim_rowmin = row_min
-    @dim_rowmax = row_max
-    @dim_colmin = col_min
-    @dim_colmax = col_max
-
-    header = [record, length].pack("vv")
-    fields = [row_min, row_max, col_min, col_max, reserved]
-    data   = fields.pack("VVvvv")
-
-    prepend(header, data)
-  end
-  private :store_dimensions
-
-  ###############################################################################
-  #
-  # store_window2()
-  #
-  # Write BIFF record Window2.
-  #
-  def store_window2   #:nodoc:
-    record         = 0x023E     # Record identifier
-    length         = 0x0012     # Number of bytes to follow
-
-    grbit          = 0x00B6     # Option flags
-    rwTop          = @first_row   # Top visible row
-    colLeft        = @first_col   # Leftmost visible column
-    rgbHdr         = 0x00000040            # Row/col heading, grid color
-
-    wScaleSLV      = 0x0000                # Zoom in page break preview
-    wScaleNormal   = 0x0000                # Zoom in normal view
-    reserved       = 0x00000000
-
-
-    # The options flags that comprise $grbit
-    fDspFmla       = @display_formulas # 0 - bit
-    fDspGrid       = @screen_gridlines # 1
-    fDspRwCol      = @display_headers  # 2
-    fFrozen        = frozen? ? 1 : 0   # 3
-    fDspZeros      = display_zeros? ? 1 : 0   # 4
-    fDefaultHdr    = 1                 # 5
-    fArabic        = @display_arabic || 0  # 6
-    fDspGuts       = @outline_on       # 7
-    fFrozenNoSplit = @frozen_no_split  # 0 - bit
-    fSelected      = selected? ? 1 : 0 # 1
-    fPaged         = @active           # 2
-    fBreakPreview  = 0                # 3
-
-    grbit             = fDspFmla
-    grbit            |= fDspGrid       << 1
-    grbit            |= fDspRwCol      << 2
-    grbit            |= fFrozen        << 3
-    grbit            |= fDspZeros      << 4
-    grbit            |= fDefaultHdr    << 5
-    grbit            |= fArabic        << 6
-    grbit            |= fDspGuts       << 7
-    grbit            |= fFrozenNoSplit << 8
-    grbit            |= fSelected      << 9
-    grbit            |= fPaged         << 10
-    grbit            |= fBreakPreview  << 11
-
-    header = [record, length].pack("vv")
-    data    =[grbit, rwTop, colLeft, rgbHdr, wScaleSLV, wScaleNormal, reserved].pack("vvvVvvV")
-
-    append(header, data)
-  end
-  private :store_window2
-
-  ###############################################################################
-  #
-  # store_page_view()
-  #
-  # Set page view mode. Only applicable to Mac Excel.
-  #
-  def store_page_view   #:nodoc:
-    return if @page_view == 0
-    data    = ['C8081100C808000000000040000000000900000000'].pack("H*")
-    append(data)
-  end
-  private :store_page_view
-
-  ###############################################################################
-  #
-  # store_tab_color()
-  #
-  # Write the Tab Color BIFF record.
-  #
-  def store_tab_color   #:nodoc:
-    color   = @tab_color
-
-    return if color == 0
-
-    record  = 0x0862      # Record identifier
-    length  = 0x0014      # Number of bytes to follow
-
-    zero    = 0x0000
-    unknown = 0x0014
-
-    store_simple(record, length, record, zero, zero, zero, zero,
-                 zero, unknown, zero, color, zero)
-  end
-  private :store_tab_color
-
-  ###############################################################################
-  #
-  # store_defrow()
-  #
-  # Write BIFF record DEFROWHEIGHT.
-  #
-  def store_defrow   #:nodoc:
-    record   = 0x0225      # Record identifier
-    length   = 0x0004      # Number of bytes to follow
-
-    grbit    = 0x0000      # Options.
-    height   = 0x00FF      # Default row height
-
-    header = [record, length].pack("vv")
-    data   = [grbit,  height].pack("vv")
-
-    prepend(header, data)
-  end
-  private :store_defrow
-
-  ###############################################################################
-  #
-  # store_defcol()
-  #
-  # Write BIFF record DEFCOLWIDTH.
-  #
-  def store_defcol   #:nodoc:
-    record   = 0x0055      # Record identifier
-    length   = 0x0002      # Number of bytes to follow
-    colwidth = 0x0008      # Default column width
-
-    header   = [record, length].pack("vv")
-    data     = [colwidth].pack("v")
-
-    prepend(header, data)
-  end
-  private :store_defcol
-
-  ###############################################################################
-  #
-  # store_colinfo($firstcol, $lastcol, $width, $format, $hidden)
-  #
-  #   firstcol : First formatted column
-  #   lastcol  : Last formatted column
-  #   width    : Col width in user units, 8.43 is default
-  #   format   : format object
-  #   hidden   : hidden flag
-  #
-  # Write BIFF record COLINFO to define column widths
-  #
-  # Note: The SDK says the record length is 0x0B but Excel writes a 0x0C
-  # length record.
-  #
-  def store_colinfo(firstcol=0, lastcol=0, width=8.43, format=nil, hidden=false, level=0, collapsed=false)  #:nodoc:
-    record   = 0x007D          # Record identifier
-    length   = 0x000B          # Number of bytes to follow
-
-    # Excel rounds the column width to the nearest pixel. Therefore we first
-    # convert to pixels and then to the internal units. The pixel to users-units
-    # relationship is different for values less than 1.
-    #
-    width ||= 8.43
-    if width < 1
-      pixels = width *12
-    else
-      pixels = width *7 +5
-    end
-    pixels = pixels.to_i
-
-    coldx    = (pixels *256/7).to_i   # Col width in internal units
-    grbit    = 0x0000               # Option flags
-    reserved = 0x00                 # Reserved
-
-    # Check for a format object
-    if !format.nil? && format.respond_to?(:xf_index)
-      ixfe = format.xf_index
-    else
-      ixfe = 0x0F
-    end
-
-    # Set the limits for the outline levels (0 <= x <= 7).
-    level = 0 if level < 0
-    level = 7 if level > 7
-
-
-    # Set the options flags. (See set_row() for more details).
-    grbit |= 0x0001 if hidden && hidden != 0
-    grbit |= level << 8
-    grbit |= 0x1000 if collapsed && collapsed != 0
-
-    header = [record, length].pack("vv")
-    data   = [firstcol, lastcol, coldx,
-              ixfe, grbit, reserved].pack("vvvvvC")
-
-    prepend(header, data)
-  end
-  private :store_colinfo
-
-  ###############################################################################
-  #
-  # store_filtermode()
-  #
-  # Write BIFF record FILTERMODE to indicate that the worksheet contains
-  # AUTOFILTER record, ie. autofilters with a filter set.
-  #
-  def store_filtermode   #:nodoc:
-    # Only write the record if the worksheet contains a filtered autofilter.
-    return '' if @filter_on == 0
-
-    record      = 0x009B      # Record identifier
-    length      = 0x0000      # Number of bytes to follow
-
-    header = [record, length].pack('vv')
-
-    prepend(header)
-  end
-  private :store_filtermode
-
-  ###############################################################################
-  #
-  # store_autofilterinfo()
-  #
-  # Write BIFF record AUTOFILTERINFO.
-  #
-  def store_autofilterinfo   #:nodoc:
-    # Only write the record if the worksheet contains an autofilter.
-    return '' if @filter_count == 0
-
-    record      = 0x009D      # Record identifier
-    length      = 0x0002      # Number of bytes to follow
-    num_filters = @filter_count
-
-    header = [record, length].pack('vv')
-    data   = [num_filters].pack('v')
-
-    prepend(header, data)
-  end
-  private :store_autofilterinfo
-
-  ###############################################################################
-  #
-  # store_selection($first_row, $first_col, $last_row, $last_col)
-  #
-  # Write BIFF record SELECTION.
-  #
-  def store_selection(first_row=0, first_col=0, last_row = nil, last_col =nil)   #:nodoc:
-    record   = 0x001D                  # Record identifier
-    length   = 0x000F                  # Number of bytes to follow
-
-    pnn      = @active_pane   # Pane position
-    rwAct    = first_row                   # Active row
-    colAct   = first_col                   # Active column
-    irefAct  = 0                       # Active cell ref
-    cref     = 1                       # Number of refs
-
-    rwFirst  = first_row                   # First row in reference
-    colFirst = first_col                   # First col in reference
-    rwLast   = last_row || rwFirst       # Last  row in reference
-    colLast  = last_col || colFirst      # Last  col in reference
-
-    # Swap last row/col for first row/col as necessary
-    if rwFirst > rwLast
-      tmp = rwFirst
-      rwFirst = rwLast
-      rwLast = tmp
-    end
-
-    if colFirst > colLast
-      tmp = colFirst
-      colFirst = colLast
-      colLast = tmp
-    end
-
-    header = [record, length].pack('vv')
-    data = [pnn, rwAct, colAct, irefAct, cref,
-    rwFirst, rwLast, colFirst, colLast].pack('CvvvvvvCC')
-
-    append(header, data)
-  end
-  private :store_selection
-
-  ###############################################################################
-  #
-  # store_externcount($count)
-  #
-  # Write BIFF record EXTERNCOUNT to indicate the number of external sheet
-  # references in a worksheet.
-  #
-  # Excel only stores references to external sheets that are used in formulas.
-  # For simplicity we store references to all the sheets in the workbook
-  # regardless of whether they are used or not. This reduces the overall
-  # complexity and eliminates the need for a two way dialogue between the formula
-  # parser the worksheet objects.
-  #
-  def store_externcount(count)   #:nodoc:
-    record   = 0x0016          # Record identifier
-    length   = 0x0002          # Number of bytes to follow
-
-    cxals    = count           # Number of external references
-
-    header = [record, length].pack('vv')
-    data   = [cxals].pack('v')
-
-    prepend(header, data)
-  end
-  private :store_externcount
-
-  ###############################################################################
-  #
-  # store_externsheet($sheetname)
-  #    sheetname  : Worksheet name
-  #
-  # Writes the Excel BIFF EXTERNSHEET record. These references are used by
-  # formulas. A formula references a sheet name via an index. Since we store a
-  # reference to all of the external worksheets the EXTERNSHEET index is the same
-  # as the worksheet index.
-  #
-  def store_externsheet(sheetname)   #:nodoc:
-    record    = 0x0017         # Record identifier
-    # length;                     # Number of bytes to follow
-
-    # cch                        # Length of sheet name
-    # rgch                       # Filename encoding
-
-    # References to the current sheet are encoded differently to references to
-    # external sheets.
-    #
-    if @name == sheetname
-      sheetname = ''
-      length    = 0x02  # The following 2 bytes
-      cch       = 1     # The following byte
-      rgch      = 0x02  # Self reference
-    else
-      length    = 0x02 + sheetname.bytesize
-      cch       = sheetname.bytesize
-      rgch      = 0x03  # Reference to a sheet in the current workbook
-    end
-
-    header = [record, length].pack('vv')
-    data   = [cch, rgch].pack('CC')
-
-    prepend(header, data, sheetname)
-  end
-  private :store_externsheet
-
-  ###############################################################################
-  #
-  # store_panes(y, x, colLeft, no_split, pnnAct)
-  #    y           = args[0] || 0   # Vertical split position
-  #    x           = $_[1] || 0;   # Horizontal split position
-  #    rwTop       = $_[2];        # Top row visible
-  #    my $colLeft     = $_[3];        # Leftmost column visible
-  #    my $no_split    = $_[4];        # No used here.
-  #    my $pnnAct      = $_[5];        # Active pane
-  #
-  #
-  # Writes the Excel BIFF PANE record.
-  # The panes can either be frozen or thawed (unfrozen).
-  # Frozen panes are specified in terms of a integer number of rows and columns.
-  # Thawed panes are specified in terms of Excel's units for rows and columns.
-  #
-  def store_panes(y=0, x=0, rwtop=nil,  colleft=nil, no_split=nil, pnnAct=nil)   #:nodoc:
-    record      = 0x0041       # Record identifier
-    length      = 0x000A       # Number of bytes to follow
-
-    # Code specific to frozen or thawed panes.
-    if frozen?
-      # Set default values for $rwTop and $colLeft
-      rwtop   = y if rwtop.nil?
-      colleft = x if colleft.nil?
-    else
-      # Set default values for $rwTop and $colLeft
-      rwtop   = 0  if rwtop.nil?
-      colleft = 0  if colleft.nil?
-
-      # Convert Excel's row and column units to the internal units.
-      # The default row height is 12.75
-      # The default column width is 8.43
-      # The following slope and intersection values were interpolated.
-      #
-      y = 20*y      + 255
-      x = 113.879*x + 390
-    end
-
-
-    # Determine which pane should be active. There is also the undocumented
-    # option to override this should it be necessary: may be removed later.
-    #
-    if pnnAct.nil?
-      pnnAct = 0 if (x != 0 && y != 0) # Bottom right
-      pnnAct = 1 if (x != 0 && y == 0) # Top right
-      pnnAct = 2 if (x == 0 && y != 0) # Bottom left
-      pnnAct = 3 if (x == 0 && y == 0) # Top left
-    end
-
-    @active_pane = pnnAct # Used in store_selection
-
-    store_simple(record, length, x, y, rwtop, colleft, pnnAct)
-  end
-  private :store_panes
-
-  ###############################################################################
-  #
-  # store_setup()
-  #
-  # Store the page setup SETUP BIFF record.
-  #
-  def store_setup   #:nodoc:
-    record       = 0x00A1                  # Record identifier
-    length       = 0x0022                  # Number of bytes to follow
-
-    iPaperSize   = @paper_size    # Paper size
-    iScale       = @print_scale   # Print scaling factor
-    iPageStart   = @page_start    # Starting page number
-    iFitWidth    = @fit_width     # Fit to number of pages wide
-    iFitHeight   = @fit_height    # Fit to number of pages high
-    grbit        = 0x00           # Option flags
-    iRes         = 0x0258         # Print resolution
-    iVRes        = 0x0258         # Vertical print resolution
-    numHdr       = @margin_header # Header Margin
-    numFtr       = @margin_footer # Footer Margin
-    iCopies      = 0x01           # Number of copies
-
-    fLeftToRight = @page_order    # Print over then down
-    fLandscape   = @orientation   # Page orientation
-    fNoPls       = 0x0                     # Setup not read from printer
-    fNoColor     = @black_white   # Print black and white
-    fDraft       = @draft_quality # Print draft quality
-    fNotes       = @print_comments# Print notes
-    fNoOrient    = 0x0            # Orientation not set
-    fUsePage     = @custom_start  # Use custom starting page
-
-    grbit           = fLeftToRight
-    grbit          |= fLandscape    << 1
-    grbit          |= fNoPls        << 2
-    grbit          |= fNoColor      << 3
-    grbit          |= fDraft        << 4
-    grbit          |= fNotes        << 5
-    grbit          |= fNoOrient     << 6
-    grbit          |= fUsePage      << 7
-
-
-    numHdr = [numHdr].pack('d')
-    numFtr = [numFtr].pack('d')
-
-    if @byte_order != 0 && @byte_order != ''
-      numHdr = numHdr.reverse
-      numFtr = numFtr.reverse
-    end
-
-    header = [record, length].pack('vv')
-    data1  = [iPaperSize, iScale, iPageStart,
-              iFitWidth, iFitHeight, grbit, iRes, iVRes].pack("vvvvvvvv")
-
-    data2  = numHdr + numFtr
-    data3  = [iCopies].pack('v')
-
-    prepend(header, data1, data2, data3)
-
-  end
-  private :store_setup
-
-  ###############################################################################
-  #
-  # store_header()
-  #
-  # Store the header caption BIFF record.
-  #
-  def store_header   #:nodoc:
-    store_header_footer_common(:header)
-  end
-  private :store_header
-
-  ###############################################################################
-  #
-  # store_footer()
-  #
-  # Store the footer caption BIFF record.
-  #
-  def store_footer   #:nodoc:
-    store_header_footer_common(:footer)
-  end
-  private :store_footer
-
-  #
-  # type :  :header / :footer
-  #
-  def store_header_footer_common(type)  # :nodoc:
-    if type == :header
-      record   = 0x0014
-      str      = @header || ''
-      encoding = @header_encoding || 0
-    else
-      record   = 0x0015
-      str      = @footer || ''
-      encoding = @footer_encoding || 0
-    end
-    cch         = str.bytesize        # Length of header/footer string
-
-    # Character length is num of chars not num of bytes
-    cch         /= 2 if encoding != 0
-
-    # Change the UTF-16 name from BE to LE
-    str         = str.unpack('v*').pack('n*') if encoding != 0
-
-    length      = 3 + str.bytesize
-
-    header      = [record, length].pack('vv')
-    data        = [cch, encoding].pack('vC')
-
-    prepend(header, data, str)
-  end
-  private :store_header_footer_common
-
-  ###############################################################################
-  #
-  # store_hcenter()
-  #
-  # Store the horizontal centering HCENTER BIFF record.
-  #
-  def store_hcenter   #:nodoc:
-    store_biff_common(:hcenter)
-  end
-  private :store_hcenter
-
-  ###############################################################################
-  #
-  # store_vcenter()
-  #
-  # Store the vertical centering VCENTER BIFF record.
-  #
-  def store_vcenter   #:nodoc:
-    store_biff_common(:vcenter)
-  end
-  private :store_vcenter
-
-  ###############################################################################
-  #
-  # store_margin_left()
-  #
-  # Store the LEFTMARGIN BIFF record.
-  #
-  def store_margin_left   #:nodoc:
-    store_margin_common(0x0026, 0x0008, @margin_left)
-  end
-  private :store_margin_left
-
-  ###############################################################################
-  #
-  # store_margin_right()
-  #
-  # Store the RIGHTMARGIN BIFF record.
-  #
-  def store_margin_right   #:nodoc:
-    store_margin_common(0x0027, 0x0008, @margin_right)
-  end
-  private :store_margin_right
-
-  ###############################################################################
-  #
-  # store_margin_top()
-  #
-  # Store the TOPMARGIN BIFF record.
-  #
-  def store_margin_top   #:nodoc:
-    store_margin_common(0x0028, 0x0008, @margin_top)
-  end
-  private :store_margin_top
-
-  ###############################################################################
-  #
-  # store_margin_bottom()
-  #
-  # Store the BOTTOMMARGIN BIFF record.
-  #
-  def store_margin_bottom   #:nodoc:
-    store_margin_common(0x0029, 0x0008, @margin_bottom)
-  end
-  private :store_margin_bottom
-
-  #
-  # record     : Record identifier
-  # length     : bytes to follow
-  # margin     : Margin in inches
-  #
-  def store_margin_common(record, length, margin)  # :nodoc:
-    header  = [record, length].pack('vv')
-    data    = [margin].pack('d')
-
-    data = data.reverse if @byte_order != 0 && @byte_order != ''
-
-    prepend(header, data)
-  end
-  private :store_margin_common
-
-  ###############################################################################
-  #
-  # merge_cells($first_row, $first_col, $last_row, $last_col)
-  #
-  # This is an Excel97/2000 method. It is required to perform more complicated
-  # merging than the normal align merge in Format.pm
-  #
-  def merge_cells(*args) #:nodoc:
-    # Check for a cell reference in A1 notation and substitute row and column
-    args = row_col_notation(args)
-
-    record  = 0x00E5                    # Record identifier
-    length  = 0x000A                    # Bytes to follow
-
-    cref     = 1                        # Number of refs
-    rwFirst  = args[0]                  # First row in reference
-    colFirst = args[1]                  # First col in reference
-    rwLast   = args[2] || rwFirst       # Last  row in reference
-    colLast  = args[3] || colFirst      # Last  col in reference
-
-    # Excel doesn't allow a single cell to be merged
-    return if rwFirst == rwLast and colFirst == colLast
-
-    # Swap last row/col with first row/col as necessary
-    rwFirst,  rwLast  = rwLast,  rwFirst  if rwFirst  > rwLast
-    colFirst, colLast = colLast, colFirst if colFirst > colLast
-
-    store_simple(record, length, cref, rwFirst, rwLast, colFirst, colLast)
-  end
-
-  ###############################################################################
-  #
-  # store_print_headers()
-  #
-  # Write the PRINTHEADERS BIFF record.
-  #
-  def store_print_headers   #:nodoc:
-    store_biff_common(:print_headers)
-  end
-  private :store_print_headers
-
-  ###############################################################################
-  #
-  # store_print_gridlines()
-  #
-  # Write the PRINTGRIDLINES BIFF record. Must be used in conjunction with the
-  # GRIDSET record.
-  #
-  def store_print_gridlines   #:nodoc:
-    store_biff_common(:print_gridlines)
-  end
-  private :store_print_gridlines
-
-  def store_biff_common(type)  # :nodoc:
-    case type
-    when :hcenter
-      record = 0x0083
-      flag   = @hcenter || 0
-    when :vcenter
-      record = 0x0084
-      flag   = @vcenter || 0
-    when :print_headers
-      record = 0x002a
-      flag   = @print_headers || 0
-    when :print_gridlines
-      record = 0x002b
-      flag   = @print_gridlines
-    end
-    length   = 0x0002
-
-    header      = [record, length].pack("vv")
-    data        = [flag].pack("v")
-
-    prepend(header, data)
-  end
-  private :store_biff_common
-
-  ###############################################################################
-  #
-  # store_gridset()
-  #
-  # Write the GRIDSET BIFF record. Must be used in conjunction with the
-  # PRINTGRIDLINES record.
-  #
-  def store_gridset   #:nodoc:
-    record      = 0x0082                        # Record identifier
-    length      = 0x0002                        # Bytes to follow
-
-    fGridSet    = @print_gridlines == 0 ? 1 : 0 # Boolean flag
-
-    header      = [record, length].pack("vv")
-    data        = [fGridSet].pack("v")
-
-    prepend(header, data)
-  end
-  private :store_gridset
-
-  ###############################################################################
-  #
-  # store_guts()
-  #
-  # Write the GUTS BIFF record. This is used to configure the gutter margins
-  # where Excel outline symbols are displayed. The visibility of the gutters is
-  # controlled by a flag in WSBOOL. See also store_wsbool().
-  #
-  # We are all in the gutter but some of us are looking at the stars.
-  #
-  def store_guts   #:nodoc:
-    record      = 0x0080   # Record identifier
-    length      = 0x0008   # Bytes to follow
-
-    dxRwGut     = 0x0000   # Size of row gutter
-    dxColGut    = 0x0000   # Size of col gutter
-
-    row_level   = @outline_row_level
-    col_level   = 0
-
-
-    # Calculate the maximum column outline level. The equivalent calculation
-    # for the row outline level is carried out in set_row().
-    #
-    @colinfo.each do |colinfo|
-      # Skip cols without outline level info.
-      next if colinfo.size < 6
-      col_level = colinfo[5] if colinfo[5] > col_level
-    end
-
-    # Set the limits for the outline levels (0 <= x <= 7).
-    col_level = 0 if col_level < 0
-    col_level = 7 if col_level > 7
-
-    # The displayed level is one greater than the max outline levels
-    row_level += 1 if row_level > 0
-    col_level += 1 if col_level > 0
-
-    header = [record, length].pack("vv")
-    data   = [dxRwGut, dxColGut, row_level, col_level].pack("vvvv")
-
-    prepend(header, data)
-  end
-  private :store_guts
-
-  ###############################################################################
-  #
-  # store_wsbool()
-  #
-  # Write the WSBOOL BIFF record, mainly for fit-to-page. Used in conjunction
-  # with the SETUP record.
-  #
-  def store_wsbool   #:nodoc:
-    record      = 0x0081   # Record identifier
-    length      = 0x0002   # Bytes to follow
-
-    grbit       = 0x0000   # Option flags
-
-    # Set the option flags
-    grbit |= 0x0001                        # Auto page breaks visible
-    grbit |= 0x0020 if @outline_style != 0 # Auto outline styles
-    grbit |= 0x0040 if @outline_below != 0 # Outline summary below
-    grbit |= 0x0080 if @outline_right != 0 # Outline summary right
-    grbit |= 0x0100 if @fit_page      != 0 # Page setup fit to page
-    grbit |= 0x0400 if @outline_on    != 0 # Outline symbols displayed
-
-    header = [record, length].pack("vv")
-    data   = [grbit].pack('v')
-
-    prepend(header, data)
-  end
-  private :store_wsbool
-
-  ###############################################################################
-  #
-  # store_hbreak()
-  #
-  # Write the HORIZONTALPAGEBREAKS BIFF record.
-  #
-  def store_hbreak   #:nodoc:
-    store_breaks_common(@hbreaks)
-  end
-  private :store_hbreak
-
-  ###############################################################################
-  #
-  # store_vbreak()
-  #
-  # Write the VERTICALPAGEBREAKS BIFF record.
-  #
-  def store_vbreak   #:nodoc:
-    store_breaks_common(@vbreaks)
-  end
-  private :store_vbreak
-
-  def store_breaks_common(breaks)  # :nodoc:
-    unless breaks.empty?
-      record  = breaks == @vbreaks ? 0x001a : 0x001b # Record identifier
-      cbrk    = breaks.size   # Number of page breaks
-      length  = 2 + 6 * cbrk         # Bytes to follow
-
-      header = [record, length].pack("vv")
-      data   = [cbrk].pack("v")
-
-      # Append each sorted page break
-      sort_pagebreaks(breaks).each do |brk|
-        data += [brk, 0x0000, 0x00ff].pack("vvv")
-      end
-
-      prepend(header, data)
-    end
-  end
-  private :store_breaks_common
-
-  ###############################################################################
-  #
-  # store_protect()
-  #
-  # Set the Biff PROTECT record to indicate that the worksheet is protected.
-  #
-  def store_protect   #:nodoc:
-    store_protect_common
-  end
-  private :store_protect
-
-  def protect?
-    @protect
-  end
-  private :protect?
-
-  ###############################################################################
-  #
-  # store_obj_protect()
-  #
-  # Set the Biff OBJPROTECT record to indicate that objects are protected.
-  #
-  def store_obj_protect   #:nodoc:
-    store_protect_common(:obj)
-  end
-  private :store_obj_protect
-
-  def store_protect_common(type = nil)  # :nodoc:
-    if protect?
-      record = if type == :obj      # Record identifier
-        0x0063                      # store_obj_protect
-      else
-        0x0012                      # store_protect
-      end
-      length = 0x0002               # Bytes to follow
-
-      fLock  = protect? ? 1 : 0     # Worksheet is protected
-
-      header = [record, length].pack("vv")
-      data   = [fLock].pack("v")
-
-      prepend(header, data)
-    end
-  end
-  private :store_protect_common
-
-
-  ###############################################################################
-  #
-  # store_password()
-  #
-  # Write the worksheet PASSWORD record.
-  #
-  def store_password   #:nodoc:
-    # Exit unless sheet protection and password have been specified
-    return if (!protect? or @password.nil?)
-
-    record      = 0x0013               # Record identifier
-    length      = 0x0002               # Bytes to follow
-
-    wPassword   = @password            # Encoded password
-
-    header      = [record, length].pack("vv")
-    data        = [wPassword].pack("v")
-
-    prepend(header, data)
-  end
-  private :store_password
-
-  #
-  # Note about compatibility mode.
-  #
-  # Excel doesn't require every possible Biff record to be present in a file.
-  # In particular if the indexing records INDEX, ROW and DBCELL aren't present
-  # it just ignores the fact and reads the cells anyway. This is also true of
-  # the EXTSST record. Gnumeric and OOo also take this approach. This allows
-  # WriteExcel to ignore these records in order to minimise the amount of data
-  # stored in memory. However, other third party applications that read Excel
-  # files often expect these records to be present. In "compatibility mode"
-  # WriteExcel writes these records and tries to be as close to an Excel
-  # generated file as possible.
-  #
-  # This requires additional data to be stored in memory until the file is
-  # about to be written. This incurs a memory and speed penalty and may not be
-  # suitable for very large files.
-  #
-
-
-
-  ###############################################################################
-  #
-  # store_table()
-  #
-  # Write cell data stored in the worksheet row/col table.
-  #
-  # This is only used when compatibity_mode() is in operation.
-  #
-  # This method writes ROW data, then cell data (NUMBER, LABELSST, etc) and then
-  # DBCELL records in blocks of 32 rows. This is explained in detail (for a
-  # change) in the Excel SDK and in the OOo Excel file format doc.
-  #
-  def store_table   #:nodoc:
-    return unless compatibility?
-
-    # Offset from the DBCELL record back to the first ROW of the 32 row block.
-    row_offset = 0
-
-    # Track rows that have cell data or modified by set_row().
-    written_rows = []
-
-
-    # Write the ROW records with updated max/min col fields.
-    #
-    (0 .. @dim_rowmax-1).each do |row|
-      # Skip unless there is cell data in row or the row has been modified.
-      next unless @table[row] or @row_data[row]
-
-      # Store the rows with data.
-      written_rows.push(row)
-
-      # Increase the row offset by the length of a ROW record;
-      row_offset += 20
-
-      # The max/min cols in the ROW records are the same as in DIMENSIONS.
-      col_min = @dim_colmin
-      col_max = @dim_colmax
-
-      # Write a user specified ROW record (modified by set_row()).
-      if @row_data[row]
-        # Rewrite the min and max cols for user defined row record.
-        packed_row = @row_data[row]
-        packed_row[6..9] = [col_min, col_max].pack('vv')
-        append(packed_row)
-      else
-        # Write a default Row record if there isn't a  user defined ROW.
-        write_row_default(row, col_min, col_max)
-      end
-
-      # If 32 rows have been written or we are at the last row in the
-      # worksheet then write the cell data and the DBCELL record.
-      #
-      if written_rows.size == 32 or row == @dim_rowmax -1
-        # Offsets to the first cell of each row.
-        cell_offsets = []
-        cell_offsets.push(row_offset - 20)
-
-        # Write the cell data in each row and sum their lengths for the
-        # cell offsets.
-        #
-        written_rows.each do |rw|
-          cell_offset = 0
-
-          if @table[rw]
-            @table[rw].each do |clm|
-              next unless clm
-              append(clm)
-              length = clm.bytesize
-              row_offset  += length
-              cell_offset += length
-            end
-          end
-          cell_offsets.push(cell_offset)
-        end
-
-        # The last offset isn't required.
-        cell_offsets.pop
-
-        # Stores the DBCELL offset for use in the INDEX record.
-        @db_indices.push(@datasize)
-
-        # Write the DBCELL record.
-        store_dbcell(row_offset, cell_offsets)
-
-        # Clear the variable for the next block of rows.
-        written_rows   = []
-        cell_offsets   = []
-        row_offset     = 0
-      end
-    end
-  end
-  private :store_table
-
-  ###############################################################################
-  #
-  # store_dbcell()
-  #
-  # Store the DBCELL record using the offset calculated in store_table().
-  #
-  # This is only used when compatibity_mode() is in operation.
-  #
-  def store_dbcell(row_offset, cell_offsets)   #:nodoc:
-    record          = 0x00D7                     # Record identifier
-    length          = 4 + 2 * cell_offsets.size  # Bytes to follow
-
-    header          = [record, length].pack('vv')
-    data            = [row_offset].pack('V')
-    cell_offsets.each do |co|
-      data += [co].pack('v')
-    end
-
-    append(header, data)
-  end
-  private :store_dbcell
-
-  ###############################################################################
-  #
-  # store_index()
-  #
-  # Store the INDEX record using the DBCELL offsets calculated in store_table().
-  #
-  # This is only used when compatibity_mode() is in operation.
-  #
-  def store_index   #:nodoc:
-    return unless compatibility?
-
-    indices     = @db_indices
-    reserved    = 0x00000000
-    row_min     = @dim_rowmin
-    row_max     = @dim_rowmax
-
-    record      = 0x020B                 # Record identifier
-    length      = 16 + 4 * indices.size  # Bytes to follow
-
-    header      = [record, length].pack('vv')
-    data        = [reserved, row_min, row_max, reserved].pack('VVVV')
-
-    indices.each do |index|
-      data += [index + @offset + 20 + length + 4].pack('V')
-    end
-
-    prepend(header, data)
-  end
-  private :store_index
 
   ###############################################################################
   #
@@ -6072,1784 +3966,6 @@ class Worksheet < BIFFWriter
 
   # Older method name for backwards compatibility.
   #   *insert_bitmap = *insert_image;
-
-
-  ###############################################################################
-  #
-  #  position_object()
-  #
-  # Calculate the vertices that define the position of a graphical object within
-  # the worksheet.
-  #
-  #         +------------+------------+
-  #         |     A      |      B     |
-  #   +-----+------------+------------+
-  #   |     |(x1,y1)     |            |
-  #   |  1  |(A1)._______|______      |
-  #   |     |    |              |     |
-  #   |     |    |              |     |
-  #   +-----+----|    BITMAP    |-----+
-  #   |     |    |              |     |
-  #   |  2  |    |______________.     |
-  #   |     |            |        (B2)|
-  #   |     |            |     (x2,y2)|
-  #   +---- +------------+------------+
-  #
-  # Example of a bitmap that covers some of the area from cell A1 to cell B2.
-  #
-  # Based on the width and height of the bitmap we need to calculate 8 vars:
-  #     $col_start, $row_start, $col_end, $row_end, $x1, $y1, $x2, $y2.
-  # The width and height of the cells are also variable and have to be taken into
-  # account.
-  # The values of $col_start and $row_start are passed in from the calling
-  # function. The values of $col_end and $row_end are calculated by subtracting
-  # the width and height of the bitmap from the width and height of the
-  # underlying cells.
-  # The vertices are expressed as a percentage of the underlying cell width as
-  # follows (rhs values are in pixels):
-  #
-  #       x1 = X / W *1024
-  #       y1 = Y / H *256
-  #       x2 = (X-1) / W *1024
-  #       y2 = (Y-1) / H *256
-  #
-  #       Where:  X is distance from the left side of the underlying cell
-  #               Y is distance from the top of the underlying cell
-  #               W is the width of the cell
-  #               H is the height of the cell
-  #
-  # Note: the SDK incorrectly states that the height should be expressed as a
-  # percentage of 1024.
-  #
-  def position_object(col_start, row_start, x1, y1, width, height)   #:nodoc:
-    # col_start;  # Col containing upper left corner of object
-    # x1;         # Distance to left side of object
-
-    # row_start;  # Row containing top left corner of object
-    # y1;         # Distance to top of object
-
-    # col_end;    # Col containing lower right corner of object
-    # x2;         # Distance to right side of object
-
-    # row_end;    # Row containing bottom right corner of object
-    # y2;         # Distance to bottom of object
-
-    # width;      # Width of image frame
-    # height;     # Height of image frame
-
-    # Adjust start column for offsets that are greater than the col width
-    x1, col_start = adjust_col_position(x1, col_start)
-
-    # Adjust start row for offsets that are greater than the row height
-    y1, row_start = adjust_row_position(y1, row_start)
-
-    # Initialise end cell to the same as the start cell
-    col_end    = col_start
-    row_end    = row_start
-
-    width     += x1
-    height    += y1
-
-    # Subtract the underlying cell widths to find the end cell of the image
-    width, col_end = adjust_col_position(width, col_end)
-
-    # Subtract the underlying cell heights to find the end cell of the image
-    height, row_end = adjust_row_position(height, row_end)
-
-    # Bitmap isn't allowed to start or finish in a hidden cell, i.e. a cell
-    # with zero eight or width.
-    #
-    return if size_col(col_start) == 0
-    return if size_col(col_end)   == 0
-    return if size_row(row_start) == 0
-    return if size_row(row_end)   == 0
-
-    # Convert the pixel values to the percentage value expected by Excel
-    x1 = 1024.0 * x1     / size_col(col_start)
-    y1 =  256.0 * y1     / size_row(row_start)
-    x2 = 1024.0 * width  / size_col(col_end)
-    y2 =  256.0 * height / size_row(row_end)
-
-    # Simulate ceil() without calling POSIX::ceil().
-    x1 = (x1 +0.5).to_i
-    y1 = (y1 +0.5).to_i
-    x2 = (x2 +0.5).to_i
-    y2 = (y2 +0.5).to_i
-
-    [
-      col_start, x1,
-      row_start, y1,
-      col_end,   x2,
-      row_end,   y2
-    ]
-  end
-
-  def adjust_col_position(x, col)  # :nodoc:
-    while x >= size_col(col)
-      x -= size_col(col)
-      col += 1
-    end
-    [x, col]
-  end
-  private :adjust_col_position
-
-  def adjust_row_position(y, row)  # :nodoc:
-    while y >= size_row(row)
-      y -= size_row(row)
-      row += 1
-    end
-    [y, row]
-  end
-  private :adjust_row_position
-
-  ###############################################################################
-  #
-  # size_col($col)
-  #
-  # Convert the width of a cell from user's units to pixels. Excel rounds the
-  # column width to the nearest pixel. If the width hasn't been set by the user
-  # we use the default value. If the column is hidden we use a value of zero.
-  #
-  def size_col(col)   #:nodoc:
-    # Look up the cell value to see if it has been changed
-    if @col_sizes[col]
-      width = @col_sizes[col]
-
-      # The relationship is different for user units less than 1.
-      if width < 1
-        (width *12).to_i
-      else
-        (width *7 +5 ).to_i
-      end
-    else
-      64
-    end
-  end
-  private :size_col
-
-  ###############################################################################
-  #
-  # size_row($row)
-  #
-  # Convert the height of a cell from user's units to pixels. By interpolation
-  # the relationship is: y = 4/3x. If the height hasn't been set by the user we
-  # use the default value. If the row is hidden we use a value of zero. (Not
-  # possible to hide row yet).
-  #
-  def size_row(row)   #:nodoc:
-    # Look up the cell value to see if it has been changed
-    if @row_sizes[row]
-      if @row_sizes[row] == 0
-        0
-      else
-        (4/3.0 * @row_sizes[row]).to_i
-      end
-    else
-      17
-    end
-  end
-  private :size_row
-
-  ###############################################################################
-  #
-  # store_zoom($zoom)
-  #
-  #
-  # Store the window zoom factor. This should be a reduced fraction but for
-  # simplicity we will store all fractions with a numerator of 100.
-  #
-  def store_zoom   #:nodoc:
-    # If scale is 100 we don't need to write a record
-    return if @zoom == 100
-
-    record      = 0x00A0               # Record identifier
-    length      = 0x0004               # Bytes to follow
-
-    store_simple(record, length, @zoom, 100)
-  end
-  private :store_zoom
-
-  ###############################################################################
-  #
-  # write_utf16be_string($row, $col, $string, $format)
-  #
-  # Write a Unicode string to the specified row and column (zero indexed).
-  # $format is optional.
-  # Returns  0 : normal termination
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #         -3 : long string truncated to 255 chars
-  #
-  def write_utf16be_string(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    args = row_col_notation(args)
-
-    return -1 if (args.size < 3)                     # Check the number of args
-
-    record      = 0x00FD                        # Record identifier
-    length      = 0x000A                        # Bytes to follow
-
-    row         = args[0]                         # Zero indexed row
-    col         = args[1]                         # Zero indexed column
-    strlen      = args[2].bytesize
-    str         = args[2]
-    xf          = xf_record_index(row, col, args[3]) # The cell format
-    encoding    = 0x1
-    str_error   = 0
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
-
-    # Limit the utf16 string to the max number of chars (not bytes).
-    if strlen > 32767* 2
-      str       = str[0..32767*2]
-      str_error = -3
-    end
-
-    num_bytes = str.bytesize
-    num_chars = (num_bytes / 2).to_i
-
-    # Check for a valid 2-byte char string.
-    raise "Uneven number of bytes in Unicode string" if num_bytes % 2 != 0
-
-    # Change from UTF16 big-endian to little endian
-    str = str.unpack('n*').pack('v*')
-
-    # Add the encoding and length header to the string.
-    str_header  = [num_chars, encoding].pack("vC")
-    str         = str_header + str
-
-    unless sinfo[:str_table][str]
-      sinfo[:str_table][str] = sinfo[:str_unique]
-      sinfo[:str_unique] += 1
-    end
-
-    sinfo[:str_total] += 1
-
-    header = [record, length].pack("vv")
-    data   = [row, col, xf, sinfo[:str_table][str]].pack("vvvV")
-
-    # Store the data or write immediately depending on the compatibility mode.
-    store_with_compatibility(row, col, header + data)
-
-    str_error
-  end
-
-  ###############################################################################
-  #
-  # write_utf16le_string($row, $col, $string, $format)
-  #
-  # Write a UTF-16LE string to the specified row and column (zero indexed).
-  # $format is optional.
-  # Returns  0 : normal termination
-  #         -1 : insufficient number of arguments
-  #         -2 : row or column out of range
-  #         -3 : long string truncated to 255 chars
-  #
-  def write_utf16le_string(*args)
-    # Check for a cell reference in A1 notation and substitute row and column
-    args = row_col_notation(args)
-
-    return -1 if (args.size < 3)                     # Check the number of args
-
-    record      = 0x00FD                          # Record identifier
-    length      = 0x000A                          # Bytes to follow
-
-    row         = args[0]                         # Zero indexed row
-    col         = args[1]                         # Zero indexed column
-    str         = args[2]
-    format      = args[3]                         # The cell format
-
-    # Change from UTF16 big-endian to little endian
-    str = str.unpack('n*').pack("v*")
-
-    write_utf16be_string(row, col, str, format)
-  end
-
-
-  # Older method name for backwards compatibility.
-  #   *write_unicode    = *write_utf16be_string;
-  #   *write_unicode_le = *write_utf16le_string;
-
-  ###############################################################################
-  #
-  # store_autofilters()
-  #
-  # Function to iterate through the columns that form part of an autofilter
-  # range and write Biff AUTOFILTER records if a filter expression has been set.
-  #
-  def store_autofilters   #:nodoc:
-    # Skip all columns if no filter have been set.
-    return '' if @filter_on == 0
-
-    col1 = @filter_area[2]
-    col2 = @filter_area[3]
-
-    col1.upto(col2) do |i|
-      # Reverse order since records are being pre-pended.
-      col = col2 -i
-
-      # Skip if column doesn't have an active filter.
-      next unless @filter_cols[col]
-
-      # Retrieve the filter tokens and write the autofilter records.
-      store_autofilter(col, *@filter_cols[col])
-    end
-  end
-  private :store_autofilters
-
-  ###############################################################################
-  #
-  # store_autofilter()
-  #    my $index           = $_[0];
-  #    my $operator_1      = $_[1];
-  #    my $token_1         = $_[2];
-  #    my $join            = $_[3]; # And/Or
-  #    my $operator_2      = $_[4];
-  #    my $token_2         = $_[5];
-  #
-  # Function to write worksheet AUTOFILTER records. These contain 2 Biff Doper
-  # structures to represent the 2 possible filter conditions.
-  #
-  def store_autofilter(index, operator_1, token_1,   #:nodoc:
-                                 join = nil, operator_2 = nil, token_2 = nil)
-    record          = 0x009E
-    length          = 0x0000
-
-    top10_active    = 0
-    top10_direction = 0
-    top10_percent   = 0
-    top10_value     = 101
-
-    grbit       = join || 0
-    optimised_1 = 0
-    optimised_2 = 0
-    doper_1     = ''
-    doper_2     = ''
-    string_1    = ''
-    string_2    = ''
-
-    # Excel used an optimisation in the case of a simple equality.
-    optimised_1 = 1 if                      operator_1 == 2
-    optimised_2 = 1 if !operator_2.nil? and operator_2 == 2
-
-    # Convert non-simple equalities back to type 2. See  parse_filter_tokens().
-    operator_1 = 2 if                      operator_1 == 22
-    operator_2 = 2 if !operator_2.nil? and operator_2 == 22
-
-    # Handle a "Top" style expression.
-    if operator_1 >= 30
-      # Remove the second expression if present.
-      operator_2 = nil
-      token_2    = nil
-
-      # Set the active flag.
-      top10_active    = 1
-
-      if (operator_1 == 30 or operator_1 == 31)
-        top10_direction = 1
-      end
-
-      if (operator_1 == 31 or operator_1 == 33)
-        top10_percent = 1
-      end
-
-      if (top10_direction == 1)
-        operator_1 = 6
-      else
-        operator_1 = 3
-      end
-
-      top10_value     = token_1.to_i
-      token_1         = 0
-    end
-
-    grbit     |= optimised_1      << 2
-    grbit     |= optimised_2      << 3
-    grbit     |= top10_active     << 4
-    grbit     |= top10_direction  << 5
-    grbit     |= top10_percent    << 6
-    grbit     |= top10_value      << 7
-
-    doper_1, string_1 = pack_doper(operator_1, token_1)
-    doper_2, string_2 = pack_doper(operator_2, token_2)
-
-    doper_1  = '' if doper_1.nil?
-    doper_2  = '' if doper_2.nil?
-    string_1 = '' if string_1.nil?
-    string_2 = '' if string_2.nil?
-
-    data = [index].pack('v')
-    data += [grbit].pack('v')
-    data += doper_1 + doper_2 + string_1 + string_2
-
-    length  = data.bytesize
-    header  = [record, length].pack('vv')
-
-    prepend(header, data)
-  end
-  private :store_autofilter
-
-  ###############################################################################
-  #
-  # pack_doper()
-  #
-  # Create a Biff Doper structure that represents a filter expression. Depending
-  # on the type of the token we pack an Empty, String or Number doper.
-  #
-  def pack_doper(operator, token)   #:nodoc:
-    doper       = ''
-    string      = ''
-
-    # Return default doper for non-defined filters.
-    if operator.nil?
-      return pack_unused_doper, string
-    end
-
-    if token.to_s =~ /^blanks|nonblanks$/i
-      doper  = pack_blanks_doper(operator, token)
-    elsif operator == 2 or
-      !(token.to_s  =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
-      # Excel treats all tokens as strings if the operator is equality, =.
-      string = token.to_s
-      ruby_19 { string = convert_to_ascii_if_ascii(string) }
-
-      encoding = 0
-      length   = string.bytesize
-
-      # Handle utf8 strings
-      if is_utf8?(string)
-        string = utf8_to_16be(string)
-        encodign = 1
-      end
-
-      string =
-        ruby_18 { [encoding].pack('C') +  string } ||
-        ruby_19 { [encoding].pack('C') +  string.force_encoding('BINARY') }
-      doper  = pack_string_doper(operator, length)
-    else
-      string = ''
-      doper  = pack_number_doper(operator, token)
-    end
-
-    [doper, string]
-  end
-  private :pack_doper
-
-  ###############################################################################
-  #
-  # pack_unused_doper()
-  #
-  # Pack an empty Doper structure.
-  #
-  def pack_unused_doper   #:nodoc:
-    [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0].pack('C10')
-  end
-  private :pack_unused_doper
-
-  ###############################################################################
-  #
-  # pack_blanks_doper()
-  #
-  # Pack an Blanks/NonBlanks Doper structure.
-  #
-  def pack_blanks_doper(operator, token)   #:nodoc:
-    if token == 'blanks'
-      type     = 0x0C
-      operator = 2
-    else
-      type     = 0x0E
-      operator = 5
-    end
-
-    [type,       # Data type
-      operator,
-      0x0000, 0x0000     # Reserved
-    ].pack('CCVV')
-  end
-  private :pack_blanks_doper
-
-  ###############################################################################
-  #
-  # pack_string_doper()
-  #
-  # Pack an string Doper structure.
-  #
-  def pack_string_doper(operator, length)   #:nodoc:
-    [0x06,     # Data type
-      operator,
-      0x0000,         #Reserved
-      length,         # String char length
-      0x0, 0x0, 0x0   # Reserved
-    ].pack('CCVCCCC')
-  end
-  private :pack_string_doper
-
-  ###############################################################################
-  #
-  # pack_number_doper()
-  #
-  # Pack an IEEE double number Doper structure.
-  #
-  def pack_number_doper(operator, number)   #:nodoc:
-    number = [number].pack('d')
-    number.reverse! if @byte_order != '' && @byte_order != 0
-
-    [0x04, operator].pack('CC') + number
-  end
-  private :pack_number_doper
-
-  #
-  # Methods related to comments and MSO objects.
-  #
-
-
-  ###############################################################################
-  #
-  # prepare_images()
-  #
-  # Turn the HoH that stores the images into an array for easier handling.
-  #
-  def prepare_images   #:nodoc:
-    prepare_common(:images)
-  end
-#  private :prepare_images
-
-  ###############################################################################
-  #
-  # prepare_comments()
-  #
-  # Turn the HoH that stores the comments into an array for easier handling.
-  #
-  def prepare_comments   #:nodoc:
-    prepare_common(:comments)
-  end
-#  private :prepare_comments
-
-  ###############################################################################
-  #
-  # prepare_charts()
-  #
-  # Turn the HoH that stores the charts into an array for easier handling.
-  #
-  def prepare_charts   #:nodoc:
-    prepare_common(:charts)
-  end
-#  private :prepare_charts
-
-  def prepare_common(param)  # :nodoc:
-    hash = {
-      :images => @images, :comments => @comments, :charts => @charts
-    }[param]
-
-    count = 0
-    obj   = []
-
-    # We sort the charts by row and column but that isn't strictly required.
-    #
-    rows = hash.keys.sort
-    rows.each do |row|
-      cols = hash[row].keys.sort
-      cols.each do |col|
-        obj.push(hash[row][col])
-        count += 1
-      end
-    end
-
-    case param
-    when :images
-      @images         = {}
-      @images_array   = obj
-    when :comments
-      @comments       = {}
-      @comments_array = obj
-    when :charts
-      @charts         = {}
-      @charts_array   = obj
-    end
-    count
-  end
-  private :prepare_common
-
-  ###############################################################################
-  #
-  # store_images()
-  #
-  # Store the collections of records that make up images.
-  #
-  def store_images   #:nodoc:
-    record          = 0x00EC           # Record identifier
-    length          = 0x0000           # Bytes to follow
-
-    ids             = @object_ids.dup
-    spid            = ids.shift
-
-    images          = @images_array
-    num_images      = images.size
-
-    num_filters     = @filter_count
-    num_comments    = @comments_array.size
-    num_charts      = @charts_array.size
-
-    # Skip this if there aren't any images.
-    return if num_images == 0
-
-    (0 .. num_images-1).each do |i|
-      row         =   images[i][0]
-      col         =   images[i][1]
-      name        =   images[i][2]
-      x_offset    =   images[i][3]
-      y_offset    =   images[i][4]
-      scale_x     =   images[i][5]
-      scale_y     =   images[i][6]
-      image_id    =   images[i][7]
-      type        =   images[i][8]
-      width       =   images[i][9]
-      height      =   images[i][10]
-
-      width  = width  * scale_x unless scale_x == 0
-      height = height * scale_y unless scale_y == 0
-
-      # Calculate the positions of image object.
-      vertices = position_object(col,row,x_offset,y_offset,width,height)
-
-      if (i == 0)
-        # Write the parent MSODRAWIING record.
-        dg_length   =  156 + 84*(num_images -1)
-        spgr_length =  132 + 84*(num_images -1)
-
-        dg_length   += 120 * num_charts
-        spgr_length += 120 * num_charts
-
-        dg_length   += 96 * num_filters
-        spgr_length += 96 * num_filters
-
-        dg_length   += 128 * num_comments
-        spgr_length += 128 * num_comments
-
-        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-        spid += 1
-        data +=
-          store_mso_sp_container(76)             +
-          store_mso_sp(75, spid, 0x0A00)
-        spid += 1
-        data +=
-          store_mso_opt_image(image_id)          +
-          store_mso_client_anchor(2, *vertices)  +
-          store_mso_client_data()
-      else
-        # Write the child MSODRAWIING record.
-        data = store_mso_sp_container(76)        +
-          store_mso_sp(75, spid, 0x0A00)
-          spid = spid + 1
-        data = data                              +
-          store_mso_opt_image(image_id)          +
-          store_mso_client_anchor(2, *vertices)  +
-          store_mso_client_data
-      end
-      length      = data.bytesize
-      header      = [record, length].pack("vv")
-      append(header, data)
-
-      store_obj_image(i+1)
-    end
-
-    @object_ids[0] = spid
-  end
-  private :store_images
-
-  def store_parent_mso_record(dg_length, ids, spgr_length, spid)  # :nodoc:
-    store_mso_dg_container(dg_length)      +
-    store_mso_dg(*ids)                     +
-    store_mso_spgr_container(spgr_length)  +
-    store_mso_sp_container(40)             +
-    store_mso_spgr()                       +
-    store_mso_sp(0x0, spid, 0x0005)
-  end
-  private :store_parent_mso_record
-
-  def store_child_mso_record(spid, *vertices)  # :nodoc:
-    store_mso_sp_container(88)             +
-    store_mso_sp(201, spid, 0x0A00)        +
-    store_mso_opt_filter                   +
-    store_mso_client_anchor(1, *vertices)  +
-    store_mso_client_data
-  end
-  private :store_child_mso_record
-
-  ###############################################################################
-  #
-  # store_charts()
-  #
-  # Store the collections of records that make up charts.
-  #
-  def store_charts   #:nodoc:
-      record          = 0x00EC           # Record identifier
-      length          = 0x0000           # Bytes to follow
-
-      ids             = @object_ids.dup
-      spid            = ids.shift
-
-      charts          = @charts_array
-      num_charts      = charts.size
-
-      num_filters     = @filter_count
-      num_comments    = @comments_array.size
-
-      # Number of objects written so far.
-      num_objects     = @images_array.size
-
-      # Skip this if there aren't any charts.
-      return if num_charts == 0
-
-      (0 .. num_charts-1 ).each do |i|
-          row         =   charts[i][0]
-          col         =   charts[i][1]
-          chart       =   charts[i][2]
-          x_offset    =   charts[i][3]
-          y_offset    =   charts[i][4]
-          scale_x     =   charts[i][5]
-          scale_y     =   charts[i][6]
-          width       =   526
-          height      =   319
-
-          width  *= scale_x if scale_x.respond_to?(:coerce) && scale_x != 0
-          height *= scale_y if scale_y.respond_to?(:coerce) && scale_y != 0
-
-          # Calculate the positions of chart object.
-          vertices = position_object( col,
-                                      row,
-                                      x_offset,
-                                      y_offset,
-                                      width,
-                                      height
-                                    )
-
-          if (i == 0 and num_objects == 0)
-              # Write the parent MSODRAWIING record.
-              dg_length    = 192 + 120*(num_charts -1)
-              spgr_length  = 168 + 120*(num_charts -1)
-
-              dg_length   +=  96 *num_filters
-              spgr_length +=  96 *num_filters
-
-              dg_length   += 128 *num_comments
-              spgr_length += 128 *num_comments
-
-
-              data  = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-              spid += 1
-              data += store_mso_sp_container_sp(spid)
-              spid += 1
-              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
-          else
-              # Write the child MSODRAWIING record.
-              data  = store_mso_sp_container_sp(spid)
-              spid += 1
-              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
-          end
-          length      = data.bytesize
-          header      = [record, length].pack("vv")
-          append(header, data)
-
-          store_obj_chart(num_objects + i + 1)
-          store_chart_binary(chart)
-      end
-
-      # Simulate the EXTERNSHEET link between the chart and data using a formula
-      # such as '=Sheet1!A1'.
-      # TODO. Won't work for external data refs. Also should use a more direct
-      #       method.
-      #
-      formula = "='#{@name}'!A1"
-      store_formula(formula)
-
-      @object_ids[0] = spid
-  end
-  private :store_charts
-
-  def store_mso_sp_container_sp(spid)  # :nodoc:
-    store_mso_sp_container(112) + store_mso_sp(201, spid, 0x0A00)
-  end
-  private :store_mso_sp_container_sp
-
-  def store_mso_opt_chart_client_anchor_client_data(*vertices)  # :nodoc:
-    store_mso_opt_chart                   +
-    store_mso_client_anchor(0, *vertices) +
-    store_mso_client_data
-  end
-  private :store_mso_opt_chart_client_anchor_client_data
-
-  ###############################################################################
-  #
-  # store_chart_binary
-  #
-  # Add the binary data for a chart. This could either be from a Chart object
-  # or from an external binary file (for backwards compatibility).
-  #
-  def store_chart_binary(chart)   #:nodoc:
-    if chart.respond_to?(:to_str)
-      filehandle = File.open(chart, "rb")
-      #      die "Couldn't open $filename in add_chart_ext(): $!.\n";
-      while tmp = filehandle.read(4096)
-        append(tmp)
-      end
-    else
-      chart.close
-      tmp = chart.get_data
-      append(tmp)
-    end
-  end
-  private :store_chart_binary
-
-  ###############################################################################
-  #
-  # store_filters()
-  #
-  # Store the collections of records that make up filters.
-  #
-  def store_filters   #:nodoc:
-    record          = 0x00EC           # Record identifier
-    length          = 0x0000           # Bytes to follow
-
-    ids             = @object_ids.dup
-    spid            = ids.shift
-
-    filter_area     = @filter_area
-    num_filters     = @filter_count
-
-    num_comments    = @comments_array.size
-
-    # Number of objects written so far.
-    num_objects     = @images_array.size + @charts_array.size
-
-    # Skip this if there aren't any filters.
-    return if num_filters == 0
-
-    row1, row2, col1, col2 = @filter_area
-
-    (0 .. num_filters-1).each do |i|
-      vertices = [ col1 + i,    0, row1   , 0,
-      col1 +i +1, 0, row1 + 1, 0]
-
-      if i == 0 and !num_objects.nil?
-        # Write the parent MSODRAWIING record.
-        dg_length   = 168 + 96 * (num_filters -1)
-        spgr_length = 144 + 96 * (num_filters -1)
-
-        dg_length   += 128 * num_comments
-        spgr_length += 128 * num_comments
-
-        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-        spid += 1
-        data += store_child_mso_record(spid, *vertices)
-        spid += 1
-
-      else
-        # Write the child MSODRAWIING record.
-        data = store_child_mso_record(spid, *vertices)
-        spid += 1
-      end
-      length      = data.bytesize
-      header      = [record, length].pack("vv")
-      append(header, data)
-
-      store_obj_filter(num_objects+i+1, col1 +i)
-    end
-
-    # Simulate the EXTERNSHEET link between the filter and data using a formula
-    # such as '=Sheet1!A1'.
-    # TODO. Won't work for external data refs. Also should use a more direct
-    #       method.
-    #
-    formula = "=#{@name}!A1"
-    store_formula(formula)
-
-    @object_ids[0] = spid
-  end
-  private :store_filters
-
-  def unpack_record(data)  # :nodoc:
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-  private :unpack_record
-
-  ###############################################################################
-  #
-  # store_comments()
-  #
-  # Store the collections of records that make up cell comments.
-  #
-  # NOTE: We write the comment objects last since that makes it a little easier
-  # to write the NOTE records directly after the MSODRAWIING records.
-  #
-  def store_comments   #:nodoc:
-    record          = 0x00EC           # Record identifier
-    length          = 0x0000           # Bytes to follow
-
-    ids             = @object_ids.dup
-    spid            = ids.shift
-
-    comments        = @comments_array
-    num_comments    = comments.size
-
-    # Number of objects written so far.
-    num_objects     = @images_array.size + @filter_count + @charts_array.size
-
-    # Skip this if there aren't any comments.
-    return if num_comments == 0
-
-    (0 .. num_comments-1).each do |i|
-      row         = comments[i][0]
-      col         = comments[i][1]
-      str         = comments[i][2]
-      encoding    = comments[i][3]
-      visible     = comments[i][6]
-      color       = comments[i][7]
-      vertices    = comments[i][8]
-      str_len     = str.bytesize
-      str_len     = str_len / 2 if encoding != 0 # Num of chars not bytes.
-      formats     = [[0, 9], [str_len, 0]]
-
-      if i == 0 and num_objects == 0
-        # Write the parent MSODRAWIING record.
-        dg_length   = 200 + 128*(num_comments -1)
-        spgr_length = 176 + 128*(num_comments -1)
-
-        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-        spid += 1
-      else
-        data = ''
-      end
-      data +=
-        store_mso_sp_container(120)                    +
-        store_mso_sp(202, spid, 0x0A00)
-      spid += 1
-      data +=
-        store_mso_opt_comment(0x80, visible, color)    +
-        store_mso_client_anchor(3, *vertices)          +
-        store_mso_client_data
-      length      = data.bytesize
-      header      = [record, length].pack("vv")
-      append(header, data)
-
-      store_obj_comment(num_objects + i + 1)
-      store_mso_drawing_text_box()
-      store_txo(str_len)
-      store_txo_continue_1(str, encoding)
-      store_txo_continue_2(formats)
-    end
-
-    # Write the NOTE records after MSODRAWIING records.
-    (0 .. num_comments-1).each do |i|
-      row         = comments[i][0]
-      col         = comments[i][1]
-      author      = comments[i][4]
-      author_enc  = comments[i][5]
-      visible     = comments[i][6]
-
-      store_note(row, col, num_objects + i + 1,
-      author, author_enc, visible)
-    end
-  end
-  private :store_comments
-
-  ###############################################################################
-  #
-  # store_mso_dg_container()
-  #
-  # Write the Escher DgContainer record that is part of MSODRAWING.
-  #
-  def store_mso_dg_container(length)   #:nodoc:
-    type        = 0xF002
-    version     = 15
-    instance    = 0
-    data        = ''
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_dg_container
-
-  ###############################################################################
-  #
-  # store_mso_dg()
-  #
-  # Write the Escher Dg record that is part of MSODRAWING.
-  #
-  def store_mso_dg(instance, num_shapes, max_spid)   #:nodoc:
-    type        = 0xF008
-    version     = 0
-    length      = 8
-    data        = [num_shapes, max_spid].pack("VV")
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_dg
-
-  ###############################################################################
-  #
-  # store_mso_spgr_container()
-  #
-  # Write the Escher SpgrContainer record that is part of MSODRAWING.
-  #
-  def store_mso_spgr_container(length)   #:nodoc:
-    type        = 0xF003
-    version     = 15
-    instance    = 0
-    data        = ''
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_spgr_container
-
-  ###############################################################################
-  #
-  # store_mso_sp_container()
-  #
-  # Write the Escher SpContainer record that is part of MSODRAWING.
-  #
-  def store_mso_sp_container(length)   #:nodoc:
-    type        = 0xF004
-    version     = 15
-    instance    = 0
-    data        = ''
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_sp_container
-
-  ###############################################################################
-  #
-  # store_mso_spgr()
-  #
-  # Write the Escher Spgr record that is part of MSODRAWING.
-  #
-  def store_mso_spgr   #:nodoc:
-    type        = 0xF009
-    version     = 1
-    instance    = 0
-    data        = [0, 0, 0, 0].pack("VVVV")
-    length      = 16
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_spgr
-
-  ###############################################################################
-  #
-  # store_mso_sp()
-  #
-  # Write the Escher Sp record that is part of MSODRAWING.
-  #
-  def store_mso_sp(instance, spid, options)   #:nodoc:
-    type        = 0xF00A
-    version     = 2
-    data        = ''
-    length      = 8
-    data        = [spid, options].pack('VV')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_sp
-
-  ###############################################################################
-  #
-  # store_mso_opt_comment()
-  #
-  # Write the Escher Opt record that is part of MSODRAWING.
-  #
-  def store_mso_opt_comment(spid, visible = nil, colour = 0x50)   #:nodoc:
-    type        = 0xF00B
-    version     = 3
-    instance    = 9
-    data        = ''
-    length      = 54
-
-    # Use the visible flag if set by the user or else use the worksheet value.
-    # Note that the value used is the opposite of store_note().
-    #
-    if !visible.nil?
-      visible = visible != 0           ? 0x0000 : 0x0002
-    else
-      visible = @comments_visible != 0 ? 0x0000 : 0x0002
-    end
-
-    data = [spid].pack('V')                            +
-    ['0000BF00080008005801000000008101'].pack("H*") +
-    [colour].pack("C")                              +
-    ['000008830150000008BF011000110001'+'02000000003F0203000300BF03'].pack("H*")  +
-    [visible].pack('v')                             +
-    ['0A00'].pack('H*')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_opt_comment
-
-  ###############################################################################
-  #
-  # store_mso_opt_image()
-  #
-  # Write the Escher Opt record that is part of MSODRAWING.
-  #
-  def store_mso_opt_image(spid)   #:nodoc:
-    type        = 0xF00B
-    version     = 3
-    instance    = 3
-    data        = ''
-    length      = nil
-
-    data = [0x4104].pack('v') +
-    [spid].pack('V')        +
-    [0x01BF].pack('v')      +
-    [0x00010000].pack('V')  +
-    [0x03BF].pack( 'v')     +
-    [0x00080000].pack( 'V')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_opt_image
-
-  ###############################################################################
-  #
-  # store_mso_opt_chart()
-  #
-  # Write the Escher Opt record that is part of MSODRAWING.
-  #
-  def store_mso_opt_chart   #:nodoc:
-    type        = 0xF00B
-    version     = 3
-    instance    = 9
-    data        = ''
-    length      = nil
-
-    data = store_mso_protection_and_text
-    data += [0x0181].pack('v')   +        # Fill Style -> fillColor
-    [0x0800004E].pack('V')       +
-    [0x0183].pack('v')           +        # Fill Style -> fillBackColor
-    [0x0800004D].pack('V')       +
-
-    [0x01BF].pack('v')           +        # Fill Style -> fNoFillHitTest
-    [0x00110010].pack('V')       +
-    [0x01C0].pack('v')           +        # Line Style -> lineColor
-    [0x0800004D].pack('V')       +
-    [0x01FF].pack('v')           +        # Line Style -> fNoLineDrawDash
-    [0x00080008].pack('V')       +
-    [0x023F].pack('v')           +        # Shadow Style -> fshadowObscured
-    [0x00020000].pack('V')       +
-    [0x03BF].pack('v')           +        # Group Shape -> fPrint
-    [0x00080000].pack('V')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_opt_chart
-
-  ###############################################################################
-  #
-  # store_mso_opt_filter()
-  #
-  # Write the Escher Opt record that is part of MSODRAWING.
-  #
-  def store_mso_opt_filter   #:nodoc:
-    type        = 0xF00B
-    version     = 3
-    instance    = 5
-    data        = ''
-    length      = nil
-
-    data = store_mso_protection_and_text
-    data += [0x01BF].pack('v')   +        # Fill Style -> fNoFillHitTest
-    [0x00010000].pack('V')       +
-    [0x01FF].pack('v')           +        # Line Style -> fNoLineDrawDash
-    [0x00080000].pack('V')       +
-    [0x03BF].pack('v')           +        # Group Shape -> fPrint
-    [0x000A0000].pack('V')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_opt_filter
-
-  def store_mso_protection_and_text  # :nodoc:
-    [0x007F].pack('v')       +        # Protection -> fLockAgainstGrouping
-    [0x01040104].pack('V')   +
-    [0x00BF].pack('v')       +        # Text -> fFitTextToShape
-    [0x00080008].pack('V')
-  end
-  private :store_mso_protection_and_text
-
-  ###############################################################################
-  #
-  # store_mso_client_anchor()
-  #    my flag         = shift;
-  #    my $col_start   = $_[0];    # Col containing upper left corner of object
-  #    my $x1          = $_[1];    # Distance to left side of object
-  #
-  #    my $row_start   = $_[2];    # Row containing top left corner of object
-  #    my $y1          = $_[3];    # Distance to top of object
-  #
-  #    my $col_end     = $_[4];    # Col containing lower right corner of object
-  #    my $x2          = $_[5];    # Distance to right side of object
-  #
-  #    my $row_end     = $_[6];    # Row containing bottom right corner of object
-  #    my $y2          = $_[7];    # Distance to bottom of object
-  #
-  # Write the Escher ClientAnchor record that is part of MSODRAWING.
-  #
-  def store_mso_client_anchor(flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2)   #:nodoc:
-    type        = 0xF010
-    version     = 0
-    instance    = 0
-    data        = ''
-    length      = 18
-
-    data = [flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2].pack('v9')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_client_anchor
-
-  ###############################################################################
-  #
-  # store_mso_client_data()
-  #
-  # Write the Escher ClientData record that is part of MSODRAWING.
-  #
-  def store_mso_client_data   #:nodoc:
-    type        = 0xF011
-    version     = 0
-    instance    = 0
-    data        = ''
-    length      = 0
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_client_data
-
-  ###############################################################################
-  #
-  # store_obj_comment()
-  #    my $obj_id      = $_[0];    # Object ID number.
-  #
-  # Write the OBJ record that is part of cell comments.
-  #
-  def store_obj_comment(obj_id)   #:nodoc:
-    record      = 0x005D   # Record identifier
-    length      = 0x0034   # Bytes to follow
-
-    obj_type    = 0x0019   # Object type (comment).
-    data        = ''       # Record data.
-
-    sub_record  = 0x0000   # Sub-record identifier.
-    sub_length  = 0x0000   # Length of sub-record.
-    sub_data    = ''       # Data of sub-record.
-    options     = 0x4011
-    reserved    = 0x0000
-
-    # Add ftCmo (common object data) subobject
-    sub_record     = 0x0015   # ftCmo
-    sub_length     = 0x0012
-    sub_data       = [obj_type, obj_id, options, reserved, reserved, reserved].pack( "vvvVVV")
-    data           = [sub_record, sub_length].pack("vv") + sub_data
-
-    # Add ftNts (note structure) subobject
-    sub_record  = 0x000D   # ftNts
-    sub_length  = 0x0016
-    sub_data    = [reserved,reserved,reserved,reserved,reserved,reserved].pack( "VVVVVv")
-    data        += [sub_record, sub_length].pack("vv") + sub_data
-
-    # Add ftEnd (end of object) subobject
-    sub_record  = 0x0000   # ftNts
-    sub_length  = 0x0000
-    data        += [sub_record, sub_length].pack("vv")
-
-    # Pack the record.
-    header      = [record, length].pack("vv")
-
-    append(header, data)
-
-  end
-  private :store_obj_comment
-
-  ###############################################################################
-  #
-  # store_obj_image()
-  #    my $obj_id      = $_[0];    # Object ID number.
-  #
-  # Write the OBJ record that is part of image records.
-  #
-  def store_obj_image(obj_id)   #:nodoc:
-    record      = 0x005D   # Record identifier
-    length      = 0x0026   # Bytes to follow
-
-    obj_type    = 0x0008   # Object type (Picture).
-    data        = ''       # Record data.
-
-    sub_record  = 0x0000   # Sub-record identifier.
-    sub_length  = 0x0000   # Length of sub-record.
-    sub_data    = ''       # Data of sub-record.
-    options     = 0x6011
-    reserved    = 0x0000
-
-    # Add ftCmo (common object data) subobject
-    sub_record  = 0x0015   # ftCmo
-    sub_length  = 0x0012
-    sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
-    data        = [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftCf (Clipboard format) subobject
-    sub_record  = 0x0007   # ftCf
-    sub_length  = 0x0002
-    sub_data    = [0xFFFF].pack( 'v')
-    data        += [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftPioGrbit (Picture option flags) subobject
-    sub_record  = 0x0008   # ftPioGrbit
-    sub_length  = 0x0002
-    sub_data    = [0x0001].pack('v')
-    data        += [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftEnd (end of object) subobject
-    sub_record  = 0x0000   # ftNts
-    sub_length  = 0x0000
-    data        += [sub_record, sub_length].pack('vv')
-
-    # Pack the record.
-    header  = [record, length].pack('vv')
-
-    append(header, data)
-
-  end
-  private :store_obj_image
-
-  ###############################################################################
-  #
-  # store_obj_chart()
-  #    my $obj_id      = $_[0];    # Object ID number.
-  #
-  # Write the OBJ record that is part of chart records.
-  #
-  def store_obj_chart(obj_id)   #:nodoc:
-    record      = 0x005D   # Record identifier
-    length      = 0x001A   # Bytes to follow
-
-    obj_type    = 0x0005   # Object type (chart).
-    data        = ''       # Record data.
-
-    sub_record  = 0x0000   # Sub-record identifier.
-    sub_length  = 0x0000   # Length of sub-record.
-    sub_data    = ''       # Data of sub-record.
-    options     = 0x6011
-    reserved    = 0x0000
-
-    # Add ftCmo (common object data) subobject
-    sub_record  = 0x0015   # ftCmo
-    sub_length  = 0x0012
-    sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
-    data        = [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftEnd (end of object) subobject
-    sub_record  = 0x0000   # ftNts
-    sub_length  = 0x0000
-    data        += [sub_record, sub_length].pack('vv')
-
-    # Pack the record.
-    header  = [record, length].pack('vv')
-
-    append(header, data)
-
-  end
-  private :store_obj_chart
-
-  ###############################################################################
-  #
-  # store_obj_filter()
-  #    my $obj_id      = $_[0];    # Object ID number.
-  #    my $col         = $_[1];
-  #
-  # Write the OBJ record that is part of filter records.
-  #
-  def store_obj_filter(obj_id, col)   #:nodoc:
-    record      = 0x005D   # Record identifier
-    length      = 0x0046   # Bytes to follow
-
-    obj_type    = 0x0014   # Object type (combo box).
-    data        = ''       # Record data.
-
-    sub_record  = 0x0000   # Sub-record identifier.
-    sub_length  = 0x0000   # Length of sub-record.
-    sub_data    = ''       # Data of sub-record.
-    options     = 0x2101
-    reserved    = 0x0000
-
-    # Add ftCmo (common object data) subobject
-    sub_record  = 0x0015   # ftCmo
-    sub_length  = 0x0012
-    sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
-    data        = [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftSbs Scroll bar subobject
-    sub_record  = 0x000C   # ftSbs
-    sub_length  = 0x0014
-    sub_data    = ['0000000000000000640001000A00000010000100'].pack('H*')
-    data        += [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftLbsData (List box data) subobject
-    sub_record  = 0x0013   # ftLbsData
-    sub_length  = 0x1FEE   # Special case (undocumented).
-
-    # If the filter is active we set one of the undocumented flags.
-
-    if @filter_cols[col]
-      sub_data       = ['000000000100010300000A0008005700'].pack('H*')
-    else
-      sub_data       = ['00000000010001030000020008005700'].pack('H*')
-    end
-
-    data        += [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftEnd (end of object) subobject
-    sub_record  = 0x0000   # ftNts
-    sub_length  = 0x0000
-    data        += [sub_record, sub_length].pack('vv')
-
-    # Pack the record.
-    header  = [record, length].pack('vv')
-
-    append(header, data)
-  end
-  private :store_obj_filter
-
-  ###############################################################################
-  #
-  # store_mso_drawing_text_box()
-  #
-  # Write the MSODRAWING ClientTextbox record that is part of comments.
-  #
-  def store_mso_drawing_text_box   #:nodoc:
-    record      = 0x00EC           # Record identifier
-    length      = 0x0008           # Bytes to follow
-
-    data        = store_mso_client_text_box()
-    header  = [record, length].pack('vv')
-
-    append(header, data)
-  end
-  private :store_mso_drawing_text_box
-
-  ###############################################################################
-  #
-  # store_mso_client_text_box()
-  #
-  # Write the Escher ClientTextbox record that is part of MSODRAWING.
-  #
-  def store_mso_client_text_box   #:nodoc:
-    type        = 0xF00D
-    version     = 0
-    instance    = 0
-    data        = ''
-    length      = 0
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-  private :store_mso_client_text_box
-
-  ###############################################################################
-  #
-  # store_txo()
-  #    my $string_len  = $_[0];                # Length of the note text.
-  #    my $format_len  = $_[1] || 16;          # Length of the format runs.
-  #    my $rotation    = $_[2] || 0;           # Options
-  #
-  # Write the worksheet TXO record that is part of cell comments.
-  #
-  def store_txo(string_len, format_len = 16, rotation = 0)   #:nodoc:
-    record      = 0x01B6               # Record identifier
-    length      = 0x0012               # Bytes to follow
-
-    grbit       = 0x0212               # Options
-    reserved    = 0x0000               # Options
-
-    # Pack the record.
-    header  = [record, length].pack('vv')
-    data    = [grbit, rotation, reserved, reserved,
-    string_len, format_len, reserved].pack("vvVvvvV")
-
-    append(header, data)
-  end
-  private :store_txo
-
-  ###############################################################################
-  #
-  # store_txo_continue_1()
-  #    my $string      = $_[0];                # Comment string.
-  #    my $encoding    = $_[1] || 0;           # Encoding of the string.
-  #
-  # Write the first CONTINUE record to follow the TXO record. It contains the
-  # text data.
-  #
-  def store_txo_continue_1(string, encoding = 0)   #:nodoc:
-    record      = 0x003C               # Record identifier
-
-    # Split long comment strings into smaller continue blocks if necessary.
-    # We can't let BIFFwriter::_add_continue() handled this since an extra
-    # encoding byte has to be added similar to the SST block.
-    #
-    # We make the limit size smaller than the add_continue() size and even
-    # so that UTF16 chars occur in the same block.
-    #
-    limit = 8218
-    while string.bytesize > limit
-      string[0 .. limit] = ""
-      tmp_str = string
-      data    = [encoding].pack("C") +
-        ruby_18 { tmp_str } ||
-        ruby_19 { tmp_str.force_encoding('ASCII-8BIT') }
-      length  = data.bytesize
-      header  = [record, length].pack('vv')
-
-      append(header, data)
-    end
-
-    # Pack the record.
-    data    =
-      ruby_18 { [encoding].pack("C") + string } ||
-      ruby_19 { [encoding].pack("C") + string.force_encoding('ASCII-8BIT') }
-    length  = data.bytesize
-    header  = [record, length].pack('vv')
-
-    append(header, data)
-  end
-  private :store_txo_continue_1
-
-  ###############################################################################
-  #
-  # store_txo_continue_2()
-  #    my $formats     = $_[0];                # Formatting information
-  #
-  # Write the second CONTINUE record to follow the TXO record. It contains the
-  # formatting information for the string.
-  #
-  def store_txo_continue_2(formats)   #:nodoc:
-    record      = 0x003C               # Record identifier
-    length      = 0x0000               # Bytes to follow
-
-    # Pack the record.
-    data = ''
-
-    formats.each do |a_ref|
-      data += [a_ref[0], a_ref[1], 0x0].pack('vvV')
-    end
-
-    length  = data.bytesize
-    header  = [record, length].pack("vv")
-
-    append(header, data)
-  end
-  private :store_txo_continue_2
-
-  ###############################################################################
-  #
-  # store_note()
-  #    my $row         = $_[0];
-  #    my $col         = $_[1];
-  #    my $obj_id      = $_[2];
-  #    my $author      = $_[3] || $self->{_comments_author};
-  #    my $author_enc  = $_[4] || $self->{_comments_author_enc};
-  #    my $visible     = $_[5];
-  #
-  # Write the worksheet NOTE record that is part of cell comments.
-  #
-  def store_note(row, col, obj_id, author = nil, author_enc = nil, visible = nil)   #:nodoc:
-    ruby_19 { author = [author].pack('a*') if author.ascii_only? }
-    record      = 0x001C               # Record identifier
-    length      = 0x000C               # Bytes to follow
-
-    author     = @comments_author     if author.nil?
-    author_enc = @comments_author_enc if author_enc.nil?
-
-    # Use the visible flag if set by the user or else use the worksheet value.
-    # The flag is also set in store_mso_opt_comment() but with the opposite
-    # value.
-    if !visible.nil?
-      visible = visible != 0           ? 0x0002 : 0x0000
-    else
-      visible = @comments_visible != 0 ? 0x0002 : 0x0000
-    end
-
-    # Get the number of chars in the author string (not bytes).
-    num_chars  = author.bytesize
-    num_chars  = num_chars / 2 if author_enc != 0 && !author_enc.nil?
-
-    # Null terminate the author string.
-    author =
-      ruby_18 { author + "\0" } ||
-      ruby_19 { author.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
-
-    # Pack the record.
-    data    = [row, col, visible, obj_id, num_chars, author_enc].pack("vvvvvC")
-
-    length  = data.bytesize + author.bytesize
-    header  = [record, length].pack("vv")
-
-    append(header, data, author)
-  end
-  private :store_note
-
-  ###############################################################################
-  #
-  # comment_params()
-  #
-  # This method handles the additional optional parameters to write_comment() as
-  # well as calculating the comment object position and vertices.
-  #
-  def comment_params(row, col, string, options = {})   #:nodoc:
-    string = convert_to_ascii_if_ascii(string)
-
-    default_width   = 128
-    default_height  = 74
-
-    params  = {
-      :author          => '',
-      :author_encoding => 0,
-      :encoding        => 0,
-      :color           => nil,
-      :start_cell      => nil,
-      :start_col       => nil,
-      :start_row       => nil,
-      :visible         => nil,
-      :width           => default_width,
-      :height          => default_height,
-      :x_offset        => nil,
-      :x_scale         => 1,
-      :y_offset        => nil,
-      :y_scale         => 1
-    }
-
-    # Overwrite the defaults with any user supplied values. Incorrect or
-    # misspelled parameters are silently ignored.
-    params.update(options)
-
-    # Ensure that a width and height have been set.
-    params[:width]  = default_width  if params[:width].nil? || params[:width] == 0
-    params[:height] = default_height if params[:height].nil? || params[:height] == 0
-
-    # Check that utf16 strings have an even number of bytes.
-    if params[:encoding] != 0
-      raise "Uneven number of bytes in comment string" if string.bytesize % 2 != 0
-
-      # Change from UTF-16BE to UTF-16LE
-      string = string.unpack('n*').pack('v*')
-    # Handle utf8 strings
-    else
-      if is_utf8?(string)
-        string = NKF.nkf('-w16L0 -m0 -W', string)
-        ruby_19 { string.force_encoding('UTF-16LE') }
-        params[:encoding] = 1
-      end
-    end
-
-    params[:author] = convert_to_ascii_if_ascii(params[:author])
-
-    if params[:author_encoding] != 0
-      raise "Uneven number of bytes in author string"  if params[:author].bytesize % 2 != 0
-
-      # Change from UTF-16BE to UTF-16LE
-      params[:author] = params[:author].unpack('n*').pack('v*')
-    else
-      if is_utf8?(params[:author])
-        params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
-        ruby_19 { params[:author].force_encoding('UTF-16LE') }
-        params[:author_encoding] = 1
-      end
-    end
-
-    # Limit the string to the max number of chars (not bytes).
-    max_len = 32767
-    max_len = max_len * 2 if params[:encoding] != 0
-
-    if string.bytesize > max_len
-      string = string[0 .. max_len]
-    end
-
-    # Set the comment background colour.
-    color = params[:color]
-    color = Colors.new.get_color(color)
-    color = 0x50 if color == 0x7FFF  # Default color.
-    params[:color] = color
-
-    # Convert a cell reference to a row and column.
-    if params[:start_cell]
-      params[:start_row], params[:start_col] = substitute_cellref(params[:start_cell])
-    end
-
-    # Set the default start cell and offsets for the comment. These are
-    # generally fixed in relation to the parent cell. However there are
-    # some edge cases for cells at the, er, edges.
-    #
-    if params[:start_row].nil?
-      case row
-      when 0     then params[:start_row] = 0
-      when 65533 then params[:start_row] = 65529
-      when 65534 then params[:start_row] = 65530
-      when 65535 then params[:start_row] = 65531
-      else            params[:start_row] = row -1
-      end
-    end
-
-    if params[:y_offset].nil?
-      case row
-      when 0     then params[:y_offset]  = 2
-      when 65533 then params[:y_offset]  = 4
-      when 65534 then params[:y_offset]  = 4
-      when 65535 then params[:y_offset]  = 2
-      else            params[:y_offset]  = 7
-      end
-    end
-
-    if params[:start_col].nil?
-      case col
-      when 253   then params[:start_col] = 250
-      when 254   then params[:start_col] = 251
-      when 255   then params[:start_col] = 252
-      else            params[:start_col] = col + 1
-      end
-    end
-
-    if params[:x_offset].nil?
-      case col
-      when 253   then params[:x_offset] = 49
-      when 254   then params[:x_offset] = 49
-      when 255   then params[:x_offset] = 49
-      else            params[:x_offset] = 15
-      end
-    end
-
-    # Scale the size of the comment box if required.
-    if params[:x_scale] != 0
-      params[:width]  = params[:width] * params[:x_scale]
-    end
-
-    if params[:y_scale] != 0
-      params[:height] = params[:height] * params[:y_scale]
-    end
-
-    # Calculate the positions of comment object.
-    vertices = position_object( params[:start_col],
-      params[:start_row],
-      params[:x_offset],
-      params[:y_offset],
-      params[:width],
-      params[:height]
-    )
-
-    [row, col, string,
-      params[:encoding],
-      params[:author],
-      params[:author_encoding],
-      params[:visible],
-      params[:color],
-      vertices
-    ]
-  end
-  private :comment_params
 
   #
   # DATA VALIDATION
@@ -8513,6 +4629,3774 @@ class Worksheet < BIFFWriter
     @validations.push(param)
   end
 
+  def active=(val)  # :nodoc:
+    @active = val
+  end
+
+  def is_name_utf16be?  # :nodoc:
+    if @name_utf16be == 0
+      false
+    elsif @name_utf16be == 1
+      true
+    else
+      !!@name_utf16be
+    end
+  end
+
+  def index  # :nodoc:
+    @index
+  end
+
+  def index=(val)  # :nodoc:
+    @index = val
+  end
+
+  def sheet_type  # :nodoc:
+    @sheet_type
+  end
+
+  def images_array  # :nodoc:
+    @images_array
+  end
+
+  def filter_area  # :nodoc:
+    @filter_area
+  end
+
+  def filter_count  # :nodoc:
+    @filter_count
+  end
+
+  def title_rowmin  # :nodoc:
+    @title_rowmin
+  end
+
+  def title_rowmax  # :nodoc:
+    @title_rowmax
+  end
+
+  def title_colmin  # :nodoc:
+    @title_colmin
+  end
+
+  def title_colmax  # :nodoc:
+    @title_colmax
+  end
+
+  def print_rowmin  # :nodoc:
+    @print_rowmin
+  end
+
+  def print_rowmax  # :nodoc:
+    @print_rowmax
+  end
+
+  def print_colmin  # :nodoc:
+    @print_colmin
+  end
+
+  def print_colmax  # :nodoc:
+    @print_colmax
+  end
+
+  def offset  # :nodoc:
+    @offset
+  end
+
+  def offset=(val)  # :nodoc:
+    @offset = val
+  end
+
+  def selected?  # :nodoc:
+    @selected
+  end
+
+  def selected=(val)  # :nodoc:
+    @selected = val
+  end
+
+  def hidden?  # :nodoc:
+    @hidden
+  end
+
+  def hidden=(val)  # :nodoc:
+    @hidden = val
+  end
+
+  def object_ids=(val)  # :nodoc:
+    @object_ids = val
+  end
+
+  def num_images  # :nodoc:
+    @num_images
+  end
+
+  def num_images=(val)  # :nodoc:
+    @num_images = val
+  end
+
+  def image_mso_size  # :nodoc:
+    @image_mso_size
+  end
+
+  def image_mso_size=(val)  # :nodoc:
+    @image_mso_size = val
+  end
+
+  ###############################################################################
+  #
+  # prepare_images()
+  #
+  # Turn the HoH that stores the images into an array for easier handling.
+  #
+  def prepare_images   #:nodoc:
+    prepare_common(:images)
+  end
+#  private :prepare_images
+
+  ###############################################################################
+  #
+  # prepare_comments()
+  #
+  # Turn the HoH that stores the comments into an array for easier handling.
+  #
+  def prepare_comments   #:nodoc:
+    prepare_common(:comments)
+  end
+#  private :prepare_comments
+
+  ###############################################################################
+  #
+  # prepare_charts()
+  #
+  # Turn the HoH that stores the charts into an array for easier handling.
+  #
+  def prepare_charts   #:nodoc:
+    prepare_common(:charts)
+  end
+#  private :prepare_charts
+
+  ###############################################################################
+  ###############################################################################
+  #
+  # Internal methods
+  #
+
+  private
+
+  def frozen?
+    @frozen
+  end
+
+  def display_zeros?
+    !@hide_zeros
+  end
+
+  def set_header_footer_common(type, string, margin, encoding)  # :nodoc:
+    ruby_19 { string = convert_to_ascii_if_ascii(string) }
+
+    limit    = encoding != 0 ? 255 *2 : 255
+
+    # Handle utf8 strings
+    if is_utf8?(string)
+      string = utf8_to_16be(string)
+      encoding = 1
+    end
+
+    if string.bytesize >= limit
+      #           carp 'Header string must be less than 255 characters';
+      return
+    end
+
+    if type == :header
+      @header          = string
+      @margin_header   = margin
+      @header_encoding = encoding
+    else
+      @footer          = string
+      @margin_footer   = margin
+      @footer_encoding = encoding
+    end
+  end
+
+  ###############################################################################
+  #
+  # extract_filter_tokens(expression)
+  #
+  # Extract the tokens from the filter expression. The tokens are mainly non-
+  # whitespace groups. The only tricky part is to extract string tokens that
+  # contain whitespace and/or quoted double quotes (Excel's escaped quotes).
+  #
+  # Examples: 'x <  2000'
+  #           'x >  2000 and x <  5000'
+  #           'x = "foo"'
+  #           'x = "foo bar"'
+  #           'x = "foo "" bar"'
+  #
+  def extract_filter_tokens(expression = nil)   #:nodoc:
+    return [] unless expression
+
+    tokens = []
+    str = expression
+    while str =~ /"(?:[^"]|"")*"|\S+/
+      tokens << $&
+      str = $~.post_match
+    end
+
+    # Remove leading and trailing quotes and unescape other quotes
+    tokens.map! do |token|
+      token.sub!(/^"/, '')
+      token.sub!(/"$/, '')
+      token.gsub!(/""/, '"')
+
+      # if token is number, convert to numeric.
+      if token =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+        token.to_f == token.to_i ? token.to_i : token.to_f
+      else
+        token
+      end
+    end
+
+    tokens
+  end
+
+  ###############################################################################
+  #
+  # parse_filter_expression(expression, @token)
+  #
+  # Converts the tokens of a possibly conditional expression into 1 or 2
+  # sub expressions for further parsing.
+  #
+  # Examples:
+  #          ('x', '==', 2000) -> exp1
+  #          ('x', '>',  2000, 'and', 'x', '<', 5000) -> exp1 and exp2
+  #
+  def parse_filter_expression(expression, tokens)   #:nodoc:
+    # The number of tokens will be either 3 (for 1 expression)
+    # or 7 (for 2  expressions).
+    #
+    if (tokens.size == 7)
+      conditional = tokens[3]
+      if conditional =~ /^(and|&&)$/
+        conditional = 0
+      elsif conditional =~ /^(or|\|\|)$/
+        conditional = 1
+      else
+        raise "Token '#{conditional}' is not a valid conditional " +
+        "in filter expression '#{expression}'"
+      end
+      expression_1 = parse_filter_tokens(expression, tokens[0..2])
+      expression_2 = parse_filter_tokens(expression, tokens[4..6])
+      [expression_1, conditional, expression_2].flatten
+    else
+      parse_filter_tokens(expression, tokens)
+    end
+  end
+
+  ###############################################################################
+  #
+  # parse_filter_tokens(@token)  # (@expression, @token)
+  #
+  # Parse the 3 tokens of a filter expression and return the operator and token.
+  #
+  def parse_filter_tokens(expression, tokens)     #:nodoc:
+    operators = {
+      '==' => 2,
+      '='  => 2,
+      '=~' => 2,
+      'eq' => 2,
+
+      '!=' => 5,
+      '!~' => 5,
+      'ne' => 5,
+      '<>' => 5,
+
+      '<'  => 1,
+      '<=' => 3,
+      '>'  => 4,
+      '>=' => 6,
+    }
+
+    operator = operators[tokens[1]]
+    token    = tokens[2]
+
+    # Special handling of "Top" filter expressions.
+    if tokens[0] =~ /^top|bottom$/i
+      value = tokens[1]
+      if (value =~ /\D/ or value.to_i < 1 or value.to_i > 500)
+        raise "The value '#{value}' in expression '#{expression}' " +
+        "must be in the range 1 to 500"
+      end
+      token.downcase!
+      if (token != 'items' and token != '%')
+        raise "The type '#{token}' in expression '#{expression}' " +
+        "must be either 'items' or '%'"
+      end
+
+      if (tokens[0] =~ /^top$/i)
+        operator = 30
+      else
+        operator = 32
+      end
+
+      if (tokens[2] == '%')
+        operator += 1
+      end
+
+      token    = value
+    end
+
+    if (not operator and tokens[0])
+      raise "Token '#{tokens[1]}' is not a valid operator " +
+      "in filter expression '#{expression}'"
+    end
+
+    # Special handling for Blanks/NonBlanks.
+    if (token =~ /^blanks|nonblanks$/i)
+      # Only allow Equals or NotEqual in this context.
+      if (operator != 2 and operator != 5)
+        raise "The operator '#{tokens[1]}' in expression '#{expression}' " +
+        "is not valid in relation to Blanks/NonBlanks'"
+      end
+
+      token.downcase!
+
+      # The operator should always be 2 (=) to flag a "simple" equality in
+      # the binary record. Therefore we convert <> to =.
+      if (token == 'blanks')
+        if (operator == 5)
+          operator = 2
+          token    = 'nonblanks'
+        end
+      else
+        if (operator == 5)
+          operator = 2
+          token    = 'blanks'
+        end
+      end
+    end
+
+    # if the string token contains an Excel match character then change the
+    # operator type to indicate a non "simple" equality.
+    if (operator == 2 and token =~ /[*?]/)
+      operator = 22
+    end
+
+    [operator, token]
+  end
+
+  def store_with_compatibility(row, col, data)  # :nodoc:
+    if compatibility?
+      store_to_table(row, col, data)
+    else
+      append(data)
+    end
+  end
+
+  def store_to_table(row, col, data)  # :nodoc:
+    tmp = []
+    tmp[col] = data
+    @table[row] = tmp
+  end
+
+  def compatibility?
+    compatibility = @workbook.compatibility
+    if compatibility == 0 || !compatibility
+      false
+    else
+      true
+    end
+  end
+
+  # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
+  def sinfo
+    @workbook.sinfo
+  end
+
+  ###############################################################################
+  #
+  # xf_record_index()
+  #
+  # Returns an index to the XF record in the workbook.
+  #
+  # Note: this is a function, not a method.
+  #
+  def xf_record_index(row, col, xf=nil)       #:nodoc:
+    if xf.respond_to?(:xf_index)
+      xf.xf_index
+    elsif @row_formats.has_key?(row)
+      @row_formats[row].xf_index
+    elsif @col_formats.has_key?(col)
+      @col_formats[col].xf_index
+    else
+      0x0F
+    end
+  end
+
+  ###############################################################################
+  #
+  # substitute_cellref()
+  #
+  # Substitute an Excel cell reference in A1 notation for  zero based row and
+  # column values in an argument list.
+  #
+  # Ex: ("A4", "Hello") is converted to (3, 0, "Hello").
+  #
+  def substitute_cellref(cell, *args)       #:nodoc:
+    return [*args] if cell.respond_to?(:coerce) # Numeric
+
+    cell.upcase!
+
+    # Convert a column range: 'A:A' or 'B:G'.
+    # A range such as A:A is equivalent to A1:65536, so add rows as required
+    if cell =~ /\$?([A-I]?[A-Z]):\$?([A-I]?[A-Z])/
+      row1, col1 =  cell_to_rowcol($1 +'1')
+      row2, col2 =  cell_to_rowcol($2 +'65536')
+      return [row1, col1, row2, col2, *args]
+    end
+
+    # Convert a cell range: 'A1:B7'
+    if cell =~ /\$?([A-I]?[A-Z]\$?\d+):\$?([A-I]?[A-Z]\$?\d+)/
+      row1, col1 =  cell_to_rowcol($1)
+      row2, col2 =  cell_to_rowcol($2)
+      return [row1, col1, row2, col2, *args]
+    end
+
+    # Convert a cell reference: 'A1' or 'AD2000'
+    if (cell =~ /\$?([A-I]?[A-Z]\$?\d+)/)
+      row1, col1 =  cell_to_rowcol($1)
+      return [row1, col1, *args]
+
+    end
+
+    raise("Unknown cell reference #{cell}")
+  end
+
+  ###############################################################################
+  #
+  # cell_to_rowcol($cell_ref)
+  #
+  # Convert an Excel cell reference in A1 notation to a zero based row and column
+  # reference; converts C1 to (0, 2).
+  #
+  # Returns: row, column
+  #
+  def cell_to_rowcol(cell)       #:nodoc:
+    cell =~ /\$?([A-I]?[A-Z])\$?(\d+)/
+    col     = $1
+    row     = $2.to_i
+
+    col = chars_to_col($1.split(//))
+
+    # Convert 1-index to zero-index
+    row -= 1
+    col -= 1
+
+    [row, col]
+  end
+
+  ###############################################################################
+  #
+  # sort_pagebreaks()
+  #
+  #
+  # This is an internal method that is used to filter elements of the array of
+  # pagebreaks used in the store_hbreak() and store_vbreak() methods. It:
+  #   1. Removes duplicate entries from the list.
+  #   2. Sorts the list.
+  #   3. Removes 0 from the list if present.
+  #
+  def sort_pagebreaks(breaks)       #:nodoc:
+    breaks.uniq.sort!
+    breaks.shift if breaks[0] == 0
+
+    # 1000 vertical pagebreaks appears to be an internal Excel 5 limit.
+    # It is slightly higher in Excel 97/200, approx. 1026
+    breaks.size > 1000 ? breaks[0..999] : breaks
+  end
+
+  ###############################################################################
+  #
+  # encode_password($password)
+  #
+  # Based on the algorithm provided by Daniel Rentz of OpenOffice.
+  #
+  #
+  def encode_password(password)       #:nodoc:
+    i = 0
+    chars = password.split(//)
+    count = chars.size
+
+    chars.each do |char|
+      i += 1
+      char     = char[0] << i
+      low_15   = char & 0x7fff
+      high_15  = char & 0x7fff << 15
+      high_15  = high_15 >> 15
+      char     = low_15 | high_15
+    end
+
+    encoded_password  = 0x0000
+    chars.each { |c| encoded_password ^= c }
+    encoded_password ^= count
+    encoded_password ^= 0xCE4B
+  end
+
+  ###############################################################################
+  #
+  # encode_formula_result()
+  #     my $value     = $_[0];      # Result to be encoded.
+  #
+  # Encode the user supplied result for a formula.
+  #
+  def encode_formula_result(value = nil)       #:nodoc:
+    is_string = 0                 # Formula evaluates to str.
+    # my $num;                    # Current value of formula.
+    # my $grbit;                  # Option flags.
+
+    unless value
+      grbit  = 0x03
+      num    = [0].pack("d")
+    else
+      # The user specified the result of the formula. We turn off the recalc
+      # flag and check the result type.
+      grbit  = 0x00
+
+      if value.to_s =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/
+        # Value is a number.
+        num = [value].pack("d")
+      else
+        bools = {
+          'TRUE'    => [1,  1],
+          'FALSE'   => [1,  0],
+          '#NULL!'  => [2,  0],
+          '#DIV/0!' => [2,  7],
+          '#VALUE!' => [2, 15],
+          '#REF!'   => [2, 23],
+          '#NAME?'  => [2, 29],
+          '#NUM!'   => [2, 36],
+          '#N/A'    => [2, 42]
+        }
+
+        if bools[value]
+          # Value is a boolean.
+          num = [bools[value][0], bools[value][1], 0, 0xFFFF].pack("vvvv")
+        else
+          # Value is a string.
+          num = [0, 0, 0, 0xFFFF].pack("vvvv")
+          is_string = 1
+        end
+      end
+    end
+
+    [num, grbit, is_string]
+  end
+
+  ###############################################################################
+  #
+  # get_formula_string()
+  #
+  # Pack the string value when a formula evaluates to a string. The value cannot
+  # be calculated by the module and thus must be supplied by the user.
+  #
+  def get_formula_string(string)       #:nodoc:
+    ruby_19 { string = convert_to_ascii_if_ascii(string) }
+
+    record    = 0x0207         # Record identifier
+    length    = 0x00           # Bytes to follow
+    # string                   # Formula string.
+    strlen    = string.bytesize  # Length of the formula string (chars).
+    encoding  = 0              # String encoding.
+
+    # Handle utf8 strings.
+    if is_utf8?(string)
+      string = utf8_to_16be(string)
+      encoding = 1
+    end
+
+    length    = 0x03 + string.bytesize  # Length of the record data
+
+    header    = [record, length].pack("vv")
+    data      = [strlen, encoding].pack("vC")
+
+    header + data + string
+  end
+
+  def store_formula_common(row, col, xf, value, formula)  # :nodoc:
+    # Excel normally stores the last calculated value of the formula in $num.
+    # Clearly we are not in a position to calculate this "a priori". Instead
+    # we set $num to zero and set the option flags in $grbit to ensure
+    # automatic calculation of the formula when the file is opened.
+    # As a workaround for some non-Excel apps we also allow the user to
+    # specify the result of the formula.
+    #
+    # is_string                                # Formula evaluates to str
+    # num                                      # Current value of formula
+    # grbit                                    # Option flags
+    num, grbit, is_string = encode_formula_result(value)
+
+    record    = 0x0006       # Record identifier
+    chn       = 0x0000       # Must be zero
+
+    formlen   = formula.bytesize     # Length of the binary string
+    length    = 0x16 + formlen       # Length of the record data
+
+    header    = [record, length].pack("vv")
+    data      = [row, col, xf].pack("vvv") +
+                num                        +
+                [grbit, chn, formlen].pack('vVv')
+
+    # The STRING record if the formula evaluates to a string.
+    string  = ''
+    string  = get_formula_string(value) if is_string != 0
+
+    # Store the data or write immediately depending on the compatibility mode.
+    store_with_compatibility(row, col, header + data + formula + string)
+  end
+
+  ###############################################################################
+  #
+  # write_url_web($row1, $col1, $row2, $col2, $url, $string, $format)
+  #    row1        = $_[0];                        # Start row
+  #    col1        = $_[1];                        # Start column
+  #    row2        = $_[2];                        # End row
+  #    col2        = $_[3];                        # End column
+  #    url         = $_[4];                        # URL string
+  #    str         = $_[5];                        # Alternative label
+  #
+  # Used to write http, ftp and mailto hyperlinks.
+  # The link type ($options) is 0x03 is the same as absolute dir ref without
+  # sheet. However it is differentiated by the $unknown2 data stream.
+  #
+  # See also write_url() above for a general description and return values.
+  #
+  def write_url_web(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
+    ruby_19 { url = convert_to_ascii_if_ascii(url) }
+
+    record = 0x01B8                       # Record identifier
+    length = 0x00000                      # Bytes to follow
+
+    xf     = format || url_format        # The cell format
+
+    # Write the visible label but protect against url recursion in write().
+    str          = url if str.nil?
+    @writing_url = 1
+    error        = write(row1, col1, str, xf)
+    @writing_url = 0
+    return error if error == -2
+
+    # Pack the undocumented parts of the hyperlink stream
+    unknown1    = ["D0C9EA79F9BACE118C8200AA004BA90B02000000"].pack("H*")
+    unknown2    = ["E0C9EA79F9BACE118C8200AA004BA90B"].pack("H*")
+
+    # Pack the option flags
+    options     = [0x03].pack("V")
+
+    # URL encoding.
+    encoding    = 0
+
+    # Convert an Utf8 URL type and to a null terminated wchar string.
+    if is_utf8?(url)
+      url = utf8_to_16be(url)
+      # URL is null terminated.
+      ruby_18 { url += "\0\0" } ||
+      ruby_19 { url += "\0\0".force_encoding('UTF-16BE') }
+      encoding = 1
+    end
+
+    # Convert an Ascii URL type and to a null terminated wchar string.
+    if encoding == 0
+      url  =
+        ruby_18 { url + "\0" } ||
+        ruby_19 { url.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
+      url  = url.unpack('c*').pack('v*')
+    end
+
+    # Pack the length of the URL
+    url_len     = [url.bytesize].pack("V")
+
+    # Calculate the data length
+    length         = 0x34 + url.bytesize
+
+    # Pack the header data
+    header      = [record, length].pack("vv")
+    data        = [row1, row2, col1, col2].pack("vvvv")
+
+    # Write the packed data
+    append( header, data,unknown1,options,unknown2,url_len,url)
+
+    error
+  end
+
+  ###############################################################################
+  #
+  # write_url_internal($row1, $col1, $row2, $col2, $url, $string, $format)
+  #    row1        = $_[0];                        # Start row
+  #    col1        = $_[1];                        # Start column
+  #    row2        = $_[2];                        # End row
+  #    col2        = $_[3];                        # End column
+  #    url         = $_[4];                        # URL string
+  #    str         = $_[5];                        # Alternative label
+  #
+  # Used to write internal reference hyperlinks such as "Sheet1!A1".
+  #
+  # See also write_url() above for a general description and return values.
+  #
+  def write_url_internal(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
+    record = 0x01B8                       # Record identifier
+    length = 0x00000                      # Bytes to follow
+
+    xf     = format || url_format        # The cell format
+
+    # Strip URL type
+    url.sub!(/^internal:/, '')
+
+    # Write the visible label but protect against url recursion in write().
+    str          = url if str.nil?
+    @writing_url = 1
+    error        = write(row1, col1, str, xf)
+    @writing_url = 0
+    return error if error == -2
+
+    # Pack the undocumented parts of the hyperlink stream
+    unknown1    = ["D0C9EA79F9BACE118C8200AA004BA90B02000000"].pack("H*")
+
+    # Pack the option flags
+    options     = [0x08].pack("V")
+
+    # URL encoding.
+    encoding    = 0
+
+    # Convert an Utf8 URL type and to a null terminated wchar string.
+    if is_utf8?(str)
+      # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
+      url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/
+      # URL is null terminated.
+      ruby_18 { url = utf8_to_16be(url) + "\0\0" } ||
+      ruby_19 { url = url.encode('UTF-16LE') + "\0\0".encode('UTF-16LE') }
+      encoding = 1
+    end
+
+    # Convert an Ascii URL type and to a null terminated wchar string.
+    if encoding == 0
+      url += "\0"
+      url = url.unpack('c*').pack('v*')
+    end
+
+    # Pack the length of the URL as chars (not wchars)
+    url_len     = [(url.length/2).to_i].pack("V")
+
+    # Calculate the data length
+    length         = 0x24 + url.bytesize
+
+    # Pack the header data
+    header      = [record, length].pack("vv")
+    data        = [row1, row2, col1, col2].pack("vvvv")
+
+    # Write the packed data
+    append( header, data, unknown1, options, url_len, url)
+
+    error
+  end
+
+  ###############################################################################
+  #
+  # write_url_external($row1, $col1, $row2, $col2, $url, $string, $format)
+  #
+  # Write links to external directory names such as 'c:\foo.xls',
+  # c:\foo.xls#Sheet1!A1', '../../foo.xls'. and '../../foo.xls#Sheet1!A1'.
+  #
+  # Note: Excel writes some relative links with the $dir_long string. We ignore
+  # these cases for the sake of simpler code.
+  #
+  # See also write_url() above for a general description and return values.
+  #
+  def write_url_external(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
+    # Network drives are different. We will handle them separately
+    # MS/Novell network drives and shares start with \\
+    if url =~ /^external:\\\\/
+      return write_url_external_net(row1, col1, row2, col2, url, str, format)
+    end
+
+    record      = 0x01B8                       # Record identifier
+    length      = 0x00000                      # Bytes to follow
+
+    xf     = format || url_format        # The cell format
+
+    # Strip URL type and change Unix dir separator to Dos style (if needed)
+    #
+    url.sub!(/^external:/, '')
+    url.gsub!(%r|/|, '\\')
+
+
+    # Write the visible label but protect against url recursion in write().
+    str = url.sub!(/\#/, ' - ') if str.nil?
+    @writing_url = 1
+    error        = write(row1, col1, str, xf)
+    @writing_url = 0
+    return error if error == -2
+
+    # Determine if the link is relative or absolute:
+    # Absolute if link starts with DOS drive specifier like C:
+    # Otherwise default to 0x00 for relative link.
+    #
+    absolute    = 0x00
+    absolute    = 0x02  if url =~ /^[A-Za-z]:/
+
+    dir_long, link_type, sheet_len, sheet = analyze_link(url, absolute)
+
+    # Pack the link type
+    link_type      = link_type.pack("V")
+
+    # Calculate the up-level dir count e.g. (..\..\..\ == 3)
+    up_count    = 0
+    while dir_long.sub!(/^\.\.\\/, '')
+      up_count += 1
+    end
+    up_count    = [up_count].pack("v")
+
+    # Store the short dos dir name (null terminated)
+    dir_short   = dir_long + "\0"
+
+    # Store the long dir name as a wchar string (non-null terminated)
+    dir_long = dir_long.split('').join("\0") + "\0"
+
+    # Pack the lengths of the dir strings
+    dir_short_len = [dir_short.bytesize].pack("V")
+    dir_long_len  = [dir_long.bytesize].pack("V")
+    stream_len    = [dir_long.bytesize + 0x06].pack("V")
+
+    # Pack the undocumented parts of the hyperlink stream
+    unknown1 = ['D0C9EA79F9BACE118C8200AA004BA90B02000000'].pack("H*")
+    unknown2 = ['0303000000000000C000000000000046'].pack("H*")
+    unknown3 = ['FFFFADDE000000000000000000000000000000000000000'].pack("H*")
+    unknown4 = [0x03].pack("v")
+
+    # Pack the main data stream
+    data        = [row1, row2, col1, col2].pack("vvvv") +
+    unknown1     +
+    link_type    +
+    unknown2     +
+    up_count     +
+    dir_short_len+
+    dir_short    +
+    unknown3     +
+    stream_len   +
+    dir_long_len +
+    unknown4     +
+    dir_long     +
+    sheet_len    +
+    sheet
+
+    # Pack the header data
+    length      = data.bytesize
+    header      = [record, length].pack("vv")
+
+    # Write the packed data
+    append(header, data)
+
+    error
+  end
+
+  ###############################################################################
+  #
+  # write_url_external_net($row1, $col1, $row2, $col2, $url, $string, $format)
+  #
+  # Write links to external MS/Novell network drives and shares such as
+  # '//NETWORK/share/foo.xls' and '//NETWORK/share/foo.xls#Sheet1!A1'.
+  #
+  # See also write_url() above for a general description and return values.
+  #
+  def write_url_external_net(row1, col1, row2, col2, url, str, format)       #:nodoc:
+    record      = 0x01B8                       # Record identifier
+    length      = 0x00000                      # Bytes to follow
+
+    xf          = format || url_format  # The cell format
+
+    # Strip URL type and change Unix dir separator to Dos style (if needed)
+    #
+    url.sub!(/^external:/, '')
+    url.gsub!(%r|/|, '\\')
+
+    # Write the visible label but protect against url recursion in write().
+    str = url.sub!(/\#/, ' - ') if str.nil?
+    @writing_url = 1
+    error        = write(row1, col1, str, xf)
+    @writing_url = 0
+    return error if error == -2
+
+    dir_long, link_type, sheet_len, sheet = analyze_link(url)
+
+    # Pack the link type
+    link_type      = [link_type].pack("V")
+
+    # Make the string null terminated
+    dir_long      += "\0"
+
+    # Pack the lengths of the dir string
+    dir_long_len  = [dir_long.bytesize].pack("V")
+
+    # Store the long dir name as a wchar string (non-null terminated)
+    dir_long = dir_long.split('').join("\0") + "\0"
+
+    # Pack the undocumented part of the hyperlink stream
+    unknown1    = ['D0C9EA79F9BACE118C8200AA004BA90B02000000'].pack("H*")
+
+    # Pack the main data stream
+    data         = [row1, row2, col1, col2].pack("vvvv") +
+    unknown1     +
+    link_type    +
+    dir_long_len +
+    dir_long     +
+    sheet_len    +
+    sheet
+
+    # Pack the header data
+    length      = data.bytesize
+    header      = [record, length].pack("vv")
+
+    # Write the packed data
+    append(header, data)
+
+    error
+  end
+
+  def url_format
+    @workbook.url_format
+  end
+
+  # Determine if the link contains a sheet reference and change some of the
+  # parameters accordingly.
+  # Split the dir name and sheet name (if it exists)
+  #
+  def analyze_link(url, absolute = nil)  # :nodoc:
+    dir_long , sheet = url.split(/\#/)
+    link_type = absolute ? (0x01 | absolute) : 0x0103
+
+    if sheet
+      link_type |= 0x08
+      sheet_len  = [sheet.bytesize + 0x01].pack("V")
+      sheet      = sheet.split('').join("\0") + "\0\0\0"
+    else
+      sheet_len   = ''
+      sheet       = ''
+    end
+
+    [dir_long, link_type, sheet_len, sheet]
+  end
+
+  #
+  # The function takes a date and time in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format
+  # and converts it to a decimal number representing a valid Excel date.
+  #
+  # Dates and times in Excel are represented by real numbers. The integer part of
+  # the number stores the number of days since the epoch and the fractional part
+  # stores the percentage of the day in seconds. The epoch can be either 1900 or
+  # 1904.
+  #
+  # Parameter: Date and time string in one of the following formats:
+  #               yyyy-mm-ddThh:mm:ss.ss  # Standard
+  #               yyyy-mm-ddT             # Date only
+  #                         Thh:mm:ss.ss  # Time only
+  #
+  # Returns:
+  #            A decimal number representing a valid Excel date, or
+  #            undef if the date is invalid.
+  #
+  def convert_date_time(date_time_string)       #:nodoc:
+    date_time = date_time_string
+
+    days      = 0 # Number of days since epoch
+    seconds   = 0 # Time expressed as fraction of 24h hours in seconds
+
+    # Strip leading and trailing whitespace.
+    date_time.sub!(/^\s+/, '')
+    date_time.sub!(/\s+$/, '')
+
+    # Check for invalid date char.
+    return nil if date_time =~ /[^0-9T:\-\.Z]/
+
+    # Check for "T" after date or before time.
+    return nil unless date_time =~ /\dT|T\d/
+
+    # Strip trailing Z in ISO8601 date.
+    date_time.sub!(/Z$/, '')
+
+    # Split into date and time.
+    date, time = date_time.split(/T/)
+
+    # We allow the time portion of the input DateTime to be optional.
+    if time
+      # Match hh:mm:ss.sss+ where the seconds are optional
+      if time =~ /^(\d\d):(\d\d)(:(\d\d(\.\d+)?))?/
+        hour   = $1.to_i
+        min    = $2.to_i
+        sec    = $4.to_f || 0
+      else
+        return nil # Not a valid time format.
+      end
+
+      # Some boundary checks
+      return nil if hour >= 24
+      return nil if min  >= 60
+      return nil if sec  >= 60
+
+      # Excel expresses seconds as a fraction of the number in 24 hours.
+      seconds = (hour * 60* 60 + min * 60 + sec) / (24.0 * 60 * 60)
+    end
+
+    # We allow the date portion of the input DateTime to be optional.
+    return seconds if date == ''
+
+    # Match date as yyyy-mm-dd.
+    if date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/
+      year   = $1.to_i
+      month  = $2.to_i
+      day    = $3.to_i
+    else
+      return nil  # Not a valid date format.
+    end
+
+    # Set the epoch as 1900 or 1904. Defaults to 1900.
+    # Special cases for Excel.
+    unless date_1904?
+      return      seconds if date == '1899-12-31' # Excel 1900 epoch
+      return      seconds if date == '1900-01-00' # Excel 1900 epoch
+      return 60 + seconds if date == '1900-02-29' # Excel false leapday
+    end
+
+
+    # We calculate the date by calculating the number of days since the epoch
+    # and adjust for the number of leap days. We calculate the number of leap
+    # days by normalising the year in relation to the epoch. Thus the year 2000
+    # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
+    #
+    epoch   = date_1904? ? 1904 : 1900
+    offset  = date_1904? ?    4 :    0
+    norm    = 300
+    range   = year -epoch
+
+    # Set month days and check for leap year.
+    mdays   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    leap    = 0
+    leap    = 1  if year % 4 == 0 && year % 100 != 0 || year % 400 == 0
+    mdays[1]   = 29 if leap != 0
+
+    # Some boundary checks
+    return nil if year  < epoch or year  > 9999
+    return nil if month < 1     or month > 12
+    return nil if day   < 1     or day   > mdays[month -1]
+
+    # Accumulate the number of days since the epoch.
+    days = day                               # Add days for current month
+    (0 .. month-2).each do |m|
+      days += mdays[m]                      # Add days for past months
+    end
+    days += range *365                       # Add days for past years
+    days += ((range)                /  4)    # Add leapdays
+    days -= ((range + offset)       /100)    # Subtract 100 year leapdays
+    days += ((range + offset + norm)/400)    # Add 400 year leapdays
+    days -= leap                             # Already counted above
+
+    # Adjust for Excel erroneously treating 1900 as a leap year.
+    days += 1 if !date_1904? and days > 59
+
+    days + seconds
+  end
+
+  def date_1904?     # :nodoc:
+    @workbook.date_1904
+  end
+
+  ###############################################################################
+  #
+  # write_row_default()
+  #        row    : Row Number
+  #        colMic : First defined column
+  #        colMac : Last defined column
+  #
+  # Write a default row record, in compatibility mode, for rows that don't have
+  # user specified values..
+  #
+  def write_row_default(row, colMic, colMac)       #:nodoc:
+
+    record      = 0x0208               # Record identifier
+    length      = 0x0010               # Number of bytes to follow
+
+    miyRw       = 0xFF                 # Row height
+    irwMac      = 0x0000               # Used by Excel to optimise loading
+    reserved    = 0x0000               # Reserved
+    grbit       = 0x0100               # Option flags
+    ixfe        = 0x0F                 # XF index
+
+    store_simple(record, length,
+                 row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe)
+  end
+
+  ###############################################################################
+  #
+  # check_dimensions($row, $col, $ignore_row, $ignore_col)
+  #
+  # Check that $row and $col are valid and store max and min values for use in
+  # DIMENSIONS record. See, store_dimensions().
+  #
+  # The $ignore_row/$ignore_col flags is used to indicate that we wish to
+  # perform the dimension check without storing the value.
+  #
+  # The ignore flags are use by set_row() and data_validate.
+  #
+  def check_dimensions(row, col, ignore_row = 0, ignore_col = 0)       #:nodoc:
+    return -2 if row.nil?
+    return -2 if row >= @xls_rowmax
+
+    return -2 if col.nil?
+    return -2 if col >= @xls_colmax
+
+    if ignore_row == 0
+      if @dim_rowmin.nil? or row < @dim_rowmin
+        @dim_rowmin = row
+      end
+
+      if @dim_rowmax.nil? or row > @dim_rowmax
+        @dim_rowmax = row
+      end
+    end
+
+    if ignore_col == 0
+      if @dim_colmin.nil? or col < @dim_colmin
+        @dim_colmin = col
+      end
+
+      if @dim_colmax.nil? or col > @dim_colmax
+        @dim_colmax =col
+      end
+    end
+
+    0
+  end
+
+  ###############################################################################
+  #
+  # store_dimensions()
+  #
+  # Writes Excel DIMENSIONS to define the area in which there is cell data.
+  #
+  # Notes:
+  #   Excel stores the max row/col as row/col +1.
+  #   Max and min values of 0 are used to indicate that no cell data.
+  #   We set the undef member data to 0 since it is used by store_table().
+  #   Inserting images or charts doesn't change the DIMENSION data.
+  #
+  def store_dimensions   #:nodoc:
+    record    = 0x0200         # Record identifier
+    length    = 0x000E         # Number of bytes to follow
+    reserved  = 0x0000         # Reserved by Excel
+
+    row_min = @dim_rowmin.nil? ? 0 : @dim_rowmin
+    row_max = @dim_rowmax.nil? ? 0 : @dim_rowmax + 1
+    col_min = @dim_colmin.nil? ? 0 : @dim_colmin
+    col_max = @dim_colmax.nil? ? 0 : @dim_colmax + 1
+
+    # Set member data to the new max/min value for use by store_table().
+    @dim_rowmin = row_min
+    @dim_rowmax = row_max
+    @dim_colmin = col_min
+    @dim_colmax = col_max
+
+    header = [record, length].pack("vv")
+    fields = [row_min, row_max, col_min, col_max, reserved]
+    data   = fields.pack("VVvvv")
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_window2()
+  #
+  # Write BIFF record Window2.
+  #
+  def store_window2   #:nodoc:
+    record         = 0x023E     # Record identifier
+    length         = 0x0012     # Number of bytes to follow
+
+    grbit          = 0x00B6     # Option flags
+    rwTop          = @first_row   # Top visible row
+    colLeft        = @first_col   # Leftmost visible column
+    rgbHdr         = 0x00000040            # Row/col heading, grid color
+
+    wScaleSLV      = 0x0000                # Zoom in page break preview
+    wScaleNormal   = 0x0000                # Zoom in normal view
+    reserved       = 0x00000000
+
+
+    # The options flags that comprise $grbit
+    fDspFmla       = @display_formulas # 0 - bit
+    fDspGrid       = @screen_gridlines # 1
+    fDspRwCol      = @display_headers  # 2
+    fFrozen        = frozen? ? 1 : 0   # 3
+    fDspZeros      = display_zeros? ? 1 : 0   # 4
+    fDefaultHdr    = 1                 # 5
+    fArabic        = @display_arabic || 0  # 6
+    fDspGuts       = @outline_on       # 7
+    fFrozenNoSplit = @frozen_no_split  # 0 - bit
+    fSelected      = selected? ? 1 : 0 # 1
+    fPaged         = @active           # 2
+    fBreakPreview  = 0                # 3
+
+    grbit             = fDspFmla
+    grbit            |= fDspGrid       << 1
+    grbit            |= fDspRwCol      << 2
+    grbit            |= fFrozen        << 3
+    grbit            |= fDspZeros      << 4
+    grbit            |= fDefaultHdr    << 5
+    grbit            |= fArabic        << 6
+    grbit            |= fDspGuts       << 7
+    grbit            |= fFrozenNoSplit << 8
+    grbit            |= fSelected      << 9
+    grbit            |= fPaged         << 10
+    grbit            |= fBreakPreview  << 11
+
+    header = [record, length].pack("vv")
+    data    =[grbit, rwTop, colLeft, rgbHdr, wScaleSLV, wScaleNormal, reserved].pack("vvvVvvV")
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_page_view()
+  #
+  # Set page view mode. Only applicable to Mac Excel.
+  #
+  def store_page_view   #:nodoc:
+    return if @page_view == 0
+    data    = ['C8081100C808000000000040000000000900000000'].pack("H*")
+    append(data)
+  end
+
+  ###############################################################################
+  #
+  # store_tab_color()
+  #
+  # Write the Tab Color BIFF record.
+  #
+  def store_tab_color   #:nodoc:
+    color   = @tab_color
+
+    return if color == 0
+
+    record  = 0x0862      # Record identifier
+    length  = 0x0014      # Number of bytes to follow
+
+    zero    = 0x0000
+    unknown = 0x0014
+
+    store_simple(record, length, record, zero, zero, zero, zero,
+                 zero, unknown, zero, color, zero)
+  end
+
+  ###############################################################################
+  #
+  # store_defrow()
+  #
+  # Write BIFF record DEFROWHEIGHT.
+  #
+  def store_defrow   #:nodoc:
+    record   = 0x0225      # Record identifier
+    length   = 0x0004      # Number of bytes to follow
+
+    grbit    = 0x0000      # Options.
+    height   = 0x00FF      # Default row height
+
+    header = [record, length].pack("vv")
+    data   = [grbit,  height].pack("vv")
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_defcol()
+  #
+  # Write BIFF record DEFCOLWIDTH.
+  #
+  def store_defcol   #:nodoc:
+    record   = 0x0055      # Record identifier
+    length   = 0x0002      # Number of bytes to follow
+    colwidth = 0x0008      # Default column width
+
+    header   = [record, length].pack("vv")
+    data     = [colwidth].pack("v")
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_colinfo($firstcol, $lastcol, $width, $format, $hidden)
+  #
+  #   firstcol : First formatted column
+  #   lastcol  : Last formatted column
+  #   width    : Col width in user units, 8.43 is default
+  #   format   : format object
+  #   hidden   : hidden flag
+  #
+  # Write BIFF record COLINFO to define column widths
+  #
+  # Note: The SDK says the record length is 0x0B but Excel writes a 0x0C
+  # length record.
+  #
+  def store_colinfo(firstcol=0, lastcol=0, width=8.43, format=nil, hidden=false, level=0, collapsed=false)  #:nodoc:
+    record   = 0x007D          # Record identifier
+    length   = 0x000B          # Number of bytes to follow
+
+    # Excel rounds the column width to the nearest pixel. Therefore we first
+    # convert to pixels and then to the internal units. The pixel to users-units
+    # relationship is different for values less than 1.
+    #
+    width ||= 8.43
+    if width < 1
+      pixels = width *12
+    else
+      pixels = width *7 +5
+    end
+    pixels = pixels.to_i
+
+    coldx    = (pixels *256/7).to_i   # Col width in internal units
+    grbit    = 0x0000               # Option flags
+    reserved = 0x00                 # Reserved
+
+    # Check for a format object
+    if !format.nil? && format.respond_to?(:xf_index)
+      ixfe = format.xf_index
+    else
+      ixfe = 0x0F
+    end
+
+    # Set the limits for the outline levels (0 <= x <= 7).
+    level = 0 if level < 0
+    level = 7 if level > 7
+
+
+    # Set the options flags. (See set_row() for more details).
+    grbit |= 0x0001 if hidden && hidden != 0
+    grbit |= level << 8
+    grbit |= 0x1000 if collapsed && collapsed != 0
+
+    header = [record, length].pack("vv")
+    data   = [firstcol, lastcol, coldx,
+              ixfe, grbit, reserved].pack("vvvvvC")
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_filtermode()
+  #
+  # Write BIFF record FILTERMODE to indicate that the worksheet contains
+  # AUTOFILTER record, ie. autofilters with a filter set.
+  #
+  def store_filtermode   #:nodoc:
+    # Only write the record if the worksheet contains a filtered autofilter.
+    return '' if @filter_on == 0
+
+    record      = 0x009B      # Record identifier
+    length      = 0x0000      # Number of bytes to follow
+
+    header = [record, length].pack('vv')
+
+    prepend(header)
+  end
+
+  ###############################################################################
+  #
+  # store_autofilterinfo()
+  #
+  # Write BIFF record AUTOFILTERINFO.
+  #
+  def store_autofilterinfo   #:nodoc:
+    # Only write the record if the worksheet contains an autofilter.
+    return '' if @filter_count == 0
+
+    record      = 0x009D      # Record identifier
+    length      = 0x0002      # Number of bytes to follow
+    num_filters = @filter_count
+
+    header = [record, length].pack('vv')
+    data   = [num_filters].pack('v')
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_selection($first_row, $first_col, $last_row, $last_col)
+  #
+  # Write BIFF record SELECTION.
+  #
+  def store_selection(first_row=0, first_col=0, last_row = nil, last_col =nil)   #:nodoc:
+    record   = 0x001D                  # Record identifier
+    length   = 0x000F                  # Number of bytes to follow
+
+    pnn      = @active_pane   # Pane position
+    rwAct    = first_row                   # Active row
+    colAct   = first_col                   # Active column
+    irefAct  = 0                       # Active cell ref
+    cref     = 1                       # Number of refs
+
+    rwFirst  = first_row                   # First row in reference
+    colFirst = first_col                   # First col in reference
+    rwLast   = last_row || rwFirst       # Last  row in reference
+    colLast  = last_col || colFirst      # Last  col in reference
+
+    # Swap last row/col for first row/col as necessary
+    if rwFirst > rwLast
+      tmp = rwFirst
+      rwFirst = rwLast
+      rwLast = tmp
+    end
+
+    if colFirst > colLast
+      tmp = colFirst
+      colFirst = colLast
+      colLast = tmp
+    end
+
+    header = [record, length].pack('vv')
+    data = [pnn, rwAct, colAct, irefAct, cref,
+    rwFirst, rwLast, colFirst, colLast].pack('CvvvvvvCC')
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_externcount($count)
+  #
+  # Write BIFF record EXTERNCOUNT to indicate the number of external sheet
+  # references in a worksheet.
+  #
+  # Excel only stores references to external sheets that are used in formulas.
+  # For simplicity we store references to all the sheets in the workbook
+  # regardless of whether they are used or not. This reduces the overall
+  # complexity and eliminates the need for a two way dialogue between the formula
+  # parser the worksheet objects.
+  #
+  def store_externcount(count)   #:nodoc:
+    record   = 0x0016          # Record identifier
+    length   = 0x0002          # Number of bytes to follow
+
+    cxals    = count           # Number of external references
+
+    header = [record, length].pack('vv')
+    data   = [cxals].pack('v')
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_externsheet($sheetname)
+  #    sheetname  : Worksheet name
+  #
+  # Writes the Excel BIFF EXTERNSHEET record. These references are used by
+  # formulas. A formula references a sheet name via an index. Since we store a
+  # reference to all of the external worksheets the EXTERNSHEET index is the same
+  # as the worksheet index.
+  #
+  def store_externsheet(sheetname)   #:nodoc:
+    record    = 0x0017         # Record identifier
+    # length;                     # Number of bytes to follow
+
+    # cch                        # Length of sheet name
+    # rgch                       # Filename encoding
+
+    # References to the current sheet are encoded differently to references to
+    # external sheets.
+    #
+    if @name == sheetname
+      sheetname = ''
+      length    = 0x02  # The following 2 bytes
+      cch       = 1     # The following byte
+      rgch      = 0x02  # Self reference
+    else
+      length    = 0x02 + sheetname.bytesize
+      cch       = sheetname.bytesize
+      rgch      = 0x03  # Reference to a sheet in the current workbook
+    end
+
+    header = [record, length].pack('vv')
+    data   = [cch, rgch].pack('CC')
+
+    prepend(header, data, sheetname)
+  end
+
+  ###############################################################################
+  #
+  # store_panes(y, x, colLeft, no_split, pnnAct)
+  #    y           = args[0] || 0   # Vertical split position
+  #    x           = $_[1] || 0;   # Horizontal split position
+  #    rwTop       = $_[2];        # Top row visible
+  #    my $colLeft     = $_[3];        # Leftmost column visible
+  #    my $no_split    = $_[4];        # No used here.
+  #    my $pnnAct      = $_[5];        # Active pane
+  #
+  #
+  # Writes the Excel BIFF PANE record.
+  # The panes can either be frozen or thawed (unfrozen).
+  # Frozen panes are specified in terms of a integer number of rows and columns.
+  # Thawed panes are specified in terms of Excel's units for rows and columns.
+  #
+  def store_panes(y=0, x=0, rwtop=nil,  colleft=nil, no_split=nil, pnnAct=nil)   #:nodoc:
+    record      = 0x0041       # Record identifier
+    length      = 0x000A       # Number of bytes to follow
+
+    # Code specific to frozen or thawed panes.
+    if frozen?
+      # Set default values for $rwTop and $colLeft
+      rwtop   = y if rwtop.nil?
+      colleft = x if colleft.nil?
+    else
+      # Set default values for $rwTop and $colLeft
+      rwtop   = 0  if rwtop.nil?
+      colleft = 0  if colleft.nil?
+
+      # Convert Excel's row and column units to the internal units.
+      # The default row height is 12.75
+      # The default column width is 8.43
+      # The following slope and intersection values were interpolated.
+      #
+      y = 20*y      + 255
+      x = 113.879*x + 390
+    end
+
+
+    # Determine which pane should be active. There is also the undocumented
+    # option to override this should it be necessary: may be removed later.
+    #
+    if pnnAct.nil?
+      pnnAct = 0 if (x != 0 && y != 0) # Bottom right
+      pnnAct = 1 if (x != 0 && y == 0) # Top right
+      pnnAct = 2 if (x == 0 && y != 0) # Bottom left
+      pnnAct = 3 if (x == 0 && y == 0) # Top left
+    end
+
+    @active_pane = pnnAct # Used in store_selection
+
+    store_simple(record, length, x, y, rwtop, colleft, pnnAct)
+  end
+
+  ###############################################################################
+  #
+  # store_setup()
+  #
+  # Store the page setup SETUP BIFF record.
+  #
+  def store_setup   #:nodoc:
+    record       = 0x00A1                  # Record identifier
+    length       = 0x0022                  # Number of bytes to follow
+
+    iPaperSize   = @paper_size    # Paper size
+    iScale       = @print_scale   # Print scaling factor
+    iPageStart   = @page_start    # Starting page number
+    iFitWidth    = @fit_width     # Fit to number of pages wide
+    iFitHeight   = @fit_height    # Fit to number of pages high
+    grbit        = 0x00           # Option flags
+    iRes         = 0x0258         # Print resolution
+    iVRes        = 0x0258         # Vertical print resolution
+    numHdr       = @margin_header # Header Margin
+    numFtr       = @margin_footer # Footer Margin
+    iCopies      = 0x01           # Number of copies
+
+    fLeftToRight = @page_order    # Print over then down
+    fLandscape   = @orientation   # Page orientation
+    fNoPls       = 0x0                     # Setup not read from printer
+    fNoColor     = @black_white   # Print black and white
+    fDraft       = @draft_quality # Print draft quality
+    fNotes       = @print_comments# Print notes
+    fNoOrient    = 0x0            # Orientation not set
+    fUsePage     = @custom_start  # Use custom starting page
+
+    grbit           = fLeftToRight
+    grbit          |= fLandscape    << 1
+    grbit          |= fNoPls        << 2
+    grbit          |= fNoColor      << 3
+    grbit          |= fDraft        << 4
+    grbit          |= fNotes        << 5
+    grbit          |= fNoOrient     << 6
+    grbit          |= fUsePage      << 7
+
+
+    numHdr = [numHdr].pack('d')
+    numFtr = [numFtr].pack('d')
+
+    if @byte_order != 0 && @byte_order != ''
+      numHdr = numHdr.reverse
+      numFtr = numFtr.reverse
+    end
+
+    header = [record, length].pack('vv')
+    data1  = [iPaperSize, iScale, iPageStart,
+              iFitWidth, iFitHeight, grbit, iRes, iVRes].pack("vvvvvvvv")
+
+    data2  = numHdr + numFtr
+    data3  = [iCopies].pack('v')
+
+    prepend(header, data1, data2, data3)
+
+  end
+
+  ###############################################################################
+  #
+  # store_header()
+  #
+  # Store the header caption BIFF record.
+  #
+  def store_header   #:nodoc:
+    store_header_footer_common(:header)
+  end
+
+  ###############################################################################
+  #
+  # store_footer()
+  #
+  # Store the footer caption BIFF record.
+  #
+  def store_footer   #:nodoc:
+    store_header_footer_common(:footer)
+  end
+
+  #
+  # type :  :header / :footer
+  #
+  def store_header_footer_common(type)  # :nodoc:
+    if type == :header
+      record   = 0x0014
+      str      = @header || ''
+      encoding = @header_encoding || 0
+    else
+      record   = 0x0015
+      str      = @footer || ''
+      encoding = @footer_encoding || 0
+    end
+    cch         = str.bytesize        # Length of header/footer string
+
+    # Character length is num of chars not num of bytes
+    cch         /= 2 if encoding != 0
+
+    # Change the UTF-16 name from BE to LE
+    str         = str.unpack('v*').pack('n*') if encoding != 0
+
+    length      = 3 + str.bytesize
+
+    header      = [record, length].pack('vv')
+    data        = [cch, encoding].pack('vC')
+
+    prepend(header, data, str)
+  end
+
+  ###############################################################################
+  #
+  # store_hcenter()
+  #
+  # Store the horizontal centering HCENTER BIFF record.
+  #
+  def store_hcenter   #:nodoc:
+    store_biff_common(:hcenter)
+  end
+
+  ###############################################################################
+  #
+  # store_vcenter()
+  #
+  # Store the vertical centering VCENTER BIFF record.
+  #
+  def store_vcenter   #:nodoc:
+    store_biff_common(:vcenter)
+  end
+
+  ###############################################################################
+  #
+  # store_margin_left()
+  #
+  # Store the LEFTMARGIN BIFF record.
+  #
+  def store_margin_left   #:nodoc:
+    store_margin_common(0x0026, 0x0008, @margin_left)
+  end
+
+  ###############################################################################
+  #
+  # store_margin_right()
+  #
+  # Store the RIGHTMARGIN BIFF record.
+  #
+  def store_margin_right   #:nodoc:
+    store_margin_common(0x0027, 0x0008, @margin_right)
+  end
+
+  ###############################################################################
+  #
+  # store_margin_top()
+  #
+  # Store the TOPMARGIN BIFF record.
+  #
+  def store_margin_top   #:nodoc:
+    store_margin_common(0x0028, 0x0008, @margin_top)
+  end
+
+  ###############################################################################
+  #
+  # store_margin_bottom()
+  #
+  # Store the BOTTOMMARGIN BIFF record.
+  #
+  def store_margin_bottom   #:nodoc:
+    store_margin_common(0x0029, 0x0008, @margin_bottom)
+  end
+
+  #
+  # record     : Record identifier
+  # length     : bytes to follow
+  # margin     : Margin in inches
+  #
+  def store_margin_common(record, length, margin)  # :nodoc:
+    header  = [record, length].pack('vv')
+    data    = [margin].pack('d')
+
+    data = data.reverse if @byte_order != 0 && @byte_order != ''
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # merge_cells($first_row, $first_col, $last_row, $last_col)
+  #
+  # This is an Excel97/2000 method. It is required to perform more complicated
+  # merging than the normal align merge in Format.pm
+  #
+  def merge_cells(*args) #:nodoc:
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
+
+    record  = 0x00E5                    # Record identifier
+    length  = 0x000A                    # Bytes to follow
+
+    cref     = 1                        # Number of refs
+    rwFirst  = args[0]                  # First row in reference
+    colFirst = args[1]                  # First col in reference
+    rwLast   = args[2] || rwFirst       # Last  row in reference
+    colLast  = args[3] || colFirst      # Last  col in reference
+
+    # Excel doesn't allow a single cell to be merged
+    return if rwFirst == rwLast and colFirst == colLast
+
+    # Swap last row/col with first row/col as necessary
+    rwFirst,  rwLast  = rwLast,  rwFirst  if rwFirst  > rwLast
+    colFirst, colLast = colLast, colFirst if colFirst > colLast
+
+    store_simple(record, length, cref, rwFirst, rwLast, colFirst, colLast)
+  end
+
+  ###############################################################################
+  #
+  # store_print_headers()
+  #
+  # Write the PRINTHEADERS BIFF record.
+  #
+  def store_print_headers   #:nodoc:
+    store_biff_common(:print_headers)
+  end
+
+  ###############################################################################
+  #
+  # store_print_gridlines()
+  #
+  # Write the PRINTGRIDLINES BIFF record. Must be used in conjunction with the
+  # GRIDSET record.
+  #
+  def store_print_gridlines   #:nodoc:
+    store_biff_common(:print_gridlines)
+  end
+
+  def store_biff_common(type)  # :nodoc:
+    case type
+    when :hcenter
+      record = 0x0083
+      flag   = @hcenter || 0
+    when :vcenter
+      record = 0x0084
+      flag   = @vcenter || 0
+    when :print_headers
+      record = 0x002a
+      flag   = @print_headers || 0
+    when :print_gridlines
+      record = 0x002b
+      flag   = @print_gridlines
+    end
+    length   = 0x0002
+
+    header      = [record, length].pack("vv")
+    data        = [flag].pack("v")
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_gridset()
+  #
+  # Write the GRIDSET BIFF record. Must be used in conjunction with the
+  # PRINTGRIDLINES record.
+  #
+  def store_gridset   #:nodoc:
+    record      = 0x0082                        # Record identifier
+    length      = 0x0002                        # Bytes to follow
+
+    fGridSet    = @print_gridlines == 0 ? 1 : 0 # Boolean flag
+
+    header      = [record, length].pack("vv")
+    data        = [fGridSet].pack("v")
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_guts()
+  #
+  # Write the GUTS BIFF record. This is used to configure the gutter margins
+  # where Excel outline symbols are displayed. The visibility of the gutters is
+  # controlled by a flag in WSBOOL. See also store_wsbool().
+  #
+  # We are all in the gutter but some of us are looking at the stars.
+  #
+  def store_guts   #:nodoc:
+    record      = 0x0080   # Record identifier
+    length      = 0x0008   # Bytes to follow
+
+    dxRwGut     = 0x0000   # Size of row gutter
+    dxColGut    = 0x0000   # Size of col gutter
+
+    row_level   = @outline_row_level
+    col_level   = 0
+
+
+    # Calculate the maximum column outline level. The equivalent calculation
+    # for the row outline level is carried out in set_row().
+    #
+    @colinfo.each do |colinfo|
+      # Skip cols without outline level info.
+      next if colinfo.size < 6
+      col_level = colinfo[5] if colinfo[5] > col_level
+    end
+
+    # Set the limits for the outline levels (0 <= x <= 7).
+    col_level = 0 if col_level < 0
+    col_level = 7 if col_level > 7
+
+    # The displayed level is one greater than the max outline levels
+    row_level += 1 if row_level > 0
+    col_level += 1 if col_level > 0
+
+    header = [record, length].pack("vv")
+    data   = [dxRwGut, dxColGut, row_level, col_level].pack("vvvv")
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_wsbool()
+  #
+  # Write the WSBOOL BIFF record, mainly for fit-to-page. Used in conjunction
+  # with the SETUP record.
+  #
+  def store_wsbool   #:nodoc:
+    record      = 0x0081   # Record identifier
+    length      = 0x0002   # Bytes to follow
+
+    grbit       = 0x0000   # Option flags
+
+    # Set the option flags
+    grbit |= 0x0001                        # Auto page breaks visible
+    grbit |= 0x0020 if @outline_style != 0 # Auto outline styles
+    grbit |= 0x0040 if @outline_below != 0 # Outline summary below
+    grbit |= 0x0080 if @outline_right != 0 # Outline summary right
+    grbit |= 0x0100 if @fit_page      != 0 # Page setup fit to page
+    grbit |= 0x0400 if @outline_on    != 0 # Outline symbols displayed
+
+    header = [record, length].pack("vv")
+    data   = [grbit].pack('v')
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_hbreak()
+  #
+  # Write the HORIZONTALPAGEBREAKS BIFF record.
+  #
+  def store_hbreak   #:nodoc:
+    store_breaks_common(@hbreaks)
+  end
+
+  ###############################################################################
+  #
+  # store_vbreak()
+  #
+  # Write the VERTICALPAGEBREAKS BIFF record.
+  #
+  def store_vbreak   #:nodoc:
+    store_breaks_common(@vbreaks)
+  end
+
+  def store_breaks_common(breaks)  # :nodoc:
+    unless breaks.empty?
+      record  = breaks == @vbreaks ? 0x001a : 0x001b # Record identifier
+      cbrk    = breaks.size   # Number of page breaks
+      length  = 2 + 6 * cbrk         # Bytes to follow
+
+      header = [record, length].pack("vv")
+      data   = [cbrk].pack("v")
+
+      # Append each sorted page break
+      sort_pagebreaks(breaks).each do |brk|
+        data += [brk, 0x0000, 0x00ff].pack("vvv")
+      end
+
+      prepend(header, data)
+    end
+  end
+
+  ###############################################################################
+  #
+  # store_protect()
+  #
+  # Set the Biff PROTECT record to indicate that the worksheet is protected.
+  #
+  def store_protect   #:nodoc:
+    store_protect_common
+  end
+
+  def protect?
+    @protect
+  end
+
+  ###############################################################################
+  #
+  # store_obj_protect()
+  #
+  # Set the Biff OBJPROTECT record to indicate that objects are protected.
+  #
+  def store_obj_protect   #:nodoc:
+    store_protect_common(:obj)
+  end
+
+  def store_protect_common(type = nil)  # :nodoc:
+    if protect?
+      record = if type == :obj      # Record identifier
+        0x0063                      # store_obj_protect
+      else
+        0x0012                      # store_protect
+      end
+      length = 0x0002               # Bytes to follow
+
+      fLock  = protect? ? 1 : 0     # Worksheet is protected
+
+      header = [record, length].pack("vv")
+      data   = [fLock].pack("v")
+
+      prepend(header, data)
+    end
+  end
+
+
+  ###############################################################################
+  #
+  # store_password()
+  #
+  # Write the worksheet PASSWORD record.
+  #
+  def store_password   #:nodoc:
+    # Exit unless sheet protection and password have been specified
+    return if (!protect? or @password.nil?)
+
+    record      = 0x0013               # Record identifier
+    length      = 0x0002               # Bytes to follow
+
+    wPassword   = @password            # Encoded password
+
+    header      = [record, length].pack("vv")
+    data        = [wPassword].pack("v")
+
+    prepend(header, data)
+  end
+
+  #
+  # Note about compatibility mode.
+  #
+  # Excel doesn't require every possible Biff record to be present in a file.
+  # In particular if the indexing records INDEX, ROW and DBCELL aren't present
+  # it just ignores the fact and reads the cells anyway. This is also true of
+  # the EXTSST record. Gnumeric and OOo also take this approach. This allows
+  # WriteExcel to ignore these records in order to minimise the amount of data
+  # stored in memory. However, other third party applications that read Excel
+  # files often expect these records to be present. In "compatibility mode"
+  # WriteExcel writes these records and tries to be as close to an Excel
+  # generated file as possible.
+  #
+  # This requires additional data to be stored in memory until the file is
+  # about to be written. This incurs a memory and speed penalty and may not be
+  # suitable for very large files.
+  #
+
+
+
+  ###############################################################################
+  #
+  # store_table()
+  #
+  # Write cell data stored in the worksheet row/col table.
+  #
+  # This is only used when compatibity_mode() is in operation.
+  #
+  # This method writes ROW data, then cell data (NUMBER, LABELSST, etc) and then
+  # DBCELL records in blocks of 32 rows. This is explained in detail (for a
+  # change) in the Excel SDK and in the OOo Excel file format doc.
+  #
+  def store_table   #:nodoc:
+    return unless compatibility?
+
+    # Offset from the DBCELL record back to the first ROW of the 32 row block.
+    row_offset = 0
+
+    # Track rows that have cell data or modified by set_row().
+    written_rows = []
+
+
+    # Write the ROW records with updated max/min col fields.
+    #
+    (0 .. @dim_rowmax-1).each do |row|
+      # Skip unless there is cell data in row or the row has been modified.
+      next unless @table[row] or @row_data[row]
+
+      # Store the rows with data.
+      written_rows.push(row)
+
+      # Increase the row offset by the length of a ROW record;
+      row_offset += 20
+
+      # The max/min cols in the ROW records are the same as in DIMENSIONS.
+      col_min = @dim_colmin
+      col_max = @dim_colmax
+
+      # Write a user specified ROW record (modified by set_row()).
+      if @row_data[row]
+        # Rewrite the min and max cols for user defined row record.
+        packed_row = @row_data[row]
+        packed_row[6..9] = [col_min, col_max].pack('vv')
+        append(packed_row)
+      else
+        # Write a default Row record if there isn't a  user defined ROW.
+        write_row_default(row, col_min, col_max)
+      end
+
+      # If 32 rows have been written or we are at the last row in the
+      # worksheet then write the cell data and the DBCELL record.
+      #
+      if written_rows.size == 32 or row == @dim_rowmax -1
+        # Offsets to the first cell of each row.
+        cell_offsets = []
+        cell_offsets.push(row_offset - 20)
+
+        # Write the cell data in each row and sum their lengths for the
+        # cell offsets.
+        #
+        written_rows.each do |rw|
+          cell_offset = 0
+
+          if @table[rw]
+            @table[rw].each do |clm|
+              next unless clm
+              append(clm)
+              length = clm.bytesize
+              row_offset  += length
+              cell_offset += length
+            end
+          end
+          cell_offsets.push(cell_offset)
+        end
+
+        # The last offset isn't required.
+        cell_offsets.pop
+
+        # Stores the DBCELL offset for use in the INDEX record.
+        @db_indices.push(@datasize)
+
+        # Write the DBCELL record.
+        store_dbcell(row_offset, cell_offsets)
+
+        # Clear the variable for the next block of rows.
+        written_rows   = []
+        cell_offsets   = []
+        row_offset     = 0
+      end
+    end
+  end
+
+  ###############################################################################
+  #
+  # store_dbcell()
+  #
+  # Store the DBCELL record using the offset calculated in store_table().
+  #
+  # This is only used when compatibity_mode() is in operation.
+  #
+  def store_dbcell(row_offset, cell_offsets)   #:nodoc:
+    record          = 0x00D7                     # Record identifier
+    length          = 4 + 2 * cell_offsets.size  # Bytes to follow
+
+    header          = [record, length].pack('vv')
+    data            = [row_offset].pack('V')
+    cell_offsets.each do |co|
+      data += [co].pack('v')
+    end
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_index()
+  #
+  # Store the INDEX record using the DBCELL offsets calculated in store_table().
+  #
+  # This is only used when compatibity_mode() is in operation.
+  #
+  def store_index   #:nodoc:
+    return unless compatibility?
+
+    indices     = @db_indices
+    reserved    = 0x00000000
+    row_min     = @dim_rowmin
+    row_max     = @dim_rowmax
+
+    record      = 0x020B                 # Record identifier
+    length      = 16 + 4 * indices.size  # Bytes to follow
+
+    header      = [record, length].pack('vv')
+    data        = [reserved, row_min, row_max, reserved].pack('VVVV')
+
+    indices.each do |index|
+      data += [index + @offset + 20 + length + 4].pack('V')
+    end
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  #  position_object()
+  #
+  # Calculate the vertices that define the position of a graphical object within
+  # the worksheet.
+  #
+  #         +------------+------------+
+  #         |     A      |      B     |
+  #   +-----+------------+------------+
+  #   |     |(x1,y1)     |            |
+  #   |  1  |(A1)._______|______      |
+  #   |     |    |              |     |
+  #   |     |    |              |     |
+  #   +-----+----|    BITMAP    |-----+
+  #   |     |    |              |     |
+  #   |  2  |    |______________.     |
+  #   |     |            |        (B2)|
+  #   |     |            |     (x2,y2)|
+  #   +---- +------------+------------+
+  #
+  # Example of a bitmap that covers some of the area from cell A1 to cell B2.
+  #
+  # Based on the width and height of the bitmap we need to calculate 8 vars:
+  #     $col_start, $row_start, $col_end, $row_end, $x1, $y1, $x2, $y2.
+  # The width and height of the cells are also variable and have to be taken into
+  # account.
+  # The values of $col_start and $row_start are passed in from the calling
+  # function. The values of $col_end and $row_end are calculated by subtracting
+  # the width and height of the bitmap from the width and height of the
+  # underlying cells.
+  # The vertices are expressed as a percentage of the underlying cell width as
+  # follows (rhs values are in pixels):
+  #
+  #       x1 = X / W *1024
+  #       y1 = Y / H *256
+  #       x2 = (X-1) / W *1024
+  #       y2 = (Y-1) / H *256
+  #
+  #       Where:  X is distance from the left side of the underlying cell
+  #               Y is distance from the top of the underlying cell
+  #               W is the width of the cell
+  #               H is the height of the cell
+  #
+  # Note: the SDK incorrectly states that the height should be expressed as a
+  # percentage of 1024.
+  #
+  def position_object(col_start, row_start, x1, y1, width, height)   #:nodoc:
+    # col_start;  # Col containing upper left corner of object
+    # x1;         # Distance to left side of object
+
+    # row_start;  # Row containing top left corner of object
+    # y1;         # Distance to top of object
+
+    # col_end;    # Col containing lower right corner of object
+    # x2;         # Distance to right side of object
+
+    # row_end;    # Row containing bottom right corner of object
+    # y2;         # Distance to bottom of object
+
+    # width;      # Width of image frame
+    # height;     # Height of image frame
+
+    # Adjust start column for offsets that are greater than the col width
+    x1, col_start = adjust_col_position(x1, col_start)
+
+    # Adjust start row for offsets that are greater than the row height
+    y1, row_start = adjust_row_position(y1, row_start)
+
+    # Initialise end cell to the same as the start cell
+    col_end    = col_start
+    row_end    = row_start
+
+    width     += x1
+    height    += y1
+
+    # Subtract the underlying cell widths to find the end cell of the image
+    width, col_end = adjust_col_position(width, col_end)
+
+    # Subtract the underlying cell heights to find the end cell of the image
+    height, row_end = adjust_row_position(height, row_end)
+
+    # Bitmap isn't allowed to start or finish in a hidden cell, i.e. a cell
+    # with zero eight or width.
+    #
+    return if size_col(col_start) == 0
+    return if size_col(col_end)   == 0
+    return if size_row(row_start) == 0
+    return if size_row(row_end)   == 0
+
+    # Convert the pixel values to the percentage value expected by Excel
+    x1 = 1024.0 * x1     / size_col(col_start)
+    y1 =  256.0 * y1     / size_row(row_start)
+    x2 = 1024.0 * width  / size_col(col_end)
+    y2 =  256.0 * height / size_row(row_end)
+
+    # Simulate ceil() without calling POSIX::ceil().
+    x1 = (x1 +0.5).to_i
+    y1 = (y1 +0.5).to_i
+    x2 = (x2 +0.5).to_i
+    y2 = (y2 +0.5).to_i
+
+    [
+      col_start, x1,
+      row_start, y1,
+      col_end,   x2,
+      row_end,   y2
+    ]
+  end
+
+  def adjust_col_position(x, col)  # :nodoc:
+    while x >= size_col(col)
+      x -= size_col(col)
+      col += 1
+    end
+    [x, col]
+  end
+
+  def adjust_row_position(y, row)  # :nodoc:
+    while y >= size_row(row)
+      y -= size_row(row)
+      row += 1
+    end
+    [y, row]
+  end
+
+  ###############################################################################
+  #
+  # size_col($col)
+  #
+  # Convert the width of a cell from user's units to pixels. Excel rounds the
+  # column width to the nearest pixel. If the width hasn't been set by the user
+  # we use the default value. If the column is hidden we use a value of zero.
+  #
+  def size_col(col)   #:nodoc:
+    # Look up the cell value to see if it has been changed
+    if @col_sizes[col]
+      width = @col_sizes[col]
+
+      # The relationship is different for user units less than 1.
+      if width < 1
+        (width *12).to_i
+      else
+        (width *7 +5 ).to_i
+      end
+    else
+      64
+    end
+  end
+
+  ###############################################################################
+  #
+  # size_row($row)
+  #
+  # Convert the height of a cell from user's units to pixels. By interpolation
+  # the relationship is: y = 4/3x. If the height hasn't been set by the user we
+  # use the default value. If the row is hidden we use a value of zero. (Not
+  # possible to hide row yet).
+  #
+  def size_row(row)   #:nodoc:
+    # Look up the cell value to see if it has been changed
+    if @row_sizes[row]
+      if @row_sizes[row] == 0
+        0
+      else
+        (4/3.0 * @row_sizes[row]).to_i
+      end
+    else
+      17
+    end
+  end
+
+  ###############################################################################
+  #
+  # store_zoom($zoom)
+  #
+  #
+  # Store the window zoom factor. This should be a reduced fraction but for
+  # simplicity we will store all fractions with a numerator of 100.
+  #
+  def store_zoom   #:nodoc:
+    # If scale is 100 we don't need to write a record
+    return if @zoom == 100
+
+    record      = 0x00A0               # Record identifier
+    length      = 0x0004               # Bytes to follow
+
+    store_simple(record, length, @zoom, 100)
+  end
+
+  # Older method name for backwards compatibility.
+  #   *write_unicode    = *write_utf16be_string;
+  #   *write_unicode_le = *write_utf16le_string;
+
+  ###############################################################################
+  #
+  # store_autofilters()
+  #
+  # Function to iterate through the columns that form part of an autofilter
+  # range and write Biff AUTOFILTER records if a filter expression has been set.
+  #
+  def store_autofilters   #:nodoc:
+    # Skip all columns if no filter have been set.
+    return '' if @filter_on == 0
+
+    col1 = @filter_area[2]
+    col2 = @filter_area[3]
+
+    col1.upto(col2) do |i|
+      # Reverse order since records are being pre-pended.
+      col = col2 -i
+
+      # Skip if column doesn't have an active filter.
+      next unless @filter_cols[col]
+
+      # Retrieve the filter tokens and write the autofilter records.
+      store_autofilter(col, *@filter_cols[col])
+    end
+  end
+
+  ###############################################################################
+  #
+  # store_autofilter()
+  #    my $index           = $_[0];
+  #    my $operator_1      = $_[1];
+  #    my $token_1         = $_[2];
+  #    my $join            = $_[3]; # And/Or
+  #    my $operator_2      = $_[4];
+  #    my $token_2         = $_[5];
+  #
+  # Function to write worksheet AUTOFILTER records. These contain 2 Biff Doper
+  # structures to represent the 2 possible filter conditions.
+  #
+  def store_autofilter(index, operator_1, token_1,   #:nodoc:
+                                 join = nil, operator_2 = nil, token_2 = nil)
+    record          = 0x009E
+    length          = 0x0000
+
+    top10_active    = 0
+    top10_direction = 0
+    top10_percent   = 0
+    top10_value     = 101
+
+    grbit       = join || 0
+    optimised_1 = 0
+    optimised_2 = 0
+    doper_1     = ''
+    doper_2     = ''
+    string_1    = ''
+    string_2    = ''
+
+    # Excel used an optimisation in the case of a simple equality.
+    optimised_1 = 1 if                      operator_1 == 2
+    optimised_2 = 1 if !operator_2.nil? and operator_2 == 2
+
+    # Convert non-simple equalities back to type 2. See  parse_filter_tokens().
+    operator_1 = 2 if                      operator_1 == 22
+    operator_2 = 2 if !operator_2.nil? and operator_2 == 22
+
+    # Handle a "Top" style expression.
+    if operator_1 >= 30
+      # Remove the second expression if present.
+      operator_2 = nil
+      token_2    = nil
+
+      # Set the active flag.
+      top10_active    = 1
+
+      if (operator_1 == 30 or operator_1 == 31)
+        top10_direction = 1
+      end
+
+      if (operator_1 == 31 or operator_1 == 33)
+        top10_percent = 1
+      end
+
+      if (top10_direction == 1)
+        operator_1 = 6
+      else
+        operator_1 = 3
+      end
+
+      top10_value     = token_1.to_i
+      token_1         = 0
+    end
+
+    grbit     |= optimised_1      << 2
+    grbit     |= optimised_2      << 3
+    grbit     |= top10_active     << 4
+    grbit     |= top10_direction  << 5
+    grbit     |= top10_percent    << 6
+    grbit     |= top10_value      << 7
+
+    doper_1, string_1 = pack_doper(operator_1, token_1)
+    doper_2, string_2 = pack_doper(operator_2, token_2)
+
+    doper_1  = '' if doper_1.nil?
+    doper_2  = '' if doper_2.nil?
+    string_1 = '' if string_1.nil?
+    string_2 = '' if string_2.nil?
+
+    data = [index].pack('v')
+    data += [grbit].pack('v')
+    data += doper_1 + doper_2 + string_1 + string_2
+
+    length  = data.bytesize
+    header  = [record, length].pack('vv')
+
+    prepend(header, data)
+  end
+
+  ###############################################################################
+  #
+  # pack_doper()
+  #
+  # Create a Biff Doper structure that represents a filter expression. Depending
+  # on the type of the token we pack an Empty, String or Number doper.
+  #
+  def pack_doper(operator, token)   #:nodoc:
+    doper       = ''
+    string      = ''
+
+    # Return default doper for non-defined filters.
+    if operator.nil?
+      return pack_unused_doper, string
+    end
+
+    if token.to_s =~ /^blanks|nonblanks$/i
+      doper  = pack_blanks_doper(operator, token)
+    elsif operator == 2 or
+      !(token.to_s  =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/)
+      # Excel treats all tokens as strings if the operator is equality, =.
+      string = token.to_s
+      ruby_19 { string = convert_to_ascii_if_ascii(string) }
+
+      encoding = 0
+      length   = string.bytesize
+
+      # Handle utf8 strings
+      if is_utf8?(string)
+        string = utf8_to_16be(string)
+        encodign = 1
+      end
+
+      string =
+        ruby_18 { [encoding].pack('C') +  string } ||
+        ruby_19 { [encoding].pack('C') +  string.force_encoding('BINARY') }
+      doper  = pack_string_doper(operator, length)
+    else
+      string = ''
+      doper  = pack_number_doper(operator, token)
+    end
+
+    [doper, string]
+  end
+
+  ###############################################################################
+  #
+  # pack_unused_doper()
+  #
+  # Pack an empty Doper structure.
+  #
+  def pack_unused_doper   #:nodoc:
+    [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0].pack('C10')
+  end
+
+  ###############################################################################
+  #
+  # pack_blanks_doper()
+  #
+  # Pack an Blanks/NonBlanks Doper structure.
+  #
+  def pack_blanks_doper(operator, token)   #:nodoc:
+    if token == 'blanks'
+      type     = 0x0C
+      operator = 2
+    else
+      type     = 0x0E
+      operator = 5
+    end
+
+    [type,       # Data type
+      operator,
+      0x0000, 0x0000     # Reserved
+    ].pack('CCVV')
+  end
+
+  ###############################################################################
+  #
+  # pack_string_doper()
+  #
+  # Pack an string Doper structure.
+  #
+  def pack_string_doper(operator, length)   #:nodoc:
+    [0x06,     # Data type
+      operator,
+      0x0000,         #Reserved
+      length,         # String char length
+      0x0, 0x0, 0x0   # Reserved
+    ].pack('CCVCCCC')
+  end
+
+  ###############################################################################
+  #
+  # pack_number_doper()
+  #
+  # Pack an IEEE double number Doper structure.
+  #
+  def pack_number_doper(operator, number)   #:nodoc:
+    number = [number].pack('d')
+    number.reverse! if @byte_order != '' && @byte_order != 0
+
+    [0x04, operator].pack('CC') + number
+  end
+
+  #
+  # Methods related to comments and MSO objects.
+  #
+
+  def prepare_common(param)  # :nodoc:
+    hash = {
+      :images => @images, :comments => @comments, :charts => @charts
+    }[param]
+
+    count = 0
+    obj   = []
+
+    # We sort the charts by row and column but that isn't strictly required.
+    #
+    rows = hash.keys.sort
+    rows.each do |row|
+      cols = hash[row].keys.sort
+      cols.each do |col|
+        obj.push(hash[row][col])
+        count += 1
+      end
+    end
+
+    case param
+    when :images
+      @images         = {}
+      @images_array   = obj
+    when :comments
+      @comments       = {}
+      @comments_array = obj
+    when :charts
+      @charts         = {}
+      @charts_array   = obj
+    end
+    count
+  end
+
+  ###############################################################################
+  #
+  # store_images()
+  #
+  # Store the collections of records that make up images.
+  #
+  def store_images   #:nodoc:
+    record          = 0x00EC           # Record identifier
+    length          = 0x0000           # Bytes to follow
+
+    ids             = @object_ids.dup
+    spid            = ids.shift
+
+    images          = @images_array
+    num_images      = images.size
+
+    num_filters     = @filter_count
+    num_comments    = @comments_array.size
+    num_charts      = @charts_array.size
+
+    # Skip this if there aren't any images.
+    return if num_images == 0
+
+    (0 .. num_images-1).each do |i|
+      row         =   images[i][0]
+      col         =   images[i][1]
+      name        =   images[i][2]
+      x_offset    =   images[i][3]
+      y_offset    =   images[i][4]
+      scale_x     =   images[i][5]
+      scale_y     =   images[i][6]
+      image_id    =   images[i][7]
+      type        =   images[i][8]
+      width       =   images[i][9]
+      height      =   images[i][10]
+
+      width  = width  * scale_x unless scale_x == 0
+      height = height * scale_y unless scale_y == 0
+
+      # Calculate the positions of image object.
+      vertices = position_object(col,row,x_offset,y_offset,width,height)
+
+      if (i == 0)
+        # Write the parent MSODRAWIING record.
+        dg_length   =  156 + 84*(num_images -1)
+        spgr_length =  132 + 84*(num_images -1)
+
+        dg_length   += 120 * num_charts
+        spgr_length += 120 * num_charts
+
+        dg_length   += 96 * num_filters
+        spgr_length += 96 * num_filters
+
+        dg_length   += 128 * num_comments
+        spgr_length += 128 * num_comments
+
+        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+        spid += 1
+        data +=
+          store_mso_sp_container(76)             +
+          store_mso_sp(75, spid, 0x0A00)
+        spid += 1
+        data +=
+          store_mso_opt_image(image_id)          +
+          store_mso_client_anchor(2, *vertices)  +
+          store_mso_client_data()
+      else
+        # Write the child MSODRAWIING record.
+        data = store_mso_sp_container(76)        +
+          store_mso_sp(75, spid, 0x0A00)
+          spid = spid + 1
+        data = data                              +
+          store_mso_opt_image(image_id)          +
+          store_mso_client_anchor(2, *vertices)  +
+          store_mso_client_data
+      end
+      length      = data.bytesize
+      header      = [record, length].pack("vv")
+      append(header, data)
+
+      store_obj_image(i+1)
+    end
+
+    @object_ids[0] = spid
+  end
+
+  def store_parent_mso_record(dg_length, ids, spgr_length, spid)  # :nodoc:
+    store_mso_dg_container(dg_length)      +
+    store_mso_dg(*ids)                     +
+    store_mso_spgr_container(spgr_length)  +
+    store_mso_sp_container(40)             +
+    store_mso_spgr()                       +
+    store_mso_sp(0x0, spid, 0x0005)
+  end
+
+  def store_child_mso_record(spid, *vertices)  # :nodoc:
+    store_mso_sp_container(88)             +
+    store_mso_sp(201, spid, 0x0A00)        +
+    store_mso_opt_filter                   +
+    store_mso_client_anchor(1, *vertices)  +
+    store_mso_client_data
+  end
+
+  ###############################################################################
+  #
+  # store_charts()
+  #
+  # Store the collections of records that make up charts.
+  #
+  def store_charts   #:nodoc:
+      record          = 0x00EC           # Record identifier
+      length          = 0x0000           # Bytes to follow
+
+      ids             = @object_ids.dup
+      spid            = ids.shift
+
+      charts          = @charts_array
+      num_charts      = charts.size
+
+      num_filters     = @filter_count
+      num_comments    = @comments_array.size
+
+      # Number of objects written so far.
+      num_objects     = @images_array.size
+
+      # Skip this if there aren't any charts.
+      return if num_charts == 0
+
+      (0 .. num_charts-1 ).each do |i|
+          row         =   charts[i][0]
+          col         =   charts[i][1]
+          chart       =   charts[i][2]
+          x_offset    =   charts[i][3]
+          y_offset    =   charts[i][4]
+          scale_x     =   charts[i][5]
+          scale_y     =   charts[i][6]
+          width       =   526
+          height      =   319
+
+          width  *= scale_x if scale_x.respond_to?(:coerce) && scale_x != 0
+          height *= scale_y if scale_y.respond_to?(:coerce) && scale_y != 0
+
+          # Calculate the positions of chart object.
+          vertices = position_object( col,
+                                      row,
+                                      x_offset,
+                                      y_offset,
+                                      width,
+                                      height
+                                    )
+
+          if (i == 0 and num_objects == 0)
+              # Write the parent MSODRAWIING record.
+              dg_length    = 192 + 120*(num_charts -1)
+              spgr_length  = 168 + 120*(num_charts -1)
+
+              dg_length   +=  96 *num_filters
+              spgr_length +=  96 *num_filters
+
+              dg_length   += 128 *num_comments
+              spgr_length += 128 *num_comments
+
+
+              data  = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+              spid += 1
+              data += store_mso_sp_container_sp(spid)
+              spid += 1
+              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
+          else
+              # Write the child MSODRAWIING record.
+              data  = store_mso_sp_container_sp(spid)
+              spid += 1
+              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
+          end
+          length      = data.bytesize
+          header      = [record, length].pack("vv")
+          append(header, data)
+
+          store_obj_chart(num_objects + i + 1)
+          store_chart_binary(chart)
+      end
+
+      # Simulate the EXTERNSHEET link between the chart and data using a formula
+      # such as '=Sheet1!A1'.
+      # TODO. Won't work for external data refs. Also should use a more direct
+      #       method.
+      #
+      formula = "='#{@name}'!A1"
+      store_formula(formula)
+
+      @object_ids[0] = spid
+  end
+
+  def store_mso_sp_container_sp(spid)  # :nodoc:
+    store_mso_sp_container(112) + store_mso_sp(201, spid, 0x0A00)
+  end
+
+  def store_mso_opt_chart_client_anchor_client_data(*vertices)  # :nodoc:
+    store_mso_opt_chart                   +
+    store_mso_client_anchor(0, *vertices) +
+    store_mso_client_data
+  end
+
+  ###############################################################################
+  #
+  # store_chart_binary
+  #
+  # Add the binary data for a chart. This could either be from a Chart object
+  # or from an external binary file (for backwards compatibility).
+  #
+  def store_chart_binary(chart)   #:nodoc:
+    if chart.respond_to?(:to_str)
+      filehandle = File.open(chart, "rb")
+      #      die "Couldn't open $filename in add_chart_ext(): $!.\n";
+      while tmp = filehandle.read(4096)
+        append(tmp)
+      end
+    else
+      chart.close
+      tmp = chart.get_data
+      append(tmp)
+    end
+  end
+
+  ###############################################################################
+  #
+  # store_filters()
+  #
+  # Store the collections of records that make up filters.
+  #
+  def store_filters   #:nodoc:
+    record          = 0x00EC           # Record identifier
+    length          = 0x0000           # Bytes to follow
+
+    ids             = @object_ids.dup
+    spid            = ids.shift
+
+    filter_area     = @filter_area
+    num_filters     = @filter_count
+
+    num_comments    = @comments_array.size
+
+    # Number of objects written so far.
+    num_objects     = @images_array.size + @charts_array.size
+
+    # Skip this if there aren't any filters.
+    return if num_filters == 0
+
+    row1, row2, col1, col2 = @filter_area
+
+    (0 .. num_filters-1).each do |i|
+      vertices = [ col1 + i,    0, row1   , 0,
+      col1 +i +1, 0, row1 + 1, 0]
+
+      if i == 0 and !num_objects.nil?
+        # Write the parent MSODRAWIING record.
+        dg_length   = 168 + 96 * (num_filters -1)
+        spgr_length = 144 + 96 * (num_filters -1)
+
+        dg_length   += 128 * num_comments
+        spgr_length += 128 * num_comments
+
+        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+        spid += 1
+        data += store_child_mso_record(spid, *vertices)
+        spid += 1
+
+      else
+        # Write the child MSODRAWIING record.
+        data = store_child_mso_record(spid, *vertices)
+        spid += 1
+      end
+      length      = data.bytesize
+      header      = [record, length].pack("vv")
+      append(header, data)
+
+      store_obj_filter(num_objects+i+1, col1 +i)
+    end
+
+    # Simulate the EXTERNSHEET link between the filter and data using a formula
+    # such as '=Sheet1!A1'.
+    # TODO. Won't work for external data refs. Also should use a more direct
+    #       method.
+    #
+    formula = "=#{@name}!A1"
+    store_formula(formula)
+
+    @object_ids[0] = spid
+  end
+
+  def unpack_record(data)  # :nodoc:
+    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
+  end
+
+  ###############################################################################
+  #
+  # store_comments()
+  #
+  # Store the collections of records that make up cell comments.
+  #
+  # NOTE: We write the comment objects last since that makes it a little easier
+  # to write the NOTE records directly after the MSODRAWIING records.
+  #
+  def store_comments   #:nodoc:
+    record          = 0x00EC           # Record identifier
+    length          = 0x0000           # Bytes to follow
+
+    ids             = @object_ids.dup
+    spid            = ids.shift
+
+    comments        = @comments_array
+    num_comments    = comments.size
+
+    # Number of objects written so far.
+    num_objects     = @images_array.size + @filter_count + @charts_array.size
+
+    # Skip this if there aren't any comments.
+    return if num_comments == 0
+
+    (0 .. num_comments-1).each do |i|
+      row         = comments[i][0]
+      col         = comments[i][1]
+      str         = comments[i][2]
+      encoding    = comments[i][3]
+      visible     = comments[i][6]
+      color       = comments[i][7]
+      vertices    = comments[i][8]
+      str_len     = str.bytesize
+      str_len     = str_len / 2 if encoding != 0 # Num of chars not bytes.
+      formats     = [[0, 9], [str_len, 0]]
+
+      if i == 0 and num_objects == 0
+        # Write the parent MSODRAWIING record.
+        dg_length   = 200 + 128*(num_comments -1)
+        spgr_length = 176 + 128*(num_comments -1)
+
+        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+        spid += 1
+      else
+        data = ''
+      end
+      data +=
+        store_mso_sp_container(120)                    +
+        store_mso_sp(202, spid, 0x0A00)
+      spid += 1
+      data +=
+        store_mso_opt_comment(0x80, visible, color)    +
+        store_mso_client_anchor(3, *vertices)          +
+        store_mso_client_data
+      length      = data.bytesize
+      header      = [record, length].pack("vv")
+      append(header, data)
+
+      store_obj_comment(num_objects + i + 1)
+      store_mso_drawing_text_box()
+      store_txo(str_len)
+      store_txo_continue_1(str, encoding)
+      store_txo_continue_2(formats)
+    end
+
+    # Write the NOTE records after MSODRAWIING records.
+    (0 .. num_comments-1).each do |i|
+      row         = comments[i][0]
+      col         = comments[i][1]
+      author      = comments[i][4]
+      author_enc  = comments[i][5]
+      visible     = comments[i][6]
+
+      store_note(row, col, num_objects + i + 1,
+      author, author_enc, visible)
+    end
+  end
+
+  ###############################################################################
+  #
+  # store_mso_dg_container()
+  #
+  # Write the Escher DgContainer record that is part of MSODRAWING.
+  #
+  def store_mso_dg_container(length)   #:nodoc:
+    type        = 0xF002
+    version     = 15
+    instance    = 0
+    data        = ''
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_dg()
+  #
+  # Write the Escher Dg record that is part of MSODRAWING.
+  #
+  def store_mso_dg(instance, num_shapes, max_spid)   #:nodoc:
+    type        = 0xF008
+    version     = 0
+    length      = 8
+    data        = [num_shapes, max_spid].pack("VV")
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_spgr_container()
+  #
+  # Write the Escher SpgrContainer record that is part of MSODRAWING.
+  #
+  def store_mso_spgr_container(length)   #:nodoc:
+    type        = 0xF003
+    version     = 15
+    instance    = 0
+    data        = ''
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_sp_container()
+  #
+  # Write the Escher SpContainer record that is part of MSODRAWING.
+  #
+  def store_mso_sp_container(length)   #:nodoc:
+    type        = 0xF004
+    version     = 15
+    instance    = 0
+    data        = ''
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_spgr()
+  #
+  # Write the Escher Spgr record that is part of MSODRAWING.
+  #
+  def store_mso_spgr   #:nodoc:
+    type        = 0xF009
+    version     = 1
+    instance    = 0
+    data        = [0, 0, 0, 0].pack("VVVV")
+    length      = 16
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_sp()
+  #
+  # Write the Escher Sp record that is part of MSODRAWING.
+  #
+  def store_mso_sp(instance, spid, options)   #:nodoc:
+    type        = 0xF00A
+    version     = 2
+    data        = ''
+    length      = 8
+    data        = [spid, options].pack('VV')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_opt_comment()
+  #
+  # Write the Escher Opt record that is part of MSODRAWING.
+  #
+  def store_mso_opt_comment(spid, visible = nil, colour = 0x50)   #:nodoc:
+    type        = 0xF00B
+    version     = 3
+    instance    = 9
+    data        = ''
+    length      = 54
+
+    # Use the visible flag if set by the user or else use the worksheet value.
+    # Note that the value used is the opposite of store_note().
+    #
+    if !visible.nil?
+      visible = visible != 0           ? 0x0000 : 0x0002
+    else
+      visible = @comments_visible != 0 ? 0x0000 : 0x0002
+    end
+
+    data = [spid].pack('V')                            +
+    ['0000BF00080008005801000000008101'].pack("H*") +
+    [colour].pack("C")                              +
+    ['000008830150000008BF011000110001'+'02000000003F0203000300BF03'].pack("H*")  +
+    [visible].pack('v')                             +
+    ['0A00'].pack('H*')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_opt_image()
+  #
+  # Write the Escher Opt record that is part of MSODRAWING.
+  #
+  def store_mso_opt_image(spid)   #:nodoc:
+    type        = 0xF00B
+    version     = 3
+    instance    = 3
+    data        = ''
+    length      = nil
+
+    data = [0x4104].pack('v') +
+    [spid].pack('V')        +
+    [0x01BF].pack('v')      +
+    [0x00010000].pack('V')  +
+    [0x03BF].pack( 'v')     +
+    [0x00080000].pack( 'V')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_opt_chart()
+  #
+  # Write the Escher Opt record that is part of MSODRAWING.
+  #
+  def store_mso_opt_chart   #:nodoc:
+    type        = 0xF00B
+    version     = 3
+    instance    = 9
+    data        = ''
+    length      = nil
+
+    data = store_mso_protection_and_text
+    data += [0x0181].pack('v')   +        # Fill Style -> fillColor
+    [0x0800004E].pack('V')       +
+    [0x0183].pack('v')           +        # Fill Style -> fillBackColor
+    [0x0800004D].pack('V')       +
+
+    [0x01BF].pack('v')           +        # Fill Style -> fNoFillHitTest
+    [0x00110010].pack('V')       +
+    [0x01C0].pack('v')           +        # Line Style -> lineColor
+    [0x0800004D].pack('V')       +
+    [0x01FF].pack('v')           +        # Line Style -> fNoLineDrawDash
+    [0x00080008].pack('V')       +
+    [0x023F].pack('v')           +        # Shadow Style -> fshadowObscured
+    [0x00020000].pack('V')       +
+    [0x03BF].pack('v')           +        # Group Shape -> fPrint
+    [0x00080000].pack('V')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_opt_filter()
+  #
+  # Write the Escher Opt record that is part of MSODRAWING.
+  #
+  def store_mso_opt_filter   #:nodoc:
+    type        = 0xF00B
+    version     = 3
+    instance    = 5
+    data        = ''
+    length      = nil
+
+    data = store_mso_protection_and_text
+    data += [0x01BF].pack('v')   +        # Fill Style -> fNoFillHitTest
+    [0x00010000].pack('V')       +
+    [0x01FF].pack('v')           +        # Line Style -> fNoLineDrawDash
+    [0x00080000].pack('V')       +
+    [0x03BF].pack('v')           +        # Group Shape -> fPrint
+    [0x000A0000].pack('V')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  def store_mso_protection_and_text  # :nodoc:
+    [0x007F].pack('v')       +        # Protection -> fLockAgainstGrouping
+    [0x01040104].pack('V')   +
+    [0x00BF].pack('v')       +        # Text -> fFitTextToShape
+    [0x00080008].pack('V')
+  end
+
+  ###############################################################################
+  #
+  # store_mso_client_anchor()
+  #    my flag         = shift;
+  #    my $col_start   = $_[0];    # Col containing upper left corner of object
+  #    my $x1          = $_[1];    # Distance to left side of object
+  #
+  #    my $row_start   = $_[2];    # Row containing top left corner of object
+  #    my $y1          = $_[3];    # Distance to top of object
+  #
+  #    my $col_end     = $_[4];    # Col containing lower right corner of object
+  #    my $x2          = $_[5];    # Distance to right side of object
+  #
+  #    my $row_end     = $_[6];    # Row containing bottom right corner of object
+  #    my $y2          = $_[7];    # Distance to bottom of object
+  #
+  # Write the Escher ClientAnchor record that is part of MSODRAWING.
+  #
+  def store_mso_client_anchor(flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2)   #:nodoc:
+    type        = 0xF010
+    version     = 0
+    instance    = 0
+    data        = ''
+    length      = 18
+
+    data = [flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2].pack('v9')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_client_data()
+  #
+  # Write the Escher ClientData record that is part of MSODRAWING.
+  #
+  def store_mso_client_data   #:nodoc:
+    type        = 0xF011
+    version     = 0
+    instance    = 0
+    data        = ''
+    length      = 0
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_obj_comment()
+  #    my $obj_id      = $_[0];    # Object ID number.
+  #
+  # Write the OBJ record that is part of cell comments.
+  #
+  def store_obj_comment(obj_id)   #:nodoc:
+    record      = 0x005D   # Record identifier
+    length      = 0x0034   # Bytes to follow
+
+    obj_type    = 0x0019   # Object type (comment).
+    data        = ''       # Record data.
+
+    sub_record  = 0x0000   # Sub-record identifier.
+    sub_length  = 0x0000   # Length of sub-record.
+    sub_data    = ''       # Data of sub-record.
+    options     = 0x4011
+    reserved    = 0x0000
+
+    # Add ftCmo (common object data) subobject
+    sub_record     = 0x0015   # ftCmo
+    sub_length     = 0x0012
+    sub_data       = [obj_type, obj_id, options, reserved, reserved, reserved].pack( "vvvVVV")
+    data           = [sub_record, sub_length].pack("vv") + sub_data
+
+    # Add ftNts (note structure) subobject
+    sub_record  = 0x000D   # ftNts
+    sub_length  = 0x0016
+    sub_data    = [reserved,reserved,reserved,reserved,reserved,reserved].pack( "VVVVVv")
+    data        += [sub_record, sub_length].pack("vv") + sub_data
+
+    # Add ftEnd (end of object) subobject
+    sub_record  = 0x0000   # ftNts
+    sub_length  = 0x0000
+    data        += [sub_record, sub_length].pack("vv")
+
+    # Pack the record.
+    header      = [record, length].pack("vv")
+
+    append(header, data)
+
+  end
+
+  ###############################################################################
+  #
+  # store_obj_image()
+  #    my $obj_id      = $_[0];    # Object ID number.
+  #
+  # Write the OBJ record that is part of image records.
+  #
+  def store_obj_image(obj_id)   #:nodoc:
+    record      = 0x005D   # Record identifier
+    length      = 0x0026   # Bytes to follow
+
+    obj_type    = 0x0008   # Object type (Picture).
+    data        = ''       # Record data.
+
+    sub_record  = 0x0000   # Sub-record identifier.
+    sub_length  = 0x0000   # Length of sub-record.
+    sub_data    = ''       # Data of sub-record.
+    options     = 0x6011
+    reserved    = 0x0000
+
+    # Add ftCmo (common object data) subobject
+    sub_record  = 0x0015   # ftCmo
+    sub_length  = 0x0012
+    sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
+    data        = [sub_record, sub_length].pack('vv') + sub_data
+
+    # Add ftCf (Clipboard format) subobject
+    sub_record  = 0x0007   # ftCf
+    sub_length  = 0x0002
+    sub_data    = [0xFFFF].pack( 'v')
+    data        += [sub_record, sub_length].pack('vv') + sub_data
+
+    # Add ftPioGrbit (Picture option flags) subobject
+    sub_record  = 0x0008   # ftPioGrbit
+    sub_length  = 0x0002
+    sub_data    = [0x0001].pack('v')
+    data        += [sub_record, sub_length].pack('vv') + sub_data
+
+    # Add ftEnd (end of object) subobject
+    sub_record  = 0x0000   # ftNts
+    sub_length  = 0x0000
+    data        += [sub_record, sub_length].pack('vv')
+
+    # Pack the record.
+    header  = [record, length].pack('vv')
+
+    append(header, data)
+
+  end
+
+  ###############################################################################
+  #
+  # store_obj_chart()
+  #    my $obj_id      = $_[0];    # Object ID number.
+  #
+  # Write the OBJ record that is part of chart records.
+  #
+  def store_obj_chart(obj_id)   #:nodoc:
+    record      = 0x005D   # Record identifier
+    length      = 0x001A   # Bytes to follow
+
+    obj_type    = 0x0005   # Object type (chart).
+    data        = ''       # Record data.
+
+    sub_record  = 0x0000   # Sub-record identifier.
+    sub_length  = 0x0000   # Length of sub-record.
+    sub_data    = ''       # Data of sub-record.
+    options     = 0x6011
+    reserved    = 0x0000
+
+    # Add ftCmo (common object data) subobject
+    sub_record  = 0x0015   # ftCmo
+    sub_length  = 0x0012
+    sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
+    data        = [sub_record, sub_length].pack('vv') + sub_data
+
+    # Add ftEnd (end of object) subobject
+    sub_record  = 0x0000   # ftNts
+    sub_length  = 0x0000
+    data        += [sub_record, sub_length].pack('vv')
+
+    # Pack the record.
+    header  = [record, length].pack('vv')
+
+    append(header, data)
+
+  end
+
+  ###############################################################################
+  #
+  # store_obj_filter()
+  #    my $obj_id      = $_[0];    # Object ID number.
+  #    my $col         = $_[1];
+  #
+  # Write the OBJ record that is part of filter records.
+  #
+  def store_obj_filter(obj_id, col)   #:nodoc:
+    record      = 0x005D   # Record identifier
+    length      = 0x0046   # Bytes to follow
+
+    obj_type    = 0x0014   # Object type (combo box).
+    data        = ''       # Record data.
+
+    sub_record  = 0x0000   # Sub-record identifier.
+    sub_length  = 0x0000   # Length of sub-record.
+    sub_data    = ''       # Data of sub-record.
+    options     = 0x2101
+    reserved    = 0x0000
+
+    # Add ftCmo (common object data) subobject
+    sub_record  = 0x0015   # ftCmo
+    sub_length  = 0x0012
+    sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
+    data        = [sub_record, sub_length].pack('vv') + sub_data
+
+    # Add ftSbs Scroll bar subobject
+    sub_record  = 0x000C   # ftSbs
+    sub_length  = 0x0014
+    sub_data    = ['0000000000000000640001000A00000010000100'].pack('H*')
+    data        += [sub_record, sub_length].pack('vv') + sub_data
+
+    # Add ftLbsData (List box data) subobject
+    sub_record  = 0x0013   # ftLbsData
+    sub_length  = 0x1FEE   # Special case (undocumented).
+
+    # If the filter is active we set one of the undocumented flags.
+
+    if @filter_cols[col]
+      sub_data       = ['000000000100010300000A0008005700'].pack('H*')
+    else
+      sub_data       = ['00000000010001030000020008005700'].pack('H*')
+    end
+
+    data        += [sub_record, sub_length].pack('vv') + sub_data
+
+    # Add ftEnd (end of object) subobject
+    sub_record  = 0x0000   # ftNts
+    sub_length  = 0x0000
+    data        += [sub_record, sub_length].pack('vv')
+
+    # Pack the record.
+    header  = [record, length].pack('vv')
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_drawing_text_box()
+  #
+  # Write the MSODRAWING ClientTextbox record that is part of comments.
+  #
+  def store_mso_drawing_text_box   #:nodoc:
+    record      = 0x00EC           # Record identifier
+    length      = 0x0008           # Bytes to follow
+
+    data        = store_mso_client_text_box()
+    header  = [record, length].pack('vv')
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_mso_client_text_box()
+  #
+  # Write the Escher ClientTextbox record that is part of MSODRAWING.
+  #
+  def store_mso_client_text_box   #:nodoc:
+    type        = 0xF00D
+    version     = 0
+    instance    = 0
+    data        = ''
+    length      = 0
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  ###############################################################################
+  #
+  # store_txo()
+  #    my $string_len  = $_[0];                # Length of the note text.
+  #    my $format_len  = $_[1] || 16;          # Length of the format runs.
+  #    my $rotation    = $_[2] || 0;           # Options
+  #
+  # Write the worksheet TXO record that is part of cell comments.
+  #
+  def store_txo(string_len, format_len = 16, rotation = 0)   #:nodoc:
+    record      = 0x01B6               # Record identifier
+    length      = 0x0012               # Bytes to follow
+
+    grbit       = 0x0212               # Options
+    reserved    = 0x0000               # Options
+
+    # Pack the record.
+    header  = [record, length].pack('vv')
+    data    = [grbit, rotation, reserved, reserved,
+    string_len, format_len, reserved].pack("vvVvvvV")
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_txo_continue_1()
+  #    my $string      = $_[0];                # Comment string.
+  #    my $encoding    = $_[1] || 0;           # Encoding of the string.
+  #
+  # Write the first CONTINUE record to follow the TXO record. It contains the
+  # text data.
+  #
+  def store_txo_continue_1(string, encoding = 0)   #:nodoc:
+    record      = 0x003C               # Record identifier
+
+    # Split long comment strings into smaller continue blocks if necessary.
+    # We can't let BIFFwriter::_add_continue() handled this since an extra
+    # encoding byte has to be added similar to the SST block.
+    #
+    # We make the limit size smaller than the add_continue() size and even
+    # so that UTF16 chars occur in the same block.
+    #
+    limit = 8218
+    while string.bytesize > limit
+      string[0 .. limit] = ""
+      tmp_str = string
+      data    = [encoding].pack("C") +
+        ruby_18 { tmp_str } ||
+        ruby_19 { tmp_str.force_encoding('ASCII-8BIT') }
+      length  = data.bytesize
+      header  = [record, length].pack('vv')
+
+      append(header, data)
+    end
+
+    # Pack the record.
+    data    =
+      ruby_18 { [encoding].pack("C") + string } ||
+      ruby_19 { [encoding].pack("C") + string.force_encoding('ASCII-8BIT') }
+    length  = data.bytesize
+    header  = [record, length].pack('vv')
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_txo_continue_2()
+  #    my $formats     = $_[0];                # Formatting information
+  #
+  # Write the second CONTINUE record to follow the TXO record. It contains the
+  # formatting information for the string.
+  #
+  def store_txo_continue_2(formats)   #:nodoc:
+    record      = 0x003C               # Record identifier
+    length      = 0x0000               # Bytes to follow
+
+    # Pack the record.
+    data = ''
+
+    formats.each do |a_ref|
+      data += [a_ref[0], a_ref[1], 0x0].pack('vvV')
+    end
+
+    length  = data.bytesize
+    header  = [record, length].pack("vv")
+
+    append(header, data)
+  end
+
+  ###############################################################################
+  #
+  # store_note()
+  #    my $row         = $_[0];
+  #    my $col         = $_[1];
+  #    my $obj_id      = $_[2];
+  #    my $author      = $_[3] || $self->{_comments_author};
+  #    my $author_enc  = $_[4] || $self->{_comments_author_enc};
+  #    my $visible     = $_[5];
+  #
+  # Write the worksheet NOTE record that is part of cell comments.
+  #
+  def store_note(row, col, obj_id, author = nil, author_enc = nil, visible = nil)   #:nodoc:
+    ruby_19 { author = [author].pack('a*') if author.ascii_only? }
+    record      = 0x001C               # Record identifier
+    length      = 0x000C               # Bytes to follow
+
+    author     = @comments_author     if author.nil?
+    author_enc = @comments_author_enc if author_enc.nil?
+
+    # Use the visible flag if set by the user or else use the worksheet value.
+    # The flag is also set in store_mso_opt_comment() but with the opposite
+    # value.
+    if !visible.nil?
+      visible = visible != 0           ? 0x0002 : 0x0000
+    else
+      visible = @comments_visible != 0 ? 0x0002 : 0x0000
+    end
+
+    # Get the number of chars in the author string (not bytes).
+    num_chars  = author.bytesize
+    num_chars  = num_chars / 2 if author_enc != 0 && !author_enc.nil?
+
+    # Null terminate the author string.
+    author =
+      ruby_18 { author + "\0" } ||
+      ruby_19 { author.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
+
+    # Pack the record.
+    data    = [row, col, visible, obj_id, num_chars, author_enc].pack("vvvvvC")
+
+    length  = data.bytesize + author.bytesize
+    header  = [record, length].pack("vv")
+
+    append(header, data, author)
+  end
+
+  ###############################################################################
+  #
+  # comment_params()
+  #
+  # This method handles the additional optional parameters to write_comment() as
+  # well as calculating the comment object position and vertices.
+  #
+  def comment_params(row, col, string, options = {})   #:nodoc:
+    string = convert_to_ascii_if_ascii(string)
+
+    default_width   = 128
+    default_height  = 74
+
+    params  = {
+      :author          => '',
+      :author_encoding => 0,
+      :encoding        => 0,
+      :color           => nil,
+      :start_cell      => nil,
+      :start_col       => nil,
+      :start_row       => nil,
+      :visible         => nil,
+      :width           => default_width,
+      :height          => default_height,
+      :x_offset        => nil,
+      :x_scale         => 1,
+      :y_offset        => nil,
+      :y_scale         => 1
+    }
+
+    # Overwrite the defaults with any user supplied values. Incorrect or
+    # misspelled parameters are silently ignored.
+    params.update(options)
+
+    # Ensure that a width and height have been set.
+    params[:width]  = default_width  if params[:width].nil? || params[:width] == 0
+    params[:height] = default_height if params[:height].nil? || params[:height] == 0
+
+    # Check that utf16 strings have an even number of bytes.
+    if params[:encoding] != 0
+      raise "Uneven number of bytes in comment string" if string.bytesize % 2 != 0
+
+      # Change from UTF-16BE to UTF-16LE
+      string = string.unpack('n*').pack('v*')
+    # Handle utf8 strings
+    else
+      if is_utf8?(string)
+        string = NKF.nkf('-w16L0 -m0 -W', string)
+        ruby_19 { string.force_encoding('UTF-16LE') }
+        params[:encoding] = 1
+      end
+    end
+
+    params[:author] = convert_to_ascii_if_ascii(params[:author])
+
+    if params[:author_encoding] != 0
+      raise "Uneven number of bytes in author string"  if params[:author].bytesize % 2 != 0
+
+      # Change from UTF-16BE to UTF-16LE
+      params[:author] = params[:author].unpack('n*').pack('v*')
+    else
+      if is_utf8?(params[:author])
+        params[:author] = NKF.nkf('-w16L0 -m0 -W', params[:author])
+        ruby_19 { params[:author].force_encoding('UTF-16LE') }
+        params[:author_encoding] = 1
+      end
+    end
+
+    # Limit the string to the max number of chars (not bytes).
+    max_len = 32767
+    max_len = max_len * 2 if params[:encoding] != 0
+
+    if string.bytesize > max_len
+      string = string[0 .. max_len]
+    end
+
+    # Set the comment background colour.
+    color = params[:color]
+    color = Colors.new.get_color(color)
+    color = 0x50 if color == 0x7FFF  # Default color.
+    params[:color] = color
+
+    # Convert a cell reference to a row and column.
+    if params[:start_cell]
+      params[:start_row], params[:start_col] = substitute_cellref(params[:start_cell])
+    end
+
+    # Set the default start cell and offsets for the comment. These are
+    # generally fixed in relation to the parent cell. However there are
+    # some edge cases for cells at the, er, edges.
+    #
+    if params[:start_row].nil?
+      case row
+      when 0     then params[:start_row] = 0
+      when 65533 then params[:start_row] = 65529
+      when 65534 then params[:start_row] = 65530
+      when 65535 then params[:start_row] = 65531
+      else            params[:start_row] = row -1
+      end
+    end
+
+    if params[:y_offset].nil?
+      case row
+      when 0     then params[:y_offset]  = 2
+      when 65533 then params[:y_offset]  = 4
+      when 65534 then params[:y_offset]  = 4
+      when 65535 then params[:y_offset]  = 2
+      else            params[:y_offset]  = 7
+      end
+    end
+
+    if params[:start_col].nil?
+      case col
+      when 253   then params[:start_col] = 250
+      when 254   then params[:start_col] = 251
+      when 255   then params[:start_col] = 252
+      else            params[:start_col] = col + 1
+      end
+    end
+
+    if params[:x_offset].nil?
+      case col
+      when 253   then params[:x_offset] = 49
+      when 254   then params[:x_offset] = 49
+      when 255   then params[:x_offset] = 49
+      else            params[:x_offset] = 15
+      end
+    end
+
+    # Scale the size of the comment box if required.
+    if params[:x_scale] != 0
+      params[:width]  = params[:width] * params[:x_scale]
+    end
+
+    if params[:y_scale] != 0
+      params[:height] = params[:height] * params[:y_scale]
+    end
+
+    # Calculate the positions of comment object.
+    vertices = position_object( params[:start_col],
+      params[:start_row],
+      params[:x_offset],
+      params[:y_offset],
+      params[:width],
+      params[:height]
+    )
+
+    [row, col, string,
+      params[:encoding],
+      params[:author],
+      params[:author_encoding],
+      params[:visible],
+      params[:color],
+      vertices
+    ]
+  end
+
   ###############################################################################
   #
   # store_validation_count()
@@ -8530,7 +8414,6 @@ class Worksheet < BIFFWriter
 
     store_dval(obj_id , dv_count)
   end
-  private :store_validation_count
 
   ###############################################################################
   #
@@ -8560,7 +8443,6 @@ class Worksheet < BIFFWriter
       )
     end
   end
-  private :store_validations
 
   ###############################################################################
   #
@@ -8585,7 +8467,6 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-  private :store_dval
 
   ###############################################################################
   #
@@ -8670,7 +8551,6 @@ class Worksheet < BIFFWriter
 
     append(header, data)
   end
-  private :store_dv
 
   ###############################################################################
   #
@@ -8708,7 +8588,6 @@ class Worksheet < BIFFWriter
     ruby_18 { [str_length, encoding].pack('vC') + string } ||
     ruby_19 { [str_length, encoding].pack('vC') + string.force_encoding('BINARY') }
   end
-  private :pack_dv_string
 
   ###############################################################################
   #
@@ -8768,7 +8647,6 @@ class Worksheet < BIFFWriter
   def parser   # :nodoc:
     @workbook.parser
   end
-  private :parser
 
   # Check for a cell reference in A1 notation and substitute row and column
   def row_col_notation(args)   # :nodoc:
@@ -8778,7 +8656,6 @@ class Worksheet < BIFFWriter
       args
     end
   end
-  private :row_col_notation
 end  # class Worksheet
 
 end  # module Writeexcel
