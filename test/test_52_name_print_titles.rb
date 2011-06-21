@@ -30,8 +30,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet1.repeat_rows(0)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -44,7 +44,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -63,8 +63,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet1.repeat_rows(0, 9)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -77,7 +77,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -96,8 +96,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet1.repeat_columns(0)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -110,7 +110,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -129,8 +129,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet1.repeat_columns('A:A')
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -143,7 +143,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -162,8 +162,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet1.repeat_columns(0, 9)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -176,7 +176,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -195,8 +195,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet1.repeat_columns('A:J')
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -209,7 +209,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -232,8 +232,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet3.repeat_rows(6, 7)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 14 00 03 00 00 00 00 00 00 00 00 00 01 00
@@ -247,7 +247,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -278,8 +278,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet5.repeat_rows(6, 7)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 14 00 03 00 00 00 00 00 00 00 00 00 02 00
@@ -293,7 +293,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -319,8 +319,8 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     worksheet1.repeat_columns(3, 4)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -333,7 +333,7 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 2A 00 20 00 00 01 1A 00 00 00 01 00 00 00

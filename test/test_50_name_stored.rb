@@ -31,7 +31,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 1
     formula        = ['3B000000000B0000000100'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                                           name,
                                           encoding,
                                           sheet_index,
@@ -54,7 +54,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 3
     formula        = ['3B02000600070006000700'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                          name,
                          encoding,
                          sheet_index,
@@ -78,7 +78,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 1
     formula        = ['3B0000000009000000FF00'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                          name,
                          encoding,
                          sheet_index,
@@ -102,7 +102,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 1
     formula        = ['3B0000000009000000FF00'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                          name,
                          encoding,
                          sheet_index,
@@ -126,7 +126,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 1
     formula        = ['3B00000000FFFF00000900'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                          name,
                          encoding,
                          sheet_index,
@@ -150,7 +150,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 1
     formula        = ['2917003B00000000FFFF030004003B0000010002000000FF0010'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                          name,
                          encoding,
                          sheet_index,
@@ -175,7 +175,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 1
     formula        = ['3B00000000040000000200'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                          name,
                          encoding,
                          sheet_index,
@@ -199,7 +199,7 @@ class TC_Name_Stored < Test::Unit::TestCase
     sheet_index    = 0
     formula        = ['3A000007000100'].pack('H*')
 
-    result         = @workbook.store_name(
+    result         = @workbook.__send__("store_name",
                          name,
                          encoding,
                          sheet_index,

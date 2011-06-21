@@ -57,7 +57,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
     image = [data.join('')].pack('H*')
 
     expected = [@type, 3, 5]
-    result   = @workbook.process_jpg(image, 'test.jpg')
+    result   = @workbook.__send__("process_jpg", image, 'test.jpg')
     assert_equal(expected, result, " \t" + testname)
   end
 
@@ -87,7 +87,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
     image = [data.join('')].pack('H*')
 
     expected = [@type, 5, 3]
-    result   = @workbook.process_jpg(image, 'test.jpg')
+    result   = @workbook.__send__("process_jpg", image, 'test.jpg')
     assert_equal(expected, result, " \t" + testname)
   end
 
@@ -117,7 +117,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
     image = [data.join('')].pack('H*')
 
     assert_raise(RuntimeError, " \t" + testname) {
-      @workbook.process_jpg(image, 'test.jpg')
+      @workbook.__send__("process_jpg", image, 'test.jpg')
     }
   end
 
@@ -126,7 +126,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
     image    = ''
 
     assert_raise(RuntimeError, " \t" + testname) {
-      @workbook.process_jpg(image, 'test.jpg')
+      @workbook.__send__("process_jpg", image, 'test.jpg')
     }
   end
 
@@ -677,7 +677,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
     )
     image = [data.join('')].pack('H*')
     expected = [@type, 35, 35]
-    results  = @workbook.process_jpg(image, 'test.jpg')
+    results  = @workbook.__send__("process_jpg", image, 'test.jpg')
     assert_equal(expected, results)
   end
 end

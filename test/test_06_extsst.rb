@@ -66,7 +66,7 @@ class TC_extsst < Test::Unit::TestCase
       str_unique = test[0]
 
       workbook.str_unique = str_unique
-      workbook.calculate_extsst_size
+      workbook.__send__("calculate_extsst_size")
 
       assert_equal(test[1], workbook.extsst_buckets,
         " \tBucket number for #{str_unique}  strings")

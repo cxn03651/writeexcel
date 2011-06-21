@@ -31,8 +31,8 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     worksheet1.print_area(area)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -45,7 +45,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -65,8 +65,8 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     worksheet1.print_area(area)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -79,7 +79,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -99,8 +99,8 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     worksheet1.print_area(area)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -113,7 +113,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -133,8 +133,8 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     worksheet1.print_area(area)
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 08 00 01 00 00 00 00 00 00 00
@@ -147,7 +147,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -170,8 +170,8 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     worksheet3.print_area('G7:H8')
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 14 00 03 00 00 00 00 00 00 00 00 00 01 00
@@ -185,7 +185,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
@@ -216,8 +216,8 @@ class TC_Name_Print_Area < Test::Unit::TestCase
     worksheet5.print_area('G7:H8')
 
     # Test the EXTERNSHEET record.
-    @workbook.calculate_extern_sizes
-    @workbook.store_externsheet
+    @workbook.__send__("calculate_extern_sizes")
+    @workbook.__send__("store_externsheet")
 
     target         = [%w(
         17 00 14 00 03 00 00 00 00 00 00 00 00 00 02 00
@@ -231,7 +231,7 @@ class TC_Name_Print_Area < Test::Unit::TestCase
 
     # Test the NAME record.
     @workbook.clear_data_for_test
-    @workbook.store_names
+    @workbook.__send__("store_names")
 
     target         = [%w(
         18 00 1B 00 20 00 00 01 0B 00 00 00 01 00 00 00
