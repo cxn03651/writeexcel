@@ -4,7 +4,7 @@ require 'digest/md5'
 class Image
   attr_reader :row, :col, :filename, :x_offset, :y_offset, :scale_x, :scale_y
   attr_reader :data, :size, :checksum1, :checksum2
-  attr_accessor :id, :type, :width, :height
+  attr_accessor :id, :type, :width, :height, :ref_count
 
   def initialize(row, col, filename, x_offset = 0, y_offset = 0, scale_x = 1, scale_y = 1)
     @row = row

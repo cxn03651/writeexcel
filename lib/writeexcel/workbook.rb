@@ -1393,7 +1393,6 @@ class Workbook < BIFFWriter
   #          = 77 + image size.
   #
   def process_images       #:nodoc:
-    ref_count       = 1
     images_seen     = {}
     image_data      = []
     previous_images = []
@@ -1412,13 +1411,14 @@ class Workbook < BIFFWriter
         unless images_seen[image.filename]
           # TODO should also match seen images based on checksum.
           image.id = image_id
+          image.ref_count = 1
           image.import
 
           # Also store new data for use in duplicate images.
           previous_images.push(image)
 
           # Store information required by the Workbook.
-          image_data.push([ref_count, image.type, image.data, image.size, image.checksum1, image.checksum2])
+          image_data.push(image)
 
           # Keep track of overall data size.
           images_size       += image.size + 61  # Size for bstore container.
@@ -1431,7 +1431,7 @@ class Workbook < BIFFWriter
           index = images_seen[image.filename] -1
 
           # Increase image reference count.
-          image_data[index][0] += 1
+          image_data[index].ref_count += 1
 
           # Add previously calculated data back onto the Worksheet array.
           # image_id, type, width, height
@@ -2682,7 +2682,7 @@ class Workbook < BIFFWriter
     data   += store_mso_dgg(*@mso_clusters)
     data   += store_mso_bstore_container
     @images_data.each do |image|
-      data += store_mso_images(*image)
+      data += store_mso_images(image)
     end
     data   += store_mso_opt
     data   += store_mso_split_menu_colors
@@ -2836,20 +2836,13 @@ class Workbook < BIFFWriter
   #
   # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_images(ref_count, image_type, image, size, checksum1, checksum2)       #:nodoc:
+  def store_mso_images(image)
     blip_store_entry =  store_mso_blip_store_entry(
-        ref_count,
-        image_type,
-        size,
-        checksum1
+        image.ref_count, image.type, image.size, image.checksum1
       )
 
     blip             =  store_mso_blip(
-        image_type,
-        image,
-        size,
-        checksum1,
-        checksum2
+        image.type, image.data, image.size, image.checksum1, image.checksum2
       )
 
     blip_store_entry + blip
