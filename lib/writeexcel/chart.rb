@@ -92,7 +92,7 @@ class Chart < Worksheet
   def initialize(*args)       #:nodoc:
     super
 
-    @sheet_type  = 0x0200
+    @type        = 0x0200
     @orientation = 0x0
     @series      = []
     @embedded    = false

@@ -55,7 +55,7 @@ class Worksheet < BIFFWriter
     @index               = index
     @name_utf16be        = name_utf16be
 
-    @sheet_type          = 0x0000
+    @type                = 0x0000
     @ext_sheets          = []
     @using_tmpfile       = true
     @fileclosed          = false
@@ -4642,8 +4642,8 @@ class Worksheet < BIFFWriter
     @index = val
   end
 
-  def sheet_type  # :nodoc:
-    @sheet_type
+  def type  # :nodoc:
+    @type
   end
 
   def images_array  # :nodoc:

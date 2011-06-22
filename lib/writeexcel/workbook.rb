@@ -1306,7 +1306,7 @@ class Workbook < BIFFWriter
     # required by each worksheet.
     #
     @worksheets.each do |sheet|
-      next unless sheet.sheet_type == 0x0000
+      next unless sheet.type == 0x0000
 
       num_images     = sheet.num_images
       num_comments   = sheet.prepare_comments
@@ -1376,7 +1376,7 @@ class Workbook < BIFFWriter
     images_size     = 0
 
     @worksheets.each do |sheet|
-      next unless sheet.sheet_type == 0x0000
+      next unless sheet.type == 0x0000
       next if sheet.prepare_images == 0
 
       num_images      = 0
@@ -1758,7 +1758,7 @@ class Workbook < BIFFWriter
   def store_boundsheet(sheet)       #:nodoc:
     sheetname = sheet.name
     offset    = sheet.offset
-    type      = sheet.sheet_type
+    type      = sheet.type
     hidden    = sheet.hidden? ? 1 : 0
     encoding  = sheet.is_name_utf16be? ? 1 : 0
 
