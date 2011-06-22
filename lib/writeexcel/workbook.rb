@@ -873,9 +873,6 @@ class Workbook < BIFFWriter
     @checksum_method = 3
   end
 
-  ###############################################################################
-  #
-  # check_sheetname(name, name_utf16be)
   #
   # Check for valid worksheet names. We check the length, if it contains any
   # invalid characters and if the name is unique in the workbook.
@@ -995,9 +992,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # set_palette_xl97()
   #
   # Sets the colour palette to the Excel 97+ default.
   #
@@ -1099,9 +1093,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # get_property_set_codepage()
   #
   # Get the character codepage used by the strings in a property set. If one of
   # the strings used is utf8 then the codepage is marked as utf8. Otherwise
@@ -1117,9 +1108,6 @@ class Workbook < BIFFWriter
     return 0x04E4  # Default codepage, Latin 1.
   end
 
-  ###############################################################################
-  #
-  # store_workbook()
   #
   # Assemble worksheets into a workbook and send the BIFF data to an OLE
   # storage.
@@ -1179,9 +1167,6 @@ class Workbook < BIFFWriter
     store_ole_filie
   end
 
-  ###############################################################################
-  #
-  # store_ole_filie()
   #
   # Store the workbook in an OLE container using the default handler or using
   # OLE::Storage_Lite if the workbook data is > ~ 7MB.
@@ -1258,9 +1243,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # calc_sheet_offsets()
   #
   # Calculate Worksheet BOF offsets records for use in the BOUNDSHEET records.
   #
@@ -1299,9 +1281,6 @@ class Workbook < BIFFWriter
     @biffsize = offset
   end
 
-  ###############################################################################
-  #
-  # calc_mso_sizes()
   #
   # Calculate the MSODRAWINGGROUP sizes and the indexes of the Worksheet
   # MSODRAWING records.
@@ -1378,9 +1357,6 @@ class Workbook < BIFFWriter
     ]
   end
 
-  ###############################################################################
-  #
-  # process_images()
   #
   # We need to process each image in each worksheet and extract information.
   # Some of this information is stored and used in the Workbook and some is
@@ -1452,9 +1428,6 @@ class Workbook < BIFFWriter
     @images_data = image_data     # Store the data for MSODRAWINGGROUP.
   end
 
-  ###############################################################################
-  #
-  # store_all_fonts()
   #
   # Store the Excel FONT records.
   #
@@ -1542,9 +1515,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_all_num_formats()
   #
   # Store user defined numerical formats i.e. FORMAT records
   #
@@ -1580,9 +1550,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_all_xfs()
   #
   # Write all XF records.
   #
@@ -1593,9 +1560,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_all_styles()
   #
   # Write all STYLE records.
   #
@@ -1623,9 +1587,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_names()
   #
   # Write the NAME record to define the print area and the repeat rows and cols.
   #
@@ -1753,9 +1714,6 @@ class Workbook < BIFFWriter
   #
 
 
-  ###############################################################################
-  #
-  # store_window1()
   #
   # Write Excel BIFF WINDOW1 record.
   #
@@ -1789,11 +1747,11 @@ class Workbook < BIFFWriter
   ###############################################################################
   #
   # store_boundsheet()
-  #    my $sheetname = $_[0];                # Worksheet name
-  #    my $offset    = $_[1];                # Location of worksheet BOF
-  #    my $type      = $_[2];                # Worksheet type
-  #    my $hidden    = $_[3];                # Worksheet hidden flag
-  #    my $encoding  = $_[4];                # Sheet name encoding
+  #    sheetname = # Worksheet name
+  #    offset    = # Location of worksheet BOF
+  #    type      = # Worksheet type
+  #    hidden    = # Worksheet hidden flag
+  #    encoding  = # Sheet name encoding
   #
   # Writes Excel BIFF BOUNDSHEET record.
   #
@@ -1826,8 +1784,8 @@ class Workbook < BIFFWriter
   ###############################################################################
   #
   # store_style()
-  #    type      = $_[0]  # Built-in style
-  #    xf_index  = $_[1]  # Index to style XF
+  #    type        # Built-in style
+  #    xf_index    # Index to style XF
   #
   # Write Excel BIFF STYLE records.
   #
@@ -1848,9 +1806,9 @@ class Workbook < BIFFWriter
   ###############################################################################
   #
   # store_num_format()
-  #    my $format    = $_[0];          # Custom format string
-  #    my $ifmt      = $_[1];          # Format index code
-  #    my $encoding  = $_[2];          # Char encoding for format string
+  #    format    # Custom format string
+  #    ifmt      # Format index code
+  #    encoding  # Char encoding for format string
   #
   # Writes Excel FORMAT record for non "built-in" numerical formats.
   #
@@ -1892,9 +1850,6 @@ class Workbook < BIFFWriter
     append(header, data, format)
   end
 
-  ###############################################################################
-  #
-  # store_1904()
   #
   # Write Excel 1904 record to indicate the date system in use.
   #
@@ -1910,9 +1865,6 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_supbook()
   #
   # Write BIFF record SUPBOOK to indicate that the workbook contains external
   # references, in our case, formula, print area and print title refs.
@@ -1930,9 +1882,6 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_externsheet()
   #
   # Writes the Excel BIFF EXTERNSHEET record. These references are used by
   # formulas. TODO NAME record is required to define the print area and the
@@ -2076,13 +2025,13 @@ class Workbook < BIFFWriter
   ###############################################################################
   #
   # store_name_long()
-  #    my $index           = shift;        # Sheet index
-  #    my $type            = shift;
-  #    my $ext_ref         = shift;        # TODO
-  #    my $rowmin          = $_[0];        # Start row
-  #    my $rowmax          = $_[1];        # End row
-  #    my $colmin          = $_[2];        # Start column
-  #    my $colmax          = $_[3];        # end column
+  #    index           = shift;        # Sheet index
+  #    type            = shift;
+  #    ext_ref         = shift;        # TODO
+  #    rowmin          = $_[0];        # Start row
+  #    rowmax          = $_[1];        # End row
+  #    colmin          = $_[2];        # Start column
+  #    colmax          = $_[3];        # end column
   #
   #
   # Store the NAME record in the long format that is used for storing the repeat
@@ -2148,9 +2097,6 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_palette()
   #
   # Stores the PALETTE biff record.
   #
@@ -2170,9 +2116,6 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_codepage()
   #
   # Stores the CODEPAGE biff record.
   #
@@ -2184,9 +2127,6 @@ class Workbook < BIFFWriter
     store_common(record, length, cv)
   end
 
-  ###############################################################################
-  #
-  # store_country()
   #
   # Stores the COUNTRY biff record.
   #
@@ -2199,9 +2139,6 @@ class Workbook < BIFFWriter
     store_common(record, length, country_default, country_win_ini)
   end
 
-  ###############################################################################
-  #
-  # store_hideobj()
   #
   # Stores the HIDEOBJ biff record.
   #
@@ -2220,9 +2157,6 @@ class Workbook < BIFFWriter
     append(header, add_data)
   end
 
-  ###############################################################################
-  #
-  # calculate_extern_sizes()
   #
   # We need to calculate the space required by the SUPBOOK, EXTERNSHEET and NAME
   # records so that it can be added to the BOUNDSHEET offsets.
@@ -2299,9 +2233,6 @@ class Workbook < BIFFWriter
     ext_refs[key] = ext_refs.keys.size
   end
 
-  ###############################################################################
-  #
-  # calculate_shared_string_sizes()
   #
   # Handling of the SST continue blocks is complicated by the need to include an
   # additional continuation byte depending on whether the string is split between
@@ -2456,9 +2387,6 @@ class Workbook < BIFFWriter
     [header_length, space_remaining, align, split_string]
   end
 
-  ###############################################################################
-  #
-  # store_shared_strings()
   #
   # Write all of the workbooks strings into an indexed array.
   #
@@ -2611,9 +2539,6 @@ class Workbook < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # calculate_extsst_size
   #
   # The number of buckets used in the EXTSST is between 0 and 128. The number of
   # strings per bucket (bucket size) has a minimum value of 8 and a theoretical
@@ -2638,9 +2563,6 @@ class Workbook < BIFFWriter
     6 + 8 * buckets
   end
 
-  ###############################################################################
-  #
-  # store_extsst
   #
   # Write EXTSST table using the offsets calculated in store_shared_strings().
   #
@@ -2665,9 +2587,6 @@ class Workbook < BIFFWriter
   # Methods related to comments and MSO objects.
   #
 
-  ###############################################################################
-  #
-  # add_mso_drawing_group()
   #
   # Write the MSODRAWINGGROUP record that keeps track of the Escher drawing
   # objects in the file such as images, comments and filters.
@@ -2695,11 +2614,8 @@ class Workbook < BIFFWriter
     header + data # For testing only.
   end
 
-  ###############################################################################
   #
-  # add_mso_drawing_group_continue()
-  #
-  # See first the WriteExcel::BIFFwriter::_add_continue() method.
+  # See first BIFFwriter#add_continue() method.
   #
   # Add specialised CONTINUE headers to large MSODRAWINGGROUP data block.
   # We use the Excel 97 max block size of 8228 - 4 bytes for the header = 8224.
@@ -2759,9 +2675,6 @@ class Workbook < BIFFWriter
     [first_string, latter_string]
   end
 
-  ###############################################################################
-  #
-  # store_mso_dgg_container()
   #
   # Write the Escher DggContainer record that is part of MSODRAWINGGROUP.
   #
@@ -2775,14 +2688,6 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_dgg()
-  #    my $max_spid        = $_[0];
-  #    my $num_clusters    = $_[1];
-  #    my $shapes_saved    = $_[2];
-  #    my $drawings_saved  = $_[3];
-  #    my $clusters        = $_[4];
   #
   # Write the Escher Dgg record that is part of MSODRAWINGGROUP.
   #
@@ -2806,9 +2711,6 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_bstore_container()
   #
   # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
   #
@@ -2824,15 +2726,6 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_images()
-  #    ref_count   = $_[0]
-  #    image_type  = $_[1]
-  #    image       = $_[2]
-  #    size        = $_[3]
-  #    checksum1   = $_[4]
-  #    checksum2   = $_[5]
   #
   # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
   #
@@ -2848,13 +2741,6 @@ class Workbook < BIFFWriter
     blip_store_entry + blip
   end
 
-  ###############################################################################
-  #
-  # store_mso_blip_store_entry()
-  #    ref_count   = $_[0]
-  #    image_type  = $_[1]
-  #    size        = $_[2]
-  #    checksum1   = $_[3]
   #
   # Write the Escher BlipStoreEntry record that is part of MSODRAWINGGROUP.
   #
@@ -2878,14 +2764,6 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_blip()
-  #    image_type  = $_[0]
-  #    image_data  = $_[1]
-  #    size        = $_[2]
-  #    checksum1   = $_[3]
-  #    checksum2   = $_[4]
   #
   # Write the Escher Blip record that is part of MSODRAWINGGROUP.
   #
@@ -2909,9 +2787,6 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_opt()
   #
   # Write the Escher Opt record that is part of MSODRAWINGGROUP.
   #
@@ -2927,9 +2802,6 @@ class Workbook < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_split_menu_colors()
   #
   # Write the Escher SplitMenuColors record that is part of MSODRAWINGGROUP.
   #
