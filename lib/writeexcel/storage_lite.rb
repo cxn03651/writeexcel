@@ -460,7 +460,7 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
       return @data.bytesize
     end
   end
-  private :_datalen
+  protected :_datalen
 
   def _makeSmallData(aList, rh_info)
     file = rh_info[:fileh]
@@ -543,7 +543,7 @@ class OLEStorageLitePPS < OLEStorageLite       #:nodoc:
     end
     file.write([0].pack('V'))                   #128
   end
-  private :_savePpsWk
+  protected :_savePpsWk
 end
 
 class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
