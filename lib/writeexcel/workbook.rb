@@ -565,7 +565,6 @@ class Workbook < BIFFWriter
   #
   # Change the default temp directory
   #
-  #
   # For speed and efficiency WriteExcel stores worksheet data in temporary
   # files prior to assembling the final workbook.
   #
@@ -860,9 +859,6 @@ class Workbook < BIFFWriter
     @fileclosed || false
   end
 
-  ###############################################################################
-  #
-  # get_checksum_method.
   #
   # Check for modules available to calculate image checksum. Excel uses MD4 but
   # MD5 will also work.
@@ -1760,16 +1756,14 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_boundsheet()
-  #    sheetname = # Worksheet name
-  #    offset    = # Location of worksheet BOF
-  #    type      = # Worksheet type
-  #    hidden    = # Worksheet hidden flag
-  #    encoding  = # Sheet name encoding
   #
   # Writes Excel BIFF BOUNDSHEET record.
+  #
+  #    sheetname  # Worksheet name
+  #    offset     # Location of worksheet BOF
+  #    type       # Worksheet type
+  #    hidden     # Worksheet hidden flag
+  #    encoding   # Sheet name encoding
   #
   def store_boundsheet(sheet)       #:nodoc:
     sheetname = sheet.name
@@ -1797,13 +1791,11 @@ class Workbook < BIFFWriter
     append(header, data, sheetname)
   end
 
-  ###############################################################################
-  #
-  # store_style()
-  #    type        # Built-in style
-  #    xf_index    # Index to style XF
   #
   # Write Excel BIFF STYLE records.
+  #
+  #    type        # Built-in style
+  #    xf_index    # Index to style XF
   #
   def store_style(type, xf_index)       #:nodoc:
     record    = 0x0293    # Record identifier
@@ -1819,14 +1811,12 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
   #
-  # store_num_format()
+  # Writes Excel FORMAT record for non "built-in" numerical formats.
+  #
   #    format    # Custom format string
   #    ifmt      # Format index code
   #    encoding  # Char encoding for format string
-  #
-  # Writes Excel FORMAT record for non "built-in" numerical formats.
   #
   def store_num_format(format, ifmt, encoding)       #:nodoc:
     format = format.to_s unless format.respond_to?(:to_str)
@@ -1978,21 +1968,18 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_name_short()
-  #    index           = shift        # Sheet index
-  #    type            = shift
-  #    ext_ref         = shift        # TODO
-  #    rowmin          = $_[0]        # Start row
-  #    rowmax          = $_[1]        # End row
-  #    colmin          = $_[2]        # Start column
-  #    colmax          = $_[3]        # end column
-  #    hidden          = $_[4]        # Name is hidden
-  #
   #
   # Store the NAME record in the short format that is used for storing the print
   # area, repeat rows only and repeat columns only.
+  #
+  #    index            # Sheet index
+  #    type
+  #    ext_ref          # TODO
+  #    rowmin           # Start row
+  #    rowmax           # End row
+  #    colmin           # Start column
+  #    colmax           # end column
+  #    hidden           # Name is hidden
   #
   def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden = nil)       #:nodoc:
     record          = 0x0018       # Record identifier
@@ -2038,22 +2025,19 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_name_long()
-  #    index           = shift;        # Sheet index
-  #    type            = shift;
-  #    ext_ref         = shift;        # TODO
-  #    rowmin          = $_[0];        # Start row
-  #    rowmax          = $_[1];        # End row
-  #    colmin          = $_[2];        # Start column
-  #    colmax          = $_[3];        # end column
-  #
   #
   # Store the NAME record in the long format that is used for storing the repeat
   # rows and columns when both are specified. This share a lot of code with
   # store_name_short() but we use a separate method to keep the code clean.
   # Code abstraction for reuse can be carried too far, and I should know. ;-)
+  #
+  #    index             # Sheet index
+  #    type      
+  #    ext_ref           # TODO
+  #    rowmin            # Start row
+  #    rowmax            # End row
+  #    colmin            # Start column
+  #    colmax            # end column
   #
   def store_name_long(index, type, ext_ref, rowmin, rowmax, colmin, colmax)       #:nodoc:
     record          = 0x0018       # Record identifier

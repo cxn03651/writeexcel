@@ -41,9 +41,6 @@ class Worksheet < BIFFWriter
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
 
-  ###############################################################################
-  #
-  # new()
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
@@ -166,9 +163,6 @@ class Worksheet < BIFFWriter
     @row_data            = {}
   end
 
-  ###############################################################################
-  #
-  # close()
   #
   # Add data to the beginning of the workbook (note the reverse order)
   # and to the end of the workbook.
@@ -1292,8 +1286,6 @@ class Worksheet < BIFFWriter
 
 
   #
-  # set_paper()
-  #
   # Set the paper type. Ex. 1 = US Letter, 9 = A4
   #
   # This method is used to set the paper format for the printed output of a
@@ -1398,9 +1390,6 @@ class Worksheet < BIFFWriter
     set_margin_bottom(margin)
   end
 
-  ###############################################################################
-  #
-  # set_margins_LR()
   #
   # Set the left and right margins to the same value in inches.
   #
@@ -1409,9 +1398,6 @@ class Worksheet < BIFFWriter
     set_margin_right(margin)
   end
 
-  ###############################################################################
-  #
-  # set_margins_TB()
   #
   # Set the top and bottom margins to the same value in inches.
   #
@@ -1421,9 +1407,6 @@ class Worksheet < BIFFWriter
   end
 
 
-  ###############################################################################
-  #
-  # set_margin_left()
   #
   # Set the left margin in inches.
   #
@@ -1432,9 +1415,6 @@ class Worksheet < BIFFWriter
   end
 
 
-  ###############################################################################
-  #
-  # set_margin_right()
   #
   # Set the right margin in inches.
   #
@@ -1442,9 +1422,6 @@ class Worksheet < BIFFWriter
     @margin_right = margin
   end
 
-  ###############################################################################
-  #
-  # set_margin_top()
   #
   # Set the top margin in inches.
   #
@@ -1452,9 +1429,6 @@ class Worksheet < BIFFWriter
     @margin_top = margin
   end
 
-  ###############################################################################
-  #
-  # set_margin_bottom()
   #
   # Set the bottom margin in inches.
   #
@@ -2003,9 +1977,6 @@ class Worksheet < BIFFWriter
     @leading_zeros = val
   end
 
-  ###############################################################################
-  #
-  # show_comments()
   #
   # Make any comments in the worksheet visible.
   #
@@ -2027,9 +1998,6 @@ class Worksheet < BIFFWriter
     @comments_visible = val ? val : 1
   end
 
-  ###############################################################################
-  #
-  # set_comments_author()
   #
   # Set the default author of the cell comments.
   #
@@ -2051,9 +2019,6 @@ class Worksheet < BIFFWriter
     @custom_start  = 1
   end
 
-  ###############################################################################
-  #
-  # set_first_row_column()
   #
   # Set the topmost and leftmost visible row and column.
   # TODO: Document this when tested fully for interaction with panes.
@@ -2474,9 +2439,9 @@ class Worksheet < BIFFWriter
     str_error
   end
 
-  ###############################################################################
   #
-  # write_utf16be_string($row, $col, $string, $format)
+  # :call-seq:
+  #   write_utf16be_string(row, col, string, format)
   #
   # Write a Unicode string to the specified row and column (zero indexed).
   # $format is optional.
@@ -2540,9 +2505,9 @@ class Worksheet < BIFFWriter
     str_error
   end
 
-  ###############################################################################
   #
-  # write_utf16le_string($row, $col, $string, $format)
+  # :call-seq:
+  #   write_utf16le_string(row, col, string, format)
   #
   # Write a UTF-16LE string to the specified row and column (zero indexed).
   # $format is optional.
@@ -3808,10 +3773,9 @@ class Worksheet < BIFFWriter
     write_url_web(*args)
   end
 
-  ###############################################################################
   #
-  # insert_chart($row, $col,   $chart, $x, $y, $scale_x, $scale_y)
-  # insert_chart($A1_notation, $chart, $x, $y, $scale_x, $scale_y)
+  # :call-seq:
+  #   insert_chart(row, col,   chart, x, y, scale_x, scale_y)
   #
   # Insert a chart into a worksheet. The $chart argument should be a Chart
   # object or else it is assumed to be a filename of an external binary file.
@@ -4734,9 +4698,6 @@ class Worksheet < BIFFWriter
     @image_mso_size = val
   end
 
-  ###############################################################################
-  #
-  # prepare_images()
   #
   # Turn the HoH that stores the images into an array for easier handling.
   #
@@ -4745,9 +4706,6 @@ class Worksheet < BIFFWriter
   end
 #  private :prepare_images
 
-  ###############################################################################
-  #
-  # prepare_comments()
   #
   # Turn the HoH that stores the comments into an array for easier handling.
   #
@@ -4756,9 +4714,6 @@ class Worksheet < BIFFWriter
   end
 #  private :prepare_comments
 
-  ###############################################################################
-  #
-  # prepare_charts()
   #
   # Turn the HoH that stores the charts into an array for easier handling.
   #
@@ -4767,7 +4722,6 @@ class Worksheet < BIFFWriter
   end
 #  private :prepare_charts
 
-  ###############################################################################
   ###############################################################################
   #
   # Internal methods
@@ -4810,9 +4764,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # extract_filter_tokens(expression)
   #
   # Extract the tokens from the filter expression. The tokens are mainly non-
   # whitespace groups. The only tricky part is to extract string tokens that
@@ -4851,9 +4802,6 @@ class Worksheet < BIFFWriter
     tokens
   end
 
-  ###############################################################################
-  #
-  # parse_filter_expression(expression, @token)
   #
   # Converts the tokens of a possibly conditional expression into 1 or 2
   # sub expressions for further parsing.
@@ -4884,9 +4832,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # parse_filter_tokens(@token)  # (@expression, @token)
   #
   # Parse the 3 tokens of a filter expression and return the operator and token.
   #
@@ -5004,9 +4949,6 @@ class Worksheet < BIFFWriter
     @workbook.sinfo
   end
 
-  ###############################################################################
-  #
-  # xf_record_index()
   #
   # Returns an index to the XF record in the workbook.
   #
@@ -5024,9 +4966,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # substitute_cellref()
   #
   # Substitute an Excel cell reference in A1 notation for  zero based row and
   # column values in an argument list.
@@ -5063,9 +5002,6 @@ class Worksheet < BIFFWriter
     raise("Unknown cell reference #{cell}")
   end
 
-  ###############################################################################
-  #
-  # cell_to_rowcol($cell_ref)
   #
   # Convert an Excel cell reference in A1 notation to a zero based row and column
   # reference; converts C1 to (0, 2).
@@ -5086,10 +5022,6 @@ class Worksheet < BIFFWriter
     [row, col]
   end
 
-  ###############################################################################
-  #
-  # sort_pagebreaks()
-  #
   #
   # This is an internal method that is used to filter elements of the array of
   # pagebreaks used in the store_hbreak() and store_vbreak() methods. It:
@@ -5106,12 +5038,8 @@ class Worksheet < BIFFWriter
     breaks.size > 1000 ? breaks[0..999] : breaks
   end
 
-  ###############################################################################
-  #
-  # encode_password($password)
   #
   # Based on the algorithm provided by Daniel Rentz of OpenOffice.
-  #
   #
   def encode_password(password)       #:nodoc:
     i = 0
@@ -5133,10 +5061,8 @@ class Worksheet < BIFFWriter
     encoded_password ^= 0xCE4B
   end
 
-  ###############################################################################
   #
-  # encode_formula_result()
-  #     my $value     = $_[0];      # Result to be encoded.
+  # value     # Result to be encoded.
   #
   # Encode the user supplied result for a formula.
   #
@@ -5183,9 +5109,6 @@ class Worksheet < BIFFWriter
     [num, grbit, is_string]
   end
 
-  ###############################################################################
-  #
-  # get_formula_string()
   #
   # Pack the string value when a formula evaluates to a string. The value cannot
   # be calculated by the module and thus must be supplied by the user.
@@ -5245,15 +5168,12 @@ class Worksheet < BIFFWriter
     store_with_compatibility(row, col, header + data + formula + string)
   end
 
-  ###############################################################################
-  #
-  # write_url_web($row1, $col1, $row2, $col2, $url, $string, $format)
-  #    row1        = $_[0];                        # Start row
-  #    col1        = $_[1];                        # Start column
-  #    row2        = $_[2];                        # End row
-  #    col2        = $_[3];                        # End column
-  #    url         = $_[4];                        # URL string
-  #    str         = $_[5];                        # Alternative label
+  #    row1                         # Start row
+  #    col1                         # Start column
+  #    row2                         # End row
+  #    col2                         # End column
+  #    url                          # URL string
+  #    str                          # Alternative label
   #
   # Used to write http, ftp and mailto hyperlinks.
   # The link type ($options) is 0x03 is the same as absolute dir ref without
@@ -5319,15 +5239,12 @@ class Worksheet < BIFFWriter
     error
   end
 
-  ###############################################################################
-  #
-  # write_url_internal($row1, $col1, $row2, $col2, $url, $string, $format)
-  #    row1        = $_[0];                        # Start row
-  #    col1        = $_[1];                        # Start column
-  #    row2        = $_[2];                        # End row
-  #    col2        = $_[3];                        # End column
-  #    url         = $_[4];                        # URL string
-  #    str         = $_[5];                        # Alternative label
+  #    row1                         # Start row
+  #    col1                         # Start column
+  #    row2                         # End row
+  #    col2                         # End column
+  #    url                          # URL string
+  #    str                          # Alternative label
   #
   # Used to write internal reference hyperlinks such as "Sheet1!A1".
   #
@@ -5390,9 +5307,6 @@ class Worksheet < BIFFWriter
     error
   end
 
-  ###############################################################################
-  #
-  # write_url_external($row1, $col1, $row2, $col2, $url, $string, $format)
   #
   # Write links to external directory names such as 'c:\foo.xls',
   # c:\foo.xls#Sheet1!A1', '../../foo.xls'. and '../../foo.xls#Sheet1!A1'.
@@ -5489,9 +5403,6 @@ class Worksheet < BIFFWriter
     error
   end
 
-  ###############################################################################
-  #
-  # write_url_external_net($row1, $col1, $row2, $col2, $url, $string, $format)
   #
   # Write links to external MS/Novell network drives and shares such as
   # '//NETWORK/share/foo.xls' and '//NETWORK/share/foo.xls#Sheet1!A1'.
@@ -5699,9 +5610,6 @@ class Worksheet < BIFFWriter
     @workbook.date_1904
   end
 
-  ###############################################################################
-  #
-  # write_row_default()
   #        row    : Row Number
   #        colMic : First defined column
   #        colMac : Last defined column
@@ -5724,9 +5632,6 @@ class Worksheet < BIFFWriter
                  row, colMic, colMac, miyRw, irwMac, reserved, grbit, ixfe)
   end
 
-  ###############################################################################
-  #
-  # check_dimensions($row, $col, $ignore_row, $ignore_col)
   #
   # Check that $row and $col are valid and store max and min values for use in
   # DIMENSIONS record. See, store_dimensions().
@@ -5756,9 +5661,6 @@ class Worksheet < BIFFWriter
     0
   end
 
-  ###############################################################################
-  #
-  # store_dimensions()
   #
   # Writes Excel DIMENSIONS to define the area in which there is cell data.
   #
@@ -5791,9 +5693,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_window2()
   #
   # Write BIFF record Window2.
   #
@@ -5844,9 +5743,6 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_page_view()
   #
   # Set page view mode. Only applicable to Mac Excel.
   #
@@ -5856,9 +5752,6 @@ class Worksheet < BIFFWriter
     append(data)
   end
 
-  ###############################################################################
-  #
-  # store_tab_color()
   #
   # Write the Tab Color BIFF record.
   #
@@ -5877,9 +5770,6 @@ class Worksheet < BIFFWriter
                  zero, unknown, zero, color, zero)
   end
 
-  ###############################################################################
-  #
-  # store_defrow()
   #
   # Write BIFF record DEFROWHEIGHT.
   #
@@ -5896,9 +5786,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_defcol()
   #
   # Write BIFF record DEFCOLWIDTH.
   #
@@ -5913,15 +5800,14 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_colinfo($firstcol, $lastcol, $width, $format, $hidden)
   #
   #   firstcol : First formatted column
   #   lastcol  : Last formatted column
   #   width    : Col width in user units, 8.43 is default
   #   format   : format object
   #   hidden   : hidden flag
+  #   lebel    : outline level
+  #   collapsed : ?
   #
   # Write BIFF record COLINFO to define column widths
   #
@@ -5972,9 +5858,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_filtermode()
   #
   # Write BIFF record FILTERMODE to indicate that the worksheet contains
   # AUTOFILTER record, ie. autofilters with a filter set.
@@ -5991,9 +5874,6 @@ class Worksheet < BIFFWriter
     prepend(header)
   end
 
-  ###############################################################################
-  #
-  # store_autofilterinfo()
   #
   # Write BIFF record AUTOFILTERINFO.
   #
@@ -6011,9 +5891,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_selection($first_row, $first_col, $last_row, $last_col)
   #
   # Write BIFF record SELECTION.
   #
@@ -6052,9 +5929,6 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_externcount($count)
   #
   # Write BIFF record EXTERNCOUNT to indicate the number of external sheet
   # references in a worksheet.
@@ -6077,10 +5951,7 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_externsheet($sheetname)
-  #    sheetname  : Worksheet name
+  # sheetname  : Worksheet name
   #
   # Writes the Excel BIFF EXTERNSHEET record. These references are used by
   # formulas. A formula references a sheet name via an index. Since we store a
@@ -6114,9 +5985,6 @@ class Worksheet < BIFFWriter
     prepend(header, data, sheetname)
   end
 
-  ###############################################################################
-  #
-  # store_panes(y, x, colLeft, no_split, pnnAct)
   #    y           = args[0] || 0   # Vertical split position
   #    x           = $_[1] || 0;   # Horizontal split position
   #    rwTop       = $_[2];        # Top row visible
@@ -6169,9 +6037,6 @@ class Worksheet < BIFFWriter
     store_simple(record, length, x, y, rwtop, colleft, pnnAct)
   end
 
-  ###############################################################################
-  #
-  # store_setup()
   #
   # Store the page setup SETUP BIFF record.
   #
@@ -6229,9 +6094,6 @@ class Worksheet < BIFFWriter
 
   end
 
-  ###############################################################################
-  #
-  # store_header()
   #
   # Store the header caption BIFF record.
   #
@@ -6239,9 +6101,6 @@ class Worksheet < BIFFWriter
     store_header_footer_common(:header)
   end
 
-  ###############################################################################
-  #
-  # store_footer()
   #
   # Store the footer caption BIFF record.
   #
@@ -6278,9 +6137,6 @@ class Worksheet < BIFFWriter
     prepend(header, data, str)
   end
 
-  ###############################################################################
-  #
-  # store_hcenter()
   #
   # Store the horizontal centering HCENTER BIFF record.
   #
@@ -6288,9 +6144,6 @@ class Worksheet < BIFFWriter
     store_biff_common(:hcenter)
   end
 
-  ###############################################################################
-  #
-  # store_vcenter()
   #
   # Store the vertical centering VCENTER BIFF record.
   #
@@ -6298,9 +6151,6 @@ class Worksheet < BIFFWriter
     store_biff_common(:vcenter)
   end
 
-  ###############################################################################
-  #
-  # store_margin_left()
   #
   # Store the LEFTMARGIN BIFF record.
   #
@@ -6308,9 +6158,6 @@ class Worksheet < BIFFWriter
     store_margin_common(0x0026, 0x0008, @margin_left)
   end
 
-  ###############################################################################
-  #
-  # store_margin_right()
   #
   # Store the RIGHTMARGIN BIFF record.
   #
@@ -6318,9 +6165,6 @@ class Worksheet < BIFFWriter
     store_margin_common(0x0027, 0x0008, @margin_right)
   end
 
-  ###############################################################################
-  #
-  # store_margin_top()
   #
   # Store the TOPMARGIN BIFF record.
   #
@@ -6328,9 +6172,6 @@ class Worksheet < BIFFWriter
     store_margin_common(0x0028, 0x0008, @margin_top)
   end
 
-  ###############################################################################
-  #
-  # store_margin_bottom()
   #
   # Store the BOTTOMMARGIN BIFF record.
   #
@@ -6352,9 +6193,9 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
   #
-  # merge_cells($first_row, $first_col, $last_row, $last_col)
+  # :call-seq:
+  # merge_cells(first_row, first_col, last_row, last_col)
   #
   # This is an Excel97/2000 method. It is required to perform more complicated
   # merging than the normal align merge in Format.pm
@@ -6382,9 +6223,6 @@ class Worksheet < BIFFWriter
     store_simple(record, length, cref, rwFirst, rwLast, colFirst, colLast)
   end
 
-  ###############################################################################
-  #
-  # store_print_headers()
   #
   # Write the PRINTHEADERS BIFF record.
   #
@@ -6392,9 +6230,6 @@ class Worksheet < BIFFWriter
     store_biff_common(:print_headers)
   end
 
-  ###############################################################################
-  #
-  # store_print_gridlines()
   #
   # Write the PRINTGRIDLINES BIFF record. Must be used in conjunction with the
   # GRIDSET record.
@@ -6426,9 +6261,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_gridset()
   #
   # Write the GRIDSET BIFF record. Must be used in conjunction with the
   # PRINTGRIDLINES record.
@@ -6445,9 +6277,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_guts()
   #
   # Write the GUTS BIFF record. This is used to configure the gutter margins
   # where Excel outline symbols are displayed. The visibility of the gutters is
@@ -6489,9 +6318,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_wsbool()
   #
   # Write the WSBOOL BIFF record, mainly for fit-to-page. Used in conjunction
   # with the SETUP record.
@@ -6516,9 +6342,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_hbreak()
   #
   # Write the HORIZONTALPAGEBREAKS BIFF record.
   #
@@ -6526,9 +6349,6 @@ class Worksheet < BIFFWriter
     store_breaks_common(@hbreaks)
   end
 
-  ###############################################################################
-  #
-  # store_vbreak()
   #
   # Write the VERTICALPAGEBREAKS BIFF record.
   #
@@ -6554,9 +6374,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_protect()
   #
   # Set the Biff PROTECT record to indicate that the worksheet is protected.
   #
@@ -6568,9 +6385,6 @@ class Worksheet < BIFFWriter
     @protect
   end
 
-  ###############################################################################
-  #
-  # store_obj_protect()
   #
   # Set the Biff OBJPROTECT record to indicate that objects are protected.
   #
@@ -6597,9 +6411,6 @@ class Worksheet < BIFFWriter
   end
 
 
-  ###############################################################################
-  #
-  # store_password()
   #
   # Write the worksheet PASSWORD record.
   #
@@ -6638,9 +6449,6 @@ class Worksheet < BIFFWriter
 
 
 
-  ###############################################################################
-  #
-  # store_table()
   #
   # Write cell data stored in the worksheet row/col table.
   #
@@ -6730,9 +6538,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_dbcell()
   #
   # Store the DBCELL record using the offset calculated in store_table().
   #
@@ -6751,9 +6556,6 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_index()
   #
   # Store the INDEX record using the DBCELL offsets calculated in store_table().
   #
@@ -6780,9 +6582,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  #  position_object()
   #
   # Calculate the vertices that define the position of a graphical object within
   # the worksheet.
@@ -6906,9 +6705,6 @@ class Worksheet < BIFFWriter
     [y, row]
   end
 
-  ###############################################################################
-  #
-  # size_col($col)
   #
   # Convert the width of a cell from user's units to pixels. Excel rounds the
   # column width to the nearest pixel. If the width hasn't been set by the user
@@ -6930,9 +6726,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # size_row($row)
   #
   # Convert the height of a cell from user's units to pixels. By interpolation
   # the relationship is: y = 4/3x. If the height hasn't been set by the user we
@@ -6952,10 +6745,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_zoom($zoom)
-  #
   #
   # Store the window zoom factor. This should be a reduced fraction but for
   # simplicity we will store all fractions with a numerator of 100.
@@ -6974,9 +6763,6 @@ class Worksheet < BIFFWriter
   #   *write_unicode    = *write_utf16be_string;
   #   *write_unicode_le = *write_utf16le_string;
 
-  ###############################################################################
-  #
-  # store_autofilters()
   #
   # Function to iterate through the columns that form part of an autofilter
   # range and write Biff AUTOFILTER records if a filter expression has been set.
@@ -7000,15 +6786,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_autofilter()
-  #    my $index           = $_[0];
-  #    my $operator_1      = $_[1];
-  #    my $token_1         = $_[2];
-  #    my $join            = $_[3]; # And/Or
-  #    my $operator_2      = $_[4];
-  #    my $token_2         = $_[5];
   #
   # Function to write worksheet AUTOFILTER records. These contain 2 Biff Doper
   # structures to represent the 2 possible filter conditions.
@@ -7091,9 +6868,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  ###############################################################################
-  #
-  # pack_doper()
   #
   # Create a Biff Doper structure that represents a filter expression. Depending
   # on the type of the token we pack an Empty, String or Number doper.
@@ -7136,9 +6910,6 @@ class Worksheet < BIFFWriter
     [doper, string]
   end
 
-  ###############################################################################
-  #
-  # pack_unused_doper()
   #
   # Pack an empty Doper structure.
   #
@@ -7146,9 +6917,6 @@ class Worksheet < BIFFWriter
     [0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0].pack('C10')
   end
 
-  ###############################################################################
-  #
-  # pack_blanks_doper()
   #
   # Pack an Blanks/NonBlanks Doper structure.
   #
@@ -7167,9 +6935,6 @@ class Worksheet < BIFFWriter
     ].pack('CCVV')
   end
 
-  ###############################################################################
-  #
-  # pack_string_doper()
   #
   # Pack an string Doper structure.
   #
@@ -7182,9 +6947,6 @@ class Worksheet < BIFFWriter
     ].pack('CCVCCCC')
   end
 
-  ###############################################################################
-  #
-  # pack_number_doper()
   #
   # Pack an IEEE double number Doper structure.
   #
@@ -7232,9 +6994,6 @@ class Worksheet < BIFFWriter
     count
   end
 
-  ###############################################################################
-  #
-  # store_images()
   #
   # Store the collections of records that make up images.
   #
@@ -7335,9 +7094,6 @@ class Worksheet < BIFFWriter
     store_mso_client_data
   end
 
-  ###############################################################################
-  #
-  # store_charts()
   #
   # Store the collections of records that make up charts.
   #
@@ -7435,9 +7191,6 @@ class Worksheet < BIFFWriter
     store_mso_client_data
   end
 
-  ###############################################################################
-  #
-  # store_chart_binary
   #
   # Add the binary data for a chart. This could either be from a Chart object
   # or from an external binary file (for backwards compatibility).
@@ -7456,9 +7209,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_filters()
   #
   # Store the collections of records that make up filters.
   #
@@ -7526,9 +7276,6 @@ class Worksheet < BIFFWriter
     data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
   end
 
-  ###############################################################################
-  #
-  # store_comments()
   #
   # Store the collections of records that make up cell comments.
   #
@@ -7605,9 +7352,6 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_mso_dg_container()
   #
   # Write the Escher DgContainer record that is part of MSODRAWING.
   #
@@ -7619,9 +7363,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_dg()
   #
   # Write the Escher Dg record that is part of MSODRAWING.
   #
@@ -7634,9 +7375,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_spgr_container()
   #
   # Write the Escher SpgrContainer record that is part of MSODRAWING.
   #
@@ -7649,9 +7387,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_sp_container()
   #
   # Write the Escher SpContainer record that is part of MSODRAWING.
   #
@@ -7664,9 +7399,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_spgr()
   #
   # Write the Escher Spgr record that is part of MSODRAWING.
   #
@@ -7680,9 +7412,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_sp()
   #
   # Write the Escher Sp record that is part of MSODRAWING.
   #
@@ -7696,9 +7425,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_opt_comment()
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
@@ -7728,9 +7454,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_opt_image()
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
@@ -7751,9 +7474,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_opt_chart()
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
@@ -7784,9 +7504,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_opt_filter()
   #
   # Write the Escher Opt record that is part of MSODRAWING.
   #
@@ -7815,23 +7532,20 @@ class Worksheet < BIFFWriter
     [0x00080008].pack('V')
   end
 
-  ###############################################################################
-  #
-  # store_mso_client_anchor()
-  #    my flag         = shift;
-  #    my $col_start   = $_[0];    # Col containing upper left corner of object
-  #    my $x1          = $_[1];    # Distance to left side of object
-  #
-  #    my $row_start   = $_[2];    # Row containing top left corner of object
-  #    my $y1          = $_[3];    # Distance to top of object
-  #
-  #    my $col_end     = $_[4];    # Col containing lower right corner of object
-  #    my $x2          = $_[5];    # Distance to right side of object
-  #
-  #    my $row_end     = $_[6];    # Row containing bottom right corner of object
-  #    my $y2          = $_[7];    # Distance to bottom of object
   #
   # Write the Escher ClientAnchor record that is part of MSODRAWING.
+  #    flag        
+  #    col_start     # Col containing upper left corner of object
+  #    x1            # Distance to left side of object
+  #
+  #    row_start     # Row containing top left corner of object
+  #    y1            # Distance to top of object
+  #
+  #    col_end       # Col containing lower right corner of object
+  #    x2            # Distance to right side of object
+  #
+  #    row_end       # Row containing bottom right corner of object
+  #    y2            # Distance to bottom of object
   #
   def store_mso_client_anchor(flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2)   #:nodoc:
     type        = 0xF010
@@ -7845,9 +7559,6 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_mso_client_data()
   #
   # Write the Escher ClientData record that is part of MSODRAWING.
   #
@@ -7861,12 +7572,9 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_obj_comment()
-  #    my $obj_id      = $_[0];    # Object ID number.
   #
   # Write the OBJ record that is part of cell comments.
+  #    obj_id      # Object ID number.
   #
   def store_obj_comment(obj_id)   #:nodoc:
     record      = 0x005D   # Record identifier
@@ -7905,12 +7613,9 @@ class Worksheet < BIFFWriter
 
   end
 
-  ###############################################################################
-  #
-  # store_obj_image()
-  #    my $obj_id      = $_[0];    # Object ID number.
   #
   # Write the OBJ record that is part of image records.
+  #    obj_id      # Object ID number.
   #
   def store_obj_image(obj_id)   #:nodoc:
     record      = 0x005D   # Record identifier
@@ -7955,12 +7660,9 @@ class Worksheet < BIFFWriter
 
   end
 
-  ###############################################################################
-  #
-  # store_obj_chart()
-  #    my $obj_id      = $_[0];    # Object ID number.
   #
   # Write the OBJ record that is part of chart records.
+  #    obj_id     # Object ID number.
   #
   def store_obj_chart(obj_id)   #:nodoc:
     record      = 0x005D   # Record identifier
@@ -7993,13 +7695,10 @@ class Worksheet < BIFFWriter
 
   end
 
-  ###############################################################################
-  #
-  # store_obj_filter()
-  #    my $obj_id      = $_[0];    # Object ID number.
-  #    my $col         = $_[1];
   #
   # Write the OBJ record that is part of filter records.
+  #    obj_id        # Object ID number.
+  #    col        
   #
   def store_obj_filter(obj_id, col)   #:nodoc:
     record      = 0x005D   # Record identifier
@@ -8051,9 +7750,6 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_mso_drawing_text_box()
   #
   # Write the MSODRAWING ClientTextbox record that is part of comments.
   #
@@ -8067,9 +7763,6 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_mso_client_text_box()
   #
   # Write the Escher ClientTextbox record that is part of MSODRAWING.
   #
@@ -8083,14 +7776,11 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
-  ###############################################################################
-  #
-  # store_txo()
-  #    my $string_len  = $_[0];                # Length of the note text.
-  #    my $format_len  = $_[1] || 16;          # Length of the format runs.
-  #    my $rotation    = $_[2] || 0;           # Options
   #
   # Write the worksheet TXO record that is part of cell comments.
+  #    string_len           # Length of the note text.
+  #    format_len           # Length of the format runs.
+  #    rotation             # Options
   #
   def store_txo(string_len, format_len = 16, rotation = 0)   #:nodoc:
     record      = 0x01B6               # Record identifier
@@ -8107,14 +7797,11 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_txo_continue_1()
-  #    my $string      = $_[0];                # Comment string.
-  #    my $encoding    = $_[1] || 0;           # Encoding of the string.
   #
   # Write the first CONTINUE record to follow the TXO record. It contains the
   # text data.
+  #    string               # Comment string.
+  #    encoding             # Encoding of the string.
   #
   def store_txo_continue_1(string, encoding = 0)   #:nodoc:
     record      = 0x003C               # Record identifier
@@ -8149,13 +7836,10 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_txo_continue_2()
-  #    my $formats     = $_[0];                # Formatting information
   #
   # Write the second CONTINUE record to follow the TXO record. It contains the
   # formatting information for the string.
+  #    formats           # Formatting information
   #
   def store_txo_continue_2(formats)   #:nodoc:
     record      = 0x003C               # Record identifier
@@ -8174,15 +7858,6 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_note()
-  #    my $row         = $_[0];
-  #    my $col         = $_[1];
-  #    my $obj_id      = $_[2];
-  #    my $author      = $_[3] || $self->{_comments_author};
-  #    my $author_enc  = $_[4] || $self->{_comments_author_enc};
-  #    my $visible     = $_[5];
   #
   # Write the worksheet NOTE record that is part of cell comments.
   #
@@ -8221,9 +7896,6 @@ class Worksheet < BIFFWriter
     append(header, data, author)
   end
 
-  ###############################################################################
-  #
-  # comment_params()
   #
   # This method handles the additional optional parameters to write_comment() as
   # well as calculating the comment object position and vertices.
@@ -8378,9 +8050,6 @@ class Worksheet < BIFFWriter
     ]
   end
 
-  ###############################################################################
-  #
-  # store_validation_count()
   #
   # Store the count of the DV records to follow.
   #
@@ -8396,9 +8065,6 @@ class Worksheet < BIFFWriter
     store_dval(obj_id , dv_count)
   end
 
-  ###############################################################################
-  #
-  # store_validations()
   #
   # Store the data_validation records.
   #
@@ -8425,14 +8091,11 @@ class Worksheet < BIFFWriter
     end
   end
 
-  ###############################################################################
-  #
-  # store_dval()
-  #    my $obj_id      = $_[0];        # Object ID number.
-  #    my $dv_count    = $_[1];        # Count of DV structs to follow.
   #
   # Store the DV record which contains the number of and information common to
   # all DV structures.
+  #    obj_id       # Object ID number.
+  #    dv_count     # Count of DV structs to follow.
   #
   def store_dval(obj_id, dv_count)   #:nodoc:
     record      = 0x01B2       # Record identifier
@@ -8449,26 +8112,23 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_dv()
-  #    my $cells           = $_[0];        # Aref of cells to which DV applies.
-  #    my $validation_type = $_[1];        # Type of data validation.
-  #    my $criteria_type   = $_[2];        # Validation criteria.
-  #    my $formula_1       = $_[3];        # Value/Source/Minimum formula.
-  #    my $formula_2       = $_[4];        # Maximum formula.
-  #    my $input_title     = $_[5];        # Title of input message.
-  #    my $input_message   = $_[6];        # Text of input message.
-  #    my $error_title     = $_[7];        # Title of error message.
-  #    my $error_message   = $_[8];        # Text of input message.
-  #    my $error_type      = $_[9];        # Error dialog type.
-  #    my $ignore_blank    = $_[10];       # Ignore blank cells.
-  #    my $dropdown        = $_[11];       # Display dropdown with list.
-  #    my $input_box       = $_[12];       # Display input box.
-  #    my $error_box       = $_[13];       # Display error box.
   #
   # Store the DV record that specifies the data validation criteria and options
   # for a range of cells..
+  #    cells             # Aref of cells to which DV applies.
+  #    validation_type   # Type of data validation.
+  #    criteria_type     # Validation criteria.
+  #    formula_1         # Value/Source/Minimum formula.
+  #    formula_2         # Maximum formula.
+  #    input_title       # Title of input message.
+  #    input_message     # Text of input message.
+  #    error_title       # Title of error message.
+  #    error_message     # Text of input message.
+  #    error_type        # Error dialog type.
+  #    ignore_blank      # Ignore blank cells.
+  #    dropdown          # Display dropdown with list.
+  #    input_box         # Display input box.
+  #    error_box         # Display error box.
   #
   def store_dv(cells, validation_type, criteria_type,   #:nodoc:
     formula_1, formula_2, input_title, input_message,
@@ -8533,9 +8193,6 @@ class Worksheet < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # pack_dv_string()
   #
   # Pack the strings used in the input and error dialog captions and messages.
   # Captions are limited to 32 characters. Messages are limited to 255 chars.
@@ -8570,9 +8227,6 @@ class Worksheet < BIFFWriter
     ruby_19 { [str_length, encoding].pack('vC') + string.force_encoding('BINARY') }
   end
 
-  ###############################################################################
-  #
-  # pack_dv_formula()
   #
   # Pack the formula used in the DV record. This is the same as an cell formula
   # with some additional header information. Note, DV formulas in Excel use

@@ -25,13 +25,11 @@ module Writeexcel
 class Format < Colors
   require 'writeexcel/helper'
 
-  ###############################################################################
-  #
-  # initialize(xf_index=0, properties = {})
-  #    xf_index   :
-  #    properties : Hash of property => value
   #
   # Constructor
+  #
+  #    xf_index   :
+  #    properties : Hash of property => value
   #
   def initialize(xf_index = 0, properties = {})   # :nodoc:
     @xf_index       = xf_index
@@ -179,9 +177,6 @@ class Format < Colors
     @font_only      = other.font_only
   end
 
-  ###############################################################################
-  #
-  # get_xf($style)
   #
   # Generate an Excel BIFF XF record.
   #
@@ -335,9 +330,6 @@ class Format < Colors
     header + data
   end
 
-  ###############################################################################
-  #
-  # get_font()
   #
   # Generate an Excel BIFF FONT record.
   #
@@ -406,9 +398,6 @@ class Format < Colors
     header + data + rgch
   end
 
-  ###############################################################################
-  #
-  # get_font_key()
   #
   # Returns a unique hash key for a font. Used by Workbook->_store_all_fonts()
   #
@@ -422,9 +411,6 @@ class Format < Colors
     key.gsub(' ', '_') # Convert the key to a single word
   end
 
-  ###############################################################################
-  #
-  # xf_index()
   #
   # Returns the used by Worksheet->_XF()
   #
@@ -616,9 +602,6 @@ class Format < Colors
     @font_only
   end
 
-  ###############################################################################
-  #
-  # class method    Format._get_color(colour)
   #
   #  used from Worksheet.rb
   #
@@ -628,9 +611,6 @@ class Format < Colors
     Colors.new.get_color(color)
   end
 
-  ###############################################################################
-  #
-  # set_type()
   #
   # Set the XF object type as 0 = cell XF or 0xFFF5 = style XF.
   #
@@ -986,9 +966,6 @@ class Format < Colors
     end
   end
 
-  ###############################################################################
-  #
-  # set_valign()
   #
   # Set vertical cell alignment. This is required by the set_format_properties()
   # method to differentiate between the vertical and horizontal properties.
@@ -1023,9 +1000,6 @@ class Format < Colors
     set_text_h_align(6)
   end
 
-  ###############################################################################
-  #
-  # set_merge()
   #
   # This was the way to implement a merge in Excel5. However it should have been
   # called "center_across" and not "merge".
