@@ -1172,14 +1172,14 @@ class Workbook < BIFFWriter
     store_eof
 
     # Store the workbook in an OLE container
-    store_ole_filie
+    store_ole_file
   end
 
   #
   # Store the workbook in an OLE container using the default handler or using
   # OLE::Storage_Lite if the workbook data is > ~ 7MB.
   #
-  def store_ole_filie       #:nodoc:
+  def store_ole_file       #:nodoc:
     maxsize = 7_087_104
 #    maxsize = 1
 
