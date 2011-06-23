@@ -16,7 +16,7 @@ require 'stringio'
 class TC_29_process_jpg < Test::Unit::TestCase
 
   def setup
-    @image = Image.new(nil, nil, nil)
+    @image = Writeexcel::Image.new(nil, nil, nil)
     @type  = 5   # Excel Blip type (MSOBLIPTYPE).
   end
 
