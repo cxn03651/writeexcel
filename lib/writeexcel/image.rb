@@ -120,9 +120,6 @@ module Writeexcel
       raise "#{@filename}: no size data found in jpeg image.\n" unless @height
     end
 
-    ###############################################################################
-    #
-    # image_checksum()
     #
     # Generate a checksum for the image using whichever module is available. The
     # available modules are checked in get_checksum_method(). Excel uses an MD4
@@ -147,9 +144,6 @@ module Writeexcel
       end
     end
 
-    ###############################################################################
-    #
-    # get_checksum_method.
     #
     # Check for modules available to calculate image checksum. Excel uses MD4 but
     # MD5 will also work.
