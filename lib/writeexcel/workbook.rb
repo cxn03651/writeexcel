@@ -75,7 +75,6 @@ class Workbook < BIFFWriter
     @date_1904             = false
     @selected              = 0
     @xf_index              = 0
-    @fileclosed            = false
     @biffsize              = 0
     @sheet_count           = 0
     @chart_count           = 0
@@ -145,7 +144,7 @@ class Workbook < BIFFWriter
   # a file you need to call close().
   #
   def close
-    return if @fileclosed  # Prevent close() from being called twice.
+    return if fileclosed?  # Prevent close() from being called twice.
 
     @fileclosed = true
     store_workbook
@@ -855,6 +854,10 @@ class Workbook < BIFFWriter
     add_format(:type => 1, :num_format => 0x2C)   # 18 Currency
     add_format(:type => 1, :num_format => 0x2A)   # 19 Currency[0]
     add_format(:type => 1, :num_format => 0x09)   # 20 Percent
+  end
+
+  def fileclosed?
+    @fileclosed || false
   end
 
   ###############################################################################
