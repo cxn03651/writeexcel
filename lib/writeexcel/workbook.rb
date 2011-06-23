@@ -882,12 +882,7 @@ class Workbook < BIFFWriter
     name_utf16be = false if name_utf16be == 0
     name_utf16be = true  if name_utf16be == 1
 
-    # Increment the Sheet/Chart number used for default sheet names below.
-    if chart
-      @chart_count += 1
-    else
-      @sheet_count += 1
-    end
+    increment_sheet_chart_count(chart)
 
     # Supply default Sheet/Chart name if none has been defined.
     if name.nil? || name == ""
@@ -912,6 +907,15 @@ class Workbook < BIFFWriter
 
     check_sheetname_uniq(name, name_utf16be)
     [name,  name_utf16be]
+  end
+
+  # Increment the Sheet/Chart number used for default sheet names below.
+  def increment_sheet_chart_count(chart)
+    if chart
+      @chart_count += 1
+    else
+      @sheet_count += 1
+    end
   end
 
   def check_sheetname_length(name, name_utf16be)       #:nodoc:
