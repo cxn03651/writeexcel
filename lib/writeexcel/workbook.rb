@@ -128,8 +128,6 @@ class Workbook < BIFFWriter
 
     # Set colour palette.
     set_palette_xl97
-
-    get_checksum_method
   end
 
   #
@@ -857,17 +855,6 @@ class Workbook < BIFFWriter
 
   def fileclosed?
     @fileclosed || false
-  end
-
-  #
-  # Check for modules available to calculate image checksum. Excel uses MD4 but
-  # MD5 will also work.
-  #
-  # ------- cxn03651 add -------
-  # md5 can use in ruby. so, @checksum_method is always 3.
-
-  def get_checksum_method       #:nodoc:
-    @checksum_method = 3
   end
 
   #
