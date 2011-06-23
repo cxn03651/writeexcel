@@ -107,7 +107,7 @@ class Workbook < BIFFWriter
     @mso_clusters          = []
     @mso_size              = 0
 
-    @hideobj               = 0
+    @hideobj               = false
 
     @summary               = ''
     @doc_summary           = ''
@@ -2150,7 +2150,7 @@ class Workbook < BIFFWriter
   def store_hideobj       #:nodoc:
     record          = 0x008D               # Record identifier
     length          = 0x0002               # Number of bytes to follow
-    hide            = @hideobj             # Option to hide objects
+    hide            = @hideobj ? 1 : 0     # Option to hide objects
 
     store_common(record, length, hide)
   end
