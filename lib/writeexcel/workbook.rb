@@ -31,7 +31,6 @@ class Workbook < BIFFWriter
 
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
-  SheetName = "Sheet"  # :nodoc:
 
   #
   # _file_ is a filename (as string) or io object where to out spreadsheet data.
