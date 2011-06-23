@@ -532,7 +532,7 @@ class Workbook < BIFFWriter
   #                                 :border   => 1
   #                            )
   #
-  def set_custom_color(index = nil, red = nil, green = nil, blue = nil)
+  def set_custom_color(index, red = nil, green = nil, blue = nil)
     # Match a HTML #xxyyzz style parameter
     if !red.nil? && red =~ /^#(\w\w)(\w\w)(\w\w)/
       red   = $1.hex
