@@ -882,15 +882,9 @@ class Workbook < BIFFWriter
     name_utf16be = true  if name_utf16be == 1
 
     increment_sheet_chart_count(chart)
-
-    # Supply default Sheet/Chart name if none has been defined.
     if name.nil? || name == ""
       name_utf16be = false
-      if chart
-        name = "Chart#{@chart_count}"
-      else
-        name = "Sheet#{@sheet_count}"
-      end
+      name = default_sheet_chart_name(chart)
     end
 
     ruby_19 { name = convert_to_ascii_if_ascii(name) }
@@ -914,6 +908,15 @@ class Workbook < BIFFWriter
       @chart_count += 1
     else
       @sheet_count += 1
+    end
+  end
+
+  # Supply default Sheet/Chart name if none has been defined.
+  def default_sheet_chart_name(chart)
+    if chart
+      "Chart#{@chart_count}"
+    else
+      "Sheet#{@sheet_count}"
     end
   end
 
