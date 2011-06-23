@@ -1184,71 +1184,79 @@ class Workbook < BIFFWriter
 #    maxsize = 1
 
     if !add_doc_properties && @biffsize <= maxsize
-      # Write the OLE file using OLEwriter if data <= 7MB
-      ole  = OLEWriter.new(@fh_out)
+      store_through_ole_writer
+    else
+      store_through_ole_storage_lite
+    end
+  end
 
-      # Write the BIFF data without the OLE container for testing.
-      ole.biff_only = @biff_only
+  def store_through_ole_writer
+    # Write the OLE file using OLEwriter if data <= 7MB
+    ole  = OLEWriter.new(@fh_out)
 
-      # Indicate that we created the filehandle and want to close it.
-      ole.internal_fh = @internal_fh
+    # Write the BIFF data without the OLE container for testing.
+    ole.biff_only = @biff_only
 
-      ole.set_size(@biffsize)
-      ole.write_header
+    # Indicate that we created the filehandle and want to close it.
+    ole.internal_fh = @internal_fh
 
-      while tmp = get_data
+    ole.set_size(@biffsize)
+    ole.write_header
+
+    while tmp = get_data
+      ole.write(tmp)
+    end
+
+    @worksheets.each do |worksheet|
+      while tmp = worksheet.get_data
         ole.write(tmp)
       end
+    end
 
-      @worksheets.each do |worksheet|
-        while tmp = worksheet.get_data
-          ole.write(tmp)
-        end
-      end
+    return ole.close
+  end
 
-      return ole.close
-    else
-      # Create the Workbook stream.
-      stream   = 'Workbook'.unpack('C*').pack('v*')
-      workbook = OLEStorageLitePPSFile.new(stream)
-      workbook.set_file   # use tempfile
+  def store_through_ole_storage_lite
+    # Create the Workbook stream.
+    stream   = 'Workbook'.unpack('C*').pack('v*')
+    workbook = OLEStorageLitePPSFile.new(stream)
+    workbook.set_file   # use tempfile
 
-      while tmp = get_data
+    while tmp = get_data
+      workbook.append(tmp)
+    end
+
+    @worksheets.each do |worksheet|
+      while tmp = worksheet.get_data
         workbook.append(tmp)
       end
-
-      @worksheets.each do |worksheet|
-        while tmp = worksheet.get_data
-          workbook.append(tmp)
-        end
-      end
-
-      streams = []
-      streams << workbook
-
-      # Create the properties streams, if any.
-      if add_doc_properties
-        stream  = "\5SummaryInformation".unpack('C*').pack('v*')
-        summary = OLEStorageLitePPSFile.new(stream, @summary)
-        streams << summary
-        stream  = "\5DocumentSummaryInformation".unpack('C*').pack('v*')
-        summary = OLEStorageLitePPSFile.new(stream, @doc_summary)
-        streams << summary
-      end
-      # Create the OLE root document and add the substreams.
-      localtime = @localtime.to_a[0..5]
-      localtime[4] -= 1  # month
-      localtime[5] -= 1900
-      ole_root = OLEStorageLitePPSRoot.new(
-                     localtime,
-                     localtime,
-                     streams
-                   )
-      ole_root.save(@file)
-
-      # Close the filehandle if it was created internally.
-      return @fh_out.close if @internal_fh != 0
     end
+
+    streams = []
+    streams << workbook
+
+    # Create the properties streams, if any.
+    if add_doc_properties
+      stream  = "\5SummaryInformation".unpack('C*').pack('v*')
+      summary = OLEStorageLitePPSFile.new(stream, @summary)
+      streams << summary
+      stream  = "\5DocumentSummaryInformation".unpack('C*').pack('v*')
+      summary = OLEStorageLitePPSFile.new(stream, @doc_summary)
+      streams << summary
+    end
+    # Create the OLE root document and add the substreams.
+    localtime = @localtime.to_a[0..5]
+    localtime[4] -= 1  # month
+    localtime[5] -= 1900
+    ole_root = OLEStorageLitePPSRoot.new(
+                   localtime,
+                   localtime,
+                   streams
+                 )
+    ole_root.save(@file)
+
+    # Close the filehandle if it was created internally.
+    return @fh_out.close if @internal_fh != 0
   end
 
   #
