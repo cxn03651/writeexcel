@@ -71,6 +71,12 @@ class TC_Workbook < Test::Unit::TestCase
     end
   end
 
+  def test_check_sheetname_raise_if_same_utf16be_sheet_name
+    smily = [0x263a].pack('n')
+    @workbook.add_worksheet(smily, true)
+    assert_raise(RuntimeError) { @workbook.add_worksheet(smily, true)}
+  end
+
   def test_check_sheetname_utf8_only
     ['Лист 1', 'Лист 2', 'Лист 3'].each do |sheetname|
       assert_nothing_raised { @workbook.add_worksheet(sheetname) }

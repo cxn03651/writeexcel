@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 ###############################################################################
 #
@@ -16,32 +17,24 @@ require 'stringio'
 
 class TC_data_only < Test::Unit::TestCase
 
-  def setup
-    @workbook  = WriteExcel.new(StringIO.new)
-    @worksheet = @workbook.add_worksheet
-  end
-
-  def teardown
-    @workbook.close
-  end
-
   def test_the_dates_generated_by_excel
     lines = data_generated_excel.split(/\n/)
     while !lines.empty?
       line = lines.shift.sub(/^\s*/,'')
       braak if line =~ /^\s*# stop/  # For debugging
 
-      @worksheet.date_1904 = false if line =~ /Excel 1900/
-      @worksheet.date_1904 = true  if line =~ /Excel 1904/
-
       next  unless line =~ /\S/      # Ignore blank lines
       next  if line =~ /^\s*#/       # Ignore comments
 
       count, date, result = line.split(/\s+/)
-      number = @worksheet.convert_date_time(date)
+      count = count.to_i
+      workbook = WriteExcel.new(StringIO.new)
+      workbook.set_1904 if (201 <= count && count <= 400) || (411 <= count)
+      worksheet = workbook.add_worksheet
+      number = worksheet.__send__("convert_date_time", date)
       number = -1 if number.nil?
       assert_equal(result.to_i, number,
-      "Testing convert_date_time: #{date} #{result}")
+        "Testing convert_date_time: #{date} #{result}")
     end
   end
 

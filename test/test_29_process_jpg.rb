@@ -2,12 +2,6 @@
 ##########################################################################
 # test_29_process_jpg.rb
 #
-# all test is commented out because Workbook#process_jpg was set to private
-# method. Before that, all test passed.
-#
-#
-#
-#
 # Tests for the JPEG width and height processing.
 #
 # reverse('©'), September 2005, John McNamara, jmcnamara@cpan.org
@@ -22,13 +16,8 @@ require 'stringio'
 class TC_29_process_jpg < Test::Unit::TestCase
 
   def setup
-    @test_file  = StringIO.new
-    @workbook   = WriteExcel.new(@test_file)
-    @type       = 5   # Excel Blip type (MSOBLIPTYPE).
-  end
-
-  def teardown
-    @workbook.close
+    @image = Writeexcel::Image.new(nil, nil, nil)
+    @type  = 5   # Excel Blip type (MSOBLIPTYPE).
   end
 
   def test_valid_jpg_image_1
@@ -54,11 +43,10 @@ class TC_29_process_jpg < Test::Unit::TestCase
       00 00 00 00 00 00 00 00 00 00 00 FF DA 00 0C 03
       01 00 02 11 03 11 00 3F 00 9D 00 1C A4 5F FF D9
     )
-    image = [data.join('')].pack('H*')
-
-    expected = [@type, 3, 5]
-    result   = @workbook.process_jpg(image, 'test.jpg')
-    assert_equal(expected, result, " \t" + testname)
+    @image.__send__("process_jpg", [data.join('')].pack('H*'))
+    assert_equal(@type, @image.type)
+    assert_equal(3, @image.width)
+    assert_equal(5, @image.height)
   end
 
   def test_valid_jpg_image_2
@@ -84,11 +72,11 @@ class TC_29_process_jpg < Test::Unit::TestCase
       00 00 00 00 00 00 00 00 00 00 00 FF DA 00 0C 03
       01 00 02 11 03 11 00 3F 00 9D 00 1C A4 5F FF D9
     )
-    image = [data.join('')].pack('H*')
 
-    expected = [@type, 5, 3]
-    result   = @workbook.process_jpg(image, 'test.jpg')
-    assert_equal(expected, result, " \t" + testname)
+    @image.__send__("process_jpg", [data.join('')].pack('H*'))
+    assert_equal(@type, @image.type)
+    assert_equal(5, @image.width)
+    assert_equal(3, @image.height)
   end
 
   def test_valid_jpg_image_3_ffco_marker_missing
@@ -114,10 +102,9 @@ class TC_29_process_jpg < Test::Unit::TestCase
       00 00 00 00 00 00 00 00 00 00 00 FF DA 00 0C 03
       01 00 02 11 03 11 00 3F 00 9D 00 1C A4 5F FF D9
     )
-    image = [data.join('')].pack('H*')
 
     assert_raise(RuntimeError, " \t" + testname) {
-      @workbook.process_jpg(image, 'test.jpg')
+      @image.__send__("process_jpg", [data.join('')].pack('H*'))
     }
   end
 
@@ -126,7 +113,7 @@ class TC_29_process_jpg < Test::Unit::TestCase
     image    = ''
 
     assert_raise(RuntimeError, " \t" + testname) {
-      @workbook.process_jpg(image, 'test.jpg')
+      @image.__send__("process_jpg", image)
     }
   end
 
@@ -675,9 +662,9 @@ class TC_29_process_jpg < Test::Unit::TestCase
       03 03 03 03 03 03 03 03 03 03 03 03 03 03 03 03
       03 03 03 03 03 03 FF C2 00 11 08 00 23 00 23 03
     )
-    image = [data.join('')].pack('H*')
-    expected = [@type, 35, 35]
-    results  = @workbook.process_jpg(image, 'test.jpg')
-    assert_equal(expected, results)
+    @image.__send__("process_jpg", [data.join('')].pack('H*'))
+    assert_equal(@type, @image.type)
+    assert_equal(35, @image.width)
+    assert_equal(35, @image.height)
   end
 end

@@ -11,7 +11,6 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-require 'digest/md5'
 require 'nkf'
 require 'writeexcel/biffwriter'
 require 'writeexcel/worksheet'
@@ -26,9 +25,11 @@ class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
 
+  attr_reader :url_format, :parser, :tempdir, :date_1904
+  attr_reader :compatibility, :palette, :sinfo
+
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
-  SheetName = "Sheet"  # :nodoc:
 
   #
   # _file_ is a filename (as string) or io object where to out spreadsheet data.
@@ -74,13 +75,9 @@ class Workbook < BIFFWriter
     @date_1904             = false
     @selected              = 0
     @xf_index              = 0
-    @fileclosed            = false
     @biffsize              = 0
-    @sheet_name            = "Sheet"
-    @chart_name            = "Chart"
     @sheet_count           = 0
     @chart_count           = 0
-    @url_format            = ''
     @codepage              = 0x04E4
     @country               = 1
     @worksheets            = []
@@ -109,8 +106,7 @@ class Workbook < BIFFWriter
     @mso_clusters          = []
     @mso_size              = 0
 
-    @hideobj               = 0
-    @compatibility         = 0
+    @hideobj               = false
 
     @summary               = ''
     @doc_summary           = ''
@@ -118,28 +114,7 @@ class Workbook < BIFFWriter
 
     @defined_names         = []
 
-    # Add the in-built style formats and the default cell format.
-    add_format(:type => 1)                        #  0 Normal
-    add_format(:type => 1)                        #  1 RowLevel 1
-    add_format(:type => 1)                        #  2 RowLevel 2
-    add_format(:type => 1)                        #  3 RowLevel 3
-    add_format(:type => 1)                        #  4 RowLevel 4
-    add_format(:type => 1)                        #  5 RowLevel 5
-    add_format(:type => 1)                        #  6 RowLevel 6
-    add_format(:type => 1)                        #  7 RowLevel 7
-    add_format(:type => 1)                        #  8 ColLevel 1
-    add_format(:type => 1)                        #  9 ColLevel 2
-    add_format(:type => 1)                        # 10 ColLevel 3
-    add_format(:type => 1)                        # 11 ColLevel 4
-    add_format(:type => 1)                        # 12 ColLevel 5
-    add_format(:type => 1)                        # 13 ColLevel 6
-    add_format(:type => 1)                        # 14 ColLevel 7
-    add_format(default_formats)                   # 15 Cell XF
-    add_format(:type => 1, :num_format => 0x2B)   # 16 Comma
-    add_format(:type => 1, :num_format => 0x29)   # 17 Comma[0]
-    add_format(:type => 1, :num_format => 0x2C)   # 18 Currency
-    add_format(:type => 1, :num_format => 0x2A)   # 19 Currency[0]
-    add_format(:type => 1, :num_format => 0x09)   # 20 Percent
+    setup_built_in_formats(default_formats)
 
     # Add the default format for hyperlinks
     @url_format = add_format(:color => 'blue', :underline => 1)
@@ -153,24 +128,7 @@ class Workbook < BIFFWriter
 
     # Set colour palette.
     set_palette_xl97
-
-    get_checksum_method
   end
-
-  ###############################################################################
-  #
-  # get_checksum_method.
-  #
-  # Check for modules available to calculate image checksum. Excel uses MD4 but
-  # MD5 will also work.
-  #
-  # ------- cxn03651 add -------
-  # md5 can use in ruby. so, @checksum_method is always 3.
-
-  def get_checksum_method       #:nodoc:
-    @checksum_method = 3
-  end
-  private :get_checksum_method
 
   #
   # Calls finalization methods and explicitly close the OLEwriter files
@@ -184,7 +142,7 @@ class Workbook < BIFFWriter
   # a file you need to call close().
   #
   def close
-    return if @fileclosed  # Prevent close() from being called twice.
+    return if fileclosed?  # Prevent close() from being called twice.
 
     @fileclosed = true
     store_workbook
@@ -234,7 +192,7 @@ class Workbook < BIFFWriter
   #
   # Add a new worksheet to the Excel workbook.
   #
-  # if _sheetname_ is UTF-16BE format, pass 1 as _encoding_.
+  # if _sheetname_ is UTF-16BE format, pass true as _name_utf16be_.
   #
   # At least one worksheet should be added to a new workbook. A worksheet is
   # used to write data into cells:
@@ -259,30 +217,18 @@ class Workbook < BIFFWriter
   # UTF-16BE worksheet names using an additional optional parameter:
   #
   #     name = [0x263a].pack('n')
-  #     worksheet = workbook.add_worksheet(name, 1)   # Smiley
+  #     worksheet = workbook.add_worksheet(name, true)   # Smiley
   #
-  def add_worksheet(sheetname = '', encoding = 0)
+  def add_worksheet(sheetname = '', name_utf16be = false)
     index = @worksheets.size
 
-    name, encoding = check_sheetname(sheetname, encoding)
+    name, name_utf16be = check_sheetname(sheetname, name_utf16be)
 
-    # Porters take note, the following scheme of passing references to Workbook
-    # data (in the \$self->{_foo} cases) instead of a reference to the Workbook
-    # itself is a workaround to avoid circular references between Workbook and
-    # Worksheet objects. Feel free to implement this in any way the suits your
-    # language.
-    #
     init_data = [
+                  self,
                   name,
                   index,
-                  encoding,
-                  @url_format,
-                  @parser,
-                  @tempdir,
-                  @date_1904,
-                  @compatibility,
-                  nil,    # Palette. Not used yet. See add_chart().
-                  @sinfo,
+                  name_utf16be
     ]
     worksheet = Writeexcel::Worksheet.new(*init_data)
     @worksheets[index] = worksheet      # Store ref for iterator
@@ -303,7 +249,7 @@ class Workbook < BIFFWriter
   #
   #   :type      (required)
   #   :name      (optional)
-  #   :encoding  (optional)
+  #   :name_utf16be  (optional)
   #   :embedded  (optional)
   #
   # * type
@@ -335,9 +281,14 @@ class Workbook < BIFFWriter
   #              :name => 'Results Chart'
   #           )
   #
+  # * :name_utf16be
+  #
+  # if :name is UTF-16BE format, pass true as :name_utf16be
+  #
   # * :encoding
   #
   # if :name is UTF-16BE format, pass 1 as :encoding.
+  # This key is obsolete in v0.7 or later. Use :name_utf16be instead.
   #
   # * :embedded
   #
@@ -359,7 +310,7 @@ class Workbook < BIFFWriter
   #
   def add_chart(properties)
     name = ''
-    encoding = 0
+    name_utf16be = false
     index    = @worksheets.size
 
     # Type must be specified so we can create the required chart instance.
@@ -371,21 +322,16 @@ class Workbook < BIFFWriter
 
     # Check the worksheet name for non-embedded charts.
     unless embedded
-      name, encoding =
-        check_sheetname(properties[:name], properties[:encoding], true)
+      properties[:name_utf16be] = true if properties[:encoding] == 1
+      name, name_utf16be =
+        check_sheetname(properties[:name], properties[:name_utf16be], true)
     end
 
     init_data = [
+      self,
       name,
       index,
-      encoding,
-      @url_format,
-      @parser,
-      @tempdir,
-      @date_1904 ? 1 : 0,
-      @compatibility,
-      @palette,
-      @sinfo
+      name_utf16be
     ]
 
     chart = Writeexcel::Chart.factory(type, *init_data)
@@ -414,17 +360,17 @@ class Workbook < BIFFWriter
   # using add_chart(). Read external_charts.txt in the external_charts
   # directory of the distro for a full explanation.
   #
-  def add_chart_ext(filename, name, encoding = 0)
+  def add_chart_ext(filename, name, name_utf16be = false)
     index    = @worksheets.size
     type = 'extarnal'
 
-    name, encoding = check_sheetname(name, encoding)
+    name, name_utf16be = check_sheetname(name, name_utf16be)
 
     init_data = [
       filename,
       name,
       index,
-      encoding,
+      name_utf16be,
       @sinfo
     ]
 
@@ -432,130 +378,6 @@ class Workbook < BIFFWriter
     @worksheets[index] = chart      # Store ref for iterator
     chart
   end
-
-  ###############################################################################
-  #
-  # check_sheetname(name, encoding)
-  #
-  # Check for valid worksheet names. We check the length, if it contains any
-  # invalid characters and if the name is unique in the workbook.
-  #
-  def check_sheetname(name, encoding = 0, chart = nil)       #:nodoc:
-    encoding ||= 0
-
-    # Increment the Sheet/Chart number used for default sheet names below.
-    if chart
-      @chart_count += 1
-    else
-      @sheet_count += 1
-    end
-
-    # Supply default Sheet/Chart name if none has been defined.
-    if name.nil? || name == ""
-      encoding = 0
-      if chart
-        name = @chart_name + @chart_count.to_s
-      else
-        name = @sheet_name + @sheet_count.to_s
-      end
-    end
-
-    ruby_19 { name = convert_to_ascii_if_ascii(name) }
-    check_sheetname_length(name, encoding)
-    check_sheetname_even(name) if encoding == 1
-    check_sheetname_valid_chars(name, encoding)
-
-    # Handle utf8 strings
-    if is_utf8?(name)
-      name = utf8_to_16be(name)
-      encoding = 1
-    end
-
-    check_sheetname_uniq(name, encoding)
-    [name,  encoding]
-  end
-  private :check_sheetname
-
-  def check_sheetname_length(name, encoding)       #:nodoc:
-    # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
-    limit           = encoding != 0 ? 62 : 31
-    raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
-  end
-  private :check_sheetname_length
-
-  def check_sheetname_even(name)       #:nodoc:
-    # Check that Unicode sheetname has an even number of bytes
-    if (name.bytesize % 2 != 0)
-      raise "Odd number of bytes in Unicode worksheet name: #{name}"
-    end
-  end
-  private :check_sheetname_even
-
-  def check_sheetname_valid_chars(name, encoding)       #:nodoc:
-    # Check that sheetname doesn't contain any invalid characters
-    invalid_char    = %r![\[\]:*?/\\]!
-    if encoding != 1 && name =~ invalid_char
-      # Check ASCII names
-      raise "Invalid character []:*?/\\ in worksheet name: #{name}"
-    else
-      # Extract any 8bit clean chars from the UTF16 name and validate them.
-      str = name.dup
-      while str =~ /../m
-        hi, lo = $~[0].unpack('aa')
-        if hi == "\0" and lo =~ invalid_char
-          raise 'Invalid character []:*?/\\ in worksheet name: ' + name
-        end
-        str = $~.post_match
-      end
-    end
-  end
-  private :check_sheetname_valid_chars
-
-  # Check that the worksheet name doesn't already exist since this is a fatal
-  # error in Excel 97. The check must also exclude case insensitive matches
-  # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
-  # to take the encoding into account.
-  #
-  def check_sheetname_uniq(name, encoding)       #:nodoc:
-    @worksheets.each do |worksheet|
-      name_a  = name
-      encd_a  = encoding
-      name_b  = worksheet.name
-      encd_b  = worksheet.encoding
-      error   = false
-
-      if    encd_a == 0 and encd_b == 0
-        error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 0 and encd_b == 1
-        name_a = ascii_to_16be(name_a)
-        error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 1 and encd_b == 0
-        name_b = ascii_to_16be(name_b)
-        error  = (name_a.downcase == name_b.downcase)
-      elsif encd_a == 1 and encd_b == 1
-        # TODO : not converted yet.
-
-        #  We can't easily do a case insensitive test of the UTF16 names.
-        # As a special case we check if all of the high bytes are nulls and
-        # then do an ASCII style case insensitive test.
-        #
-        # Strip out the high bytes (funkily).
-        # my $hi_a = grep {ord} $name_a =~ /(.)./sg;
-        # my $hi_b = grep {ord} $name_b =~ /(.)./sg;
-        #
-        # if ($hi_a or $hi_b) {
-        #    $error  = 1 if    $name_a  eq    $name_b;
-        # }
-        # else {
-        #    $error  = 1 if lc($name_a) eq lc($name_b);
-        # }
-      end
-      if error
-        raise "Worksheet name '#{name}', with case ignored, is already in use"
-      end
-    end
-  end
-  private :check_sheetname_uniq
 
   #
   # The add_format method can be used to create new Format objects which are
@@ -625,7 +447,7 @@ class Workbook < BIFFWriter
   # about to be written. This incurs a memory and speed penalty and may not be
   # suitable for very large files.
   #
-  def compatibility_mode(mode = 1)
+  def compatibility_mode(mode = true)
     unless sheets.empty?
       raise "compatibility_mode() must be called before add_worksheet()"
     end
@@ -738,77 +560,8 @@ class Workbook < BIFFWriter
     index + 8
   end
 
-  ###############################################################################
-  #
-  # set_palette_xl97()
-  #
-  # Sets the colour palette to the Excel 97+ default.
-  #
-  def set_palette_xl97       #:nodoc:
-    @palette = [
-      [0x00, 0x00, 0x00, 0x00],   # 8
-      [0xff, 0xff, 0xff, 0x00],   # 9
-      [0xff, 0x00, 0x00, 0x00],   # 10
-      [0x00, 0xff, 0x00, 0x00],   # 11
-      [0x00, 0x00, 0xff, 0x00],   # 12
-      [0xff, 0xff, 0x00, 0x00],   # 13
-      [0xff, 0x00, 0xff, 0x00],   # 14
-      [0x00, 0xff, 0xff, 0x00],   # 15
-      [0x80, 0x00, 0x00, 0x00],   # 16
-      [0x00, 0x80, 0x00, 0x00],   # 17
-      [0x00, 0x00, 0x80, 0x00],   # 18
-      [0x80, 0x80, 0x00, 0x00],   # 19
-      [0x80, 0x00, 0x80, 0x00],   # 20
-      [0x00, 0x80, 0x80, 0x00],   # 21
-      [0xc0, 0xc0, 0xc0, 0x00],   # 22
-      [0x80, 0x80, 0x80, 0x00],   # 23
-      [0x99, 0x99, 0xff, 0x00],   # 24
-      [0x99, 0x33, 0x66, 0x00],   # 25
-      [0xff, 0xff, 0xcc, 0x00],   # 26
-      [0xcc, 0xff, 0xff, 0x00],   # 27
-      [0x66, 0x00, 0x66, 0x00],   # 28
-      [0xff, 0x80, 0x80, 0x00],   # 29
-      [0x00, 0x66, 0xcc, 0x00],   # 30
-      [0xcc, 0xcc, 0xff, 0x00],   # 31
-      [0x00, 0x00, 0x80, 0x00],   # 32
-      [0xff, 0x00, 0xff, 0x00],   # 33
-      [0xff, 0xff, 0x00, 0x00],   # 34
-      [0x00, 0xff, 0xff, 0x00],   # 35
-      [0x80, 0x00, 0x80, 0x00],   # 36
-      [0x80, 0x00, 0x00, 0x00],   # 37
-      [0x00, 0x80, 0x80, 0x00],   # 38
-      [0x00, 0x00, 0xff, 0x00],   # 39
-      [0x00, 0xcc, 0xff, 0x00],   # 40
-      [0xcc, 0xff, 0xff, 0x00],   # 41
-      [0xcc, 0xff, 0xcc, 0x00],   # 42
-      [0xff, 0xff, 0x99, 0x00],   # 43
-      [0x99, 0xcc, 0xff, 0x00],   # 44
-      [0xff, 0x99, 0xcc, 0x00],   # 45
-      [0xcc, 0x99, 0xff, 0x00],   # 46
-      [0xff, 0xcc, 0x99, 0x00],   # 47
-      [0x33, 0x66, 0xff, 0x00],   # 48
-      [0x33, 0xcc, 0xcc, 0x00],   # 49
-      [0x99, 0xcc, 0x00, 0x00],   # 50
-      [0xff, 0xcc, 0x00, 0x00],   # 51
-      [0xff, 0x99, 0x00, 0x00],   # 52
-      [0xff, 0x66, 0x00, 0x00],   # 53
-      [0x66, 0x66, 0x99, 0x00],   # 54
-      [0x96, 0x96, 0x96, 0x00],   # 55
-      [0x00, 0x33, 0x66, 0x00],   # 56
-      [0x33, 0x99, 0x66, 0x00],   # 57
-      [0x00, 0x33, 0x00, 0x00],   # 58
-      [0x33, 0x33, 0x00, 0x00],   # 59
-      [0x99, 0x33, 0x00, 0x00],   # 60
-      [0x99, 0x33, 0x66, 0x00],   # 61
-      [0x33, 0x33, 0x99, 0x00],   # 62
-      [0x33, 0x33, 0x33, 0x00]    # 63
-    ]
-  end
-  private :set_palette_xl97
-
   #
   # Change the default temp directory
-  #
   #
   # For speed and efficiency WriteExcel stores worksheet data in temporary
   # files prior to assembling the final workbook.
@@ -1045,135 +798,6 @@ class Workbook < BIFFWriter
     @add_doc_properties = true
   end
 
-  def property_set(property, params)       #:nodoc:
-    valid_properties[property][0..1] + [params[property]]
-  end
-  private :property_set
-
-  def property_sets(properties, params)       #:nodoc:
-    properties.select { |property| params[property.to_sym] }.
-      collect do |property|
-        property_set(property.to_sym, params)
-      end
-  end
-  private :property_sets
-
-  # List of valid input parameters.
-  def valid_properties       #:nodoc:
-    {
-      :codepage      => [0x0001, 'VT_I2'      ],
-      :title         => [0x0002, 'VT_LPSTR'   ],
-      :subject       => [0x0003, 'VT_LPSTR'   ],
-      :author        => [0x0004, 'VT_LPSTR'   ],
-      :keywords      => [0x0005, 'VT_LPSTR'   ],
-      :comments      => [0x0006, 'VT_LPSTR'   ],
-      :last_author   => [0x0008, 'VT_LPSTR'   ],
-      :created       => [0x000C, 'VT_FILETIME'],
-      :category      => [0x0002, 'VT_LPSTR'   ],
-      :manager       => [0x000E, 'VT_LPSTR'   ],
-      :company       => [0x000F, 'VT_LPSTR'   ],
-      :utf8          => 1
-    }
-  end
-  private :valid_properties
-
-  def check_valid_params_for_properties(params)       #:nodoc:
-    params.each_key do |k|
-      unless valid_properties.has_key?(k)
-        raise "Unknown parameter '#{k}' in set_properties()"
-      end
-    end
-  end
-  private :check_valid_params_for_properties
-
-  ###############################################################################
-  #
-  # get_property_set_codepage()
-  #
-  # Get the character codepage used by the strings in a property set. If one of
-  # the strings used is utf8 then the codepage is marked as utf8. Otherwise
-  # Latin 1 is used (although in our case this is limited to 7bit ASCII).
-  #
-  def get_property_set_codepage(params, properties)       #:nodoc:
-    # Allow for manually marked utf8 strings.
-    return 0xFDE9 unless params[:utf8].nil?
-    properties.each do |property|
-      next unless params.has_key?(property.to_sym)
-      return 0xFDE9 if is_utf8?(params[property.to_sym])
-    end
-    return 0x04E4  # Default codepage, Latin 1.
-  end
-  private :get_property_set_codepage
-
-  ###############################################################################
-  #
-  # store_workbook()
-  #
-  # Assemble worksheets into a workbook and send the BIFF data to an OLE
-  # storage.
-  #
-  def store_workbook       #:nodoc:
-    # Add a default worksheet if non have been added.
-    add_worksheet if @worksheets.empty?
-
-    # Calculate size required for MSO records and update worksheets.
-    calc_mso_sizes
-
-    # Ensure that at least one worksheet has been selected.
-    @worksheets[0].select if @sinfo[:activesheet] == 0
-
-    # Calculate the number of selected sheet tabs and set the active sheet.
-    @worksheets.each do |sheet|
-      @selected    += 1 if sheet.selected != 0
-      sheet.active  = 1 if sheet.index == @sinfo[:activesheet]
-    end
-
-    # Add Workbook globals
-    store_bof(0x0005)
-    store_codepage
-    store_window1
-    store_hideobj
-    store_1904
-    store_all_fonts
-    store_all_num_formats
-    store_all_xfs
-    store_all_styles
-    store_palette
-
-    # Calculate the offsets required by the BOUNDSHEET records
-    calc_sheet_offsets
-
-    # Add BOUNDSHEET records.
-    @worksheets.each do |sheet|
-      store_boundsheet(
-          sheet.name,
-          sheet.offset,
-          sheet.sheet_type,
-          sheet.hidden,
-          sheet.encoding
-        )
-    end
-
-    # NOTE: If any records are added between here and EOF the
-    # calc_sheet_offsets() should be updated to include the new length.
-    store_country
-    if @ext_refs.keys.size != 0
-      store_supbook
-      store_externsheet
-      store_names
-    end
-    add_mso_drawing_group
-    store_shared_strings
-    store_extsst
-
-    # End Workbook globals
-    store_eof
-
-    # Store the workbook in an OLE container
-    store_ole_filie
-  end
-  private :store_workbook
-
   def str_unique=(val)  # :nodoc:
     @sinfo[:str_unique] = val
   end
@@ -1198,89 +822,426 @@ class Workbook < BIFFWriter
     @localtime = val
   end
 
-  ###############################################################################
+  #==========================================
+  #  Internal method
+  #==========================================
+
+  private
+
+  # Add the in-built style formats and the default cell format.
+  def setup_built_in_formats(default_formats)   # :nodoc:
+    add_format(:type => 1)                        #  0 Normal
+    add_format(:type => 1)                        #  1 RowLevel 1
+    add_format(:type => 1)                        #  2 RowLevel 2
+    add_format(:type => 1)                        #  3 RowLevel 3
+    add_format(:type => 1)                        #  4 RowLevel 4
+    add_format(:type => 1)                        #  5 RowLevel 5
+    add_format(:type => 1)                        #  6 RowLevel 6
+    add_format(:type => 1)                        #  7 RowLevel 7
+    add_format(:type => 1)                        #  8 ColLevel 1
+    add_format(:type => 1)                        #  9 ColLevel 2
+    add_format(:type => 1)                        # 10 ColLevel 3
+    add_format(:type => 1)                        # 11 ColLevel 4
+    add_format(:type => 1)                        # 12 ColLevel 5
+    add_format(:type => 1)                        # 13 ColLevel 6
+    add_format(:type => 1)                        # 14 ColLevel 7
+    add_format(default_formats)                   # 15 Cell XF
+    add_format(:type => 1, :num_format => 0x2B)   # 16 Comma
+    add_format(:type => 1, :num_format => 0x29)   # 17 Comma[0]
+    add_format(:type => 1, :num_format => 0x2C)   # 18 Currency
+    add_format(:type => 1, :num_format => 0x2A)   # 19 Currency[0]
+    add_format(:type => 1, :num_format => 0x09)   # 20 Percent
+  end
+
+  def fileclosed?
+    @fileclosed || false
+  end
+
   #
-  # store_ole_filie()
+  # Check for valid worksheet names. We check the length, if it contains any
+  # invalid characters and if the name is unique in the workbook.
+  #
+  def check_sheetname(name, name_utf16be = false, chart = nil)       #:nodoc:
+    # name_utf16be parameter may set 0/1 in v0.6.6 or earlier
+    name_utf16be = false if name_utf16be == 0
+    name_utf16be = true  if name_utf16be == 1
+
+    increment_sheet_chart_count(chart)
+    if name.nil? || name == ""
+      name_utf16be = false
+      name = default_sheet_chart_name(chart)
+    end
+
+    ruby_19 { name = convert_to_ascii_if_ascii(name) }
+    check_sheetname_length(name, name_utf16be)
+    check_sheetname_even(name) if name_utf16be
+    check_sheetname_valid_chars(name, name_utf16be)
+
+    # Handle utf8 strings
+    if is_utf8?(name)
+      name = utf8_to_16be(name)
+      name_utf16be = true
+    end
+
+    check_sheetname_uniq(name, name_utf16be)
+    [name,  name_utf16be]
+  end
+
+  # Increment the Sheet/Chart number used for default sheet names below.
+  def increment_sheet_chart_count(chart)
+    if chart
+      @chart_count += 1
+    else
+      @sheet_count += 1
+    end
+  end
+
+  # Supply default Sheet/Chart name if none has been defined.
+  def default_sheet_chart_name(chart)
+    if chart
+      "Chart#{@chart_count}"
+    else
+      "Sheet#{@sheet_count}"
+    end
+  end
+
+  def check_sheetname_length(name, name_utf16be)       #:nodoc:
+    # Check that sheetname is <= 31 (1 or 2 byte chars). Excel limit.
+    limit           = name_utf16be ? 62 : 31
+    raise "Sheetname $name must be <= 31 chars" if name.bytesize > limit
+  end
+
+  def check_sheetname_even(name)       #:nodoc:
+    # Check that Unicode sheetname has an even number of bytes
+    if (name.bytesize % 2 != 0)
+      raise "Odd number of bytes in Unicode worksheet name: #{name}"
+    end
+  end
+
+  def check_sheetname_valid_chars(name, name_utf16be)       #:nodoc:
+    # Check that sheetname doesn't contain any invalid characters
+    invalid_char    = %r![\[\]:*?/\\]!
+    if !name_utf16be && name =~ invalid_char
+      # Check ASCII names
+      raise "Invalid character []:*?/\\ in worksheet name: #{name}"
+    else
+      # Extract any 8bit clean chars from the UTF16 name and validate them.
+      str = name.dup
+      while str =~ /../m
+        hi, lo = $~[0].unpack('aa')
+        if hi == "\0" and lo =~ invalid_char
+          raise 'Invalid character []:*?/\\ in worksheet name: ' + name
+        end
+        str = $~.post_match
+      end
+    end
+  end
+
+  # Check that the worksheet name doesn't already exist since this is a fatal
+  # error in Excel 97. The check must also exclude case insensitive matches
+  # since the names 'Sheet1' and 'sheet1' are equivalent. The tests also have
+  # to take the name_utf16be into account.
+  #
+  def check_sheetname_uniq(name, name_utf16be)       #:nodoc:
+    @worksheets.each do |worksheet|
+      name_a  = name
+      encd_a  = name_utf16be
+      name_b  = worksheet.name
+      encd_b  = worksheet.is_name_utf16be?
+      error   = false
+
+      if    !encd_a and !encd_b
+        error  = (name_a.downcase == name_b.downcase)
+      elsif !encd_a and encd_b
+        name_a = ascii_to_16be(name_a)
+        error  = (name_a.downcase == name_b.downcase)
+      elsif encd_a and !encd_b
+        name_b = ascii_to_16be(name_b)
+        error  = (name_a.downcase == name_b.downcase)
+      elsif encd_a and encd_b
+        error  = (name_a.downcase == name_b.downcase)
+        # TODO : not converted yet.
+
+        #  We can't easily do a case insensitive test of the UTF16 names.
+        # As a special case we check if all of the high bytes are nulls and
+        # then do an ASCII style case insensitive test.
+        #
+        # Strip out the high bytes (funkily).
+        # my $hi_a = grep {ord} $name_a =~ /(.)./sg;
+        # my $hi_b = grep {ord} $name_b =~ /(.)./sg;
+        #
+        # if ($hi_a or $hi_b) {
+        #    $error  = 1 if    $name_a  eq    $name_b;
+        # }
+        # else {
+        #    $error  = 1 if lc($name_a) eq lc($name_b);
+        # }
+      end
+      if error
+        raise "Worksheet name '#{name}', with case ignored, is already in use"
+      end
+    end
+  end
+
+  #
+  # Sets the colour palette to the Excel 97+ default.
+  #
+  def set_palette_xl97       #:nodoc:
+    @palette = [
+      [0x00, 0x00, 0x00, 0x00],   # 8
+      [0xff, 0xff, 0xff, 0x00],   # 9
+      [0xff, 0x00, 0x00, 0x00],   # 10
+      [0x00, 0xff, 0x00, 0x00],   # 11
+      [0x00, 0x00, 0xff, 0x00],   # 12
+      [0xff, 0xff, 0x00, 0x00],   # 13
+      [0xff, 0x00, 0xff, 0x00],   # 14
+      [0x00, 0xff, 0xff, 0x00],   # 15
+      [0x80, 0x00, 0x00, 0x00],   # 16
+      [0x00, 0x80, 0x00, 0x00],   # 17
+      [0x00, 0x00, 0x80, 0x00],   # 18
+      [0x80, 0x80, 0x00, 0x00],   # 19
+      [0x80, 0x00, 0x80, 0x00],   # 20
+      [0x00, 0x80, 0x80, 0x00],   # 21
+      [0xc0, 0xc0, 0xc0, 0x00],   # 22
+      [0x80, 0x80, 0x80, 0x00],   # 23
+      [0x99, 0x99, 0xff, 0x00],   # 24
+      [0x99, 0x33, 0x66, 0x00],   # 25
+      [0xff, 0xff, 0xcc, 0x00],   # 26
+      [0xcc, 0xff, 0xff, 0x00],   # 27
+      [0x66, 0x00, 0x66, 0x00],   # 28
+      [0xff, 0x80, 0x80, 0x00],   # 29
+      [0x00, 0x66, 0xcc, 0x00],   # 30
+      [0xcc, 0xcc, 0xff, 0x00],   # 31
+      [0x00, 0x00, 0x80, 0x00],   # 32
+      [0xff, 0x00, 0xff, 0x00],   # 33
+      [0xff, 0xff, 0x00, 0x00],   # 34
+      [0x00, 0xff, 0xff, 0x00],   # 35
+      [0x80, 0x00, 0x80, 0x00],   # 36
+      [0x80, 0x00, 0x00, 0x00],   # 37
+      [0x00, 0x80, 0x80, 0x00],   # 38
+      [0x00, 0x00, 0xff, 0x00],   # 39
+      [0x00, 0xcc, 0xff, 0x00],   # 40
+      [0xcc, 0xff, 0xff, 0x00],   # 41
+      [0xcc, 0xff, 0xcc, 0x00],   # 42
+      [0xff, 0xff, 0x99, 0x00],   # 43
+      [0x99, 0xcc, 0xff, 0x00],   # 44
+      [0xff, 0x99, 0xcc, 0x00],   # 45
+      [0xcc, 0x99, 0xff, 0x00],   # 46
+      [0xff, 0xcc, 0x99, 0x00],   # 47
+      [0x33, 0x66, 0xff, 0x00],   # 48
+      [0x33, 0xcc, 0xcc, 0x00],   # 49
+      [0x99, 0xcc, 0x00, 0x00],   # 50
+      [0xff, 0xcc, 0x00, 0x00],   # 51
+      [0xff, 0x99, 0x00, 0x00],   # 52
+      [0xff, 0x66, 0x00, 0x00],   # 53
+      [0x66, 0x66, 0x99, 0x00],   # 54
+      [0x96, 0x96, 0x96, 0x00],   # 55
+      [0x00, 0x33, 0x66, 0x00],   # 56
+      [0x33, 0x99, 0x66, 0x00],   # 57
+      [0x00, 0x33, 0x00, 0x00],   # 58
+      [0x33, 0x33, 0x00, 0x00],   # 59
+      [0x99, 0x33, 0x00, 0x00],   # 60
+      [0x99, 0x33, 0x66, 0x00],   # 61
+      [0x33, 0x33, 0x99, 0x00],   # 62
+      [0x33, 0x33, 0x33, 0x00]    # 63
+    ]
+  end
+
+  def property_set(property, params)       #:nodoc:
+    valid_properties[property][0..1] + [params[property]]
+  end
+
+  def property_sets(properties, params)       #:nodoc:
+    properties.select { |property| params[property.to_sym] }.
+      collect do |property|
+        property_set(property.to_sym, params)
+      end
+  end
+
+  # List of valid input parameters.
+  def valid_properties       #:nodoc:
+    {
+      :codepage      => [0x0001, 'VT_I2'      ],
+      :title         => [0x0002, 'VT_LPSTR'   ],
+      :subject       => [0x0003, 'VT_LPSTR'   ],
+      :author        => [0x0004, 'VT_LPSTR'   ],
+      :keywords      => [0x0005, 'VT_LPSTR'   ],
+      :comments      => [0x0006, 'VT_LPSTR'   ],
+      :last_author   => [0x0008, 'VT_LPSTR'   ],
+      :created       => [0x000C, 'VT_FILETIME'],
+      :category      => [0x0002, 'VT_LPSTR'   ],
+      :manager       => [0x000E, 'VT_LPSTR'   ],
+      :company       => [0x000F, 'VT_LPSTR'   ],
+      :utf8          => 1
+    }
+  end
+
+  def check_valid_params_for_properties(params)       #:nodoc:
+    params.each_key do |k|
+      unless valid_properties.has_key?(k)
+        raise "Unknown parameter '#{k}' in set_properties()"
+      end
+    end
+  end
+
+  #
+  # Get the character codepage used by the strings in a property set. If one of
+  # the strings used is utf8 then the codepage is marked as utf8. Otherwise
+  # Latin 1 is used (although in our case this is limited to 7bit ASCII).
+  #
+  def get_property_set_codepage(params, properties)       #:nodoc:
+    # Allow for manually marked utf8 strings.
+    return 0xFDE9 unless params[:utf8].nil?
+    properties.each do |property|
+      next unless params.has_key?(property.to_sym)
+      return 0xFDE9 if is_utf8?(params[property.to_sym])
+    end
+    return 0x04E4  # Default codepage, Latin 1.
+  end
+
+  #
+  # Assemble worksheets into a workbook and send the BIFF data to an OLE
+  # storage.
+  #
+  def store_workbook       #:nodoc:
+    # Add a default worksheet if non have been added.
+    add_worksheet if @worksheets.empty?
+
+    # Calculate size required for MSO records and update worksheets.
+    calc_mso_sizes
+
+    # Ensure that at least one worksheet has been selected.
+    @worksheets[0].select if @sinfo[:activesheet] == 0
+
+    # Calculate the number of selected sheet tabs and set the active sheet.
+    @worksheets.each do |sheet|
+      @selected    += 1 if sheet.selected?
+      sheet.active  = 1 if sheet.index == @sinfo[:activesheet]
+    end
+
+    # Add Workbook globals
+    store_bof(0x0005)
+    store_codepage
+    store_window1
+    store_hideobj
+    store_1904
+    store_all_fonts
+    store_all_num_formats
+    store_all_xfs
+    store_all_styles
+    store_palette
+
+    # Calculate the offsets required by the BOUNDSHEET records
+    calc_sheet_offsets
+
+    # Add BOUNDSHEET records.
+    @worksheets.each do |sheet|
+      store_boundsheet(sheet)
+    end
+
+    # NOTE: If any records are added between here and EOF the
+    # calc_sheet_offsets() should be updated to include the new length.
+    store_country
+    if @ext_refs.keys.size != 0
+      store_supbook
+      store_externsheet
+      store_names
+    end
+    add_mso_drawing_group
+    store_shared_strings
+    store_extsst
+
+    # End Workbook globals
+    store_eof
+
+    # Store the workbook in an OLE container
+    store_ole_file
+  end
+
   #
   # Store the workbook in an OLE container using the default handler or using
   # OLE::Storage_Lite if the workbook data is > ~ 7MB.
   #
-  def store_ole_filie       #:nodoc:
+  def store_ole_file       #:nodoc:
     maxsize = 7_087_104
 #    maxsize = 1
 
     if !add_doc_properties && @biffsize <= maxsize
-      # Write the OLE file using OLEwriter if data <= 7MB
-      ole  = OLEWriter.new(@fh_out)
-
-      # Write the BIFF data without the OLE container for testing.
-      ole.biff_only = @biff_only
-
-      # Indicate that we created the filehandle and want to close it.
-      ole.internal_fh = @internal_fh
-
-      ole.set_size(@biffsize)
-      ole.write_header
-
-      while tmp = get_data
-        ole.write(tmp)
-      end
-
-      @worksheets.each do |worksheet|
-        while tmp = worksheet.get_data
-          ole.write(tmp)
-        end
-      end
-
-      return ole.close
+      store_through_ole_writer
     else
-      # Create the Workbook stream.
-      stream   = 'Workbook'.unpack('C*').pack('v*')
-      workbook = OLEStorageLitePPSFile.new(stream)
-      workbook.set_file   # use tempfile
-
-      while tmp = get_data
-        workbook.append(tmp)
-      end
-
-      @worksheets.each do |worksheet|
-        while tmp = worksheet.get_data
-          workbook.append(tmp)
-        end
-      end
-
-      streams = []
-      streams << workbook
-
-      # Create the properties streams, if any.
-      if add_doc_properties
-        stream  = "\5SummaryInformation".unpack('C*').pack('v*')
-        summary = OLEStorageLitePPSFile.new(stream, @summary)
-        streams << summary
-        stream  = "\5DocumentSummaryInformation".unpack('C*').pack('v*')
-        summary = OLEStorageLitePPSFile.new(stream, @doc_summary)
-        streams << summary
-      end
-      # Create the OLE root document and add the substreams.
-      localtime = @localtime.to_a[0..5]
-      localtime[4] -= 1  # month
-      localtime[5] -= 1900
-      ole_root = OLEStorageLitePPSRoot.new(
-                     localtime,
-                     localtime,
-                     streams
-                   )
-      ole_root.save(@file)
-
-      # Close the filehandle if it was created internally.
-      return @fh_out.close if @internal_fh != 0
+      store_through_ole_storage_lite
     end
   end
-  private :store_ole_filie
 
-  ###############################################################################
-  #
-  # calc_sheet_offsets()
+  def store_through_ole_writer
+    # Write the OLE file using OLEwriter if data <= 7MB
+    ole  = OLEWriter.new(@fh_out)
+
+    # Write the BIFF data without the OLE container for testing.
+    ole.biff_only = @biff_only
+
+    # Indicate that we created the filehandle and want to close it.
+    ole.internal_fh = @internal_fh
+
+    ole.set_size(@biffsize)
+    ole.write_header
+
+    while tmp = get_data
+      ole.write(tmp)
+    end
+
+    @worksheets.each do |worksheet|
+      while tmp = worksheet.get_data
+        ole.write(tmp)
+      end
+    end
+
+    return ole.close
+  end
+
+  def store_through_ole_storage_lite
+    # Create the Workbook stream.
+    stream   = 'Workbook'.unpack('C*').pack('v*')
+    workbook = OLEStorageLitePPSFile.new(stream)
+    workbook.set_file   # use tempfile
+
+    while tmp = get_data
+      workbook.append(tmp)
+    end
+
+    @worksheets.each do |worksheet|
+      while tmp = worksheet.get_data
+        workbook.append(tmp)
+      end
+    end
+
+    streams = []
+    streams << workbook
+
+    # Create the properties streams, if any.
+    if add_doc_properties
+      stream  = "\5SummaryInformation".unpack('C*').pack('v*')
+      summary = OLEStorageLitePPSFile.new(stream, @summary)
+      streams << summary
+      stream  = "\5DocumentSummaryInformation".unpack('C*').pack('v*')
+      summary = OLEStorageLitePPSFile.new(stream, @doc_summary)
+      streams << summary
+    end
+    # Create the OLE root document and add the substreams.
+    localtime = @localtime.to_a[0..5]
+    localtime[4] -= 1  # month
+    localtime[5] -= 1900
+    ole_root = OLEStorageLitePPSRoot.new(
+                   localtime,
+                   localtime,
+                   streams
+                 )
+    ole_root.save(@file)
+
+    # Close the filehandle if it was created internally.
+    return @fh_out.close if @internal_fh != 0
+  end
+
   #
   # Calculate Worksheet BOF offsets records for use in the BOUNDSHEET records.
   #
@@ -1318,11 +1279,7 @@ class Workbook < BIFFWriter
 
     @biffsize = offset
   end
-  private :calc_sheet_offsets
 
-  ###############################################################################
-  #
-  # calc_mso_sizes()
   #
   # Calculate the MSODRAWINGGROUP sizes and the indexes of the Worksheet
   # MSODRAWING records.
@@ -1348,10 +1305,9 @@ class Workbook < BIFFWriter
     # required by each worksheet.
     #
     @worksheets.each do |sheet|
-      next unless sheet.sheet_type == 0x0000
+      next unless sheet.type == 0x0000
 
       num_images     = sheet.num_images
-      image_mso_size = sheet.image_mso_size
       num_comments   = sheet.prepare_comments
       num_charts     = sheet.prepare_charts
       num_filters    = sheet.filter_count
@@ -1362,7 +1318,7 @@ class Workbook < BIFFWriter
       num_shapes    = 1 + num_images   +  num_comments +
                           num_charts   +  num_filters
       shapes_saved += num_shapes
-      mso_size     += image_mso_size
+      mso_size     += sheet.image_mso_size
 
       # Add a drawing object for each sheet with comments.
       drawings_saved += 1
@@ -1399,11 +1355,7 @@ class Workbook < BIFFWriter
       drawings_saved, clusters
     ]
   end
-  private :calc_mso_sizes
 
-  ###############################################################################
-  #
-  # process_images()
   #
   # We need to process each image in each worksheet and extract information.
   # Some of this information is stored and used in the Workbook and some is
@@ -1423,251 +1375,58 @@ class Workbook < BIFFWriter
     images_size     = 0
 
     @worksheets.each do |sheet|
-      next unless sheet.sheet_type == 0x0000
+      next unless sheet.type == 0x0000
       next if sheet.prepare_images == 0
 
       num_images      = 0
       image_mso_size  = 0
 
       sheet.images_array.each do |image|
-        filename = image[2]
         num_images += 1
-
-        #
-        # For each Worksheet image we get a structure like this
-        # [
-        #   $row,
-        #   $col,
-        #   $name,
-        #   $x_offset,
-        #   $y_offset,
-        #   $scale_x,
-        #   $scale_y,
-        # ]
-        #
-        # And we add additional information:
-        #
-        #   $image_id,
-        #   $type,
-        #   $width,
-        #   $height;
-
-        if images_seen[filename].nil?
+        unless images_seen[image.filename]
           # TODO should also match seen images based on checksum.
-
-          # Open the image file and import the data.
-          fh = open(filename, "rb")
-          raise "Couldn't import #{filename}: #{$!}" unless fh
-
-          # Slurp the file into a string and do some size calcs.
-          #             my $data        = do {local $/; <$fh>};
-          data = fh.read
-          size        = data.bytesize
-          checksum1   = image_checksum(data, image_id)
-          checksum2   = checksum1
-          ref_count   = 1
-
-          # Process the image and extract dimensions.
-          # Test for PNGs...
-          if  data.unpack('x A3')[0] ==  'PNG'
-            type, width, height = process_png(data)
-            # Test for JFIF and Exif JPEGs...
-          elsif ( data.unpack('n')[0] == 0xFFD8 &&
-            (data.unpack('x6 A4')[0] == 'JFIF' ||
-            data.unpack('x6 A4')[0] == 'Exif')
-            )
-            type, width, height = process_jpg(data, filename)
-            # Test for BMPs...
-          elsif data.unpack('A2')[0] == 'BM'
-            type, width, height = process_bmp(data, filename)
-            # The 14 byte header of the BMP is stripped off.
-            data[0, 13] = ''
-
-            # A checksum of the new image data is also required.
-            checksum2  = image_checksum(data, image_id, image_id)
-
-            # Adjust size -14 (header) + 16 (extra checksum).
-            size += 2
-          else
-            raise "Unsupported image format for file: #{filename}\n"
-          end
-
-          # Push the new data back into the Worksheet array;
-          image.push(image_id, type, width, height)
+          image.id = image_id
+          image.ref_count = 1
+          image.import
 
           # Also store new data for use in duplicate images.
-          previous_images.push([image_id, type, width, height])
+          previous_images.push(image)
 
           # Store information required by the Workbook.
-          image_data.push([ref_count, type, data, size,
-          checksum1, checksum2])
+          image_data.push(image)
 
           # Keep track of overall data size.
-          images_size       += size +61  # Size for bstore container.
-          image_mso_size    += size +69  # Size for dgg container.
+          images_size       += image.size + 61  # Size for bstore container.
+          image_mso_size    += image.size + 69  # Size for dgg container.
 
-          images_seen[filename] = image_id
+          images_seen[image.filename] = image_id
           image_id += 1
-          fh.close
         else
           # We've processed this file already.
-          index = images_seen[filename] -1
+          index = images_seen[image.filename] -1
 
           # Increase image reference count.
-          image_data[index][0] += 1
+          image_data[index].ref_count += 1
 
           # Add previously calculated data back onto the Worksheet array.
-          # $image_id, $type, $width, $height
-          a_ref = sheet.images_array[index]
-          image.concat(previous_images[index])
+          # image_id, type, width, height
+          image.id = previous_images[index].id
+          image.type = previous_images[index].type
+          image.width = previous_images[index].width
+          image.height = previous_images[index].height
         end
       end
 
       # Store information required by the Worksheet.
       sheet.num_images     = num_images
       sheet.image_mso_size = image_mso_size
-
     end
-
 
     # Store information required by the Workbook.
     @images_size = images_size
     @images_data = image_data     # Store the data for MSODRAWINGGROUP.
   end
-  private :process_images
 
-  ###############################################################################
-  #
-  # image_checksum()
-  #
-  # Generate a checksum for the image using whichever module is available..The
-  # available modules are checked in get_checksum_method(). Excel uses an MD4
-  # checksum but any other will do. In the event of no checksum module being
-  # available we simulate a checksum using the image index.
-  #
-  def image_checksum(data, index1, index2 = 0)       #:nodoc:
-    if    @checksum_method == 1
-      # Digest::MD4
-      #           return Digest::MD4::md4_hex($data);
-    elsif @checksum_method == 2
-      # Digest::Perl::MD4
-      #           return Digest::Perl::MD4::md4_hex($data);
-    elsif @checksum_method == 3
-      # Digest::MD5
-      return Digest::MD5.hexdigest(data)
-    else
-      # Default
-      return sprintf('%016X%016X', index2, index1)
-    end
-  end
-  private :image_checksum
-
-  ###############################################################################
-  #
-  # process_png()
-  #
-  # Extract width and height information from a PNG file.
-  #
-  def process_png(data)       #:nodoc:
-    type    = 6 # Excel Blip type (MSOBLIPTYPE).
-    width   = data[16, 4].unpack("N")[0]
-    height  = data[20, 4].unpack("N")[0]
-
-    [type, width, height]
-  end
-  private :process_png
-
-  ###############################################################################
-  #
-  # process_bmp()
-  #
-  # Extract width and height information from a BMP file.
-  #
-  # Most of these checks came from the old Worksheet::_process_bitmap() method.
-  #
-  def process_bmp(data, filename)       #:nodoc:
-    type     = 7   # Excel Blip type (MSOBLIPTYPE).
-
-    # Check that the file is big enough to be a bitmap.
-    if data.bytesize  <= 0x36
-      raise "#{filename} doesn't contain enough data."
-    end
-
-    # Read the bitmap width and height. Verify the sizes.
-    width, height = data.unpack("x18 V2")
-
-    if width > 0xFFFF
-      raise "#{filename}: largest image width #{width} supported is 65k."
-    end
-
-    if height > 0xFFFF
-      raise "#{filename}: largest image height supported is 65k."
-    end
-
-    # Read the bitmap planes and bpp data. Verify them.
-    planes, bitcount = data.unpack("x26 v2")
-
-    if bitcount != 24
-      raise "#{filename} isn't a 24bit true color bitmap."
-    end
-
-    if planes != 1
-      raise "#{filename}: only 1 plane supported in bitmap image."
-    end
-
-    # Read the bitmap compression. Verify compression.
-    compression = data.unpack("x30 V")
-
-    if compression != 0
-      raise "#{filename}: compression not supported in bitmap image."
-    end
-
-    [type, width, height]
-  end
-  private :process_bmp
-
-  ###############################################################################
-  #
-  # process_jpg()
-  #
-  # Extract width and height information from a JPEG file.
-  #
-  def process_jpg(data, filename) # :nodoc:
-    type     = 5  # Excel Blip type (MSOBLIPTYPE).
-
-    offset = 2
-    data_length = data.bytesize
-
-    # Search through the image data to find the 0xFFC0 marker. The height and
-    # width are contained in the data for that sub element.
-    while offset < data_length
-      marker  = data[offset,   2].unpack("n")
-      marker = marker[0]
-      length  = data[offset+2, 2].unpack("n")
-      length = length[0]
-
-      if marker == 0xFFC0 || marker == 0xFFC2
-        height = data[offset+5, 2].unpack("n")
-        height = height[0]
-        width  = data[offset+7, 2].unpack("n")
-        width  = width[0]
-        break
-      end
-
-      offset += length + 2
-      break if marker == 0xFFDA
-    end
-
-    if height.nil?
-      raise "#{filename}: no size data found in jpeg image.\n"
-    end
-
-    [type, width, height]
-  end
-
-  ###############################################################################
-  #
-  # store_all_fonts()
   #
   # Store the Excel FONT records.
   #
@@ -1754,11 +1513,7 @@ class Workbook < BIFFWriter
       end
     end
   end
-  private :store_all_fonts
 
-  ###############################################################################
-  #
-  # store_all_num_formats()
   #
   # Store user defined numerical formats i.e. FORMAT records
   #
@@ -1793,11 +1548,7 @@ class Workbook < BIFFWriter
       end
     end
   end
-  private :store_all_num_formats
 
-  ###############################################################################
-  #
-  # store_all_xfs()
   #
   # Write all XF records.
   #
@@ -1807,11 +1558,7 @@ class Workbook < BIFFWriter
       append(xf)
     end
   end
-  private :store_all_xfs
 
-  ###############################################################################
-  #
-  # store_all_styles()
   #
   # Write all STYLE records.
   #
@@ -1838,11 +1585,7 @@ class Workbook < BIFFWriter
       store_style(type, xf_index)
     end
   end
-  private :store_all_styles
 
-  ###############################################################################
-  #
-  # store_names()
   #
   # Write the NAME record to define the print area and the repeat rows and cols.
   #
@@ -1890,7 +1633,6 @@ class Workbook < BIFFWriter
       end
     end
   end
-  private :create_autofilter_name_records
 
   def create_print_area_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
@@ -1910,7 +1652,6 @@ class Workbook < BIFFWriter
       end
     end
   end
-  private :create_print_area_name_records
 
   def create_print_title_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
@@ -1964,7 +1705,6 @@ class Workbook < BIFFWriter
       end
     end
   end
-  private :create_print_title_name_records
 
   ###############################################################################
   ###############################################################################
@@ -1973,9 +1713,6 @@ class Workbook < BIFFWriter
   #
 
 
-  ###############################################################################
-  #
-  # store_window1()
   #
   # Write Excel BIFF WINDOW1 record.
   #
@@ -2005,20 +1742,23 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_window1
 
-  ###############################################################################
-  #
-  # store_boundsheet()
-  #    my $sheetname = $_[0];                # Worksheet name
-  #    my $offset    = $_[1];                # Location of worksheet BOF
-  #    my $type      = $_[2];                # Worksheet type
-  #    my $hidden    = $_[3];                # Worksheet hidden flag
-  #    my $encoding  = $_[4];                # Sheet name encoding
   #
   # Writes Excel BIFF BOUNDSHEET record.
   #
-  def store_boundsheet(sheetname, offset, type, hidden, encoding)       #:nodoc:
+  #    sheetname  # Worksheet name
+  #    offset     # Location of worksheet BOF
+  #    type       # Worksheet type
+  #    hidden     # Worksheet hidden flag
+  #    encoding   # Sheet name encoding
+  #
+  def store_boundsheet(sheet)       #:nodoc:
+    sheetname = sheet.name
+    offset    = sheet.offset
+    type      = sheet.type
+    hidden    = sheet.hidden? ? 1 : 0
+    encoding  = sheet.is_name_utf16be? ? 1 : 0
+
     record    = 0x0085                      # Record identifier
     length    = 0x08 + sheetname.bytesize   # Number of bytes to follow
 
@@ -2037,15 +1777,12 @@ class Workbook < BIFFWriter
 
     append(header, data, sheetname)
   end
-  private :store_boundsheet
 
-  ###############################################################################
-  #
-  # store_style()
-  #    type      = $_[0]  # Built-in style
-  #    xf_index  = $_[1]  # Index to style XF
   #
   # Write Excel BIFF STYLE records.
+  #
+  #    type        # Built-in style
+  #    xf_index    # Index to style XF
   #
   def store_style(type, xf_index)       #:nodoc:
     record    = 0x0293    # Record identifier
@@ -2060,16 +1797,13 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_style
 
-  ###############################################################################
-  #
-  # store_num_format()
-  #    my $format    = $_[0];          # Custom format string
-  #    my $ifmt      = $_[1];          # Format index code
-  #    my $encoding  = $_[2];          # Char encoding for format string
   #
   # Writes Excel FORMAT record for non "built-in" numerical formats.
+  #
+  #    format    # Custom format string
+  #    ifmt      # Format index code
+  #    encoding  # Char encoding for format string
   #
   def store_num_format(format, ifmt, encoding)       #:nodoc:
     format = format.to_s unless format.respond_to?(:to_str)
@@ -2108,11 +1842,7 @@ class Workbook < BIFFWriter
 
     append(header, data, format)
   end
-  private :store_num_format
 
-  ###############################################################################
-  #
-  # store_1904()
   #
   # Write Excel 1904 record to indicate the date system in use.
   #
@@ -2127,11 +1857,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_1904
 
-  ###############################################################################
-  #
-  # store_supbook()
   #
   # Write BIFF record SUPBOOK to indicate that the workbook contains external
   # references, in our case, formula, print area and print title refs.
@@ -2148,11 +1874,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_supbook
 
-  ###############################################################################
-  #
-  # store_externsheet()
   #
   # Writes the Excel BIFF EXTERNSHEET record. These references are used by
   # formulas. TODO NAME record is required to define the print area and the
@@ -2233,21 +1955,18 @@ class Workbook < BIFFWriter
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # store_name_short()
-  #    index           = shift        # Sheet index
-  #    type            = shift
-  #    ext_ref         = shift        # TODO
-  #    rowmin          = $_[0]        # Start row
-  #    rowmax          = $_[1]        # End row
-  #    colmin          = $_[2]        # Start column
-  #    colmax          = $_[3]        # end column
-  #    hidden          = $_[4]        # Name is hidden
-  #
   #
   # Store the NAME record in the short format that is used for storing the print
   # area, repeat rows only and repeat columns only.
+  #
+  #    index            # Sheet index
+  #    type
+  #    ext_ref          # TODO
+  #    rowmin           # Start row
+  #    rowmax           # End row
+  #    colmin           # Start column
+  #    colmax           # end column
+  #    hidden           # Name is hidden
   #
   def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden = nil)       #:nodoc:
     record          = 0x0018       # Record identifier
@@ -2292,24 +2011,20 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_name_short
 
-  ###############################################################################
-  #
-  # store_name_long()
-  #    my $index           = shift;        # Sheet index
-  #    my $type            = shift;
-  #    my $ext_ref         = shift;        # TODO
-  #    my $rowmin          = $_[0];        # Start row
-  #    my $rowmax          = $_[1];        # End row
-  #    my $colmin          = $_[2];        # Start column
-  #    my $colmax          = $_[3];        # end column
-  #
   #
   # Store the NAME record in the long format that is used for storing the repeat
   # rows and columns when both are specified. This share a lot of code with
   # store_name_short() but we use a separate method to keep the code clean.
   # Code abstraction for reuse can be carried too far, and I should know. ;-)
+  #
+  #    index             # Sheet index
+  #    type      
+  #    ext_ref           # TODO
+  #    rowmin            # Start row
+  #    rowmax            # End row
+  #    colmin            # Start column
+  #    colmax            # end column
   #
   def store_name_long(index, type, ext_ref, rowmin, rowmax, colmin, colmax)       #:nodoc:
     record          = 0x0018       # Record identifier
@@ -2368,11 +2083,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_name_long
 
-  ###############################################################################
-  #
-  # store_palette()
   #
   # Stores the PALETTE biff record.
   #
@@ -2391,11 +2102,7 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_palette
 
-  ###############################################################################
-  #
-  # store_codepage()
   #
   # Stores the CODEPAGE biff record.
   #
@@ -2406,11 +2113,7 @@ class Workbook < BIFFWriter
 
     store_common(record, length, cv)
   end
-  private :store_codepage
 
-  ###############################################################################
-  #
-  # store_country()
   #
   # Stores the COUNTRY biff record.
   #
@@ -2422,22 +2125,17 @@ class Workbook < BIFFWriter
 
     store_common(record, length, country_default, country_win_ini)
   end
-  private :store_country
 
-  ###############################################################################
-  #
-  # store_hideobj()
   #
   # Stores the HIDEOBJ biff record.
   #
   def store_hideobj       #:nodoc:
     record          = 0x008D               # Record identifier
     length          = 0x0002               # Number of bytes to follow
-    hide            = @hideobj             # Option to hide objects
+    hide            = @hideobj ? 1 : 0     # Option to hide objects
 
     store_common(record, length, hide)
   end
-  private :store_hideobj
 
   def store_common(record, length, *data)       #:nodoc:
     header = [record, length].pack("vv")
@@ -2445,11 +2143,7 @@ class Workbook < BIFFWriter
 
     append(header, add_data)
   end
-  private :store_common
 
-  ###############################################################################
-  #
-  # calculate_extern_sizes()
   #
   # We need to calculate the space required by the SUPBOOK, EXTERNSHEET and NAME
   # records so that it can be added to the BOUNDSHEET offsets.
@@ -2525,11 +2219,7 @@ class Workbook < BIFFWriter
   def add_ext_refs(ext_refs, key)       #:nodoc:
     ext_refs[key] = ext_refs.keys.size
   end
-  private :add_ext_refs
 
-  ###############################################################################
-  #
-  # calculate_shared_string_sizes()
   #
   # Handling of the SST continue blocks is complicated by the need to include an
   # additional continuation byte depending on whether the string is split between
@@ -2652,7 +2342,6 @@ class Workbook < BIFFWriter
 
     length
   end
-  private :calculate_shared_string_sizes
 
   def split_string_setup(encoding, split_string, continue_limit, written, continue)       #:nodoc:
     # We need to avoid the case where a string is continued in the first
@@ -2684,11 +2373,7 @@ class Workbook < BIFFWriter
     end
     [header_length, space_remaining, align, split_string]
   end
-  private :split_string_setup
 
-  ###############################################################################
-  #
-  # store_shared_strings()
   #
   # Write all of the workbooks strings into an indexed array.
   #
@@ -2840,11 +2525,7 @@ class Workbook < BIFFWriter
       end
     end
   end
-  private :store_shared_strings
 
-  ###############################################################################
-  #
-  # calculate_extsst_size
   #
   # The number of buckets used in the EXTSST is between 0 and 128. The number of
   # strings per bucket (bucket size) has a minimum value of 8 and a theoretical
@@ -2869,9 +2550,6 @@ class Workbook < BIFFWriter
     6 + 8 * buckets
   end
 
-  ###############################################################################
-  #
-  # store_extsst
   #
   # Write EXTSST table using the offsets calculated in store_shared_strings().
   #
@@ -2891,15 +2569,11 @@ class Workbook < BIFFWriter
 
     append(header, data)
   end
-  private :store_extsst
 
   #
   # Methods related to comments and MSO objects.
   #
 
-  ###############################################################################
-  #
-  # add_mso_drawing_group()
   #
   # Write the MSODRAWINGGROUP record that keeps track of the Escher drawing
   # objects in the file such as images, comments and filters.
@@ -2914,7 +2588,7 @@ class Workbook < BIFFWriter
     data   += store_mso_dgg(*@mso_clusters)
     data   += store_mso_bstore_container
     @images_data.each do |image|
-      data += store_mso_images(*image)
+      data += store_mso_images(image)
     end
     data   += store_mso_opt
     data   += store_mso_split_menu_colors
@@ -2926,13 +2600,9 @@ class Workbook < BIFFWriter
 
     header + data # For testing only.
   end
-  private :add_mso_drawing_group
 
-  ###############################################################################
   #
-  # add_mso_drawing_group_continue()
-  #
-  # See first the WriteExcel::BIFFwriter::_add_continue() method.
+  # See first BIFFwriter#add_continue() method.
   #
   # Add specialised CONTINUE headers to large MSODRAWINGGROUP data block.
   # We use the Excel 97 max block size of 8228 - 4 bytes for the header = 8224.
@@ -2985,18 +2655,13 @@ class Workbook < BIFFWriter
     # Turn the base class add_continue() method back on.
     @ignore_continue = 0
   end
-  private :add_mso_drawing_group_continue
 
   def devide_string(string, nth)       #:nodoc:
     first_string = string[0, nth]
     latter_string = string[nth, string.size - nth]
     [first_string, latter_string]
   end
-  private :devide_string
 
-  ###############################################################################
-  #
-  # store_mso_dgg_container()
   #
   # Write the Escher DggContainer record that is part of MSODRAWINGGROUP.
   #
@@ -3009,16 +2674,7 @@ class Workbook < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-  private :store_mso_dgg_container
 
-  ###############################################################################
-  #
-  # store_mso_dgg()
-  #    my $max_spid        = $_[0];
-  #    my $num_clusters    = $_[1];
-  #    my $shapes_saved    = $_[2];
-  #    my $drawings_saved  = $_[3];
-  #    my $clusters        = $_[4];
   #
   # Write the Escher Dgg record that is part of MSODRAWINGGROUP.
   #
@@ -3041,11 +2697,7 @@ class Workbook < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-  private :store_mso_dgg
 
-  ###############################################################################
-  #
-  # store_mso_bstore_container()
   #
   # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
   #
@@ -3060,47 +2712,22 @@ class Workbook < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-  private :store_mso_bstore_container
 
-  ###############################################################################
-  #
-  # store_mso_images()
-  #    ref_count   = $_[0]
-  #    image_type  = $_[1]
-  #    image       = $_[2]
-  #    size        = $_[3]
-  #    checksum1   = $_[4]
-  #    checksum2   = $_[5]
   #
   # Write the Escher BstoreContainer record that is part of MSODRAWINGGROUP.
   #
-  def store_mso_images(ref_count, image_type, image, size, checksum1, checksum2)       #:nodoc:
+  def store_mso_images(image)
     blip_store_entry =  store_mso_blip_store_entry(
-        ref_count,
-        image_type,
-        size,
-        checksum1
+        image.ref_count, image.type, image.size, image.checksum1
       )
 
     blip             =  store_mso_blip(
-        image_type,
-        image,
-        size,
-        checksum1,
-        checksum2
+        image.type, image.data, image.size, image.checksum1, image.checksum2
       )
 
     blip_store_entry + blip
   end
-  private :store_mso_images
 
-  ###############################################################################
-  #
-  # store_mso_blip_store_entry()
-  #    ref_count   = $_[0]
-  #    image_type  = $_[1]
-  #    size        = $_[2]
-  #    checksum1   = $_[3]
   #
   # Write the Escher BlipStoreEntry record that is part of MSODRAWINGGROUP.
   #
@@ -3123,16 +2750,7 @@ class Workbook < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-  private :store_mso_blip_store_entry
 
-  ###############################################################################
-  #
-  # store_mso_blip()
-  #    image_type  = $_[0]
-  #    image_data  = $_[1]
-  #    size        = $_[2]
-  #    checksum1   = $_[3]
-  #    checksum2   = $_[4]
   #
   # Write the Escher Blip record that is part of MSODRAWINGGROUP.
   #
@@ -3155,11 +2773,7 @@ class Workbook < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-  private :store_mso_blip
 
-  ###############################################################################
-  #
-  # store_mso_opt()
   #
   # Write the Escher Opt record that is part of MSODRAWINGGROUP.
   #
@@ -3174,11 +2788,7 @@ class Workbook < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-  private :store_mso_opt
 
-  ###############################################################################
-  #
-  # store_mso_split_menu_colors()
   #
   # Write the Escher SplitMenuColors record that is part of MSODRAWINGGROUP.
   #
@@ -3193,15 +2803,11 @@ class Workbook < BIFFWriter
 
     add_mso_generic(type, version, instance, data, length)
   end
-  private :store_mso_split_menu_colors
 
   def cleanup       #:nodoc:
     super
     sheets.each { |sheet| sheet.cleanup }
   end
-  private :cleanup
-
-  private
 
   def add_doc_properties
     @add_doc_properties ||= false

@@ -31,9 +31,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     initialize_hashes
   end
 
-  ###############################################################################
-  #
-  # parse_formula()
   #
   # Takes a textual description of a formula and returns a RPN encoded byte
   # string.
@@ -60,9 +57,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     end
   end
 
-  ###############################################################################
-  #
-  # parse_tokens()
   #
   # Convert each token or token pair to its Excel 'ptg' equivalent.
   #
@@ -227,9 +221,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   ###############################################################################
 
 
-  ###############################################################################
-  #
-  #  _check_volatile()
   #
   # Check if the formula contains a volatile function, i.e. a function that must
   # be recalculated each time a cell is updated. These formulas require a ptgAttr
@@ -251,9 +242,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     volatile
   end
 
-  ###############################################################################
-  #
-  # _convert_volatile()
   #
   # Convert _vol to a ptgAttr tag formatted to indicate that the formula contains
   # a volatile function. See _check_volatile()
@@ -263,9 +251,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
       return [@ptg['ptgAttr'], 0x1, 0x0].pack("CCv")
   end
 
-  ###############################################################################
-  #
-  # _convert_bool()
   #
   # Convert a boolean token to ptgBool
   #
@@ -274,9 +259,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   end
 
 
-  ###############################################################################
-  #
-  # _convert_number()
   #
   # Convert a number token to ptgInt or ptgNum
   #
@@ -291,9 +273,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     end
   end
 
-  ###############################################################################
-  #
-  # _convert_string()
   #
   # Convert a string to a ptg Str.
   #
@@ -322,9 +301,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     [@ptg['ptgStr'], length, encoding].pack("CCC") + str
   end
 
-  ###############################################################################
-  #
-  # _convert_ref2d()
   #
   # Convert an Excel reference such as A1, $B2, C$3 or $D$4 to a ptgRefV.
   #
@@ -346,9 +322,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     ptgref + row + col
   end
 
-  ###############################################################################
-  #
-  # _convert_ref3d
   #
   # Convert an Excel 3d reference such as "Sheet1!A1" or "Sheet1:Sheet2!A1" to a
   # ptgRef3dV.
@@ -377,9 +350,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     ptgref + ext_ref + row + col
   end
 
-  ###############################################################################
-  #
-  # _convert_range2d()
   #
   # Convert an Excel range such as A1:D4 or A:D to a ptgRefV.
   #
@@ -409,9 +379,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     ptgarea + row1 + row2 + col1 + col2
   end
 
-  ###############################################################################
-  #
-  # _convert_range3d
   #
   # Convert an Excel 3d range such as "Sheet1!A1:D4" or "Sheet1:Sheet2!A1:D4" to
   # a ptgArea3dV.
@@ -448,9 +415,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     ptgarea + ext_ref + row1 + row2 + col1+ col2
   end
 
-  ###############################################################################
-  #
-  # _pack_ext_ref()
   #
   # Convert the sheet name part of an external reference, for example "Sheet1" or
   # "Sheet1:Sheet2", to a packed structure.
@@ -491,9 +455,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     [index].pack("v")
   end
 
-  ###############################################################################
-  #
-  # _get_sheet_index()
   #
   # Look up the index that corresponds to an external sheet name. The hash of
   # sheet names is updated by the add_worksheet() method of the Workbook class.
@@ -515,9 +476,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   end
   public :get_sheet_index
 
-  ###############################################################################
-  #
-  # set_ext_sheets()
   #
   # This semi-public method is used to update the hash of sheet names. It is
   # updated by the add_worksheet() method of the Workbook class.
@@ -529,9 +487,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   end
   public :set_ext_sheets
 
-  ###############################################################################
-  #
-  # get_ext_sheets()
   #
   # This semi-public method is used to get the worksheet references that were
   # used in formulas for inclusion in the EXTERNSHEET Workbook record.
@@ -541,9 +496,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   end
   public :get_ext_sheets
 
-  ###############################################################################
-  #
-  # get_ext_ref_count()
   #
   # TODO This semi-public method is used to update the hash of sheet names. It is
   # updated by the add_worksheet() method of the Workbook class.
@@ -552,9 +504,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     @ext_ref_count
   end
 
-  ###############################################################################
-  #
-  # _get_name_index()
   #
   # Look up the index that corresponds to an external defined name. The hash of
   # defined names is updated by the define_name() method in the Workbook class.
@@ -568,9 +517,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   end
   private :get_name_index
 
-  ###############################################################################
-  #
-  # set_ext_name()
   #
   # This semi-public method is used to update the hash of defined names.
   #
@@ -579,9 +525,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   end
   public :set_ext_name
 
-  ###############################################################################
-  #
-  # _convert_function()
   #
   # Convert a function to a ptgFunc or ptgFuncVarV depending on the number of
   # args that it takes.
@@ -607,9 +550,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     end
   end
 
-  ###############################################################################
-  #
-  # _convert_name()
   #
   # Convert a symbolic name into a name reference.
   #
@@ -629,9 +569,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   end
   private :convert_name
 
-  ###############################################################################
-  #
-  # _cell_to_rowcol($cell_ref)
   #
   # Convert an Excel cell reference such as A1 or $B2 or C$3 or $D$4 to a zero
   # indexed row and column number. Also returns two boolean values to indicate
@@ -654,9 +591,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     [row, col, row_rel, col_rel]
   end
 
-  ###############################################################################
-  #
-  # _cell_to_packed_rowcol($row, $col, $row_rel, $col_rel)
   #
   # pack() row and column into the required 3 byte format.
   #
@@ -676,10 +610,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
     [row, col]
   end
 
-  ###############################################################################
-  #
-  # _initialize_hashes()
-  #
   def initialize_hashes
 
     # The Excel ptg indices
@@ -1023,6 +953,10 @@ class Formula < ExcelFormulaParser       #:nodoc:
       'ROMAN'                         => [ 354,   -1,    1,    0 ]
     }
 
+  end
+
+  def inspect
+    to_s
   end
 end
 

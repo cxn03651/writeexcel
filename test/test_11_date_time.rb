@@ -34,7 +34,7 @@ class TC_data_time < Test::Unit::TestCase
     # pass: diff < @fit_delta
     date_time = '1899-12-31T00:00:00.0004'
     number = 0
-    result = @worksheet.convert_date_time(date_time)
+    result = @worksheet.__send__("convert_date_time", date_time)
     result = -1 if result.nil?
     assert(fit_cmp(number, result),
     "Testing convert_date_time: #{date_time} => #{result} <> #{number}")
@@ -42,7 +42,7 @@ class TC_data_time < Test::Unit::TestCase
     # fail: diff > @fit_delta
     date_time = '1989-12-31%00:00:00.0005'
     number = 0
-    result = @worksheet.convert_date_time(date_time)
+    result = @worksheet.__send__("convert_date_time", date_time)
     result = -1 if result.nil?
     assert(!fit_cmp(number, result),
     "Testing convert_date_time: #{date_time} => #{result} <> #{number}")
@@ -62,7 +62,7 @@ class TC_data_time < Test::Unit::TestCase
 
         if line =~ /"Number">([^<]+)/
           number = $1.to_f
-          result = @worksheet.convert_date_time(date_time)
+          result = @worksheet.__send__("convert_date_time", date_time)
           result = -1 if result.nil?
           assert(fit_cmp(number, result),
           "date_time: #{date_time}\n"                    +

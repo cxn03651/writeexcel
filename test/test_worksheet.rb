@@ -47,7 +47,7 @@ class TC_Worksheet < Test::Unit::TestCase
 
   def test_store_dimensions
     file = "delete_this"
-    File.open(file,"w+"){ |f| f.print @ws.store_dimensions }
+    File.open(file,"w+"){ |f| f.print @ws.__send__("store_dimensions") }
     pf = @perldir + "ws_store_dimensions"
     p_od = IO.readlines(pf).to_s.dump
     r_od = IO.readlines(file).to_s.dump
@@ -58,7 +58,7 @@ class TC_Worksheet < Test::Unit::TestCase
 
   def test_store_colinfo
     file = "delete_this"
-    File.open(file,"w+"){ |f| f.print @ws.store_colinfo }
+    File.open(file,"w+"){ |f| f.print @ws.__send__("store_colinfo") }
     pf = @perldir + "ws_store_colinfo"
     p_od = IO.readlines(pf).to_s.dump
     r_od = IO.readlines(file).to_s.dump
@@ -69,7 +69,7 @@ class TC_Worksheet < Test::Unit::TestCase
 
   def test_store_selection
     file = "delete_this"
-    File.open(file,"w+"){ |f| f.print @ws.store_selection(1,1,2,2) }
+    File.open(file,"w+"){ |f| f.print @ws.__send__("store_selection", 1,1,2,2) }
     pf = @perldir + "ws_store_selection"
     p_od = IO.readlines(pf).to_s.dump
     r_od = IO.readlines(file).to_s.dump
@@ -80,7 +80,7 @@ class TC_Worksheet < Test::Unit::TestCase
 
   def test_store_filtermode
     file = "delete_this"
-    File.open(file,"w+"){ |f| f.print @ws.store_filtermode }
+    File.open(file,"w+"){ |f| f.print @ws.__send__("store_filtermode") }
     pf = @perldir + "ws_store_filtermode_off"
     p_od = IO.readlines(pf).to_s.dump
     r_od = IO.readlines(file).to_s.dump
@@ -90,7 +90,7 @@ class TC_Worksheet < Test::Unit::TestCase
 
     @ws.autofilter(1,1,2,2)
     @ws.filter_column(1, 'x < 2000')
-    File.open(file,"w+"){ |f| f.print @ws.store_filtermode }
+    File.open(file,"w+"){ |f| f.print @ws.__send__("store_filtermode") }
     pf = @perldir + "ws_store_filtermode_on"
     p_od = IO.readlines(pf).to_s.dump
     r_od = IO.readlines(file).to_s.dump

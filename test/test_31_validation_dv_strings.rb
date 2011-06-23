@@ -33,7 +33,7 @@ class TC_validation_dv_strings < Test::Unit::TestCase
     target     = %w(
                    01 00 00 00
                  ).join(' ')
-    result     = unpack_record(@worksheet.pack_dv_string(string, max_length))
+    result     = unpack_record(@worksheet.__send__("pack_dv_string", string, max_length))
     assert_equal(target, result, caption)
   end
 
@@ -45,7 +45,7 @@ class TC_validation_dv_strings < Test::Unit::TestCase
     target     = %w(
                    01 00 00 00
                  ).join(' ')
-    result     = unpack_record(@worksheet.pack_dv_string(string, max_length))
+    result     = unpack_record(@worksheet.__send__("pack_dv_string", string, max_length))
     assert_equal(target, result, caption)
   end
 
@@ -57,7 +57,7 @@ class TC_validation_dv_strings < Test::Unit::TestCase
     target     = %w(
                    01 00 00 20
                  ).join(' ')
-    result     = unpack_record(@worksheet.pack_dv_string(string, max_length))
+    result     = unpack_record(@worksheet.__send__("pack_dv_string", string, max_length))
     assert_equal(target, result, caption)
   end
 
@@ -69,7 +69,7 @@ class TC_validation_dv_strings < Test::Unit::TestCase
     target     = %w(
                    01 00 00 41
                  ).join(' ')
-    result     = unpack_record(@worksheet.pack_dv_string(string, max_length))
+    result     = unpack_record(@worksheet.__send__("pack_dv_string", string, max_length))
     assert_equal(target, result, caption)
   end
 
@@ -83,7 +83,7 @@ class TC_validation_dv_strings < Test::Unit::TestCase
                    73 74 72 69 6E 67 20 69 73 20 6C 6F 6E 67 65 72
                    20 74 68 61 6E 20 33 32 20 63 68
                  ).join(' ')
-    result     = unpack_record(@worksheet.pack_dv_string(string, max_length))
+    result     = unpack_record(@worksheet.__send__("pack_dv_string", string, max_length))
     assert_equal(target, result, caption)
   end
 
@@ -111,7 +111,7 @@ class TC_validation_dv_strings < Test::Unit::TestCase
                             42 43 44 41 42 43 44 41 42 43 44 41 42 43 44 41
                             42 43
                  ).join(' ')
-    result     = unpack_record(@worksheet.pack_dv_string(string, max_length))
+    result     = unpack_record(@worksheet.__send__("pack_dv_string", string, max_length))
     assert_equal(target, result, caption)
   end
 

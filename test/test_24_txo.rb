@@ -33,7 +33,7 @@ class TC_txo < Test::Unit::TestCase
                     10 00 00 00 00 00
                    ).join(' ')
 
-    result     = unpack_record(@worksheet.store_txo(string.length))
+    result     = unpack_record(@worksheet.__send__("store_txo", string.length))
     assert_equal(target, result, caption)
   end
 
@@ -44,7 +44,7 @@ class TC_txo < Test::Unit::TestCase
                     3C 00 04 00 00 61 61 61
                    ).join(' ')
 
-    result     = unpack_record(@worksheet.store_txo_continue_1(string))
+    result     = unpack_record(@worksheet.__send__("store_txo_continue_1", string))
     assert_equal(target, result, caption)
   end
 
@@ -60,7 +60,7 @@ class TC_txo < Test::Unit::TestCase
                     [string.length, 0]
                  ]
 
-    result     = unpack_record(@worksheet.store_txo_continue_2(formats))
+    result     = unpack_record(@worksheet.__send__("store_txo_continue_2", formats))
     assert_equal(target, result, caption)
   end
 

@@ -33,19 +33,19 @@ class TC_data_seconds < Test::Unit::TestCase
   def test_some_false_times
     # These should fail.
     date_time = '1899-12-31T24:00:00.000'
-    assert(! @worksheet.convert_date_time(date_time),
+    assert(! @worksheet.__send__("convert_date_time", date_time),
     " Testing incorrect time: #{date_time}\tincorrect hour caught.")
 
     date_time = '1899-12-31T00:60:00.000'
-    assert(! @worksheet.convert_date_time(date_time),
+    assert(! @worksheet.__send__("convert_date_time", date_time),
     " Testing incorrect time: #{date_time}\tincorrect mins caught.")
 
     date_time = '1899-12-31T00:00:60.000'
-    assert(! @worksheet.convert_date_time(date_time),
+    assert(! @worksheet.__send__("convert_date_time", date_time),
     " Testing incorrect time: $date_time\tincorrect secs caught.")
 
     date_time = '1899-12-31T00:00:59.9999999999999999999'
-    assert(! @worksheet.convert_date_time(date_time),
+    assert(! @worksheet.__send__("convert_date_time", date_time),
     " Testing incorrect time: $date_time\tincorrect secs caught.")
   end
 
@@ -63,7 +63,7 @@ class TC_data_seconds < Test::Unit::TestCase
 
         if line =~ /"Number">([^<]+)/
           number = $1.to_f
-          result = @worksheet.convert_date_time(date_time)
+          result = @worksheet.__send__("convert_date_time", date_time)
           result = -1 if result.nil?
           assert(fit_cmp(number, result),
           "date_time: #{date_time}\n"                    +

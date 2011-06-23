@@ -77,7 +77,7 @@ class TC_position_object < Test::Unit::TestCase
     tests.each do |testcase|
       input    = testcase[0]
       expected = testcase[1]
-      results  = @worksheet.position_object(*input)
+      results  = @worksheet.__send__("position_object", *input)
       assert_equal(expected, results)
     end
   end

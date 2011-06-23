@@ -19,10 +19,10 @@ class TC_26_autofilter < Test::Unit::TestCase
     @tests.each do |test|
       column     = test['column']
       expression = test['expression']
-      tokens     = @worksheet.extract_filter_tokens(expression)
-      tokens     = @worksheet.parse_filter_expression(expression, tokens)
+      tokens     = @worksheet.__send__("extract_filter_tokens", expression)
+      tokens     = @worksheet.__send__("parse_filter_expression", expression, tokens)
 
-      result     = @worksheet.store_autofilter(column, *tokens)
+      result     = @worksheet.__send__("store_autofilter", column, *tokens)
 
       target     = test['data'].join(" ")
 

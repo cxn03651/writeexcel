@@ -229,4 +229,9 @@ class BIFFWriter < WriteFile       #:nodoc:
   def cleanup # :nodoc:
     @filehandle.close(true) if @filehandle
   end
+
+  # override Object#inspect
+  def inspect          # :nodoc:
+    to_s
+  end
 end

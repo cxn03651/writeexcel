@@ -54,9 +54,6 @@ module Writeexcel
 class Chart < Worksheet
   require 'writeexcel/helper'
 
-  ###############################################################################
-  #
-  # factory()
   #
   # Factory method for returning chart objects based on their class type.
   #
@@ -82,7 +79,6 @@ class Chart < Worksheet
     klass.new(*args)
   end
 
-  ###############################################################################
   #
   # :call-seq:
   #   new(filename, name, index, encoding, activesheet, firstsheet, external_bin = nil)
@@ -92,7 +88,7 @@ class Chart < Worksheet
   def initialize(*args)       #:nodoc:
     super
 
-    @sheet_type  = 0x0200
+    @type        = 0x0200
     @orientation = 0x0
     @series      = []
     @embedded    = false
@@ -344,9 +340,6 @@ class Chart < Worksheet
     @title_formula  = formula
   end
 
-  ###############################################################################
-  #
-  # set_legend()
   #
   # Set the properties of the chart legend.
   #
@@ -358,9 +351,6 @@ class Chart < Worksheet
     end
   end
 
-  ###############################################################################
-  #
-  # set_plotarea()
   #
   # Set the properties of the chart plotarea.
   #
@@ -411,9 +401,6 @@ class Chart < Worksheet
     end
   end
 
-  ###############################################################################
-  #
-  # set_chartarea()
   #
   # Set the properties of the chart chartarea.
   #
@@ -489,9 +476,6 @@ class Chart < Worksheet
     @embedded = val
   end
 
-  ###############################################################################
-  #
-  # _prepend(), overridden.
   #
   # The parent Worksheet class needs to store some data in memory and some in
   # temporary files for efficiency. The Chart* classes don't need to do this
@@ -504,9 +488,6 @@ class Chart < Worksheet
     append(*args)
   end
 
-  ###############################################################################
-  #
-  # _close(), overridden.
   #
   # Create and store the Chart data structures.
   #
@@ -573,9 +554,6 @@ class Chart < Worksheet
     store_eof
   end
 
-  ###############################################################################
-  #
-  # _store_window2(), overridden.
   #
   # Write BIFF record Window2. Note, this overrides the parent Worksheet
   # record because the Chart version of the record is smaller and is used
@@ -599,7 +577,7 @@ class Chart < Worksheet
     fArabic        = 0                      # 6
     fDspGuts       = 0                      # 7
     fFrozenNoSplit = 0                      # 0 - bit
-    fSelected      = @selected              # 1
+    fSelected      = selected? ? 1 : 0      # 1
     fPaged         = 0                      # 2
     fBreakPreview  = 0                      # 3
 
@@ -624,9 +602,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _parse_series_formula()
   #
   # Parse the formula used to define a series. We also extract some range
   # information required for _store_series() and the SERIES record.
@@ -641,9 +616,6 @@ class Chart < Worksheet
 
     # Strip the = sign at the beginning of the formula string
     formula = formula.sub(/^=/, '')
-
-    # Parse the formula using the parser in Formula.pm
-    parser = @parser
 
     # In order to raise formula errors from the point of view of the calling
     # program we use an eval block and re-raise the error from here.
@@ -672,9 +644,6 @@ class Chart < Worksheet
     [formula, count]
   end
 
-  ###############################################################################
-  #
-  # _encode_utf16()
   #
   # Convert UTF8 strings used in the chart to UTF16.
   #
@@ -705,9 +674,6 @@ class Chart < Worksheet
     [string, encoding]
   end
 
-  ###############################################################################
-  #
-  # _get_color_indices()
   #
   # Convert the user specified colour index or string to an colour index and
   # RGB colour number.
@@ -724,9 +690,6 @@ class Chart < Worksheet
     end
   end
 
-  ###############################################################################
-  #
-  # _get_color_rbg()
   #
   # Get the RedGreenBlue number for the colour index from the Workbook palette.
   #
@@ -734,13 +697,15 @@ class Chart < Worksheet
     # Adjust colour index from 8-63 (user range) to 0-55 (Excel range).
     index -= 8
 
-    red_green_blue = @palette[index]
+    red_green_blue = palette[index]
     red_green_blue.pack('C*').unpack('V')[0]
   end
 
-  ###############################################################################
-  #
-  # _get_line_pattern()
+  def palette
+    @workbook.palette
+  end
+  private :palette
+
   #
   # Get the Excel chart index for line pattern that corresponds to the user
   # defined value.
@@ -777,9 +742,6 @@ class Chart < Worksheet
     end
   end
 
-  ###############################################################################
-  #
-  # _get_line_weight()
   #
   # Get the Excel chart index for line weight that corresponds to the user
   # defined value.
@@ -806,9 +768,6 @@ class Chart < Worksheet
     end
   end
 
-  ###############################################################################
-  #
-  # _store_chart_stream()
   #
   # Store the CHART record and it's substreams.
   #
@@ -865,9 +824,6 @@ class Chart < Worksheet
   end
   private :_formula_type_from_param
 
-  ###############################################################################
-  #
-  # _store_series_stream()
   #
   # Write the SERIES chart substream.
   #
@@ -895,9 +851,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_dataformat_stream()
   #
   # Write the DATAFORMAT chart substream.
   #
@@ -909,9 +862,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_series_text_stream()
   #
   # Write the series TEXT substream.
   #
@@ -930,9 +880,6 @@ class Chart < Worksheet
   end
   private :_formula_type
 
-  ###############################################################################
-  #
-  # _store_x_axis_text_stream()
   #
   # Write the X-axis TEXT substream.
   #
@@ -955,9 +902,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_y_axis_text_stream()
   #
   # Write the Y-axis TEXT substream.
   #
@@ -980,9 +924,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_legend_text_stream()
   #
   # Write the legend TEXT substream.
   #
@@ -996,9 +937,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_title_text_stream()
   #
   # Write the title TEXT substream.
   #
@@ -1021,9 +959,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_axisparent_stream()
   #
   # Write the AXISPARENT chart substream.
   #
@@ -1051,9 +986,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_axis_category_stream()
   #
   # Write the AXIS chart substream for the chart category.
   #
@@ -1067,9 +999,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_axis_values_stream()
   #
   # Write the AXIS chart substream for the chart values.
   #
@@ -1084,9 +1013,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_plotarea_frame_stream()
   #
   # Write the FRAME chart substream.
   #
@@ -1094,9 +1020,6 @@ class Chart < Worksheet
     store_area_frame_stream_common(:plot)
   end
 
-  ###############################################################################
-  #
-  # _store_chartarea_frame_stream()
   #
   # Write the FRAME chart substream for and embedded chart.
   #
@@ -1132,9 +1055,6 @@ class Chart < Worksheet
   end
   private :store_area_frame_stream_common
 
-  ###############################################################################
-  #
-  # _store_chartformat_stream()
   #
   # Write the CHARTFORMAT chart substream.
   #
@@ -1157,9 +1077,6 @@ class Chart < Worksheet
     store_end
   end
 
-  ###############################################################################
-  #
-  # _store_chart_type()
   #
   # This is an abstract method that is overridden by the sub-classes to define
   # the chart types such as Column, Line, Pie, etc.
@@ -1168,9 +1085,6 @@ class Chart < Worksheet
 
   end
 
-  ###############################################################################
-  #
-  # _store_marker_dataformat_stream()
   #
   # This is an abstract method that is overridden by the sub-classes to define
   # properties of markers, linetypes, pie formats and other.
@@ -1179,9 +1093,6 @@ class Chart < Worksheet
 
   end
 
-  ###############################################################################
-  #
-  # _store_legend_stream()
   #
   # Write the LEGEND chart substream.
   #
@@ -1200,9 +1111,6 @@ class Chart < Worksheet
   #
   ###############################################################################
 
-  ###############################################################################
-  #
-  # _store_3dbarshape()
   #
   # Write the 3DBARSHAPE chart BIFF record.
   #
@@ -1219,9 +1127,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_ai()
   #
   # Write the AI chart BIFF record.
   #
@@ -1260,9 +1165,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_areaformat()
   #
   # Write the AREAFORMAT chart BIFF record. Contains the patterns and colours
   # of a chart area.
@@ -1288,9 +1190,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_axcext()
   #
   # Write the AXCEXT chart BIFF record.
   #
@@ -1311,9 +1210,6 @@ class Chart < Worksheet
                  catMinor, unitMinor, unitBase, catCrossDate, grbit)
   end
 
-  ###############################################################################
-  #
-  # _store_axesused()
   #
   # Write the AXESUSED chart BIFF record.
   #
@@ -1325,9 +1221,6 @@ class Chart < Worksheet
     store_simple(record, length, num_axes)
   end
 
-  ###############################################################################
-  #
-  # _store_axis()
   #
   # Write the AXIS chart BIFF record to define the axis type.
   #
@@ -1350,9 +1243,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_axislineformat()
   #
   # Write the AXISLINEFORMAT chart BIFF record.
   #
@@ -1364,9 +1254,6 @@ class Chart < Worksheet
     store_simple(record, length, line_format)
   end
 
-  ###############################################################################
-  #
-  # _store_axisparent()
   #
   # Write the AXISPARENT chart BIFF record.
   #
@@ -1389,9 +1276,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_begin()
   #
   # Write the BEGIN chart BIFF record to indicate the start of a sub stream.
   #
@@ -1402,9 +1286,6 @@ class Chart < Worksheet
     store_simple(record, length)
   end
 
-  ###############################################################################
-  #
-  # _store_catserrange()
   #
   # Write the CATSERRANGE chart BIFF record.
   #
@@ -1419,9 +1300,6 @@ class Chart < Worksheet
     store_simple(record, length, catCross, catLabel, catMark, grbit)
   end
 
-  ###############################################################################
-  #
-  # _store_chart()
   #
   # Write the CHART BIFF record. This indicates the start of the chart sub-stream
   # and contains dimensions of the chart on the display. Units are in 1/72 inch
@@ -1444,9 +1322,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_chartformat()
   #
   # Write the CHARTFORMAT chart BIFF record. The parent record for formatting
   # of a chart group.
@@ -1472,9 +1347,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_chartline()
   #
   # Write the CHARTLINE chart BIFF record.
   #
@@ -1486,9 +1358,6 @@ class Chart < Worksheet
     store_simple(record, length, type)
   end
 
-  ###############################################################################
-  #
-  # _store_charttext()
   #
   # Write the TEXT chart BIFF record.
   #
@@ -1525,9 +1394,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_dataformat()
   #
   # Write the DATAFORMAT chart BIFF record. This record specifies the series
   # that the subsequent sub stream refers to.
@@ -1543,9 +1409,6 @@ class Chart < Worksheet
     store_simple(record, length, point_number, series_index, series_number, grbit)
   end
 
-  ###############################################################################
-  #
-  # _store_defaulttext()
   #
   # Write the DEFAULTTEXT chart BIFF record. Identifier for subsequent TEXT
   # record.
@@ -1558,9 +1421,6 @@ class Chart < Worksheet
     store_simple(record, length, type)
   end
 
-  ###############################################################################
-  #
-  # _store_dropbar()
   #
   # Write the DROPBAR chart BIFF record.
   #
@@ -1572,9 +1432,6 @@ class Chart < Worksheet
     store_simple(record, length, percent_gap)
   end
 
-  ###############################################################################
-  #
-  # _store_end()
   #
   # Write the END chart BIFF record to indicate the end of a sub stream.
   #
@@ -1585,8 +1442,6 @@ class Chart < Worksheet
     store_simple(record, length)
   end
 
-  ###############################################################################
-  # _store_fbi()
   #
   # Write the FBI chart BIFF record. Specifies the font information at the time
   # it was applied to the chart.
@@ -1603,9 +1458,6 @@ class Chart < Worksheet
     store_simple(record, length, width_basis, height_basis, height, scale_basis, index)
   end
 
-  ###############################################################################
-  #
-  # _store_fontx()
   #
   # Write the FONTX chart BIFF record which contains the index of the FONT
   # record in the Workbook.
@@ -1618,9 +1470,6 @@ class Chart < Worksheet
     store_simple(record, length, index)
   end
 
-  ###############################################################################
-  #
-  # _store_frame()
   #
   # Write the FRAME chart BIFF record.
   #
@@ -1633,9 +1482,6 @@ class Chart < Worksheet
     store_simple(record, length, frame_type, grbit)
   end
 
-  ###############################################################################
-  #
-  # _store_legend()
   #
   # Write the LEGEND chart BIFF record. The Marcus Horan method.
   #
@@ -1662,9 +1508,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_lineformat()
   #
   # Write the LINEFORMAT chart BIFF record.
   #
@@ -1687,9 +1530,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_markerformat()
   #
   # Write the MARKERFORMAT chart BIFF record.
   #
@@ -1716,9 +1556,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_objectlink()
   #
   # Write the OBJECTLINK chart BIFF record.
   #
@@ -1732,9 +1569,6 @@ class Chart < Worksheet
     store_simple(record, length, link_type, link_index1, link_index2)
   end
 
-  ###############################################################################
-  #
-  # _store_pieformat()
   #
   # Write the PIEFORMAT chart BIFF record.
   #
@@ -1746,9 +1580,6 @@ class Chart < Worksheet
     store_simple(record, length, percent)
   end
 
-  ###############################################################################
-  #
-  # _store_plotarea()
   #
   # Write the PLOTAREA chart BIFF record. This indicates that the subsequent
   # FRAME record belongs to a plot area.
@@ -1760,9 +1591,6 @@ class Chart < Worksheet
     store_simple(record, length)
   end
 
-  ###############################################################################
-  #
-  # _store_plotgrowth()
   #
   # Write the PLOTGROWTH chart BIFF record.
   #
@@ -1779,9 +1607,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_pos()
   #
   # Write the POS chart BIFF record. Generally not required when using
   # automatic positioning.
@@ -1807,9 +1632,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_serauxtrend()
   #
   # Write the SERAUXTREND chart BIFF record.
   #
@@ -1842,9 +1664,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_series()
   #
   # Write the SERIES chart BIFF record.
   #
@@ -1862,9 +1681,6 @@ class Chart < Worksheet
                  category_count, value_count, bubble_type, bubble_count)
   end
 
-  ###############################################################################
-  #
-  # _store_seriestext()
   #
   # Write the SERIESTEXT chart BIFF record.
   #
@@ -1896,9 +1712,6 @@ class Chart < Worksheet
     append(header, data, str)
   end
 
-  ###############################################################################
-  #
-  # _store_serparent()
   #
   # Write the SERPARENT chart BIFF record.
   #
@@ -1910,9 +1723,6 @@ class Chart < Worksheet
     store_simple(record, length, series)
   end
 
-  ###############################################################################
-  #
-  # _store_sertocrt()
   #
   # Write the SERTOCRT chart BIFF record to indicate the chart group index.
   #
@@ -1924,9 +1734,6 @@ class Chart < Worksheet
     store_simple(record, length, chartgroup)
   end
 
-  ###############################################################################
-  #
-  # _store_shtprops()
   #
   # Write the SHTPROPS chart BIFF record.
   #
@@ -1941,9 +1748,6 @@ class Chart < Worksheet
     store_simple(record, length, grbit, empty_cells)
   end
 
-  ###############################################################################
-  #
-  # _store_text()
   #
   # Write the TEXT chart BIFF record.
   #
@@ -1980,9 +1784,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_tick()
   #
   # Write the TICK chart BIFF record.
   #
@@ -2019,9 +1820,6 @@ class Chart < Worksheet
     append(header, data)
   end
 
-  ###############################################################################
-  #
-  # _store_valuerange()
   #
   # Write the VALUERANGE chart BIFF record.
   #
@@ -2055,9 +1853,6 @@ class Chart < Worksheet
   #
   ###############################################################################
 
-  ###############################################################################
-  #
-  # _set_default_properties()
   #
   # Setup the default properties for a chart.
   #
@@ -2099,9 +1894,6 @@ class Chart < Worksheet
     }
   end
 
-  ###############################################################################
-  #
-  # _set_default_config_data()
   #
   # Setup the default configuration data for a chart.
   #
@@ -2134,9 +1926,6 @@ class Chart < Worksheet
   end
   private :default_config_data
 
-  ###############################################################################
-  #
-  # _set_embedded_config_data()
   #
   # Setup the default configuration data for an embedded chart.
   #
