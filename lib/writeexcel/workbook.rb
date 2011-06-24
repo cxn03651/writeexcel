@@ -43,7 +43,7 @@ class Workbook < BIFFWriter
   #     worksheet = workbook.add_worksheet
   #     worksheet.write(0, 0, 'Hi Excel!')
   #
-  # Here are some other examples of using new() with filenames:
+  # Here are some other examples of using new():
   #
   #     workbook1 = WriteExcel.new(filename)
   #     workbook2 = WriteExcel.new('/tmp/filename.xls')
@@ -58,13 +58,17 @@ class Workbook < BIFFWriter
   # worksheets and store data.
   #
   # If the file cannot be created, due to file permissions or some other reason,
-  # new will return undef. Therefore, it is good practice to check the return
-  # value of new before proceeding.
+  # new will raise Exception Errno::EXXX.
   #
-  #     workbook  = WriteExcel.new('protected.xls')
-  #     die "Problems creating new Excel file:" if workbook.nil?
+  # You can also pass a valid IO object to the new() constructor.:
+  #     require 'stringio'
   #
-  # You can also pass a valid IO object to the new() constructor.
+  #     io = StringIO.new
+  #     workbook = WriteExcel.new(io)  # After workbook.close, you can get excel data as io.string
+  #
+  # And, you can also pass default format properties.
+  #
+  #     workbook = WriteExcel.new(filename, :font => 'Courier New', :size => 11)
   #
   def initialize(file, default_formats = {})
     super()
@@ -252,7 +256,7 @@ class Workbook < BIFFWriter
   #   :name_utf16be  (optional)
   #   :embedded  (optional)
   #
-  # * type
+  # * :type
   #
   # This is a required parameter. It defines the type of chart that will be created.
   #
@@ -273,7 +277,7 @@ class Workbook < BIFFWriter
   # Set the name for the chart sheet. The name property is optional and
   # if it isn't supplied will default to Chart1 .. n. The name must be
   # a valid Excel worksheet name. See add_worksheet() for more details
-  # on valid sheet names. The name property can be omitted for embedded
+  # on valid sheet names. The :name property can be omitted for embedded
   # charts.
   #
   #   chart = workbook.add_chart(
@@ -292,11 +296,11 @@ class Workbook < BIFFWriter
   #
   # * :embedded
   #
-  # Specifies that the Chart object will be inserted in a worksheet via
+  # Specifies true that the Chart object will be inserted in a worksheet via
   # the insert_chart() Worksheet method. It is an error to try insert a
   # Chart that doesn't have this flag set.
   #
-  #   chart = workbook.add_chart(:type => 'Chart::Line', :embedded => 1)
+  #   chart = workbook.add_chart(:type => 'Chart::Line', :embedded => true)
   #
   #   # Configure the chart.
   #   ...
@@ -467,7 +471,7 @@ class Workbook < BIFFWriter
   # WriteExcel stores dates in the 1900 format by default. If you wish to
   # change this you can call the set_1904() workbook method. You can query
   # the current value by calling the get_1904() workbook method. This returns
-  # 0 for 1900 and 1 for 1904.
+  # false for 1900 and true for 1904.
   #
   # See also "DATES AND TIME IN EXCEL" for more information about working
   # with Excel's date system.
@@ -717,14 +721,14 @@ class Workbook < BIFFWriter
   #
   # The properties that can be set are:
   #
-  #    * title
-  #    * subject
-  #    * author
-  #    * manager
-  #    * company
-  #    * category
-  #    * keywords
-  #    * comments
+  #    * :title
+  #    * :subject
+  #    * :author
+  #    * :manager
+  #    * :company
+  #    * :category
+  #    * :keywords
+  #    * :comments
   #
   # User defined properties are not supported due to effort required.
   #
@@ -743,7 +747,7 @@ class Workbook < BIFFWriter
   #
   #     workbook.set_properties(
   #         ...,
-  #         :comments => 'Created with Ruby and WriteExcel',
+  #         :comments => 'Created with Ruby and writeexcel',
   #         ...,
   #     )
   #
@@ -2019,7 +2023,7 @@ class Workbook < BIFFWriter
   # Code abstraction for reuse can be carried too far, and I should know. ;-)
   #
   #    index             # Sheet index
-  #    type      
+  #    type
   #    ext_ref           # TODO
   #    rowmin            # Start row
   #    rowmax            # End row
