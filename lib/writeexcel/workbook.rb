@@ -482,7 +482,11 @@ class Workbook < BIFFWriter
     unless sheets.empty?
       raise "set_1904() must be called before add_worksheet()"
     end
-    @date_1904 = mode
+    @date_1904 = (!mode || mode == 0) ? false : true
+  end
+
+  def get_1904
+    @date_1904
   end
 
   #
