@@ -364,11 +364,11 @@ class Workbook < BIFFWriter
   # using add_chart(). Read external_charts.txt in the external_charts
   # directory of the distro for a full explanation.
   #
-  def add_chart_ext(filename, name, name_utf16be = false)
+  def add_chart_ext(filename, chartname, name_utf16be = false)
     index    = @worksheets.size
     type = 'extarnal'
 
-    name, name_utf16be = check_sheetname(name, name_utf16be)
+    name, name_utf16be = check_sheetname(chartname, name_utf16be)
 
     init_data = [
       filename,
