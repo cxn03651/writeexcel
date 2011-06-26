@@ -2962,8 +2962,8 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
-  #    repeat_formula(row, col,    formula, format, ([:pattern => replace, ...]) -> Fixnum
-  #    repeat_formula(A1_notation, formula, format, ([:pattern => replace, ...]) -> Fixnum
+  #    repeat_formula(row, col,    formula, format, pat, rep, (pat2, rep2,, ...) -> Fixnum
+  #    repeat_formula(A1_notation, formula, format, pat, rep, (pat2, rep2,, ...) -> Fixnum
   #
   # Write a formula to the specified row and column (zero indexed) by
   # substituting _pattern_ _replacement_ pairs in the formula created via
@@ -2989,7 +2989,7 @@ class Worksheet < BIFFWriter
   #     formula = worksheet.store_formula('=A1 * 3 + 50')
   #
   #     (0...100).each do |row|
-  #       worksheet.repeat_formula(row, 1, formula, format, 'A1', 'A'.(row +1))
+  #       worksheet.repeat_formula(row, 1, formula, format, 'A1', "A#{row + 1}")
   #     end
   #
   # It should be noted that repeat_formula() doesn't modify the tokens. In the
@@ -3011,13 +3011,13 @@ class Worksheet < BIFFWriter
   #     worksheet.repeat_formula('B1', formula, undef, 'A1', 'B1')
   #
   #     # Gives '=B1 + B1'
-  #     worksheet.repeat_formula('B2', formula, undef, ('A1', 'B1') x 2)
+  #     worksheet.repeat_formula('B2', formula, undef, 'A1', 'B1', 'A1', 'B1')
   #
   # Since the pattern is interpolated each time that it is used it is worth
-  # using the qr operator to quote the pattern. The qr operator is explained
+  # using the %q operator to quote the pattern. The qr operator is explained
   # in the perlop man page.
   #
-  #     worksheet.repeat_formula('B1', formula, format, qr/A1/, 'A2')
+  #     worksheet.repeat_formula('B1', formula, format, %q!A1!, 'A2')
   #
   # Care should be taken with the values that are substituted. The formula
   # returned by repeat_formula() contains several other tokens in addition to
@@ -3033,55 +3033,23 @@ class Worksheet < BIFFWriter
   #
   #     (1..10).each do |row|
   #       worksheet.repeat_formula(row -1, 1, formula, nil,
-  #                                     qw/A1/, 'A' . row,   #! Bad.
-  #                                     qw/A1/, 'A' . row    #! Bad.
+  #                                     'A1', "A#{row}",   #! Bad.
+  #                                     'A1', "A#{row}"    #! Bad.
   #                               )
   #     end
   #
   # However it contains a bug. In the last iteration of the loop when row is
   # 10 the following substitutions will occur:
   #
-  #     s/A1/A10/;    changes    =A1 + SIN(A1)     to    =A10 + SIN(A1)
-  #     s/A1/A10/;    changes    =A10 + SIN(A1)    to    =A100 + SIN(A1) # !!
+  #     sub('A1', 'A10')    changes    =A1 + SIN(A1)     to    =A10 + SIN(A1)
+  #     sub('A1', 'A10')    changes    =A10 + SIN(A1)    to    =A100 + SIN(A1) # !!
   #
-  # The solution in this case is to use a more explicit match such as qw/^A1$/:
+  # The solution in this case is to use a more explicit match such as /(?!A1\d+)A1/:
   #
   #         worksheet.repeat_formula(row -1, 1, formula, nil,
-  #                                     qw/^A1$/, 'A' . row,
-  #                                     qw/^A1$/, 'A' . row
+  #                                     'A1', 'A' . row,
+  #                                     /(?!A1\d+)A1/, 'A' . row
   #                                   )
-  #
-  # Another similar problem occurs due to the fact that substitutions are made
-  # in order. For example the following snippet is meant to change the stored
-  # formula from =A10 + A11 to =A11 + A12:
-  #
-  #     formula = worksheet.store_formula('=A10 + A11')
-  #
-  #     worksheet.repeat_formula('A1', formula, nil,
-  #                                 qw/A10/, 'A11',   #! Bad.
-  #                                 qw/A11/, 'A12'    #! Bad.
-  #                               )
-  #
-  # However, the actual substitution yields =A12 + A11:
-  #
-  #     s/A10/A11/;    changes    =A10 + A11    to    =A11 + A11
-  #     s/A11/A12/;    changes    =A11 + A11    to    =A12 + A11 # !!
-  #
-  # The solution here would be to reverse the order of the substitutions or to
-  # start with a stored formula that won't yield a false match such as =X10 + Y11:
-  #
-  #     formula = worksheet.store_formula('=X10 + Y11')
-  #
-  #     worksheet.repeat_formula('A1', formula, nil,
-  #                                 qw/X10/, 'A11',
-  #                                 qw/Y11/, 'A12'
-  #                               )
-  #
-  # If you think that you have a problem related to a false match you can check
-  # the tokens that you are substituting against as follows.
-  #
-  #     formula = worksheet.store_formula('=A1*5+4')
-  #     print "#{formula}\n"
   #
   # See also the repeat.rb program in the examples directory of the distro.
   #
