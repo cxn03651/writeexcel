@@ -489,8 +489,8 @@ class Worksheet < BIFFWriter
   # The hidden parameter should be set to true if you wish to hide a row. This can
   # be used, for example, to hide intermediary steps in a complicated calculation:
   #
-  #     worksheet.set_row(0, 20,    format, true)
-  #     worksheet.set_row(1, undef, nil,    true)
+  #     worksheet.set_row(0, 20,  format, true)
+  #     worksheet.set_row(1, nil, nil,    true)
   #
   # The level parameter is used to set the outline level of the row. Outlines
   # are described in "OUTLINES AND GROUPING IN EXCEL". Adjacent rows with the
@@ -7533,7 +7533,7 @@ class Worksheet < BIFFWriter
 
   #
   # Write the Escher ClientAnchor record that is part of MSODRAWING.
-  #    flag        
+  #    flag
   #    col_start     # Col containing upper left corner of object
   #    x1            # Distance to left side of object
   #
@@ -7697,7 +7697,7 @@ class Worksheet < BIFFWriter
   #
   # Write the OBJ record that is part of filter records.
   #    obj_id        # Object ID number.
-  #    col        
+  #    col
   #
   def store_obj_filter(obj_id, col)   #:nodoc:
     record      = 0x005D   # Record identifier
