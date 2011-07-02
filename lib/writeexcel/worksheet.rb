@@ -3429,22 +3429,22 @@ class Worksheet < BIFFWriter
   # control over the format of the cell comment the following options are
   # available:
   #
-  #     encoding
-  #     author
-  #     author_encoding
-  #     visible
-  #     x_scale
-  #     width
-  #     y_scale
-  #     height
-  #     color
-  #     start_cell
-  #     start_row
-  #     start_col
-  #     x_offset
-  #     y_offset
+  #     :encoding
+  #     :author
+  #     :author_encoding
+  #     :visible
+  #     :x_scale
+  #     :width
+  #     :y_scale
+  #     :height
+  #     :color
+  #     :start_cell
+  #     :start_row
+  #     :start_col
+  #     :x_offset
+  #     :y_offset
   #
-  # Option: encoding
+  # Option: :encoding
   #
   #   This option is used to indicate that the comment string is encoded as
   #   UTF-16BE.
@@ -3453,7 +3453,7 @@ class Worksheet < BIFFWriter
   #
   #     worksheet.write_comment('C3', comment, :encoding => 1)
   #
-  # Option: author
+  # Option: :author
   #
   #   This option is used to indicate who the author of the comment is. Excel
   #   displays the author of the comment in the status bar at the bottom of
@@ -3462,11 +3462,11 @@ class Worksheet < BIFFWriter
   #
   #     worksheet.write_comment('C3', 'Atonement', :author => 'Ian McEwan')
   #
-  # Option: author_encoding
+  # Option: :author_encoding
   #
   #   This option is used to indicate that the author string is encoded as UTF-16BE.
   #
-  # Option: visible
+  # Option: :visible
   #
   #   This option is used to make a cell comment visible when the worksheet
   #   is opened. The default behaviour in Excel is that comments are initially
@@ -3482,7 +3482,7 @@ class Worksheet < BIFFWriter
   #
   #     worksheet.write_comment('C3', 'Hello', :visible => 0)
   #
-  # Option: x_scale
+  # Option: :x_scale
   #
   #   This option is used to set the width of the cell comment box as a factor
   #   of the default width.
@@ -3490,14 +3490,14 @@ class Worksheet < BIFFWriter
   #     worksheet.write_comment('C3', 'Hello', :x_scale => 2)
   #     worksheet.write_comment('C4', 'Hello', :x_scale => 4.2)
   #
-  # Option: width
+  # Option: :width
   #
   #   This option is used to set the width of the cell comment box
   #   explicitly in pixels.
   #
   #     worksheet.write_comment('C3', 'Hello', :width => 200)
   #
-  # Option: y_scale
+  # Option: :y_scale
   #
   #   This option is used to set the height of the cell comment box as a
   #   factor of the default height.
@@ -3505,14 +3505,14 @@ class Worksheet < BIFFWriter
   #     worksheet.write_comment('C3', 'Hello', :y_scale => 2)
   #     worksheet.write_comment('C4', 'Hello', :y_scale => 4.2)
   #
-  # Option: height
+  # Option: :height
   #
   #   This option is used to set the height of the cell comment box
   #   explicitly in pixels.
   #
   #     worksheet.write_comment('C3', 'Hello', :height => 200)
   #
-  # Option: color
+  # Option: :color
   #
   #   This option is used to set the background colour of cell comment box.
   #   You can use one of the named colours recognised by WriteExcel or a colour
@@ -3521,7 +3521,7 @@ class Worksheet < BIFFWriter
   #     worksheet.write_comment('C3', 'Hello', :color => 'green')
   #     worksheet.write_comment('C4', 'Hello', :color => 0x35)    # Orange
   #
-  # Option: start_cell
+  # Option: :start_cell
   #
   #   This option is used to set the cell in which the comment will appear.
   #   By default Excel displays comments one cell to the right and one cell
@@ -3531,28 +3531,28 @@ class Worksheet < BIFFWriter
   #
   #     worksheet.write_comment('C3', 'Hello', :start_cell => 'E2')
   #
-  # Option: start_row
+  # Option: :start_row
   #
   #   This option is used to set the row in which the comment will appear.
   #   See the start_cell option above. The row is zero indexed.
   #
   #     worksheet.write_comment('C3', 'Hello', :start_row => 0)
   #
-  # Option: start_col
+  # Option: :start_col
   #
   #   This option is used to set the column in which the comment will appear.
   #   See the start_cell option above. The column is zero indexed.
   #
   #     worksheet.write_comment('C3', 'Hello', :start_col => 4)
   #
-  # Option: x_offset
+  # Option: :x_offset
   #
   #   This option is used to change the x offset, in pixels, of a comment
   #   within a cell:
   #
   #     worksheet.write_comment('C3', comment, :x_offset => 30)
   #
-  # Option: y_offset
+  # Option: :y_offset
   #
   #   This option is used to change the y offset, in pixels, of a comment
   #   within a cell:
@@ -3752,7 +3752,7 @@ class Worksheet < BIFFWriter
   # The Chart must be created by the add_chart() Workbook method and it must
   # have the embedded option set.
   #
-  #     chart = workbook.add_chart(:type => 'Chart::Line', :embedded => 1 )
+  #     chart = workbook.add_chart(:type => 'Chart::Line', :embedded => true )
   #
   #     # Configure the chart.
   #     ...
@@ -3829,7 +3829,7 @@ class Worksheet < BIFFWriter
   #
   #     worksheet1.insert_image('A1', 'ruby.bmp')
   #     worksheet2.insert_image('A1', '../images/ruby.bmp')
-  #     worksheet3.insert_image('A1', '.c:\images\ruby.bmp')
+  #     worksheet3.insert_image('A1', 'c:\images\ruby.bmp')
   #
   # The parameters _x_ and _y_ can be used to specify an offset from the top
   # left hand corner of the cell specified by _row_ and _col_. The offset
