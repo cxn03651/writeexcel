@@ -89,6 +89,16 @@ If you have any problem or question, please contact <a href="mailto:cxn03651@msj
     <li class='indexItem indexItem2'><a href='#autofilter'>autofilter(first_row, first_col, last_row, last_col)</a></li>
     <li class='indexItem indexItem2'><a href='#filter_column'>filter_column(column, expression)</a></li>
   </ul></li>
+  <li class='indexItem indexItem1'><a href='#CHART_METHODS'>CHART METHODS</a></li>
+  <li><ul class='indexList indexList2'>
+    <li class='indexItem indexItem2'><a href='#add_series'>add_series</a></li>
+    <li class='indexItem indexItem2'><a href='#set_x_axis'>set_x_axis</a></li>
+    <li class='indexItem indexItem2'><a href='#set_y_axis'>set_y_axis</a></li>
+    <li class='indexItem indexItem2'><a href='#set_title'>set_title</a></li>
+    <li class='indexItem indexItem2'><a href='#set_legend'>set_legend</a></li>
+    <li class='indexItem indexItem2'><a href='#set_chartarea'>set_chartarea</a></li>
+    <li class='indexItem indexItem2'><a href='#set_plotarea'>set_plotarea</a></li>
+  </ul></li>
   <li class='indexItem indexItem1'><a href='#PAGE_SET-UP_METHODS'>PAGE SET-UP METHODS</a></li>
   <li><ul class='indexList indexList2'>
     <li class='indexItem indexItem2'><a href='#set_landscape'>set_landscape</a></li>
@@ -149,6 +159,11 @@ If you have any problem or question, please contact <a href="mailto:cxn03651@msj
     <li class='indexItem indexItem2'><a href='#copy'>copy(format)</a></li>
   </ul></li>
   <li class='indexItem indexItem1'><a href='#COLOURS_IN_EXCEL'>COLOURS IN EXCEL</a></li>
+  <li class='indexItem indexItem1'><a href='#Chart_object_colours'>CHART OBJECT COLOURS</a></li>
+  <li class='indexItem indexItem1'><a href='#Chart_line_patterns'>CHART LINE PATTERNS</a></li>
+  <li class='indexItem indexItem1'><a href='#Chart_line_weights'>CHART LINE WIGHTS</a></li>
+  <li class='indexItem indexItem1'><a href='#Chart_names_and_links'>CHART NAMES AND LINKS</a></li>
+  <li class='indexItem indexItem1'><a href='#Chart_names_and_Unicode'>CHART NAMES AND UNICODE</a></li>
   <li class='indexItem indexItem1'><a href='#DATES_AND_TIME_IN_EXCEL'>DATES AND TIME IN EXCEL</a></li>
   <li><ul class='indexList indexList2'>
     <li class='indexItem indexItem2'><a href='#An_Excel_date_time_is_a_number_plus_a_format'>An Excel date/time is a number plus a format</a></li>
@@ -187,6 +202,13 @@ If you have any problem or question, please contact <a href="mailto:cxn03651@msj
     <li class='indexItem indexItem2'><a href='#Example_3'>Example 3</a></li>
     <li class='indexItem indexItem2'><a href='#Example_4'>Example 4</a></li>
     <li class='indexItem indexItem2'><a href='#Example_5'>Example 5</a></li>
+    <li class='indexItem indexItem2'><a href='#Example_6'>Example 6 (Chart Area)</a></li>
+    <li class='indexItem indexItem2'><a href='#Example_7'>Example 7 (Chart Bar)</a></li>
+    <li class='indexItem indexItem2'><a href='#Example_8'>Example 8 (Chart Column)</a></li>
+    <li class='indexItem indexItem2'><a href='#Example_9'>Example 9 (Chart Line)</a></li>
+    <li class='indexItem indexItem2'><a href='#Example_10'>Example 10 (Chart Pie)</a></li>
+    <li class='indexItem indexItem2'><a href='#Example_11'>Example 11 (Chart Scatter)</a></li>
+    <li class='indexItem indexItem2'><a href='#Example_12'>Example 12 (Chart Stock)</a></li>
     <li class='indexItem indexItem2'><a href='#Additional_Examples'>Additional Examples</a></li>
   </ul></li>
   <li class='indexItem indexItem1'><a href='#LIMITATIONS'>LIMITATIONS</a></li>
@@ -2273,6 +2295,258 @@ name="filter_column"
 <p>See the <code>autofilter.rb</code> program in the examples directory of the distro for a more detailed example.</p>
 
 <h1><a class='u' href='#___top' title='click to go to top of document'
+name="CHART_METHODS"
+>CHART METHODS</a></h1>
+
+<h2><a class='u' href='#___top' title='click to go to top of document'
+name="add_series"
+>add_series</a></h2>
+
+<p>In an Excel chart a &#34;series&#34; is a collection of information such as values, x-axis labels and the name that define which data is plotted. These settings are displayed when you select the <code>Chart . Source Data...</code> menu option.</p>
+
+<p>With a WriteExcel Chart object the <code>add_series</code> method is used to set the properties for a series:</p>
+
+<pre>
+    chart.add_series(
+        :categories    =&#62; &#39;=Sheet1!$A$2:$A$10&#39;,
+        :values        =&#62; &#39;=Sheet1!$B$2:$B$10&#39;,
+        :name          =&#62; &#39;Series name&#39;,
+        :name_formula  =&#62; &#39;=Sheet1!$B$1&#39;,
+    )
+</pre>
+
+<p>The properties that can be set are:</p>
+
+<ul>
+  <li><code>:values</code>
+  <p>This is the most important property of a series and must be set for every chart object. It links the chart with the worksheet data that it displays. Note the format that should be used for the formula.</p>
+  </li>
+
+  <li><code>:categories</code>
+  <p>This sets the chart category labels. The category is more or less the same as the X-axis. In most chart types the <code>categories</code> property is optional and the chart will just assume a sequential series from <code>1 .. n</code>.</p>
+  </li>
+
+  <li><code>:name</code>
+  <p>Set the name for the series. The name is displayed in the chart legend and in the formula bar. The name property is optional and if it isn&#39;t supplied will default to <code>Series 1 .. n</code>.</p>
+  </li>
+
+  <li><code>:name_formula</code>
+  <p>Optional, can be used to link the name to a worksheet cell. See <a href="#Chart_names_and_links" class="podlinkpod"
+  >&#34;Chart names and links&#34;</a>.</p>
+  </li>
+</ul>
+
+<p>You can add more than one series to a chart, in fact some chart types such as <code>Chart::Stock</code> require it. The series numbering and order in the final chart is the same as the order in which that are added.</p>
+
+  <pre>
+    # Add the first series.
+      chart.add_series(
+        :categories =&#62; &#39;=Sheet1!$A$2:$A$7&#39;,
+        :values     =&#62; &#39;=Sheet1!$B$2:$B$7&#39;,
+        :name       =&#62; &#39;Test data series 1&#39;,
+      )
+
+      # Add another series. Category is the same but values are different.
+      chart.add_series(
+        :categories =&#62; &#39;=Sheet1!$A$2:$A$7&#39;,
+        :values     =&#62; &#39;=Sheet1!$C$2:$C$7&#39;,
+        :name       =&#62; &#39;Test data series 2&#39;,
+      )
+</pre>
+
+<h2><a class='u' href='#___top' title='click to go to top of document'
+name="set_x_axis"
+>set_x_axis</a></h2>
+
+<p>The <code>set_x_axis</code> method is used to set properties of the X axis.</p>
+<p>A Pie chart does not have an X or Y axis so this method is ignored.</p>
+<pre>
+    chart.set_x_axis( :name =&#62; &#39;Sample length (m)&#39; )
+</pre>
+
+<p>The properties that can be set are:</p>
+
+<ul>
+  <li><code>:name</code>
+  <p>Set the name (title or caption) for the axis. The name is displayed below the X axis. This property is optional. The default is to have no axis name.</p>
+  </li>
+
+  <li><code>:name_formula</code>
+  <p>Optional, can be used to link the name to a worksheet cell. See <a href="#Chart_names_and_links" class="podlinkpod"
+  >&#34;Chart names and links&#34;</a>.</p>
+  </li>
+</ul>
+
+<p>Additional axis properties such as range, divisions and ticks will be made available in later releases.</p>
+
+<h2><a class='u' href='#___top' title='click to go to top of document'
+name="set_y_axis"
+>set_y_axis</a></h2>
+
+<p>The <code>set_y_axis</code> method is used to set properties of the Y axis.</p>
+
+<pre>
+    chart.set_y_axis( :name =&#62; &#39;Sample weight (kg)&#39; )
+</pre>
+
+<p>The properties that can be set are:</p>
+
+<ul>
+  <li><code>:name</code>
+  <p>Set the name (title or caption) for the axis. The name is displayed to the left of the Y axis. This property is optional. The default is to have no axis name.</p>
+  </li>
+
+  <li><code>:name_formula</code>
+  <p>Optional, can be used to link the name to a worksheet cell. See <a href="#Chart_names_and_links" class="podlinkpod"
+  >&#34;Chart names and links&#34;</a>.</p>
+  </li>
+</ul>
+
+<p>Additional axis properties such as range, divisions and ticks will be made available in later releases.</p>
+
+<h2><a class='u' href='#___top' title='click to go to top of document'
+name="set_title"
+>set_title</a></h2>
+
+<p>The <code>set_title</code> method is used to set properties of the chart title.</p>
+
+<pre>
+    chart.set_title( :name =&#62; &#39;Year End Results&#39; )
+</pre>
+
+<p>The properties that can be set are:</p>
+
+<ul>
+  <li><code>:name</code>
+  <p>Set the name (title) for the chart. The name is displayed above the chart. This property is optional. The default is to have no chart title.</p>
+  </li>
+
+  <li><code>:name_formula</code>
+  <p>Optional, can be used to link the name to a worksheet cell. See <a href="#Chart_names_and_links" class="podlinkpod"
+  >&#34;Chart names and links&#34;</a>.</p>
+  </li>
+</ul>
+
+<h2><a class='u' href='#___top' title='click to go to top of document'
+name="set_legend"
+>set_legend</a></h2>
+
+<p>The <code>set_legend</code> method is used to set properties of the chart legend.</p>
+
+<pre>
+    chart.set_legend( :position =&#62; &#39;none&#39; )
+</pre>
+
+<p>The properties that can be set are:</p>
+
+<ul>
+  <li><code>:position</code>
+  <p>Set the position of the chart legend.</p>
+
+  <pre>
+    chart.set_legend( :position =&#62; &#39;none&#39; )
+  </pre>
+
+  <p>The default legend position is <code>bottom</code>. The currently supported chart positions are:</p>
+
+  <pre>
+    none
+    bottom
+  </pre>
+
+  <p>The other legend positions will be added later.</p>
+  </li>
+</ul>
+
+<h2><a class='u' href='#___top' title='click to go to top of document'
+name="set_chartarea"
+>set_chartarea</a></h2>
+
+<p>The <code>set_chartarea</code> method is used to set the properties of the chart area. In Excel the chart area is the background area behind the chart.</p>
+
+<p>The properties that can be set are:</p>
+
+<ul>
+  <li><code>:color</code>
+  <p>Set the colour of the chart area. The Excel default chart area color is &#39;white&#39;, index 9. See <a href="#Chart_object_colours" class="podlinkpod"
+  >&#34;CHART OBJECT COLOURS&#34;</a>.</p>
+  </li>
+
+  <li><code>:line_color</code>
+  <p>Set the colour of the chart area border line. The Excel default border line colour is &#39;black&#39;, index 9. See <a href="#Chart_object_colours" class="podlinkpod"
+  >&#34;CHART OBJECT COLOURS&#34;</a>.</p>
+  </li>
+
+  <li><code>:line_pattern</code>
+  <p>Set the pattern of the of the chart area border line. The Excel default pattern is &#39;none&#39;, index 0 for a chart sheet and &#39;solid&#39;, index 1, for an embedded chart. See <a href="#Chart_line_patterns" class="podlinkpod"
+  >&#34;Chart line patterns&#34;</a>.</p>
+  </li>
+
+  <li><code>:line_weight</code>
+  <p>Set the weight of the of the chart area border line. The Excel default weight is &#39;narrow&#39;, index 2. See <a href="#Chart_line_weights" class="podlinkpod"
+  >&#34;Chart line weights&#34;</a>.</p>
+  </li>
+</ul>
+
+<p>Here is an example of setting several properties:</p>
+
+<pre>
+    chart.set_chartarea(
+      :color        =&#62; &#39;red&#39;,
+      :line_color   =&#62; &#39;black&#39;,
+      :line_pattern =&#62; 2,
+      :line_weight  =&#62; 3,
+    )
+</pre>
+
+<p>Note, for chart sheets the chart area border is off by default. For embedded charts is is on by default.</p>
+
+<h2><a class='u' href='#___top' title='click to go to top of document'
+name="set_plotarea"
+>set_plotarea</a></h2>
+
+<p>The <code>set_plotarea</code> method is used to set properties of the plot area of a chart. In Excel the plot area is the area between the axes on which the chart series are plotted.</p>
+
+<p>The properties that can be set are:</p>
+
+<ul>
+  <li><code>:visible</code>
+  <p>Set the visibility of the plot area. The default is 1 for visible. Set to 0 to hide the plot area and have the same colour as the background chart area.</p>
+  </li>
+
+  <li><code>:color</code>
+  <p>Set the colour of the plot area. The Excel default plot area color is &#39;silver&#39;, index 23. See <a href="#Chart_object_colours" class="podlinkpod"
+  >&#34;CHART OBJECT COLOURS&#34;</a>.</p>
+  </li>
+
+  <li><code>:line_color</code>
+  <p>Set the colour of the plot area border line. The Excel default border line colour is &#39;gray&#39;, index 22. See <a href="#Chart_object_colours" class="podlinkpod"
+  >&#34;CHART OBJECT COLOURS&#34;</a>.</p>
+  </li>
+
+  <li><code>:line_pattern</code>
+  <p>Set the pattern of the of the plot area border line. The Excel default pattern is &#39;solid&#39;, index 1. See <a href="#Chart_line_patterns" class="podlinkpod"
+  >&#34;Chart line patterns&#34;</a>.</p>
+  </li>
+
+  <li><code>:line_weight</code>
+  <p>Set the weight of the of the plot area border line. The Excel default weight is &#39;narrow&#39;, index 2. See <a href="#Chart_line_weights" class="podlinkpod"
+  >&#34;Chart line weights&#34;</a>.</p>
+  </li>
+</ul>
+
+<p>Here is an example of setting several properties:</p>
+
+<pre>
+    chart.set_plotarea(
+      :color        =&#62; &#39;red&#39;,
+      :line_color   =&#62; &#39;black&#39;,
+      :line_pattern =&#62; 2,
+      :line_weight  =&#62; 3,
+    )
+</pre>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
 name="PAGE_SET-UP_METHODS"
 >PAGE SET-UP METHODS</a></h1>
 
@@ -3768,6 +4042,115 @@ name="COLOURS_IN_EXCEL"
 <p>The default Excel colour palette is shown in <code>palette.html</code> in the <code>docs</code> directory of the distro. You can generate an Excel version of the palette using <code>colors.rb</code> in the <code>examples</code> directory.</p>
 
 <h1><a class='u' href='#___top' title='click to go to top of document'
+name="Chart_object_colours"
+>CHART OBJECT COLOURS</a></h1>
+
+<p>Many of the chart objects supported by WriteExcl allow the default colours to be changed. Excel provides a palette of 56 colours and in WriteExcel these colours are accessed via their palette index in the range 8..63.</p>
+
+<p>The most commonly used colours can be accessed by name or index.</p>
+
+<pre>
+    black   =&#62;   8,    green    =&#62;  17,    navy     =&#62;  18,
+    white   =&#62;   9,    orange   =&#62;  53,    pink     =&#62;  33,
+    red     =&#62;  10,    gray     =&#62;  23,    purple   =&#62;  20,
+    blue    =&#62;  12,    lime     =&#62;  11,    silver   =&#62;  22,
+    yellow  =&#62;  13,    cyan     =&#62;  15,
+    brown   =&#62;  16,    magenta  =&#62;  14,
+</pre>
+
+<p>For example the following are equivalent.</p>
+
+<pre>
+    chart.set_plotarea( :color =&#62; 10    )
+    chart.set_plotarea( :color =&#62; &#39;red&#39; )
+</pre>
+
+<p>The colour palette can be generated using <code>colors.rb</code> in the <code>examples</code> directory.</p>
+
+<p>User defined colours can be set using the <code><a href="#set_custom_color">set_custom_color</a></code> workbook method. This and other aspects of using colours are discussed in the <a href="#COLOURS_IN_EXCEL">COLOURS IN EXCEL</a> section.</p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Chart_line_patterns"
+>Chart line patterns</a></h1>
+
+<p>Chart lines patterns can be set using either an index or a name:</p>
+
+<pre>
+    chart.set_plotarea( :weight =&#62; 2      )
+    chart.set_plotarea( :weight =&#62; &#39;dash&#39; )
+</pre>
+
+<p>Chart lines have 9 possible patterns are follows:</p>
+
+<pre>
+    &#39;none&#39;         =&#62; 0,
+    &#39;solid&#39;        =&#62; 1,
+    &#39;dash&#39;         =&#62; 2,
+    &#39;dot&#39;          =&#62; 3,
+    &#39;dash-dot&#39;     =&#62; 4,
+    &#39;dash-dot-dot&#39; =&#62; 5,
+    &#39;medium-gray&#39;  =&#62; 6,
+    &#39;dark-gray&#39;    =&#62; 7,
+    &#39;light-gray&#39;   =&#62; 8,
+</pre>
+
+<p>The patterns 1-8 are shown in order in the drop down dialog boxes in Excel. The default pattern is &#39;solid&#39;, index 1.</p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Chart_line_weights"
+>Chart line weights</a></h1>
+
+<p>Chart lines weights can be set using either an index or a name:</p>
+
+<pre>
+    chart.set_plotarea( :weight =&#62; 1          )
+    chart.set_plotarea( :weight =&#62; &#39;hairline&#39; )
+</pre>
+
+<p>Chart lines have 4 possible weights are follows:</p>
+
+<pre>
+    &#39;hairline&#39; =&#62; 1,
+    &#39;narrow&#39;   =&#62; 2,
+    &#39;medium&#39;   =&#62; 3,
+    &#39;wide&#39;     =&#62; 4,
+</pre>
+
+<p>The weights 1-4 are shown in order in the drop down dialog boxes in Excel. The default weight is &#39;narrow&#39;, index 2.</p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Chart_names_and_links"
+>Chart names and links</a></h1>
+
+<p>The <code>add_series</code>, <code>set_x_axis</code>, <code>set_y_axis</code> and <code>set_title</code> methods all support a <code>:name</code> property. In general these names can be either a static string or a link to a worksheet cell. If you choose to use the <code>name_formula</code> property to specify a link then you should also the <code>name</code> property. This isn&#39;t strictly required by Excel but some third party applications expect it to be present.</p>
+
+<pre>
+    chart.set_title(
+      :name          =&#62; &#39;Year End Results&#39;,
+      :name_formula  =&#62; &#39;=Sheet1!$C$1&#39;,
+    )
+</pre>
+
+<p>These links should be used sparingly since they aren&#39;t commonly used in Excel charts.</p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Chart_names_and_Unicode"
+>Chart names and Unicode</a></h1>
+
+<p>The <code>add_series</code>, <code>set_x_axis</code>, <code>set_y_axis</code> and <code>set_title</code> methods all support a <code>name</code> property. These names can be UTF8 strings.</p>
+
+<p>You can write Unicode strings as UTF-16BE by adding a <code>name_encoding</code> property:</p>
+
+<pre>
+    utf16be_name = pack &#39;n&#39;, 0x263A;
+
+    chart.set_title(
+      name          =&#62; utf16be_name,
+      name_encoding =&#62; 1,
+    )
+</pre>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
 name="DATES_AND_TIME_IN_EXCEL"
 >DATES AND TIME IN EXCEL</a></h1>
 
@@ -4987,6 +5370,436 @@ name="Example_5"
       workbook.close
     end
 </pre>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Example_6"
+>Example 6 (Chart Area)</a></h1>
+
+<p>Here is a complete example that demonstrates some of the available features when creating a chart.</p>
+
+<pre>
+    #!/usr/bin/ruby -w
+
+    require 'rubygems'
+    require 'writeexcel'
+
+    workbook  = WriteExcel.new( 'chart_area.xls' )
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format( :bold => 1 )
+
+    # Add the worksheet data that the charts will refer to.
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ]
+    data = [
+             [ 2, 3, 4, 5, 6, 7 ],
+             [ 1, 4, 5, 2, 1, 5 ],
+             [ 3, 6, 7, 5, 4, 3 ]
+           ]
+
+    worksheet.write( 'A1', headings, bold )
+    worksheet.write( 'A2', data )
+
+    # Create a new chart object. In this case an embedded chart.
+    chart = workbook.add_chart( :type => 'Chart::Area', :embedded => 1 )
+
+    # Configure the first series. (Sample 1)
+    chart.add_series(
+      :name       => 'Sample 1',
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7'
+    )
+
+    # Configure the second series. (Sample 2)
+    chart.add_series(
+      :name       => 'Sample 2',
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$C$2:$C$7'
+    )
+
+    # Add a chart title and some axis labels.
+    chart.set_title( :name => 'Results of sample analysis' )
+    chart.set_x_axis( :name => 'Test number' )
+    chart.set_y_axis( :name => 'Sample length (cm)' )
+
+    # Insert the chart into the worksheet (with an offset).
+    worksheet.insert_chart( 'D2', chart, 25, 10 )
+
+    workbook.close
+</pre>
+
+  <p>This will produce a chart that looks like this:</p>
+
+
+  <p><img src="../images/area1.jpg" width="530" height="325" alt="Chart example." /></p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Example_7"
+>Example 7 (Chart Bar)</a></h1>
+
+<p>Here is a complete example that demonstrates some of the available features when creating a chart.</p>
+
+<pre>
+    #!/usr/bin/ruby -w
+
+    require 'rubygems'
+    require 'writeexcel'
+
+    workbook  = WriteExcel.new( 'chart_bar.xls' )
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format( :bold => 1 )
+
+    # Add the worksheet data that the charts will refer to.
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ];
+    data = [
+        [ 2, 3, 4, 5, 6, 7 ],
+        [ 1, 4, 5, 2, 1, 5 ],
+        [ 3, 6, 7, 5, 4, 3 ],
+    ];
+
+    worksheet.write( 'A1', headings, bold )
+    worksheet.write( 'A2', data )
+
+    # Create a new chart object. In this case an embedded chart.
+    chart = workbook.add_chart( :type => 'Chart::Bar', :embedded => 1 )
+
+    # Configure the first series. (Sample 1)
+    chart.add_series(
+        :name       => 'Sample 1',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$B$2:$B$7'
+    )
+
+    # Configure the second series. (Sample 2)
+    chart.add_series(
+        :name       => 'Sample 2',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$C$2:$C$7'
+    )
+
+    # Add a chart title and some axis labels.
+    chart.set_title( :name => 'Results of sample analysis' )
+    chart.set_x_axis( :name => 'Test number' )
+    chart.set_y_axis( :name => 'Sample length (cm)' )
+
+    # Insert the chart into the worksheet (with an offset).
+    worksheet.insert_chart( 'D2', chart, 25, 10 )
+
+    workbook.close
+</pre>
+
+  <p>This will produce a chart that looks like this:</p>
+
+
+  <p><img src="../images/bar1.jpg" width="530" height="325" alt="Chart::Bar example." /></p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Example_8"
+>Example 8 (Chart Column)</a></h1>
+
+<p>Here is a complete example that demonstrates some of the available features when creating a chart.</p>
+
+<pre>
+    #!/usr/bin/ruby -w
+
+    require 'rubygems'
+    require 'writeexcel'
+
+    workbook  = WriteExcel.new( 'chart_column.xls' )
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format( :bold => 1 )
+
+    # Add the worksheet data that the charts will refer to.
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ];
+    data = [
+        [ 2, 3, 4, 5, 6, 7 ],
+        [ 1, 4, 5, 2, 1, 5 ],
+        [ 3, 6, 7, 5, 4, 3 ],
+    ];
+
+    worksheet.write( 'A1', headings, bold )
+    worksheet.write( 'A2', data )
+
+    # Create a new chart object. In this case an embedded chart.
+    chart = workbook.add_chart( :type => 'Chart::Column', :embedded => 1 )
+
+    # Configure the first series. (Sample 1)
+    chart.add_series(
+        :name       => 'Sample 1',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$B$2:$B$7'
+    )
+
+    # Configure the second series. (Sample 2)
+    chart.add_series(
+        :name       => 'Sample 2',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$C$2:$C$7'
+    )
+
+    # Add a chart title and some axis labels.
+    chart.set_title( :name => 'Results of sample analysis' )
+    chart.set_x_axis( :name => 'Test number' )
+    chart.set_y_axis( :name => 'Sample length (cm)' )
+
+    # Insert the chart into the worksheet (with an offset).
+    worksheet.insert_chart( 'D2', chart, 25, 10 )
+
+    workbook.close
+</pre>
+
+  <p>This will produce a chart that looks like this:</p>
+
+
+  <p><img src="../images/column1.jpg" width="530" height="325" alt="Chart::Column example." /></p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Example_9"
+>Example 9 (Chart Line)</a></h1>
+
+<p>Here is a complete example that demonstrates some of the available features when creating a chart.</p>
+
+<pre>
+    #!/usr/bin/ruby -w
+
+    require 'rubygems'
+    require 'writeexcel'
+
+    workbook  = WriteExcel.new( 'chart_line.xls' )
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format( :bold => 1 )
+
+    # Add the worksheet data that the charts will refer to.
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ];
+    data = [
+        [ 2, 3, 4, 5, 6, 7 ],
+        [ 1, 4, 5, 2, 1, 5 ],
+        [ 3, 6, 7, 5, 4, 3 ],
+    ];
+
+    worksheet.write( 'A1', headings, bold )
+    worksheet.write( 'A2', data )
+
+    # Create a new chart object. In this case an embedded chart.
+    chart = workbook.add_chart( :type => 'Chart::Line', :embedded => 1 )
+
+    # Configure the first series. (Sample 1)
+    chart.add_series(
+        :name       => 'Sample 1',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$B$2:$B$7'
+    )
+
+    # Configure the second series. (Sample 2)
+    chart.add_series(
+        :name       => 'Sample 2',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$C$2:$C$7'
+    )
+
+    # Add a chart title and some axis labels.
+    chart.set_title( :name => 'Results of sample analysis' )
+    chart.set_x_axis( :name => 'Test number' )
+    chart.set_y_axis( :name => 'Sample length (cm)' )
+
+    # Insert the chart into the worksheet (with an offset).
+    worksheet.insert_chart( 'D2', chart, 25, 10 )
+
+    workbook.close
+</pre>
+
+  <p>This will produce a chart that looks like this:</p>
+
+
+  <p><img src="../images/line1.jpg" width="530" height="325" alt="Chart::Line example." /></p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Example_10"
+>Example 10 (Chart Pie)</a></h1>
+
+<p>Here is a complete example that demonstrates some of the available features when creating a chart.</p>
+
+<pre>
+#!/usr/bin/ruby -w
+
+    require 'rubygems'
+    require 'writeexcel'
+
+    workbook  = WriteExcel.new( 'chart_pie.xls' )
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format( :bold => 1 )
+
+    # Add the worksheet data that the charts will refer to.
+    headings = [ 'Category', 'Values' ]
+    data = [
+        [ 'Apple', 'Cherry', 'Pecan' ],
+        [ 60,       30,       10     ]
+    ]
+
+    worksheet.write( 'A1', headings, bold )
+    worksheet.write( 'A2', data )
+
+    # Create a new chart object. In this case an embedded chart.
+    chart = workbook.add_chart( :type => 'Chart::Pie', :embedded => 1 )
+
+    # Configure the series.
+    chart.add_series(
+        :name       => 'Pie sales data',
+        :categories => '=Sheet1!$A$2:$A$4',
+        :values     => '=Sheet1!$B$2:$B$4'
+    )
+
+    # Add a title.
+    chart.set_title( :name => 'Popular Pie Types' )
+
+    # Insert the chart into the worksheet (with an offset).
+    worksheet.insert_chart( 'C2', chart, 25, 10 )
+
+    workbook.close
+</pre>
+
+  <p>This will produce a chart that looks like this:</p>
+
+  <p><img src="../images/pie1.jpg" width="530" height="325" alt="Chart::Pie example." /></p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Example_11"
+>Example 11 (Chart Scatter)</a></h1>
+
+<p>Here is a complete example that demonstrates some of the available features when creating a chart.</p>
+
+<pre>
+#!/usr/bin/ruby -w
+
+    require 'rubygems'
+    require 'writeexcel'
+
+    workbook  = WriteExcel.new( 'chart_scatter.xls' )
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format( :bold => 1 )
+
+    # Add the worksheet data that the charts will refer to.
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ]
+    data = [
+        [ 2, 3, 4, 5, 6, 7 ],
+        [ 1, 4, 5, 2, 1, 5 ],
+        [ 3, 6, 7, 5, 4, 3 ]
+    ]
+
+    worksheet.write( 'A1', headings, bold )
+    worksheet.write( 'A2', data )
+
+    # Create a new chart object. In this case an embedded chart.
+    chart = workbook.add_chart( :type => 'Chart::Scatter', :embedded => 1 )
+
+    # Configure the first series. (Sample 1)
+    chart.add_series(
+        :name       => 'Sample 1',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$B$2:$B$7'
+    )
+
+    # Configure the second series. (Sample 2)
+    chart.add_series(
+        :name       => 'Sample 2',
+        :categories => '=Sheet1!$A$2:$A$7',
+        :values     => '=Sheet1!$C$2:$C$7'
+    )
+
+    # Add a chart title and some axis labels.
+    chart.set_title( :name => 'Results of sample analysis' )
+    chart.set_x_axis( :name => 'Test number' )
+    chart.set_y_axis( :name => 'Sample length (cm)' )
+
+    # Insert the chart into the worksheet (with an offset).
+    worksheet.insert_chart( 'D2', chart, 25, 10 )
+
+    workbook.close
+</pre>
+
+  <p>This will produce a chart that looks like this:</p>
+
+  <p><img src="../images/scatter1.jpg" width="530" height="325" alt="Chart::Scatter example." /></p>
+
+<h1><a class='u' href='#___top' title='click to go to top of document'
+name="Example_12"
+>Example 12 (Chart Stock)</a></h1>
+
+<p>Here is a complete example that demonstrates some of the available features when creating a chart.</p>
+
+<pre>
+#!/usr/bin/ruby -w
+
+    require 'rubygems'
+    require 'writeexcel'
+
+    workbook    = WriteExcel.new( 'chart_stock_ex.xls' )
+    worksheet   = workbook.add_worksheet
+    bold        = workbook.add_format( :bold => 1 )
+    date_format = workbook.add_format( :num_format => 'dd/mm/yyyy' )
+
+    # Add the worksheet data that the charts will refer to.
+    headings = [ 'Date', 'Open', 'High', 'Low', 'Close' ]
+    data = [
+        [ '2009-08-23', 110.75, 113.48, 109.05, 109.40 ],
+        [ '2009-08-24', 111.24, 111.60, 103.57, 104.87 ],
+        [ '2009-08-25', 104.96, 108.00, 103.88, 106.00 ],
+        [ '2009-08-26', 104.95, 107.95, 104.66, 107.91 ],
+        [ '2009-08-27', 108.10, 108.62, 105.69, 106.15 ]
+      ]
+
+    worksheet.write( 'A1', headings, bold )
+
+    row = 1
+    data.each do |d|
+      worksheet.write( row, 0, d[0], date_format )
+      worksheet.write( row, 1, d[1] )
+      worksheet.write( row, 2, d[2] )
+      worksheet.write( row, 3, d[3] )
+      worksheet.write( row, 4, d[4] )
+      row += 1
+    end
+
+    # Create a new chart object. In this case an embedded chart.
+    chart = workbook.add_chart( :type => 'Chart::Stock', :embedded => 1 )
+
+    # Add a series for each of the Open-High-Low-Close columns.
+    chart.add_series(
+        :categories => '=Sheet1!$A$2:$A$6',
+        :values     => '=Sheet1!$B$2:$B$6',
+        :name       => 'Open'
+    )
+
+    chart.add_series(
+        :categories => '=Sheet1!$A$2:$A$6',
+        :values     => '=Sheet1!$C$2:$C$6',
+        :name       => 'High'
+    )
+
+    chart.add_series(
+        :categories => '=Sheet1!$A$2:$A$6',
+        :values     => '=Sheet1!$D$2:$D$6',
+        :name       => 'Low'
+    )
+
+    chart.add_series(
+        :categories => '=Sheet1!$A$2:$A$6',
+        :values     => '=Sheet1!$E$2:$E$6',
+        :name       => 'Close'
+    )
+
+    # Add a chart title and some axis labels.
+    chart.set_title( :name => 'Open-High-Low-Close' )
+    chart.set_x_axis( :name => 'Date' )
+    chart.set_y_axis( :name => 'Share price' )
+
+    # Insert the chart into the worksheet (with an offset).
+    worksheet.insert_chart( 'F2', chart, 25, 10 )
+
+    workbook.close
+</pre>
+
+  <p>This will produce a chart that looks like this:</p>
+
+  <p><img src="../images/stock1.jpg" width="530" height="325" alt="Chart::Stock example." /></p>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
 name="Additional_Examples"
