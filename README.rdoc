@@ -28,7 +28,7 @@ Original description is below:
 
 == Usage
 
-See rdoc's WriteExcel class document.
+See rdoc's WriteExcel class document or Reference http://writeexcel.web.fc2.com/ .
 You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'.
 
 Example Code:
