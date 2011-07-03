@@ -1084,7 +1084,7 @@ name="write_col"
 <p>The <code>write_col</code> method can be used to write a 1D or 2D array of data in one go. This is useful for converting the results of a database query into an Excel worksheet. You must pass a reference to the array of data rather than the array itself. The <code>write</code> method is then called for each element of the data. For example:</p>
 
 <pre>
-    array      = [39;awk&#39;, &#39;gawk&#39;, &#39;mawk&#39;]
+    array      = [&#39;awk&#39;, &#39;gawk&#39;, &#39;mawk&#39;]
 
     worksheet.write_col(0, 0, array)
 
@@ -1457,7 +1457,7 @@ name="write_comment"
 <p>This option is used to indicate that the comment string is encoded as <code>UTF-16BE</code>.</p>
 
 <pre>
-    comment = pack &#39;n&#39;, 0x263a; # UTF-16BE Smiley symbol
+    comment = [0x263a].pack('n')   # UTF-16BE Smiley symbol
 
     worksheet.write_comment(&#39;C3&#39;, comment, :encoding =&#62; 1)
 </pre>
@@ -2592,7 +2592,7 @@ name="set_landscape"
 <p>This method is used to set the orientation of a worksheet&#39;s printed page to landscape:</p>
 
 <pre>
-    worksheet.set_landscape; # Landscape mode
+    worksheet.set_landscape  # Landscape mode
 </pre>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
@@ -2602,7 +2602,7 @@ name="set_portrait"
 <p>This method is used to set the orientation of a worksheet&#39;s printed page to portrait. The default worksheet orientation is portrait, so you won&#39;t generally need to call this method.</p>
 
 <pre>
-    worksheet.set_portrait; # Portrait mode
+    worksheet.set_portrait  # Portrait mode
 </pre>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
@@ -2707,10 +2707,10 @@ name="set_margins"
     set_margins        # Set all margins to the same value
     set_margins_LR     # Set left and right margins to the same value
     set_margins_TB     # Set top and bottom margins to the same value
-    set_margin_left;   # Set left margin
-    set_margin_right;  # Set right margin
-    set_margin_top;    # Set top margin
-    set_margin_bottom; # Set bottom margin
+    set_margin_left    # Set left margin
+    set_margin_right   # Set right margin
+    set_margin_top     # Set top margin
+    set_margin_bottom  # Set bottom margin
 </pre>
 
 <p>All of these methods take a distance in inches as a parameter. Note: 1 inch = 25.4mm. ;-) The default left and right margin is 0.75 inch. The default top and bottom margin is 1.00 inch.</p>
@@ -3226,7 +3226,7 @@ name="Working_with_formats"
 
 <pre>
     format1 = workbook.add_format
-    format1.set_bold;  # Turns bold on
+    format1.set_bold    # Turns bold on
     format1.set_bold(1) # Also turns bold on
     format1.set_bold(0) # Turns bold off
 </pre>
@@ -3383,7 +3383,7 @@ name="set_bold"
 <p>Set the bold property of the font:</p>
 
 <pre>
-    format.set_bold;  # Turn bold on
+    format.set_bold   # Turn bold on
 </pre>
 
 <p>[1] Actually, values in the range 100..1000 are also valid. 400 is normal, 700 is bold and 1000 is very bold indeed. It is probably best to set the value to 1 and use normal bold.</p>
@@ -3401,7 +3401,7 @@ name="set_italic"
 <p>Set the italic property of the font:</p>
 
 <pre>
-    format.set_italic;  # Turn italic on
+    format.set_italic   # Turn italic on
 </pre>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
@@ -3421,7 +3421,7 @@ name="set_underline"
 <p>Set the underline property of the font.</p>
 
 <pre>
-    format.set_underline;   # Single underline
+    format.set_underline    # Single underline
 </pre>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
@@ -3846,7 +3846,7 @@ name="set_bg_color"
 <pre>
     format = workbook.add_format
 
-    format.set_pattern; # This is optional when using a solid fill
+    format.set_pattern  # This is optional when using a solid fill
 
     format.set_bg_color(&#39;green&#39;)
     worksheet.write(&#39;A1&#39;, &#39;Ray&#39;, format)
@@ -4142,7 +4142,7 @@ name="Chart_names_and_Unicode"
 <p>You can write Unicode strings as UTF-16BE by adding a <code>name_encoding</code> property:</p>
 
 <pre>
-    utf16be_name = pack &#39;n&#39;, 0x263A;
+    utf16be_name = [0x263a].pack('n')
 
     chart.set_title(
       name          =&#62; utf16be_name,
@@ -5448,12 +5448,12 @@ name="Example_7"
     bold      = workbook.add_format( :bold => 1 )
 
     # Add the worksheet data that the charts will refer to.
-    headings = [ 'Number', 'Sample 1', 'Sample 2' ];
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ]
     data = [
         [ 2, 3, 4, 5, 6, 7 ],
         [ 1, 4, 5, 2, 1, 5 ],
         [ 3, 6, 7, 5, 4, 3 ],
-    ];
+    ]
 
     worksheet.write( 'A1', headings, bold )
     worksheet.write( 'A2', data )
@@ -5508,12 +5508,12 @@ name="Example_8"
     bold      = workbook.add_format( :bold => 1 )
 
     # Add the worksheet data that the charts will refer to.
-    headings = [ 'Number', 'Sample 1', 'Sample 2' ];
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ]
     data = [
         [ 2, 3, 4, 5, 6, 7 ],
         [ 1, 4, 5, 2, 1, 5 ],
         [ 3, 6, 7, 5, 4, 3 ],
-    ];
+    ]
 
     worksheet.write( 'A1', headings, bold )
     worksheet.write( 'A2', data )
@@ -5568,12 +5568,12 @@ name="Example_9"
     bold      = workbook.add_format( :bold => 1 )
 
     # Add the worksheet data that the charts will refer to.
-    headings = [ 'Number', 'Sample 1', 'Sample 2' ];
+    headings = [ 'Number', 'Sample 1', 'Sample 2' ]
     data = [
         [ 2, 3, 4, 5, 6, 7 ],
         [ 1, 4, 5, 2, 1, 5 ],
         [ 3, 6, 7, 5, 4, 3 ],
-    ];
+    ]
 
     worksheet.write( 'A1', headings, bold )
     worksheet.write( 'A2', data )
