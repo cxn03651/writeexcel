@@ -226,7 +226,7 @@ Gem::Specification.new do |s|
     "writeexcel.gemspec",
     "writeexcel.rdoc"
   ]
-  s.homepage = %q{http://wiki.github.com/cxn03651/writeexcel/}
+  s.homepage = %q{http://writeexcel.web.fc2.com/}
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.5.2}
   s.summary = %q{Write to a cross-platform Excel binary file.}
