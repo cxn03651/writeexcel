@@ -968,7 +968,7 @@ name="write_string"
 
 <pre>
     # Format as a string. Doesn&#39;t change to a number when edited
-    format1 = workbook.add_format(num_format =&#62; &#39;@&#39;)
+    format1 = workbook.add_format(:num_format =&#62; &#39;@&#39;)
     worksheet.write_string(&#39;A2&#39;, &#39;01209&#39;, format1)
 </pre>
 
@@ -1173,7 +1173,7 @@ name="write_date_time"
 >&#34;CELL FORMATTING&#34;</a>. Here is a typical example:</p>
 
 <pre>
-    date_format = workbook.add_format(num_format =&#62; &#39;mm/dd/yy&#39;)
+    date_format = workbook.add_format(:num_format =&#62; &#39;mm/dd/yy&#39;)
     worksheet.write_date_time(&#39;A1&#39;, &#39;2004-05-13T23:20&#39;, date_format)
 </pre>
 
@@ -1675,7 +1675,7 @@ name="insert_chart"
 <p>This method can be used to insert a Chart object into a worksheet. The Chart must be created by the <code>add_chart</code> Workbook method and it must have the <code>embedded</code> option set.</p>
 
 <pre>
-    chart = workbook.add_chart( type =&#62; &#39;Chart::Line&#39;, :embedded =&#62; true )
+    chart = workbook.add_chart( :type =&#62; &#39;Chart::Line&#39;, :embedded =&#62; true )
 
     # Configure the chart.
     ...
@@ -1831,8 +1831,8 @@ name="protect"
 
 <pre>
     # Set some format properties
-    unlocked  = workbook.add_format(locked =&#62; 0)
-    hidden    = workbook.add_format(hidden =&#62; 1)
+    unlocked  = workbook.add_format(:locked =&#62; 0)
+    hidden    = workbook.add_format(:hidden =&#62; 1)
 
     # Enable worksheet protection
     worksheet.protect
@@ -2109,9 +2109,9 @@ name="merge_range"
 
 <pre>
     format = workbook.add_format(
-                                        border  =&#62; 6,
-                                        valign  =&#62; &#39;vcenter&#39;,
-                                        align   =&#62; &#39;center&#39;,
+                                        :border  =&#62; 6,
+                                        :valign  =&#62; &#39;vcenter&#39;,
+                                        :align   =&#62; &#39;center&#39;,
                                       )
 
     worksheet.merge_range(&#39;B3:D4&#39;, &#39;Vertical and horizontal&#39;, format)
@@ -3275,7 +3275,7 @@ name="FORMAT_METHODS"
     set_right_color
 </pre>
 
-<p>The above methods can also be applied directly as properties. For example <code>format.set_bold</code> is equivalent to <code>workbook.add_format(bold =&#62; 1)</code>.</p>
+<p>The above methods can also be applied directly as properties. For example <code>format.set_bold</code> is equivalent to <code>workbook.add_format(:bold =&#62; 1)</code>.</p>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
 name="set_format_properties"
@@ -3285,13 +3285,13 @@ name="set_format_properties"
 
 <pre>
     format = workbook.add_format
-    format.set_format_properties(bold =&#62; 1, color =&#62; &#39;red&#39;)
+    format.set_format_properties(:bold =&#62; 1, :color =&#62; &#39;red&#39;)
 </pre>
 
 <p>However, this method is here mainly for legacy reasons. It is preferable to set the properties in the format constructor:</p>
 
 <pre>
-    format = workbook.add_format(bold =&#62; 1, color =&#62; &#39;red&#39;)
+    format = workbook.add_format(:bold =&#62; 1, :color =&#62; &#39;red&#39;)
 </pre>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
@@ -4145,8 +4145,8 @@ name="Chart_names_and_Unicode"
     utf16be_name = [0x263a].pack('n')
 
     chart.set_title(
-      name          =&#62; utf16be_name,
-      name_encoding =&#62; 1,
+      :name          =&#62; utf16be_name,
+      :name_encoding =&#62; 1,
     )
 </pre>
 
@@ -4195,22 +4195,22 @@ name="An_Excel_date_time_is_a_number_plus_a_format"
 
     worksheet.write(&#39;A1&#39;, number)            #     39506.5
 
-    format2 = workbook.add_format(num_format =&#62; &#39;dd/mm/yy&#39;)
+    format2 = workbook.add_format(:num_format =&#62; &#39;dd/mm/yy&#39;)
     worksheet.write(&#39;A2&#39;, number , format2) #     28/02/08
 
-    format3 = workbook.add_format(num_format =&#62; &#39;mm/dd/yy&#39;)
+    format3 = workbook.add_format(:num_format =&#62; &#39;mm/dd/yy&#39;)
     worksheet.write(&#39;A3&#39;, number , format3) #     02/28/08
 
-    format4 = workbook.add_format(num_format =&#62; &#39;d-m-yyyy&#39;)
+    format4 = workbook.add_format(:num_format =&#62; &#39;d-m-yyyy&#39;)
     worksheet.write(&#39;A4&#39;, number , format4) #     28-2-2008
 
-    format5 = workbook.add_format(num_format =&#62; &#39;dd/mm/yy hh:mm&#39;)
+    format5 = workbook.add_format(:num_format =&#62; &#39;dd/mm/yy hh:mm&#39;)
     worksheet.write(&#39;A5&#39;, number , format5) #     28/02/08 12:00
 
-    format6 = workbook.add_format(num_format =&#62; &#39;d mmm yyyy&#39;)
+    format6 = workbook.add_format(:num_format =&#62; &#39;d mmm yyyy&#39;)
     worksheet.write(&#39;A6&#39;, number , format6) #     28 Feb 2008
 
-    format7 = workbook.add_format(num_format =&#62; &#39;mmm d yyyy hh:mm AM/PM&#39;)
+    format7 = workbook.add_format(:num_format =&#62; &#39;mmm d yyyy hh:mm AM/PM&#39;)
     worksheet.write(&#39;A7&#39;, number , format7) #     Feb 28 2008 12:00 PM
 </pre>
 
@@ -4254,7 +4254,7 @@ name="WriteExcel_doesnt_automatically_convert_date_time_strings"
     worksheet   = workbook.add_worksheet
 
     # Set the default format for dates.
-    date_format = workbook.add_format(num_format =&#62; &#39;mmm d yyyy&#39;)
+    date_format = workbook.add_format(:num_format =&#62; &#39;mmm d yyyy&#39;)
 
     # Increase column width to improve visibility of data.
     worksheet.set_column(&#39;A:C&#39;, 20)
@@ -4419,7 +4419,7 @@ name="DATA_VALIDATION_IN_EXCEL"
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
 name="data_validation"
->data_validation(row, col, { parameter =&#62; &#39;value&#39;, ... })</a></h2>
+>data_validation(row, col, { :parameter =&#62; &#39;value&#39;, ... })</a></h2>
 
 <p>The <code>data_validation</code> method is used to construct an Excel data validation.</p>
 
