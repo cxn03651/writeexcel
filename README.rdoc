@@ -77,6 +77,9 @@ when use urf8 string data.
 
 == Recent Changes
 
+v0.6.8
+* Bug fix. Worksheet#protect doesn't work well.
+
 v0.6.7
 * Bug fix. Worksheet#set_first_sheet doesn't work well.
 * Bug fix. Worksheet#hide_zero doesn't work well.
