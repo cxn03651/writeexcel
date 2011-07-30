@@ -5008,12 +5008,12 @@ class Worksheet < BIFFWriter
   #
   # Based on the algorithm provided by Daniel Rentz of OpenOffice.
   #
-  def encode_password(password)       #:nodoc:
+  def encode_password(password)
     i = 0
     chars = password.split(//)
     count = chars.size
 
-    chars.each do |char|
+    chars.collect! do |char|
       i += 1
       char     = char[0] << i
       low_15   = char & 0x7fff
