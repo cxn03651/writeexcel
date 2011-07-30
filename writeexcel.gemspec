@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{writeexcel}
-  s.version = "0.6.7"
+  s.version = "0.6.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Hideo NAKAMURA"]
-  s.date = %q{2011-07-03}
+  s.date = %q{2011-07-30}
   s.description = %q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
   s.email = %q{cxn03651@msj.biglobe.ne.jp}
   s.extra_rdoc_files = [
@@ -68,6 +68,7 @@ Gem::Specification.new do |s|
     "examples/outline.rb",
     "examples/outline_collapsed.rb",
     "examples/panes.rb",
+    "examples/password_protection.rb",
     "examples/properties.rb",
     "examples/properties_jp.rb",
     "examples/protection.rb",
@@ -181,6 +182,7 @@ Gem::Specification.new do |s|
     "test/perl_output/outline.xls",
     "test/perl_output/outline_collapsed.xls",
     "test/perl_output/panes.xls",
+    "test/perl_output/password_protection.xls",
     "test/perl_output/protection.xls",
     "test/perl_output/regions.xls",
     "test/perl_output/right_to_left.xls",
@@ -246,7 +248,7 @@ Gem::Specification.new do |s|
     "writeexcel.gemspec",
     "writeexcel.rdoc"
   ]
-  s.homepage = %q{http://github.com/cxn03651/writeexcel/}
+  s.homepage = %q{http://wiki.github.com/cxn03651/writeexcel/}
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.6.2}
   s.summary = %q{Write to a cross-platform Excel binary file.}
