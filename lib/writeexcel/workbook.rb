@@ -2628,7 +2628,7 @@ class Workbook < BIFFWriter
     block_count = 1
 
     # Ignore the base class add_continue() method.
-    @ignore_continue = 1
+    @ignore_continue = true
 
     # Case 1 above. Just return the data as it is.
     if data.bytesize <= limit
@@ -2661,7 +2661,7 @@ class Workbook < BIFFWriter
     append(header, data)
 
     # Turn the base class add_continue() method back on.
-    @ignore_continue = 0
+    @ignore_continue = false
   end
 
   def devide_string(string, nth)       #:nodoc:

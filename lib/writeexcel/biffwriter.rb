@@ -32,7 +32,7 @@ class BIFFWriter < WriteFile       #:nodoc:
     @data            = ''
     @datasize        = 0
     @limit           = 8224
-    @ignore_continue = 0
+    @ignore_continue = false
 
     # Open a tmp file to store the majority of the Worksheet data. If this fails,
     # for example due to write permissions, store the data in memory. This can be
@@ -163,7 +163,7 @@ class BIFFWriter < WriteFile       #:nodoc:
     record      = 0x003C # Record identifier
 
     # Skip this if another method handles the continue blocks.
-    return data if @ignore_continue != 0
+    return data if @ignore_continue
 
     # The first 2080/8224 bytes remain intact. However, we have to change
     # the length field of the record.
