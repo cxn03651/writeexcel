@@ -1114,16 +1114,8 @@ class Worksheet < BIFFWriter
     row1, col1, row2, col2 = args
 
     # Reverse max and min values if necessary.
-    if row2 < row1
-      tmp  = row1
-      row1 = row2
-      row2 = tmp
-    end
-    if col2 < col1
-      tmp  = col1
-      col1 = col2
-      col2 = col1
-    end
+    row1, row2 = row2, row1 if row2 < row1
+    col1, col2 = col2, col1 if col2 < col1
 
     # Store the Autofilter information
     @filter_area = [row1, row2, col1, col2]
