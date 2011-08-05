@@ -153,8 +153,6 @@ class Worksheet < BIFFWriter
     @filter_on           = 0
     @filter_cols         = []
 
-    @writing_url         = 0
-
     @db_indices          = []
 
     @validations         = []
@@ -2258,13 +2256,13 @@ class Worksheet < BIFFWriter
     elsif token.respond_to?(:coerce)  # Numeric
       write_number(*args)
       # Match http, https or ftp URL
-    elsif token =~ %r|^[fh]tt?ps?://|    and @writing_url == 0
+    elsif token =~ %r|^[fh]tt?ps?://|
       write_url(*args)
       # Match mailto:
-    elsif token =~ %r|^mailto:|          and @writing_url == 0
+    elsif token =~ %r|^mailto:|
       write_url(*args)
       # Match internal or external sheet link
-    elsif token =~ %r!^(?:in|ex)ternal:! and @writing_url == 0
+    elsif token =~ %r!^(?:in|ex)ternal:!
       write_url(*args)
       # Match formula
     elsif token =~ /^=/
@@ -5150,9 +5148,7 @@ class Worksheet < BIFFWriter
 
     # Write the visible label but protect against url recursion in write().
     str          = url unless str
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
+    error        = write_string(row1, col1, str, xf)
     return error if error == -2
 
     # Pack the undocumented parts of the hyperlink stream
@@ -5220,9 +5216,7 @@ class Worksheet < BIFFWriter
 
     # Write the visible label but protect against url recursion in write().
     str          = url unless str
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
+    error        = write_string(row1, col1, str, xf)
     return error if error == -2
 
     # Pack the undocumented parts of the hyperlink stream
@@ -5295,9 +5289,7 @@ class Worksheet < BIFFWriter
 
     # Write the visible label but protect against url recursion in write().
     str = url.sub!(/\#/, ' - ') unless str
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
+    error        = write_string(row1, col1, str, xf)
     return error if error == -2
 
     # Determine if the link is relative or absolute:
@@ -5381,9 +5373,7 @@ class Worksheet < BIFFWriter
 
     # Write the visible label but protect against url recursion in write().
     str = url.sub!(/\#/, ' - ') unless str
-    @writing_url = 1
-    error        = write(row1, col1, str, xf)
-    @writing_url = 0
+    error        = write_string(row1, col1, str, xf)
     return error if error == -2
 
     dir_long, link_type, sheet_len, sheet = analyze_link(url)
