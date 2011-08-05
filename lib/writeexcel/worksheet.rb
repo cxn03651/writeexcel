@@ -57,9 +57,6 @@ class Worksheet < BIFFWriter
     @using_tmpfile       = true
     @fileclosed          = false
     @offset              = 0
-    @xls_rowmax          = RowMax
-    @xls_colmax          = ColMax
-    @xls_strmax          = StrMax
     @dim_rowmin          = nil
     @dim_rowmax          = nil
     @dim_colmin          = nil
@@ -5592,10 +5589,10 @@ class Worksheet < BIFFWriter
   #
   def check_dimensions(row, col, ignore_row = 0, ignore_col = 0)       #:nodoc:
     return -2 unless row
-    return -2 if row >= @xls_rowmax
+    return -2 if row >= RowMax
 
     return -2 unless col
-    return -2 if col >= @xls_colmax
+    return -2 if col >= ColMax
 
     if ignore_row == 0
       @dim_rowmin = row if !@dim_rowmin || (row < @dim_rowmin)
