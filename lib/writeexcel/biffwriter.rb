@@ -161,6 +161,7 @@ class BIFFWriter < WriteFile       #:nodoc:
   #
   def add_continue(data)
     record      = 0x003C # Record identifier
+    header  = [record, @limit].pack("vv")
 
     # Skip this if another method handles the continue blocks.
     return data if @ignore_continue
@@ -168,29 +169,14 @@ class BIFFWriter < WriteFile       #:nodoc:
     # The first 2080/8224 bytes remain intact. However, we have to change
     # the length field of the record.
     #
-
-    # in perl
-    #  $tmp = substr($data, 0, $limit, "");
-    if data.bytesize > @limit
-      tmp = data[0, @limit]
-      data[0, @limit] = ''
-    else
-      tmp = data.dup
-      data = ''
-    end
-
-    tmp[2, 2] = [@limit-4].pack('v')
-
-    # Strip out chunks of 2080/8224 bytes +4 for the header.
-    while (data.bytesize > @limit)
-      header  = [record, @limit].pack("vv")
-      tmp     += header + data[0, @limit]
-      data[0, @limit] = ''
-    end
-
-    # Mop up the last of the data
-    header  = [record, data.bytesize].pack("vv")
-    tmp     += header + data
+    data_array = split_by_length(data, @limit)
+    first_data = data_array.shift
+    last_data  = data_array.pop || ''
+    first_data[2, 2] = [@limit-4].pack('v')
+    first_data <<
+      data_array.join(header) <<
+      [record, last_data.bytesize].pack('vv') <<
+      last_data
   end
 
   ###############################################################################
@@ -233,5 +219,17 @@ class BIFFWriter < WriteFile       #:nodoc:
   # override Object#inspect
   def inspect          # :nodoc:
     to_s
+  end
+
+  private
+
+  def split_by_length(data, length)
+    array = []
+    s = 0
+    while s < data.length
+      array << data[s, length]
+      s += length
+    end
+    array
   end
 end
