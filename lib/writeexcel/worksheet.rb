@@ -5857,33 +5857,24 @@ class Worksheet < BIFFWriter
     record   = 0x001D                  # Record identifier
     length   = 0x000F                  # Number of bytes to follow
 
-    pnn      = @active_pane   # Pane position
-    rwAct    = first_row                   # Active row
-    colAct   = first_col                   # Active column
+    pane_position = @active_pane       # Pane position
+    row_active    = first_row          # Active row
+    col_active    = first_col          # Active column
     irefAct  = 0                       # Active cell ref
     cref     = 1                       # Number of refs
 
-    rwFirst  = first_row                   # First row in reference
-    colFirst = first_col                   # First col in reference
-    rwLast   = last_row || rwFirst       # Last  row in reference
-    colLast  = last_col || colFirst      # Last  col in reference
+    row_first = first_row              # First row in reference
+    col_first = first_col              # First col in reference
+    row_last  = last_row || row_first  # Last  row in reference
+    col_last  = last_col || col_first  # Last  col in reference
 
     # Swap last row/col for first row/col as necessary
-    if rwFirst > rwLast
-      tmp = rwFirst
-      rwFirst = rwLast
-      rwLast = tmp
-    end
-
-    if colFirst > colLast
-      tmp = colFirst
-      colFirst = colLast
-      colLast = tmp
-    end
+    row_first, row_last = row_last, row_first if row_first > row_last
+    col_first, col_last = col_last, col_first if col_first > col_last
 
     header = [record, length].pack('vv')
-    data = [pnn, rwAct, colAct, irefAct, cref,
-    rwFirst, rwLast, colFirst, colLast].pack('CvvvvvvCC')
+    data = [pane_position, row_active, col_active, irefAct, cref,
+      row_first, row_last, col_first, col_last].pack('CvvvvvvCC')
 
     append(header, data)
   end
