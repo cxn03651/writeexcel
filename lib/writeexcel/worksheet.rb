@@ -36,6 +36,21 @@ module Writeexcel
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
+  class CellRange
+    attr_accessor :row_min, :row_max, :col_min, :col_max
+
+    def row(val)
+      @row_min = val if !@row_min || (val < row_min)
+      @row_max = val if !@row_max || (val > row_max)
+    end
+
+    def col(val)
+      @col_min = val if !@col_min || (val < col_min)
+      @col_max = val if !@col_max || (val > col_max)
+    end
+  end
+
+
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
@@ -57,10 +72,7 @@ class Worksheet < BIFFWriter
     @using_tmpfile       = true
     @fileclosed          = false
     @offset              = 0
-    @dim_rowmin          = nil
-    @dim_rowmax          = nil
-    @dim_colmin          = nil
-    @dim_colmax          = nil
+    @dimension           = CellRange.new
     @colinfo             = []
     @selection           = [0, 0]
     @panes               = []
@@ -5594,15 +5606,8 @@ class Worksheet < BIFFWriter
     return -2 unless col
     return -2 if col >= ColMax
 
-    if ignore_row == 0
-      @dim_rowmin = row if !@dim_rowmin || (row < @dim_rowmin)
-      @dim_rowmax = row if !@dim_rowmax || (row > @dim_rowmax)
-    end
-
-    if ignore_col == 0
-      @dim_colmin = col if !@dim_colmin || (col < @dim_colmin)
-      @dim_colmax = col if !@dim_colmax || (col > @dim_colmax)
-    end
+    @dimension.row(row) if ignore_row == 0
+    @dimension.col(col) if ignore_col == 0
 
     0
   end
@@ -5621,16 +5626,16 @@ class Worksheet < BIFFWriter
     length    = 0x000E         # Number of bytes to follow
     reserved  = 0x0000         # Reserved by Excel
 
-    row_min = @dim_rowmin ? @dim_rowmin     : 0
-    row_max = @dim_rowmax ? @dim_rowmax + 1 : 0
-    col_min = @dim_colmin ? @dim_colmin     : 0
-    col_max = @dim_colmax ? @dim_colmax + 1 : 0
+    row_min = @dimension.row_min || 0
+    row_max = @dimension.row_max ? @dimension.row_max + 1 : 0
+    col_min = @dimension.col_min || 0
+    col_max = @dimension.col_max ? @dimension.col_max + 1 : 0
 
     # Set member data to the new max/min value for use by store_table().
-    @dim_rowmin = row_min
-    @dim_rowmax = row_max
-    @dim_colmin = col_min
-    @dim_colmax = col_max
+    @dimension.row_min = row_min
+    @dimension.row_max = row_max
+    @dimension.col_min = col_min
+    @dimension.col_max = col_max
 
     header = [record, length].pack("vv")
     fields = [row_min, row_max, col_min, col_max, reserved]
@@ -6407,7 +6412,7 @@ class Worksheet < BIFFWriter
 
     # Write the ROW records with updated max/min col fields.
     #
-    (0 .. @dim_rowmax-1).each do |row|
+    (0 .. @dimension.row_max-1).each do |row|
       # Skip unless there is cell data in row or the row has been modified.
       next unless @table[row] or @row_data[row]
 
@@ -6418,8 +6423,8 @@ class Worksheet < BIFFWriter
       row_offset += 20
 
       # The max/min cols in the ROW records are the same as in DIMENSIONS.
-      col_min = @dim_colmin
-      col_max = @dim_colmax
+      col_min = @dimension.col_min
+      col_max = @dimension.col_max
 
       # Write a user specified ROW record (modified by set_row()).
       if @row_data[row]
@@ -6435,7 +6440,7 @@ class Worksheet < BIFFWriter
       # If 32 rows have been written or we are at the last row in the
       # worksheet then write the cell data and the DBCELL record.
       #
-      if written_rows.size == 32 or row == @dim_rowmax -1
+      if written_rows.size == 32 || row == @dimension.row_max - 1
         # Offsets to the first cell of each row.
         cell_offsets = []
         cell_offsets.push(row_offset - 20)
@@ -6503,8 +6508,8 @@ class Worksheet < BIFFWriter
 
     indices     = @db_indices
     reserved    = 0x00000000
-    row_min     = @dim_rowmin
-    row_max     = @dim_rowmax
+    row_min     = @dimension.row_min
+    row_max     = @dimension.row_max
 
     record      = 0x020B                 # Record identifier
     length      = 16 + 4 * indices.size  # Bytes to follow
