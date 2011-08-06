@@ -37,7 +37,29 @@ class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
   class CellRange
-    attr_accessor :row_min, :row_max, :col_min, :col_max
+    def row_min
+      @row_min || 0
+    end
+
+    def col_min
+      @col_min || 0
+    end
+
+    def row_max
+      @row_max || 0
+    end
+
+    def col_max
+      @col_max || 0
+    end
+
+    def increment_row_max
+      @row_max += 1 if @row_max
+    end
+
+    def increment_col_max
+      @col_max += 1 if @col_max
+    end
 
     def row(val)
       @row_min = val if !@row_min || (val < row_min)
@@ -5626,19 +5648,11 @@ class Worksheet < BIFFWriter
     length    = 0x000E         # Number of bytes to follow
     reserved  = 0x0000         # Reserved by Excel
 
-    row_min = @dimension.row_min || 0
-    row_max = @dimension.row_max ? @dimension.row_max + 1 : 0
-    col_min = @dimension.col_min || 0
-    col_max = @dimension.col_max ? @dimension.col_max + 1 : 0
-
-    # Set member data to the new max/min value for use by store_table().
-    @dimension.row_min = row_min
-    @dimension.row_max = row_max
-    @dimension.col_min = col_min
-    @dimension.col_max = col_max
+    @dimension.increment_row_max
+    @dimension.increment_col_max
 
     header = [record, length].pack("vv")
-    fields = [row_min, row_max, col_min, col_max, reserved]
+    fields = [@dimension.row_min, @dimension.row_max, @dimension.col_min, @dimension.col_max, reserved]
     data   = fields.pack("VVvvv")
 
     prepend(header, data)
