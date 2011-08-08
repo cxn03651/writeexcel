@@ -1647,15 +1647,15 @@ class Workbook < BIFFWriter
       index  = worksheet.index
 
       # Write a Name record if the print area has been defined
-      if !worksheet.print_rowmin.nil?
+      if worksheet.print_range.row_min
         store_name_short(
           worksheet.index,
           0x06, # NAME type = Print_Area
           @ext_refs["#{index}:#{index}"],
-          worksheet.print_rowmin,
-          worksheet.print_rowmax,
-          worksheet.print_colmin,
-          worksheet.print_colmax
+          worksheet.print_range.row_min,
+          worksheet.print_range.row_max,
+          worksheet.print_range.col_min,
+          worksheet.print_range.col_max
         )
       end
     end
@@ -1664,10 +1664,10 @@ class Workbook < BIFFWriter
   def create_print_title_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
       index = worksheet.index
-      rowmin = worksheet.title_rowmin
-      rowmax = worksheet.title_rowmax
-      colmin = worksheet.title_colmin
-      colmax = worksheet.title_colmax
+      rowmin = worksheet.title_range.row_min
+      rowmax = worksheet.title_range.row_max
+      colmin = worksheet.title_range.col_min
+      colmax = worksheet.title_range.col_max
       key = "#{index}:#{index}"
       ref = @ext_refs[key]
 
@@ -2174,14 +2174,14 @@ class Workbook < BIFFWriter
 
     @worksheets.each do |worksheet|
 
-      rowmin      = worksheet.title_rowmin
-      colmin      = worksheet.title_colmin
+      rowmin      = worksheet.title_range.row_min
+      colmin      = worksheet.title_range.col_min
       key         = "#{index}:#{index}"
       index += 1
 
       # Add area NAME records
       #
-      if worksheet.print_rowmin
+      if worksheet.print_range.row_min
         add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       end

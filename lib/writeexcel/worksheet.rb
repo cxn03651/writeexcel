@@ -37,21 +37,7 @@ class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
   class CellRange
-    def row_min
-      @row_min || 0
-    end
-
-    def col_min
-      @col_min || 0
-    end
-
-    def row_max
-      @row_max || 0
-    end
-
-    def col_max
-      @col_max || 0
-    end
+    attr_accessor :row_min, :row_max, :col_min, :col_max
 
     def increment_row_max
       @row_max += 1 if @row_max
@@ -72,12 +58,30 @@ class Worksheet < BIFFWriter
     end
   end
 
+  class CellDimension < CellRange
+    def row_min
+      @row_min || 0
+    end
+
+    def col_min
+      @col_min || 0
+    end
+
+    def row_max
+      @row_max || 0
+    end
+
+    def col_max
+      @col_max || 0
+    end
+  end
 
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
 
+  attr_reader :title_range, :print_range
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
@@ -94,7 +98,7 @@ class Worksheet < BIFFWriter
     @using_tmpfile       = true
     @fileclosed          = false
     @offset              = 0
-    @dimension           = CellRange.new
+    @dimension           = CellDimension.new
     @colinfo             = []
     @selection           = [0, 0]
     @panes               = []
@@ -117,14 +121,8 @@ class Worksheet < BIFFWriter
     @margin_top          = 1.00
     @margin_bottom       = 1.00
 
-    @title_rowmin        = nil
-    @title_rowmax        = nil
-    @title_colmin        = nil
-    @title_colmax        = nil
-    @print_rowmin        = nil
-    @print_rowmax        = nil
-    @print_colmin        = nil
-    @print_colmax        = nil
+    @title_range         = CellRange.new
+    @print_range         = CellRange.new
 
     @print_gridlines     = 1
     @screen_gridlines    = 1
@@ -1634,8 +1632,8 @@ class Worksheet < BIFFWriter
   #     worksheet2.repeat_rows(0, 1)  # Repeat the first two rows
   #
   def repeat_rows(first_row, last_row = nil)
-    @title_rowmin  = first_row
-    @title_rowmax  = last_row || first_row # Second row is optional
+    @title_range.row_min = first_row
+    @title_range.row_max = last_row || first_row # Second row is optional
   end
 
   #
@@ -1669,8 +1667,8 @@ class Worksheet < BIFFWriter
       firstcol, lastcol = args
     end
 
-    @title_colmin  = firstcol
-    @title_colmax  = lastcol || firstcol # Second col is optional
+    @title_range.col_min  = firstcol
+    @title_range.col_max  = lastcol || firstcol # Second col is optional
   end
 
   #
@@ -1774,7 +1772,7 @@ class Worksheet < BIFFWriter
 
     return if args.size != 4 # Require 4 parameters
 
-    @print_rowmin, @print_colmin, @print_rowmax, @print_colmax = args
+    @print_range.row_min, @print_range.col_min, @print_range.row_max, @print_range.col_max = args
   end
 
   #
@@ -4608,38 +4606,6 @@ class Worksheet < BIFFWriter
 
   def filter_count  # :nodoc:
     @filter_count
-  end
-
-  def title_rowmin  # :nodoc:
-    @title_rowmin
-  end
-
-  def title_rowmax  # :nodoc:
-    @title_rowmax
-  end
-
-  def title_colmin  # :nodoc:
-    @title_colmin
-  end
-
-  def title_colmax  # :nodoc:
-    @title_colmax
-  end
-
-  def print_rowmin  # :nodoc:
-    @print_rowmin
-  end
-
-  def print_rowmax  # :nodoc:
-    @print_rowmax
-  end
-
-  def print_colmin  # :nodoc:
-    @print_colmin
-  end
-
-  def print_colmax  # :nodoc:
-    @print_colmax
   end
 
   def offset  # :nodoc:
