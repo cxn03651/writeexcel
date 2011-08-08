@@ -27,6 +27,7 @@ class Workbook < BIFFWriter
 
   attr_reader :url_format, :parser, :tempdir, :date_1904
   attr_reader :compatibility, :palette, :sinfo
+  attr_reader :ext_refs
 
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
@@ -1664,49 +1665,35 @@ class Workbook < BIFFWriter
   def create_print_title_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
       index = worksheet.index
-      rowmin = worksheet.title_range.row_min
-      rowmax = worksheet.title_range.row_max
-      colmin = worksheet.title_range.col_min
-      colmax = worksheet.title_range.col_max
-      key = "#{index}:#{index}"
-      ref = @ext_refs[key]
 
       # Determine if row + col, row, col or nothing has been defined
       # and write the appropriate record
       #
-      if rowmin && colmin
+      if worksheet.title_range.row_min && worksheet.title_range.col_min
         # Row and column titles have been defined.
         # Row title has been defined.
-        store_name_long(
-          worksheet.index,
-          0x07, # NAME type = Print_Titles
-          ref,
-          rowmin,
-          rowmax,
-          colmin,
-          colmax
-        )
-      elsif rowmin
+        append(*worksheet.print_title_name_record_long)
+      elsif worksheet.title_range.row_min
         # Row title has been defined.
         store_name_short(
           worksheet.index,
           0x07, # NAME type = Print_Titles
-          ref,
-          rowmin,
-          rowmax,
+          @ext_refs["#{index}:#{index}"],
+          worksheet.title_range.row_min,
+          worksheet.title_range.row_max,
           0x00,
           0xff
         )
-      elsif colmin
+      elsif worksheet.title_range.col_min
         # Column title has been defined.
         store_name_short(
           worksheet.index,
           0x07, # NAME type = Print_Titles
-          ref,
+          @ext_refs["#{index}:#{index}"],
           0x0000,
           0xffff,
-          colmin,
-          colmax
+          worksheet.title_range.col_min,
+          worksheet.title_range.col_max
         )
       else
         # Nothing left to do
@@ -2016,78 +2003,6 @@ class Workbook < BIFFWriter
     data           += [rowmax].pack("v")
     data           += [colmin].pack("v")
     data           += [colmax].pack("v")
-
-    append(header, data)
-  end
-
-  #
-  # Store the NAME record in the long format that is used for storing the repeat
-  # rows and columns when both are specified. This share a lot of code with
-  # store_name_short() but we use a separate method to keep the code clean.
-  # Code abstraction for reuse can be carried too far, and I should know. ;-)
-  #
-  #    index             # Sheet index
-  #    type
-  #    ext_ref           # TODO
-  #    rowmin            # Start row
-  #    rowmax            # End row
-  #    colmin            # Start column
-  #    colmax            # end column
-  #
-  def store_name_long(index, type, ext_ref, rowmin, rowmax, colmin, colmax)       #:nodoc:
-    record          = 0x0018       # Record identifier
-    length          = 0x002a       # Number of bytes to follow
-
-    grbit           = 0x0020       # Option flags
-    chkey           = 0x00         # Keyboard shortcut
-    cch             = 0x01         # Length of text name
-    cce             = 0x001a       # Length of text definition
-    unknown01       = 0x0000       #
-    ixals           = index + 1    # Sheet index
-    unknown02       = 0x00         #
-    cch_cust_menu   = 0x00         # Length of cust menu text
-    cch_description = 0x00         # Length of description text
-    cch_helptopic   = 0x00         # Length of help topic text
-    cch_statustext  = 0x00         # Length of status bar text
-    rgch            = type         # Built-in name type
-
-    unknown03       = 0x29
-    unknown04       = 0x0017
-    unknown05       = 0x3b
-
-    header          = [record, length].pack("vv")
-    data            = [grbit].pack("v")
-    data           += [chkey].pack("C")
-    data           += [cch].pack("C")
-    data           += [cce].pack("v")
-    data           += [unknown01].pack("v")
-    data           += [ixals].pack("v")
-    data           += [unknown02].pack("C")
-    data           += [cch_cust_menu].pack("C")
-    data           += [cch_description].pack("C")
-    data           += [cch_helptopic].pack("C")
-    data           += [cch_statustext].pack("C")
-    data           += [rgch].pack("C")
-
-    # Column definition
-    data           += [unknown03].pack("C")
-    data           += [unknown04].pack("v")
-    data           += [unknown05].pack("C")
-    data           += [ext_ref].pack("v")
-    data           += [0x0000].pack("v")
-    data           += [0xffff].pack("v")
-    data           += [colmin].pack("v")
-    data           += [colmax].pack("v")
-
-    # Row definition
-    data           += [unknown05].pack("C")
-    data           += [ext_ref].pack("v")
-    data           += [rowmin].pack("v")
-    data           += [rowmax].pack("v")
-    data           += [0x00].pack("v")
-    data           += [0xff].pack("v")
-    # End of data
-    data           += [0x10].pack("C")
 
     append(header, data)
   end

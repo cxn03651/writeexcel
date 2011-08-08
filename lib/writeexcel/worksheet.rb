@@ -56,6 +56,78 @@ class Worksheet < BIFFWriter
       @col_min = val if !@col_min || (val < col_min)
       @col_max = val if !@col_max || (val > col_max)
     end
+
+    #
+    # Store the NAME record in the long format that is used for storing the repeat
+    # rows and columns when both are specified. This share a lot of code with
+    # store_name_short() but we use a separate method to keep the code clean.
+    # Code abstraction for reuse can be carried too far, and I should know. ;-)
+    #
+    #    index             # Sheet index
+    #    type
+    #    ext_ref           # TODO
+    #    rowmin            # Start row
+    #    rowmax            # End row
+    #    colmin            # Start column
+    #    colmax            # end column
+    #
+    def name_record_long(index, type, ext_ref)       #:nodoc:
+      record          = 0x0018       # Record identifier
+      length          = 0x002a       # Number of bytes to follow
+
+      grbit           = 0x0020       # Option flags
+      chkey           = 0x00         # Keyboard shortcut
+      cch             = 0x01         # Length of text name
+      cce             = 0x001a       # Length of text definition
+      unknown01       = 0x0000       #
+      ixals           = index + 1    # Sheet index
+      unknown02       = 0x00         #
+      cch_cust_menu   = 0x00         # Length of cust menu text
+      cch_description = 0x00         # Length of description text
+      cch_helptopic   = 0x00         # Length of help topic text
+      cch_statustext  = 0x00         # Length of status bar text
+      rgch            = type         # Built-in name type
+
+      unknown03       = 0x29
+      unknown04       = 0x0017
+      unknown05       = 0x3b
+
+      header          = [record, length].pack("vv")
+      data            = [grbit].pack("v")
+      data           += [chkey].pack("C")
+      data           += [cch].pack("C")
+      data           += [cce].pack("v")
+      data           += [unknown01].pack("v")
+      data           += [ixals].pack("v")
+      data           += [unknown02].pack("C")
+      data           += [cch_cust_menu].pack("C")
+      data           += [cch_description].pack("C")
+      data           += [cch_helptopic].pack("C")
+      data           += [cch_statustext].pack("C")
+      data           += [rgch].pack("C")
+
+      # Column definition
+      data           += [unknown03].pack("C")
+      data           += [unknown04].pack("v")
+      data           += [unknown05].pack("C")
+      data           += [ext_ref].pack("v")
+      data           += [0x0000].pack("v")
+      data           += [0xffff].pack("v")
+      data           += [@col_min].pack("v")
+      data           += [@col_max].pack("v")
+
+      # Row definition
+      data           += [unknown05].pack("C")
+      data           += [ext_ref].pack("v")
+      data           += [@row_min].pack("v")
+      data           += [@row_max].pack("v")
+      data           += [0x00].pack("v")
+      data           += [0xff].pack("v")
+      # End of data
+      data           += [0x10].pack("C")
+
+      [header, data]
+    end
   end
 
   class CellDimension < CellRange
@@ -4678,6 +4750,14 @@ class Worksheet < BIFFWriter
     prepare_common(:charts)
   end
 #  private :prepare_charts
+
+  def print_title_name_record_long     #:nodoc:
+    @title_range.name_record_long(
+      index,
+      0x07, # NAME type = Print_Titles
+      @workbook.ext_refs["#{index}:#{index}"]
+    )
+  end
 
   ###############################################################################
   #
