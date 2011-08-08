@@ -128,6 +128,71 @@ class Worksheet < BIFFWriter
 
       [header, data]
     end
+
+    #
+    # Store the NAME record in the short format that is used for storing the print
+    # area, repeat rows only and repeat columns only.
+    #
+    #    index            # Sheet index
+    #    type
+    #    ext_ref          # TODO
+    #    rowmin           # Start row
+    #    rowmax           # End row
+    #    colmin           # Start column
+    #    colmax           # end column
+    #    hidden           # Name is hidden
+    #
+    def name_record_short(index, type, ext_ref, hidden = nil)       #:nodoc:
+      record          = 0x0018       # Record identifier
+      length          = 0x001b       # Number of bytes to follow
+
+      grbit           = 0x0020       # Option flags
+      chkey           = 0x00         # Keyboard shortcut
+      cch             = 0x01         # Length of text name
+      cce             = 0x000b       # Length of text definition
+      unknown01       = 0x0000       #
+      ixals           = index + 1    # Sheet index
+      unknown02       = 0x00         #
+      cch_cust_menu   = 0x00         # Length of cust menu text
+      cch_description = 0x00         # Length of description text
+      cch_helptopic   = 0x00         # Length of help topic text
+      cch_statustext  = 0x00         # Length of status bar text
+      rgch            = type         # Built-in name type
+      unknown03       = 0x3b         #
+
+      grbit           = 0x0021 if hidden
+
+      rowmin = row_min
+      rowmax = row_max
+      rowmin, rowmax = 0x0000, 0xffff unless row_min
+
+      colmin = col_min
+      colmax = col_max
+      colmin, colmax = 0x00, 0xff unless col_min
+
+      header          = [record, length].pack("vv")
+      data            = [grbit].pack("v")
+      data           += [chkey].pack("C")
+      data           += [cch].pack("C")
+      data           += [cce].pack("v")
+      data           += [unknown01].pack("v")
+      data           += [ixals].pack("v")
+      data           += [unknown02].pack("C")
+      data           += [cch_cust_menu].pack("C")
+      data           += [cch_description].pack("C")
+      data           += [cch_helptopic].pack("C")
+      data           += [cch_statustext].pack("C")
+      data           += [rgch].pack("C")
+      data           += [unknown03].pack("C")
+      data           += [ext_ref].pack("v")
+
+      data           += [rowmin].pack("v")
+      data           += [rowmax].pack("v")
+      data           += [colmin].pack("v")
+      data           += [colmax].pack("v")
+
+      [header, data]
+    end
   end
 
   class CellDimension < CellRange
@@ -4756,6 +4821,33 @@ class Worksheet < BIFFWriter
       index,
       0x07, # NAME type = Print_Titles
       @workbook.ext_refs["#{index}:#{index}"]
+    )
+  end
+
+  def print_title_name_record_short(hidden = nil)     #:nodoc:
+    @title_range.name_record_short(
+      index,
+      0x07, # NAME type = Print_Titles
+      @workbook.ext_refs["#{index}:#{index}"],
+      hidden
+    )
+  end
+
+  def autofilter_name_record_short(hidden = nil)     #:nodoc:
+    @filter_area.name_record_short(
+      index,
+      0x0D, # NAME type = Filter Database
+      @workbook.ext_refs["#{index}:#{index}"],
+      hidden
+    )
+  end
+
+  def print_area_name_record_short(hidden = nil)     #:nodoc:
+    @print_range.name_record_short(
+      index,
+      0x06, # NAME type = Print_Area
+      @workbook.ext_refs["#{index}:#{index}"],
+      hidden
     )
   end
 
