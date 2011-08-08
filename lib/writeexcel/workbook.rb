@@ -1632,10 +1632,10 @@ class Workbook < BIFFWriter
           worksheet.index,
           0x0D, # NAME type = Filter Database
           @ext_refs["#{index}:#{index}"],
-          worksheet.filter_area[0],
-          worksheet.filter_area[1],
-          worksheet.filter_area[2],
-          worksheet.filter_area[3],
+          worksheet.filter_area.row_min,
+          worksheet.filter_area.row_max,
+          worksheet.filter_area.col_min,
+          worksheet.filter_area.col_max,
           1     # Hidden
         )
       end

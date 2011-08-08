@@ -177,7 +177,7 @@ class Worksheet < BIFFWriter
     @num_images          = 0
     @image_mso_size      = 0
 
-    @filter_area         = []
+    @filter_area         = CellRange.new
     @filter_count        = 0
     @filter_on           = 0
     @filter_cols         = []
@@ -1145,7 +1145,10 @@ class Worksheet < BIFFWriter
     col1, col2 = col2, col1 if col2 < col1
 
     # Store the Autofilter information
-    @filter_area = [row1, row2, col1, col2]
+    @filter_area.row_min = row1
+    @filter_area.row_max = row2
+    @filter_area.col_min = col1
+    @filter_area.col_max = col2
     @filter_count = 1 + col2 -col1
   end
 
@@ -1253,8 +1256,8 @@ class Worksheet < BIFFWriter
     # Convert col ref to a cell ref and then to a col number.
     no_use, col = substitute_cellref(col + '1') if col =~ /^\D/
 
-    col_first = @filter_area[2]
-    col_last  = @filter_area[3]
+    col_first = @filter_area.col_min
+    col_last  = @filter_area.col_max
 
     # Reject column if it is outside filter range.
     if (col < col_first or col > col_last)
@@ -6693,8 +6696,8 @@ class Worksheet < BIFFWriter
     # Skip all columns if no filter have been set.
     return '' if @filter_on == 0
 
-    col1 = @filter_area[2]
-    col2 = @filter_area[3]
+    col1 = @filter_area.col_min
+    col2 = @filter_area.col_max
 
     col1.upto(col2) do |i|
       # Reverse order since records are being pre-pended.
@@ -7152,11 +7155,13 @@ class Worksheet < BIFFWriter
     # Skip this if there aren't any filters.
     return if num_filters == 0
 
-    row1, row2, col1, col2 = @filter_area
-
     (0 .. num_filters-1).each do |i|
-      vertices = [ col1 + i,    0, row1   , 0,
-      col1 +i +1, 0, row1 + 1, 0]
+      vertices = [
+        @filter_area.col_min + i,     0,
+        @filter_area.row_min,         0,
+        @filter_area.col_min + i + 1, 0,
+        @filter_area.row_min + 1,     0
+      ]
 
       if i == 0 && num_objects
         # Write the parent MSODRAWIING record.
@@ -7180,7 +7185,7 @@ class Worksheet < BIFFWriter
       header      = [record, length].pack("vv")
       append(header, data)
 
-      store_obj_filter(num_objects+i+1, col1 +i)
+      store_obj_filter(num_objects + i + 1, @filter_area.col_min + i)
     end
 
     # Simulate the EXTERNSHEET link between the filter and data using a formula
