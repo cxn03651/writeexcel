@@ -1347,17 +1347,17 @@ class Worksheet < BIFFWriter
 
     return if args.size != 4 # Require 4 parameters
 
-    row1, col1, row2, col2 = args
+    row_min, col_min, row_max, col_max = args
 
     # Reverse max and min values if necessary.
-    row1, row2 = row2, row1 if row2 < row1
-    col1, col2 = col2, col1 if col2 < col1
+    row_min, row_max = row_max, row_min if row_max < row_min
+    col_min, col_max = col_max, col_min if col_max < col_min
 
     # Store the Autofilter information
-    @filter_area.row_min = row1
-    @filter_area.row_max = row2
-    @filter_area.col_min = col1
-    @filter_area.col_max = col2
+    @filter_area.row_min = row_min
+    @filter_area.row_max = row_max
+    @filter_area.col_min = col_min
+    @filter_area.col_max = col_max
     @filter_count = 1 + col2 -col1
   end
 
