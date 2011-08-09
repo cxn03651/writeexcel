@@ -1639,8 +1639,6 @@ class Workbook < BIFFWriter
 
   def create_print_title_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
-      index = worksheet.index
-
       # Determine if row + col, row, col or nothing has been defined
       # and write the appropriate record
       #
