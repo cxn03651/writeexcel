@@ -57,8 +57,10 @@ class TC_Worksheet < Test::Unit::TestCase
   end
 
   def test_store_colinfo
+    colinfo = Writeexcel::Worksheet::ColInfo.new(0, 0, 8.43, nil, false, 0, false)
+
     file = "delete_this"
-    File.open(file,"w+"){ |f| f.print @ws.__send__("store_colinfo") }
+    File.open(file,"w+"){ |f| f.print @ws.__send__("store_colinfo", colinfo) }
     pf = @perldir + "ws_store_colinfo"
     p_od = IO.readlines(pf).to_s.dump
     r_od = IO.readlines(file).to_s.dump
