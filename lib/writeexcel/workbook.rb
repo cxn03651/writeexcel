@@ -399,7 +399,7 @@ class Workbook < BIFFWriter
     args.each { |arg| fmts = fmts.merge(arg) }
     format = Writeexcel::Format.new(@xf_index, @default_formats.merge(fmts))
     @xf_index += 1
-    formats.push format # Store format reference
+    @formats.push format # Store format reference
     format
   end
 
@@ -1443,7 +1443,7 @@ class Workbook < BIFFWriter
   # Store the Excel FONT records.
   #
   def store_all_fonts       #:nodoc:
-    format  = formats[15]   # The default cell format.
+    format  = @formats[15]   # The default cell format.
     font    = format.get_font
 
     # Fonts are 0-indexed. According to the SDK there is no index 4,
@@ -1506,7 +1506,7 @@ class Workbook < BIFFWriter
     # Fonts that are marked as '_font_only' are always stored. These are used
     # mainly for charts and may not have an associated XF record.
 
-    formats.each do |fmt|
+    @formats.each do |fmt|
       key = fmt.get_font_key
       if fmt.font_only == 0 and !fonts[key].nil?
         # FONT has already been used
@@ -1536,7 +1536,7 @@ class Workbook < BIFFWriter
     # Iterate through the XF objects and write a FORMAT record if it isn't a
     # built-in format type and if the FORMAT string hasn't already been used.
     #
-    formats.each do |format|
+    @formats.each do |format|
       num_format = format.num_format
       encoding   = format.num_format_enc
 
@@ -1565,7 +1565,7 @@ class Workbook < BIFFWriter
   # Write all XF records.
   #
   def store_all_xfs       #:nodoc:
-    formats.each do |format|
+    @formats.each do |format|
       xf = format.get_xf
       append(xf)
     end
@@ -2632,10 +2632,6 @@ class Workbook < BIFFWriter
 
   def add_doc_properties
     @add_doc_properties ||= false
-  end
-
-  def formats
-    @formats
   end
 
   def defined_names
