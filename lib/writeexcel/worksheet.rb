@@ -1457,19 +1457,15 @@ class Worksheet < BIFFWriter
   #
   def filter_column(col, expression)
     raise "Must call autofilter() before filter_column()" if @filter_area.count == 0
-    #      raise "Incorrect number of arguments to filter_column()" unless @_ == 2
 
     # Check for a column reference in A1 notation and substitute.
     # Convert col ref to a cell ref and then to a col number.
-    no_use, col = substitute_cellref(col + '1') if col =~ /^\D/
-
-    col_first = @filter_area.col_min
-    col_last  = @filter_area.col_max
+    dummy, col = substitute_cellref("#{col}1") if col =~ /^\D/
 
     # Reject column if it is outside filter range.
-    if (col < col_first or col > col_last)
+    if @filter_area.inside?(col)
       raise "Column '#{col}' outside autofilter() column range " +
-      "(#{col_first} .. #{col_last})"
+        "(#{@filter_area.col_min} .. #{@filter_area.col_max})"
     end
 
     tokens = extract_filter_tokens(expression)
@@ -1478,10 +1474,7 @@ class Worksheet < BIFFWriter
       raise "Incorrect number of tokens in expression '#{expression}'"
     end
 
-
-    tokens = parse_filter_expression(expression, tokens)
-
-    @filter_cols[col] = Array.new(tokens)
+    @filter_cols[col] = parse_filter_expression(expression, tokens)
     @filter_on        = 1
   end
 

@@ -200,6 +200,10 @@ class Worksheet < BIFFWriter
         0
       end
     end
+
+    def inside?(col)
+      col < @col_min || col > @col_max
+    end
   end
 end
 
