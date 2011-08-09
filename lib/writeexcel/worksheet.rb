@@ -4837,11 +4837,11 @@ class Worksheet < BIFFWriter
   end
 
   def autofilter_name_record_short(hidden = nil)     #:nodoc:
-    name_record_short(@filter_area, hidden)
+    name_record_short(@filter_area, hidden) if @filter_count != 0
   end
 
   def print_area_name_record_short(hidden = nil)     #:nodoc:
-    name_record_short(@print_range, hidden)
+    name_record_short(@print_range, hidden) if @print_range.row_min
   end
 
   ###############################################################################
