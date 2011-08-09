@@ -37,6 +37,181 @@ module Writeexcel
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
+  class Comments
+    def initialize
+      @comments = {}
+    end
+
+    def <<(comment)
+      @comments[comment.row] = { comment.col => comment }
+    end
+
+    def array
+      return @array if @array
+
+      @array = []
+      @comments.keys.sort.each do |row|
+        @comments[row].keys.sort.each do |col|
+          @array << @comments[row][col]
+        end
+      end
+      @array
+    end
+  end
+
+  class Comment
+    attr_reader :row, :col, :string, :encoding, :author, :author_encoding, :visible, :color, :vertices
+
+    def initialize(worksheet, row, col, string, options = {})
+      @worksheet = worksheet
+      @row, @col = row, col
+      @params = params_with(options)
+      @string, @params[:encoding] = string_and_encoding(string, @params[:encoding], 'comment')
+
+      # Limit the string to the max number of chars (not bytes).
+      max_len = 32767
+      max_len = max_len * 2 if @params[:encoding] != 0
+
+      if @string.bytesize > max_len
+        @string = @string[0 .. max_len]
+      end
+      @encoding        = @params[:encoding]
+      @author          = @params[:author]
+      @author_encoding = @params[:author_encoding]
+      @visible         = @params[:visible]
+      @color           = @params[:color]
+      @vertices        = calc_vertices
+    end
+
+    private
+
+    def params_with(options)
+      params = default_params.update(options)
+
+      # Ensure that a width and height have been set.
+      params[:width]  = default_width  unless params[:width]  && params[:width] != 0
+      params[:width]  = params[:width] * params[:x_scale]  if params[:x_scale] != 0
+      params[:height] = default_height unless params[:height] && params[:height] != 0
+      params[:height] = params[:height] * params[:y_scale] if params[:y_scale] != 0
+
+      params[:author], params[:author_encoding] =
+          string_and_encoding(params[:author], params[:author_encoding], 'author')
+
+      # Set the comment background colour.
+      params[:color] = background_color(params[:color])
+
+      # Set the default start cell and offsets for the comment. These are
+      # generally fixed in relation to the parent cell. However there are
+      # some edge cases for cells at the, er, edges.
+      #
+      params[:start_row] = default_start_row unless params[:start_row]
+      params[:y_offset]  = default_y_offset  unless params[:y_offset]
+      params[:start_col] = default_start_col unless params[:start_col]
+      params[:x_offset]  = default_x_offset  unless params[:x_offset]
+
+      params
+    end
+
+    def default_params
+      {
+        :author          => '',
+        :author_encoding => 0,
+        :encoding        => 0,
+        :color           => nil,
+        :start_cell      => nil,
+        :start_col       => nil,
+        :start_row       => nil,
+        :visible         => nil,
+        :width           => default_width,
+        :height          => default_height,
+        :x_offset        => nil,
+        :x_scale         => 1,
+        :y_offset        => nil,
+        :y_scale         => 1
+      }
+    end
+
+    def default_width
+      128
+    end
+
+    def default_height
+      74
+    end
+
+    def default_start_row
+      case @row
+      when 0     then 0
+      when 65533 then 65529
+      when 65534 then 65530
+      when 65535 then 65531
+      else            @row -1
+      end
+    end
+
+    def default_y_offset
+      case @row
+      when 0     then 2
+      when 65533 then 4
+      when 65534 then 4
+      when 65535 then 2
+      else            7
+      end
+    end
+
+    def default_start_col
+      case @col
+      when 253   then 250
+      when 254   then 251
+      when 255   then 252
+      else            @col + 1
+      end
+    end
+
+    def default_x_offset
+      case @col
+      when 253   then 49
+      when 254   then 49
+      when 255   then 49
+      else            15
+      end
+    end
+
+    def string_and_encoding(string, encoding, type)
+      string = convert_to_ascii_if_ascii(string)
+      if encoding != 0
+        raise "Uneven number of bytes in #{type} string" if string.bytesize % 2 != 0
+        # Change from UTF-16BE to UTF-16LE
+        string = string.unpack('n*').pack('v*')
+      # Handle utf8 strings
+      else
+        if is_utf8?(string)
+          string = NKF.nkf('-w16L0 -m0 -W', string)
+          ruby_19 { string.force_encoding('UTF-16LE') }
+          encoding = 1
+        end
+      end
+      [string, encoding]
+    end
+
+    def background_color(color)
+      color = Colors.new.get_color(color)
+      color = 0x50 if color == 0x7FFF  # Default color.
+      color
+    end
+
+    # Calculate the positions of comment object.
+    def calc_vertices
+      @worksheet.position_object( @params[:start_col],
+        @params[:start_row],
+        @params[:x_offset],
+        @params[:y_offset],
+        @params[:width],
+        @params[:height]
+      )
+    end
+  end
+
   class ColInfo
     attr_reader :level
 
@@ -209,10 +384,7 @@ class Worksheet < BIFFWriter
     @images_array        = []
     @charts              = {}
     @charts_array        = []
-    @comments            = {}
-    @comments_array      = []
-    @comments_author     = ''
-    @comments_author_enc = 0
+    @comments            = Comments.new
     @comments_visible    = 0
 
     @num_images          = 0
@@ -2057,14 +2229,6 @@ class Worksheet < BIFFWriter
   end
 
   #
-  # Set the default author of the cell comments.
-  #
-  def set_comments_author(author = '', author_enc = 0)
-    @comments_author     = author
-    @comments_author_enc = author_enc
-  end
-
-  #
   # Set the start page number.
   #
   # The set_start_page() method is used to set the number of the starting page
@@ -3646,8 +3810,13 @@ class Worksheet < BIFFWriter
     # Check that row and col are valid and store max and min values
     return -2 if check_dimensions(row, col) != 0
 
+    params = args[3]
+    if params && params[:start_cell]
+      params[:start_row], params[:start_col] = substitute_cellref(params[:start_cell])
+    end
+
     # We have to avoid duplicate comments in cells or else Excel will complain.
-    @comments[row] = { col => comment_params(*args) }
+    @comments << Comment.new(self, *args)
   end
 
   #
@@ -4726,6 +4895,113 @@ class Worksheet < BIFFWriter
 
   def print_area_name_record_short(hidden = nil)     #:nodoc:
     name_record_short(@print_range, hidden) if @print_range.row_min
+  end
+
+  #
+  # Calculate the vertices that define the position of a graphical object within
+  # the worksheet.
+  #
+  #         +------------+------------+
+  #         |     A      |      B     |
+  #   +-----+------------+------------+
+  #   |     |(x1,y1)     |            |
+  #   |  1  |(A1)._______|______      |
+  #   |     |    |              |     |
+  #   |     |    |              |     |
+  #   +-----+----|    BITMAP    |-----+
+  #   |     |    |              |     |
+  #   |  2  |    |______________.     |
+  #   |     |            |        (B2)|
+  #   |     |            |     (x2,y2)|
+  #   +---- +------------+------------+
+  #
+  # Example of a bitmap that covers some of the area from cell A1 to cell B2.
+  #
+  # Based on the width and height of the bitmap we need to calculate 8 vars:
+  #     $col_start, $row_start, $col_end, $row_end, $x1, $y1, $x2, $y2.
+  # The width and height of the cells are also variable and have to be taken into
+  # account.
+  # The values of $col_start and $row_start are passed in from the calling
+  # function. The values of $col_end and $row_end are calculated by subtracting
+  # the width and height of the bitmap from the width and height of the
+  # underlying cells.
+  # The vertices are expressed as a percentage of the underlying cell width as
+  # follows (rhs values are in pixels):
+  #
+  #       x1 = X / W *1024
+  #       y1 = Y / H *256
+  #       x2 = (X-1) / W *1024
+  #       y2 = (Y-1) / H *256
+  #
+  #       Where:  X is distance from the left side of the underlying cell
+  #               Y is distance from the top of the underlying cell
+  #               W is the width of the cell
+  #               H is the height of the cell
+  #
+  # Note: the SDK incorrectly states that the height should be expressed as a
+  # percentage of 1024.
+  #
+  def position_object(col_start, row_start, x1, y1, width, height)   #:nodoc:
+    # col_start;  # Col containing upper left corner of object
+    # x1;         # Distance to left side of object
+
+    # row_start;  # Row containing top left corner of object
+    # y1;         # Distance to top of object
+
+    # col_end;    # Col containing lower right corner of object
+    # x2;         # Distance to right side of object
+
+    # row_end;    # Row containing bottom right corner of object
+    # y2;         # Distance to bottom of object
+
+    # width;      # Width of image frame
+    # height;     # Height of image frame
+
+    # Adjust start column for offsets that are greater than the col width
+    x1, col_start = adjust_col_position(x1, col_start)
+
+    # Adjust start row for offsets that are greater than the row height
+    y1, row_start = adjust_row_position(y1, row_start)
+
+    # Initialise end cell to the same as the start cell
+    col_end    = col_start
+    row_end    = row_start
+
+    width     += x1
+    height    += y1
+
+    # Subtract the underlying cell widths to find the end cell of the image
+    width, col_end = adjust_col_position(width, col_end)
+
+    # Subtract the underlying cell heights to find the end cell of the image
+    height, row_end = adjust_row_position(height, row_end)
+
+    # Bitmap isn't allowed to start or finish in a hidden cell, i.e. a cell
+    # with zero eight or width.
+    #
+    return if size_col(col_start) == 0
+    return if size_col(col_end)   == 0
+    return if size_row(row_start) == 0
+    return if size_row(row_end)   == 0
+
+    # Convert the pixel values to the percentage value expected by Excel
+    x1 = 1024.0 * x1     / size_col(col_start)
+    y1 =  256.0 * y1     / size_row(row_start)
+    x2 = 1024.0 * width  / size_col(col_end)
+    y2 =  256.0 * height / size_row(row_end)
+
+    # Simulate ceil() without calling POSIX::ceil().
+    x1 = (x1 +0.5).to_i
+    y1 = (y1 +0.5).to_i
+    x2 = (x2 +0.5).to_i
+    y2 = (y2 +0.5).to_i
+
+    [
+      col_start, x1,
+      row_start, y1,
+      col_end,   x2,
+      row_end,   y2
+    ]
   end
 
   ###############################################################################
@@ -6496,113 +6772,6 @@ class Worksheet < BIFFWriter
     prepend(header, data)
   end
 
-  #
-  # Calculate the vertices that define the position of a graphical object within
-  # the worksheet.
-  #
-  #         +------------+------------+
-  #         |     A      |      B     |
-  #   +-----+------------+------------+
-  #   |     |(x1,y1)     |            |
-  #   |  1  |(A1)._______|______      |
-  #   |     |    |              |     |
-  #   |     |    |              |     |
-  #   +-----+----|    BITMAP    |-----+
-  #   |     |    |              |     |
-  #   |  2  |    |______________.     |
-  #   |     |            |        (B2)|
-  #   |     |            |     (x2,y2)|
-  #   +---- +------------+------------+
-  #
-  # Example of a bitmap that covers some of the area from cell A1 to cell B2.
-  #
-  # Based on the width and height of the bitmap we need to calculate 8 vars:
-  #     $col_start, $row_start, $col_end, $row_end, $x1, $y1, $x2, $y2.
-  # The width and height of the cells are also variable and have to be taken into
-  # account.
-  # The values of $col_start and $row_start are passed in from the calling
-  # function. The values of $col_end and $row_end are calculated by subtracting
-  # the width and height of the bitmap from the width and height of the
-  # underlying cells.
-  # The vertices are expressed as a percentage of the underlying cell width as
-  # follows (rhs values are in pixels):
-  #
-  #       x1 = X / W *1024
-  #       y1 = Y / H *256
-  #       x2 = (X-1) / W *1024
-  #       y2 = (Y-1) / H *256
-  #
-  #       Where:  X is distance from the left side of the underlying cell
-  #               Y is distance from the top of the underlying cell
-  #               W is the width of the cell
-  #               H is the height of the cell
-  #
-  # Note: the SDK incorrectly states that the height should be expressed as a
-  # percentage of 1024.
-  #
-  def position_object(col_start, row_start, x1, y1, width, height)   #:nodoc:
-    # col_start;  # Col containing upper left corner of object
-    # x1;         # Distance to left side of object
-
-    # row_start;  # Row containing top left corner of object
-    # y1;         # Distance to top of object
-
-    # col_end;    # Col containing lower right corner of object
-    # x2;         # Distance to right side of object
-
-    # row_end;    # Row containing bottom right corner of object
-    # y2;         # Distance to bottom of object
-
-    # width;      # Width of image frame
-    # height;     # Height of image frame
-
-    # Adjust start column for offsets that are greater than the col width
-    x1, col_start = adjust_col_position(x1, col_start)
-
-    # Adjust start row for offsets that are greater than the row height
-    y1, row_start = adjust_row_position(y1, row_start)
-
-    # Initialise end cell to the same as the start cell
-    col_end    = col_start
-    row_end    = row_start
-
-    width     += x1
-    height    += y1
-
-    # Subtract the underlying cell widths to find the end cell of the image
-    width, col_end = adjust_col_position(width, col_end)
-
-    # Subtract the underlying cell heights to find the end cell of the image
-    height, row_end = adjust_row_position(height, row_end)
-
-    # Bitmap isn't allowed to start or finish in a hidden cell, i.e. a cell
-    # with zero eight or width.
-    #
-    return if size_col(col_start) == 0
-    return if size_col(col_end)   == 0
-    return if size_row(row_start) == 0
-    return if size_row(row_end)   == 0
-
-    # Convert the pixel values to the percentage value expected by Excel
-    x1 = 1024.0 * x1     / size_col(col_start)
-    y1 =  256.0 * y1     / size_row(row_start)
-    x2 = 1024.0 * width  / size_col(col_end)
-    y2 =  256.0 * height / size_row(row_end)
-
-    # Simulate ceil() without calling POSIX::ceil().
-    x1 = (x1 +0.5).to_i
-    y1 = (y1 +0.5).to_i
-    x2 = (x2 +0.5).to_i
-    y2 = (y2 +0.5).to_i
-
-    [
-      col_start, x1,
-      row_start, y1,
-      col_end,   x2,
-      row_end,   y2
-    ]
-  end
-
   def adjust_col_position(x, col)  # :nodoc:
     while x >= size_col(col)
       x -= size_col(col)
@@ -6877,35 +7046,34 @@ class Worksheet < BIFFWriter
 
   def prepare_common(param)  # :nodoc:
     hash = {
-      :images => @images, :comments => @comments, :charts => @charts
+      :images => @images, :charts => @charts
     }[param]
-
-    count = 0
-    obj   = []
 
     # We sort the charts by row and column but that isn't strictly required.
     #
-    rows = hash.keys.sort
-    rows.each do |row|
-      cols = hash[row].keys.sort
-      cols.each do |col|
-        obj.push(hash[row][col])
-        count += 1
+    if hash
+      obj   = []
+      rows = hash.keys.sort
+      rows.each do |row|
+        cols = hash[row].keys.sort
+        cols.each do |col|
+          obj.push(hash[row][col])
+        end
       end
+    else
+      obj = @comments.array
     end
+
 
     case param
     when :images
       @images         = {}
       @images_array   = obj
-    when :comments
-      @comments       = {}
-      @comments_array = obj
     when :charts
       @charts         = {}
       @charts_array   = obj
     end
-    count
+    obj.size
   end
 
   #
@@ -6922,7 +7090,7 @@ class Worksheet < BIFFWriter
     num_images      = images.size
 
     num_filters     = @filter_count
-    num_comments    = @comments_array.size
+    num_comments    = @comments.array.size
     num_charts      = @charts_array.size
 
     # Skip this if there aren't any images.
@@ -7022,7 +7190,7 @@ class Worksheet < BIFFWriter
       num_charts      = charts.size
 
       num_filters     = @filter_count
-      num_comments    = @comments_array.size
+      num_comments    = @comments.array.size
 
       # Number of objects written so far.
       num_objects     = @images_array.size
@@ -7136,7 +7304,7 @@ class Worksheet < BIFFWriter
     filter_area     = @filter_area
     num_filters     = @filter_count
 
-    num_comments    = @comments_array.size
+    num_comments    = @comments.array.size
 
     # Number of objects written so far.
     num_objects     = @images_array.size + @charts_array.size
@@ -7205,7 +7373,7 @@ class Worksheet < BIFFWriter
     ids             = @object_ids.dup
     spid            = ids.shift
 
-    comments        = @comments_array
+    comments        = @comments.array
     num_comments    = comments.size
 
     # Number of objects written so far.
@@ -7215,13 +7383,13 @@ class Worksheet < BIFFWriter
     return if num_comments == 0
 
     (0 .. num_comments-1).each do |i|
-      row         = comments[i][0]
-      col         = comments[i][1]
-      str         = comments[i][2]
-      encoding    = comments[i][3]
-      visible     = comments[i][6]
-      color       = comments[i][7]
-      vertices    = comments[i][8]
+      row         = comments[i].row
+      col         = comments[i].col
+      str         = comments[i].string
+      encoding    = comments[i].encoding
+      visible     = comments[i].visible
+      color       = comments[i].color
+      vertices    = comments[i].vertices
       str_len     = str.bytesize
       str_len     = str_len / 2 if encoding != 0 # Num of chars not bytes.
       formats     = [[0, 9], [str_len, 0]]
@@ -7257,14 +7425,13 @@ class Worksheet < BIFFWriter
 
     # Write the NOTE records after MSODRAWIING records.
     (0 .. num_comments-1).each do |i|
-      row         = comments[i][0]
-      col         = comments[i][1]
-      author      = comments[i][4]
-      author_enc  = comments[i][5]
-      visible     = comments[i][6]
+      row         = comments[i].row
+      col         = comments[i].col
+      author      = comments[i].author
+      author_enc  = comments[i].author_encoding
+      visible     = comments[i].visible
 
-      store_note(row, col, num_objects + i + 1,
-      author, author_enc, visible)
+      store_note(row, col, num_objects + i + 1, author, author_enc, visible)
     end
   end
 
@@ -7782,8 +7949,8 @@ class Worksheet < BIFFWriter
     record      = 0x001C               # Record identifier
     length      = 0x000C               # Bytes to follow
 
-    author     = @comments_author     unless author
-    author_enc = @comments_author_enc unless author_enc
+    author     = '' unless author
+    author_enc = 0  unless author_enc
 
     # Use the visible flag if set by the user or else use the worksheet value.
     # The flag is also set in store_mso_opt_comment() but with the opposite
