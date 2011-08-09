@@ -58,18 +58,14 @@ class Worksheet < BIFFWriter
     end
 
     #
-    # Store the NAME record in the long format that is used for storing the repeat
+    # assemble the NAME record in the long format that is used for storing the repeat
     # rows and columns when both are specified. This share a lot of code with
-    # store_name_short() but we use a separate method to keep the code clean.
+    # name_record_short() but we use a separate method to keep the code clean.
     # Code abstraction for reuse can be carried too far, and I should know. ;-)
     #
     #    index             # Sheet index
     #    type
     #    ext_ref           # TODO
-    #    rowmin            # Start row
-    #    rowmax            # End row
-    #    colmin            # Start column
-    #    colmax            # end column
     #
     def name_record_long(index, type, ext_ref)       #:nodoc:
       record          = 0x0018       # Record identifier
@@ -130,16 +126,12 @@ class Worksheet < BIFFWriter
     end
 
     #
-    # Store the NAME record in the short format that is used for storing the print
+    # assemble the NAME record in the short format that is used for storing the print
     # area, repeat rows only and repeat columns only.
     #
     #    index            # Sheet index
     #    type
     #    ext_ref          # TODO
-    #    rowmin           # Start row
-    #    rowmax           # End row
-    #    colmin           # Start column
-    #    colmax           # end column
     #    hidden           # Name is hidden
     #
     def name_record_short(index, type, ext_ref, hidden = nil)       #:nodoc:
