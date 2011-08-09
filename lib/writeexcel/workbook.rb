@@ -1297,7 +1297,6 @@ class Workbook < BIFFWriter
   #
   def calc_mso_sizes       #:nodoc:
     mso_size        = 0    # Size of the MSODRAWINGGROUP record
-    start_spid      = 1024 # Initial spid for each sheet
     max_spid        = 1024 # spidMax
     num_clusters    = 1    # cidcl
     shapes_saved    = 0    # cspSaved
