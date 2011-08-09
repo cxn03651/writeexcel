@@ -173,12 +173,8 @@ class Worksheet < BIFFWriter
     store_filtermode
 
     # Prepend the COLINFO records if they exist
-    unless @colinfo.empty?
-      colinfo = @colinfo.dup
-      while (!colinfo.empty?)
-        arrayref = colinfo.pop
-        store_colinfo(*arrayref)
-      end
+    @colinfo.reverse.each do |colinfo|
+      store_colinfo(*colinfo)
     end
 
     # Prepend the DEFCOLWIDTH record
