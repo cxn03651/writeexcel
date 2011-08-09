@@ -26,12 +26,12 @@ class TC_note < Test::Unit::TestCase
   end
 
   def test_blank_author_name
-    data = @worksheet.__send__("comment_params", 2, 0, 'Test')
-    row      = data[0]
-    col      = data[1]
-    author   = data[4]
-    encoding = data[5]
-    visible  = data[6]
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 2, 0, 'Test')
+    row      = comment.row
+    col      = comment.col
+    author   = comment.author
+    encoding = comment.encoding
+    visible  = comment.visible
     obj_id   = 1
 
     caption = sprintf(" \tstore_note")
@@ -44,12 +44,12 @@ class TC_note < Test::Unit::TestCase
   end
 
   def test_defined_author_name
-    data = @worksheet.__send__("comment_params", 2, 0,'Test', :author => 'Username')
-    row      = data[0]
-    col      = data[1]
-    author   = data[4]
-    encoding = data[5]
-    visible  = data[6]
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 2, 0,'Test', :author => 'Username')
+    row      = comment.row
+    col      = comment.col
+    author   = comment.author
+    encoding = comment.encoding
+    visible  = comment.visible
     obj_id   = 1
 
     caption = sprintf(" \tstore_note")

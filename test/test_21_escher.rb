@@ -175,153 +175,151 @@ class TC_escher < Test::Unit::TestCase
     # A1
     range   = 'A1'
     caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 01 00 F0 00 00 00
     1E 00 03 00 F0 00 04 00 78 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
     # A2
     range   = 'A2'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 01 00 F0 00 00 00
     69 00 03 00 F0 00 04 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     # A3
     range   = 'A3'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 01 00 F0 00 01 00
     69 00 03 00 F0 00 05 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     # A65534
     range   = 'A65534'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 01 00 F0 00 F9 FF
     3C 00 03 00 F0 00 FD FF 97 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     # A65536
     range   = 'A65536'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 01 00 F0 00 FB FF
     1E 00 03 00 F0 00 FF FF 78 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     # IT3
     range   = 'IT3'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 FA 00 10 03 01 00
     69 00 FC 00 10 03 05 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     # IU3
     range   = 'IU3'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 FB 00 10 03 01 00
     69 00 FD 00 10 03 05 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     #
     range   = 'IU3'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 FB 00 10 03 01 00
     69 00 FD 00 10 03 05 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     # IV3
     range   = 'IV3'
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    caption = sprintf(" \t_store_mso_client_anchor(%s)", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00 FC 00 10 03 01 00
     69 00 FE 00 10 03 05 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
   end
 
   def test_for_store_mso_client_anchor_where_comment_offsets_have_changed
-    range   = 'A3'
-    caption = sprintf(" \t_store_mso_client_anchor(%s). Cell offsets changes.", range)
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test',
-    :x_offset=>18, :y_offset=>9)
-    data    = data[-1]
+    range    = 'A3'
+    caption  = sprintf(" \t_store_mso_client_anchor(%s). Cell offsets changes.", range)
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test',
+      :x_offset => 18, :y_offset => 9).vertices
     target  = %w(
     00 00 10 F0 12 00
     00 00 03 00 01 00 20 01 01 00 88 00 03 00 20 01
     05 00 E2 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
   end
@@ -330,31 +328,29 @@ class TC_escher < Test::Unit::TestCase
     # x_scale, y_scale
     range   = 'A3'
     caption = sprintf(" \t_store_mso_client_anchor(%s). Dimensions changes.", range)
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test',
-    :x_scale=>3, :y_scale=>2)
-    data    = data[-1]
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test',
+      :x_scale => 3, :y_scale => 2).vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00
     01 00 F0 00 01 00 69 00 07 00 F0 00 0A 00 1E 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
 
     # width, height
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test',
-    :width=>384, :height=>148)
-    data    = data[-1]
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test',
+      :width => 384, :height => 148).vertices
     target  = %w(
     00 00 10 F0 12 00 00 00 03 00
     01 00 F0 00 01 00 69 00 07 00 F0 00 0A 00 1E 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
@@ -366,9 +362,8 @@ class TC_escher < Test::Unit::TestCase
     @worksheet.set_column('G:G', 20)
 
     caption = sprintf(" \t_store_mso_client_anchor(%s). Col width changes.", range)
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
 
     target  = %w(
     00 00 10 F0 12 00
@@ -376,7 +371,7 @@ class TC_escher < Test::Unit::TestCase
     05 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
@@ -385,9 +380,8 @@ class TC_escher < Test::Unit::TestCase
     range = 'K3'
     @worksheet.set_column('L:O', 4)
 
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
 
     target  = %w(
     00 00 10 F0 12 00
@@ -395,7 +389,7 @@ class TC_escher < Test::Unit::TestCase
     05 00 C4 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
@@ -410,9 +404,8 @@ class TC_escher < Test::Unit::TestCase
     @worksheet.set_row(8, 6)
 
     caption = sprintf(" \t_store_mso_client_anchor(%s). Row height changed.", range)
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
 
     target  = %w(
     00 00 10 F0 12 00
@@ -420,7 +413,7 @@ class TC_escher < Test::Unit::TestCase
     0A 00 E2 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
@@ -430,9 +423,8 @@ class TC_escher < Test::Unit::TestCase
     @worksheet.set_row(14, 60)
 
     caption = sprintf(" \t_store_mso_client_anchor(%s). Row height changed.", range)
-    data    = @worksheet.__send__("substitute_cellref", range)
-    data    = @worksheet.__send__("comment_params", data[0], data[1], 'Test')
-    data    = data[-1]
+    row, col = @worksheet.__send__("substitute_cellref", range)
+    vertices = Writeexcel::Worksheet::Comment.new(@worksheet, row, col, 'Test').vertices
 
     target  = %w(
     00 00 10 F0 12 00
@@ -440,7 +432,7 @@ class TC_escher < Test::Unit::TestCase
     0E 00 CD 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_client_anchor", 3, *vertices))
 
     assert_equal(target, result, caption)
 
