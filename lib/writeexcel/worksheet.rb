@@ -297,7 +297,7 @@ class Worksheet < BIFFWriter
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
 
-  attr_reader :title_range, :print_range, :filter_area, :filter_count
+  attr_reader :title_range, :print_range, :filter_area
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
@@ -391,7 +391,6 @@ class Worksheet < BIFFWriter
     @image_mso_size      = 0
 
     @filter_area         = FilterRange.new(self)
-    @filter_count        = 0
     @filter_on           = 0
     @filter_cols         = []
 
@@ -1358,7 +1357,6 @@ class Worksheet < BIFFWriter
     @filter_area.row_max = row_max
     @filter_area.col_min = col_min
     @filter_area.col_max = col_max
-    @filter_count = 1 + col2 -col1
   end
 
   #
@@ -1458,7 +1456,7 @@ class Worksheet < BIFFWriter
   # for a more detailed example.
   #
   def filter_column(col, expression)
-    raise "Must call autofilter() before filter_column()" if @filter_count == 0
+    raise "Must call autofilter() before filter_column()" if @filter_area.count == 0
     #      raise "Incorrect number of arguments to filter_column()" unless @_ == 2
 
     # Check for a column reference in A1 notation and substitute.
@@ -4890,7 +4888,7 @@ class Worksheet < BIFFWriter
   end
 
   def autofilter_name_record_short(hidden = nil)     #:nodoc:
-    name_record_short(@filter_area, hidden) if @filter_count != 0
+    name_record_short(@filter_area, hidden) if @filter_area.count != 0
   end
 
   def print_area_name_record_short(hidden = nil)     #:nodoc:
@@ -5002,6 +5000,10 @@ class Worksheet < BIFFWriter
       col_end,   x2,
       row_end,   y2
     ]
+  end
+
+  def filter_count
+    @filter_area.count
   end
 
   ###############################################################################
@@ -6084,11 +6086,11 @@ class Worksheet < BIFFWriter
   #
   def store_autofilterinfo   #:nodoc:
     # Only write the record if the worksheet contains an autofilter.
-    return '' if @filter_count == 0
+    return '' if @filter_area.count == 0
 
     record      = 0x009D      # Record identifier
     length      = 0x0002      # Number of bytes to follow
-    num_filters = @filter_count
+    num_filters = @filter_area.count
 
     header = [record, length].pack('vv')
     data   = [num_filters].pack('v')
@@ -7089,7 +7091,7 @@ class Worksheet < BIFFWriter
     images          = @images_array
     num_images      = images.size
 
-    num_filters     = @filter_count
+    num_filters     = @filter_area.count
     num_comments    = @comments.array.size
     num_charts      = @charts_array.size
 
@@ -7189,7 +7191,7 @@ class Worksheet < BIFFWriter
       charts          = @charts_array
       num_charts      = charts.size
 
-      num_filters     = @filter_count
+      num_filters     = @filter_area.count
       num_comments    = @comments.array.size
 
       # Number of objects written so far.
@@ -7302,7 +7304,7 @@ class Worksheet < BIFFWriter
     spid            = ids.shift
 
     filter_area     = @filter_area
-    num_filters     = @filter_count
+    num_filters     = @filter_area.count
 
     num_comments    = @comments.array.size
 
@@ -7377,7 +7379,7 @@ class Worksheet < BIFFWriter
     num_comments    = comments.size
 
     # Number of objects written so far.
-    num_objects     = @images_array.size + @filter_count + @charts_array.size
+    num_objects     = @images_array.size + @filter_area.count + @charts_array.size
 
     # Skip this if there aren't any comments.
     return if num_comments == 0

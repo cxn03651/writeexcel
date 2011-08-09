@@ -192,6 +192,14 @@ class Worksheet < BIFFWriter
     def name_record_short(ext_ref, hidden)
       super(0x0D, ext_ref, hidden) # 0x0D  NAME type = Filter Database
     end
+
+    def count
+      if @col_min && @col_max
+        1 + @col_max - @col_min
+      else
+        0
+      end
+    end
   end
 end
 
