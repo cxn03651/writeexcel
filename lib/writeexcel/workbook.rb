@@ -1626,7 +1626,7 @@ class Workbook < BIFFWriter
   def create_autofilter_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
       # Write a Name record if Autofilter has been defined
-      append(*worksheet.autofilter_name_record_short(1)) if worksheet.filter_count != 0
+      append(*worksheet.autofilter_name_record_short(true)) if worksheet.filter_count != 0
     end
   end
 

@@ -39,6 +39,10 @@ class Worksheet < BIFFWriter
   class CellRange
     attr_accessor :row_min, :row_max, :col_min, :col_max
 
+    def initialize(worksheet)
+      @worksheet = worksheet
+    end
+
     def increment_row_max
       @row_max += 1 if @row_max
     end
@@ -63,11 +67,10 @@ class Worksheet < BIFFWriter
     # name_record_short() but we use a separate method to keep the code clean.
     # Code abstraction for reuse can be carried too far, and I should know. ;-)
     #
-    #    index             # Sheet index
     #    type
     #    ext_ref           # TODO
     #
-    def name_record_long(index, type, ext_ref)       #:nodoc:
+    def name_record_long(type, ext_ref)       #:nodoc:
       record          = 0x0018       # Record identifier
       length          = 0x002a       # Number of bytes to follow
 
@@ -76,7 +79,7 @@ class Worksheet < BIFFWriter
       cch             = 0x01         # Length of text name
       cce             = 0x001a       # Length of text definition
       unknown01       = 0x0000       #
-      ixals           = index + 1    # Sheet index
+      ixals           = @worksheet.index + 1    # Sheet index
       unknown02       = 0x00         #
       cch_cust_menu   = 0x00         # Length of cust menu text
       cch_description = 0x00         # Length of description text
@@ -129,12 +132,11 @@ class Worksheet < BIFFWriter
     # assemble the NAME record in the short format that is used for storing the print
     # area, repeat rows only and repeat columns only.
     #
-    #    index            # Sheet index
     #    type
     #    ext_ref          # TODO
     #    hidden           # Name is hidden
     #
-    def name_record_short(index, type, ext_ref, hidden = nil)       #:nodoc:
+    def name_record_short(type, ext_ref, hidden = nil)       #:nodoc:
       record          = 0x0018       # Record identifier
       length          = 0x001b       # Number of bytes to follow
 
@@ -143,7 +145,7 @@ class Worksheet < BIFFWriter
       cch             = 0x01         # Length of text name
       cce             = 0x000b       # Length of text definition
       unknown01       = 0x0000       #
-      ixals           = index + 1    # Sheet index
+      ixals           = @worksheet.index + 1    # Sheet index
       unknown02       = 0x00         #
       cch_cust_menu   = 0x00         # Length of cust menu text
       cch_description = 0x00         # Length of description text
@@ -205,12 +207,34 @@ class Worksheet < BIFFWriter
     end
   end
 
+  class PrintRange < CellRange
+    def name_record_short(ext_ref, hidden)
+      super(0x06, ext_ref, hidden) # 0x06  NAME type = Print_Area
+    end
+  end
+
+  class TitleRange < CellRange
+    def name_record_long(ext_ref)
+      super(0x07, ext_ref) # 0x07  NAME type = Print_Titles
+    end
+
+    def name_record_short(ext_ref, hidden)
+      super(0x07, ext_ref, hidden) # 0x07  NAME type = Print_Titles
+    end
+  end
+
+  class FilterRange < CellRange
+    def name_record_short(ext_ref, hidden)
+      super(0x0D, ext_ref, hidden) # 0x0D  NAME type = Filter Database
+    end
+  end
+
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
 
-  attr_reader :title_range, :print_range
+  attr_reader :title_range, :print_range, :filter_area, :filter_count
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
@@ -227,7 +251,7 @@ class Worksheet < BIFFWriter
     @using_tmpfile       = true
     @fileclosed          = false
     @offset              = 0
-    @dimension           = CellDimension.new
+    @dimension           = CellDimension.new(self)
     @colinfo             = []
     @selection           = [0, 0]
     @panes               = []
@@ -250,8 +274,8 @@ class Worksheet < BIFFWriter
     @margin_top          = 1.00
     @margin_bottom       = 1.00
 
-    @title_range         = CellRange.new
-    @print_range         = CellRange.new
+    @title_range         = TitleRange.new(self)
+    @print_range         = PrintRange.new(self)
 
     @print_gridlines     = 1
     @screen_gridlines    = 1
@@ -306,7 +330,7 @@ class Worksheet < BIFFWriter
     @num_images          = 0
     @image_mso_size      = 0
 
-    @filter_area         = CellRange.new
+    @filter_area         = FilterRange.new(self)
     @filter_count        = 0
     @filter_on           = 0
     @filter_cols         = []
@@ -4732,14 +4756,6 @@ class Worksheet < BIFFWriter
     @images_array
   end
 
-  def filter_area  # :nodoc:
-    @filter_area
-  end
-
-  def filter_count  # :nodoc:
-    @filter_count
-  end
-
   def offset  # :nodoc:
     @offset
   end
@@ -4809,38 +4825,23 @@ class Worksheet < BIFFWriter
 #  private :prepare_charts
 
   def print_title_name_record_long     #:nodoc:
-    @title_range.name_record_long(
-      index,
-      0x07, # NAME type = Print_Titles
-      @workbook.ext_refs["#{index}:#{index}"]
-    )
+    @title_range.name_record_long(@workbook.ext_refs["#{index}:#{index}"])
+  end
+
+  def name_record_short(cell_range, hidden = nil)
+    cell_range.name_record_short(@workbook.ext_refs["#{index}:#{index}"], hidden)
   end
 
   def print_title_name_record_short(hidden = nil)     #:nodoc:
-    @title_range.name_record_short(
-      index,
-      0x07, # NAME type = Print_Titles
-      @workbook.ext_refs["#{index}:#{index}"],
-      hidden
-    )
+    name_record_short(@title_range, hidden)
   end
 
   def autofilter_name_record_short(hidden = nil)     #:nodoc:
-    @filter_area.name_record_short(
-      index,
-      0x0D, # NAME type = Filter Database
-      @workbook.ext_refs["#{index}:#{index}"],
-      hidden
-    )
+    name_record_short(@filter_area, hidden)
   end
 
   def print_area_name_record_short(hidden = nil)     #:nodoc:
-    @print_range.name_record_short(
-      index,
-      0x06, # NAME type = Print_Area
-      @workbook.ext_refs["#{index}:#{index}"],
-      hidden
-    )
+    name_record_short(@print_range, hidden)
   end
 
   ###############################################################################
