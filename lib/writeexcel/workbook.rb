@@ -1129,16 +1129,7 @@ class Workbook < BIFFWriter
     end
 
     # Add Workbook globals
-    store_bof(0x0005)
-    store_codepage
-    store_window1
-    store_hideobj
-    store_1904
-    store_all_fonts
-    store_all_num_formats
-    store_all_xfs
-    store_all_styles
-    store_palette
+    add_workbook_globals
 
     # Calculate the offsets required by the BOUNDSHEET records
     calc_sheet_offsets
@@ -1165,6 +1156,19 @@ class Workbook < BIFFWriter
 
     # Store the workbook in an OLE container
     store_ole_file
+  end
+
+  def add_workbook_globals
+    store_bof(0x0005)
+    store_codepage
+    store_window1
+    store_hideobj
+    store_1904
+    store_all_fonts
+    store_all_num_formats
+    store_all_xfs
+    store_all_styles
+    store_palette
   end
 
   #
@@ -1985,9 +1989,6 @@ class Workbook < BIFFWriter
     end
 
     @worksheets.each do |worksheet|
-
-      rowmin      = worksheet.title_range.row_min
-      colmin      = worksheet.title_range.col_min
       key         = "#{index}:#{index}"
       index += 1
 
@@ -2000,10 +2001,10 @@ class Workbook < BIFFWriter
 
       # Add title  NAME records
       #
-      if rowmin and colmin
+      if worksheet.title_range.row_min && worksheet.title_range.col_min
         add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 46
-      elsif rowmin or colmin
+      elsif worksheet.title_range.row_min || worksheet.title_range.col_min
         add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       else
