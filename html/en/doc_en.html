@@ -406,7 +406,7 @@ name="add_worksheet"
 <p>You can specify <code>UTF-16BE</code> worksheet names using an additional optional parameter:</p>
 
 <pre>
-    name = pack &#39;n&#39;, 0x263a
+    name = [0x263a].pack(&#39;n&#39;)
     worksheet = workbook.add_worksheet(name, true)   # Smiley
 </pre>
 
@@ -491,7 +491,7 @@ name="add_chart"
 </ul>
 
 <p>See <a href="#" class="podlinkpod"
->WriteExcel::Chart</a> for details on how to configure the chart object once it is created. See also the <code>chart_*.pl</code> programs in the examples directory of the distro.</p>
+>WriteExcel::Chart</a> for details on how to configure the chart object once it is created. See also the <code>chart_*.rb</code> programs in the examples directory of the distro.</p>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
 name="add_chart_ext"
@@ -988,7 +988,7 @@ name="write_utf16le_string"
 <p><code>UTF-16</code> data can be changed from little-endian to big-endian format (and vice-versa) as follows:</p>
 
 <pre>
-    utf16be = pack &#39;n*&#39;, unpack &#39;v*&#39;, utf16le
+    utf16be = [utf16le.unpack(&#39;v*&#39;)].pack(&#39;n*&#39;)
 </pre>
 
 <h2><a class='u' href='#___top' title='click to go to top of document'
