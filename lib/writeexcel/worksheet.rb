@@ -306,6 +306,34 @@ class Worksheet < BIFFWriter
     end
   end
 
+  class EmbeddedChart
+    attr_reader :row, :col, :chart, :vertices
+
+    def initialize(worksheet, row, col, chart, x_offset = 0, y_offset = 0, scale_x = 1, scale_y = 1)
+      @worksheet = worksheet
+      @row, @col, @chart, @x_offset, @y_offset, @scale_x, @scale_y =
+        row, col, chart, x_offset, y_offset, scale_x, scale_y
+      @width = default_width * scale_x
+      @height = default_height * scale_y
+      @vertices = calc_vertices
+    end
+
+    # Calculate the positions of comment object.
+    def calc_vertices
+      @worksheet.position_object( @col, @row, @x_offset, @y_offset, @width, @height)
+    end
+
+    private
+
+    def default_width
+      526
+    end
+
+    def default_height
+      319
+    end
+  end
+
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
@@ -394,10 +422,8 @@ class Worksheet < BIFFWriter
     @write_match         = []
 
     @object_ids          = []
-    @images              = {}
-    @images_array        = []
-    @charts              = {}
-    @charts_array        = []
+    @images              = Collection.new
+    @charts              = Collection.new
     @comments            = Comments.new
 
     @num_images          = 0
@@ -4028,13 +4054,7 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
 
-    row         = args[0]
-    col         = args[1]
     chart       = args[2]
-    x_offset    = args[3] || 0
-    y_offset    = args[4] || 0
-    scale_x     = args[5] || 1
-    scale_y     = args[6] || 1
 
     if chart.respond_to?(:embedded)
       print "Not a embedded style Chart object in insert_chart()" unless chart.embedded
@@ -4043,9 +4063,7 @@ class Worksheet < BIFFWriter
         print "Couldn't locate #{chart} in insert_chart()" unless FileTest.exist?(chart)
     end
 
-    @charts[row] = {
-      col => [row, col, chart, x_offset, y_offset, scale_x, scale_y]
-    }
+    @charts << EmbeddedChart.new(self, *args)
   end
 
   #
@@ -4115,7 +4133,7 @@ class Worksheet < BIFFWriter
     raise "Insufficient arguments in insert_image()" unless args.size >= 3
     raise "Couldn't locate #{image.filename}: $!"    unless test(?e, image.filename)
 
-    @images[image.row] = { image.col => image }
+    @images << image
   end
 
   # Older method name for backwards compatibility.
@@ -4810,7 +4828,7 @@ class Worksheet < BIFFWriter
   end
 
   def images_array  # :nodoc:
-    @images_array
+    @images.array
   end
 
   def offset  # :nodoc:
@@ -7053,35 +7071,7 @@ class Worksheet < BIFFWriter
   #
 
   def prepare_common(param)  # :nodoc:
-    hash = {
-      :images => @images, :charts => @charts
-    }[param]
-
-    # We sort the charts by row and column but that isn't strictly required.
-    #
-    if hash
-      obj   = []
-      rows = hash.keys.sort
-      rows.each do |row|
-        cols = hash[row].keys.sort
-        cols.each do |col|
-          obj.push(hash[row][col])
-        end
-      end
-    else
-      obj = @comments.array
-    end
-
-
-    case param
-    when :images
-      @images         = {}
-      @images_array   = obj
-    when :charts
-      @charts         = {}
-      @charts_array   = obj
-    end
-    obj.size
+    { :images => @images, :comments => @comments, :charts => @charts }[param].array.size
   end
 
   #
@@ -7094,12 +7084,12 @@ class Worksheet < BIFFWriter
     ids             = @object_ids.dup
     spid            = ids.shift
 
-    images          = @images_array
+    images          = @images.array
     num_images      = images.size
 
     num_filters     = @filter_area.count
     num_comments    = @comments.array.size
-    num_charts      = @charts_array.size
+    num_charts      = @charts.array.size
 
     # Skip this if there aren't any images.
     return if num_images == 0
@@ -7194,70 +7184,50 @@ class Worksheet < BIFFWriter
       ids             = @object_ids.dup
       spid            = ids.shift
 
-      charts          = @charts_array
+      charts          = @charts.array
       num_charts      = charts.size
 
       num_filters     = @filter_area.count
       num_comments    = @comments.array.size
 
       # Number of objects written so far.
-      num_objects     = @images_array.size
+      num_objects     = @images.array.size
 
       # Skip this if there aren't any charts.
       return if num_charts == 0
 
       (0 .. num_charts-1 ).each do |i|
-          row         =   charts[i][0]
-          col         =   charts[i][1]
-          chart       =   charts[i][2]
-          x_offset    =   charts[i][3]
-          y_offset    =   charts[i][4]
-          scale_x     =   charts[i][5]
-          scale_y     =   charts[i][6]
-          width       =   526
-          height      =   319
+        chart       =   charts[i].chart
+        vertices    =   charts[i].vertices
 
-          width  *= scale_x if scale_x.respond_to?(:coerce) && scale_x != 0
-          height *= scale_y if scale_y.respond_to?(:coerce) && scale_y != 0
+        if i == 0 && num_objects == 0
+          # Write the parent MSODRAWIING record.
+          dg_length    = 192 + 120*(num_charts -1)
+          spgr_length  = 168 + 120*(num_charts -1)
 
-          # Calculate the positions of chart object.
-          vertices = position_object( col,
-                                      row,
-                                      x_offset,
-                                      y_offset,
-                                      width,
-                                      height
-                                    )
+          dg_length   +=  96 *num_filters
+          spgr_length +=  96 *num_filters
 
-          if (i == 0 and num_objects == 0)
-              # Write the parent MSODRAWIING record.
-              dg_length    = 192 + 120*(num_charts -1)
-              spgr_length  = 168 + 120*(num_charts -1)
+          dg_length   += 128 *num_comments
+          spgr_length += 128 *num_comments
 
-              dg_length   +=  96 *num_filters
-              spgr_length +=  96 *num_filters
+          data  = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+          spid += 1
+          data += store_mso_sp_container_sp(spid)
+          spid += 1
+          data += store_mso_opt_chart_client_anchor_client_data(*vertices)
+        else
+          # Write the child MSODRAWIING record.
+          data  = store_mso_sp_container_sp(spid)
+          spid += 1
+          data += store_mso_opt_chart_client_anchor_client_data(*vertices)
+        end
+        length      = data.bytesize
+        header      = [record, length].pack("vv")
+        append(header, data)
 
-              dg_length   += 128 *num_comments
-              spgr_length += 128 *num_comments
-
-
-              data  = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-              spid += 1
-              data += store_mso_sp_container_sp(spid)
-              spid += 1
-              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
-          else
-              # Write the child MSODRAWIING record.
-              data  = store_mso_sp_container_sp(spid)
-              spid += 1
-              data += store_mso_opt_chart_client_anchor_client_data(*vertices)
-          end
-          length      = data.bytesize
-          header      = [record, length].pack("vv")
-          append(header, data)
-
-          store_obj_chart(num_objects + i + 1)
-          store_chart_binary(chart)
+        store_obj_chart(num_objects + i + 1)
+        store_chart_binary(chart)
       end
 
       # Simulate the EXTERNSHEET link between the chart and data using a formula
@@ -7265,8 +7235,7 @@ class Worksheet < BIFFWriter
       # TODO. Won't work for external data refs. Also should use a more direct
       #       method.
       #
-      formula = "='#{@name}'!A1"
-      store_formula(formula)
+      store_formula("='#{@name}'!A1")
 
       @object_ids[0] = spid
   end
@@ -7315,7 +7284,7 @@ class Worksheet < BIFFWriter
     num_comments    = @comments.array.size
 
     # Number of objects written so far.
-    num_objects     = @images_array.size + @charts_array.size
+    num_objects     = @images.array.size + @charts.array.size
 
     # Skip this if there aren't any filters.
     return if num_filters == 0
@@ -7385,7 +7354,7 @@ class Worksheet < BIFFWriter
     num_comments    = comments.size
 
     # Number of objects written so far.
-    num_objects     = @images_array.size + @filter_area.count + @charts_array.size
+    num_objects     = @images.array.size + @filter_area.count + @charts.array.size
 
     # Skip this if there aren't any comments.
     return if num_comments == 0
