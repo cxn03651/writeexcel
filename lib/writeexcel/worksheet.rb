@@ -237,7 +237,7 @@ class Worksheet < BIFFWriter
     #   width    : Col width in user units, 8.43 is default
     #   format   : format object
     #   hidden   : hidden flag
-    #   lebel    : outline level
+    #   level    : outline level
     #   collapsed : ?
     #
     def initialize(*args)
