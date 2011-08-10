@@ -1320,8 +1320,8 @@ class Workbook < BIFFWriter
       next unless sheet.type == 0x0000
 
       num_images     = sheet.num_images
-      num_comments   = sheet.prepare_comments
-      num_charts     = sheet.prepare_charts
+      num_comments   = sheet.comments_size
+      num_charts     = sheet.charts_size
       num_filters    = sheet.filter_count
 
       next if num_images + num_comments + num_charts + num_filters == 0
@@ -1388,7 +1388,7 @@ class Workbook < BIFFWriter
 
     @worksheets.each do |sheet|
       next unless sheet.type == 0x0000
-      next if sheet.prepare_images == 0
+      next if sheet.images_size == 0
 
       num_images      = 0
       image_mso_size  = 0

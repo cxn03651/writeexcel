@@ -4875,29 +4875,17 @@ class Worksheet < BIFFWriter
     @image_mso_size = val
   end
 
-  #
-  # Turn the HoH that stores the images into an array for easier handling.
-  #
-  def prepare_images   #:nodoc:
-    prepare_common(:images)
+  def images_size   #:nodoc:
+    @images.array.size
   end
-#  private :prepare_images
 
-  #
-  # Turn the HoH that stores the comments into an array for easier handling.
-  #
-  def prepare_comments   #:nodoc:
-    prepare_common(:comments)
+  def comments_size   #:nodoc:
+    @comments.array.size
   end
-#  private :prepare_comments
 
-  #
-  # Turn the HoH that stores the charts into an array for easier handling.
-  #
-  def prepare_charts   #:nodoc:
-    prepare_common(:charts)
+  def charts_size   #:nodoc:
+    @charts.array.size
   end
-#  private :prepare_charts
 
   def print_title_name_record_long     #:nodoc:
     @title_range.name_record_long(@workbook.ext_refs["#{index}:#{index}"])
@@ -7067,14 +7055,6 @@ class Worksheet < BIFFWriter
   end
 
   #
-  # Methods related to comments and MSO objects.
-  #
-
-  def prepare_common(param)  # :nodoc:
-    { :images => @images, :comments => @comments, :charts => @charts }[param].array.size
-  end
-
-  #
   # Store the collections of records that make up images.
   #
   def store_images   #:nodoc:
@@ -7088,8 +7068,7 @@ class Worksheet < BIFFWriter
     num_images      = images.size
 
     num_filters     = @filter_area.count
-    num_comments    = @comments.array.size
-    num_charts      = @charts.array.size
+    num_comments    = comments_size
 
     # Skip this if there aren't any images.
     return if num_images == 0
@@ -7118,8 +7097,8 @@ class Worksheet < BIFFWriter
         dg_length   =  156 + 84*(num_images -1)
         spgr_length =  132 + 84*(num_images -1)
 
-        dg_length   += 120 * num_charts
-        spgr_length += 120 * num_charts
+        dg_length   += 120 * charts_size
+        spgr_length += 120 * charts_size
 
         dg_length   += 96 * num_filters
         spgr_length += 96 * num_filters
@@ -7185,13 +7164,13 @@ class Worksheet < BIFFWriter
       spid            = ids.shift
 
       charts          = @charts.array
-      num_charts      = charts.size
+      num_charts      = charts_size
 
       num_filters     = @filter_area.count
-      num_comments    = @comments.array.size
+      num_comments    = comments_size
 
       # Number of objects written so far.
-      num_objects     = @images.array.size
+      num_objects     = images_size
 
       # Skip this if there aren't any charts.
       return if num_charts == 0
@@ -7281,10 +7260,10 @@ class Worksheet < BIFFWriter
     filter_area     = @filter_area
     num_filters     = @filter_area.count
 
-    num_comments    = @comments.array.size
+    num_comments    = comments_size
 
     # Number of objects written so far.
-    num_objects     = @images.array.size + @charts.array.size
+    num_objects     = images_size + charts_size
 
     # Skip this if there aren't any filters.
     return if num_filters == 0
@@ -7354,7 +7333,7 @@ class Worksheet < BIFFWriter
     num_comments    = comments.size
 
     # Number of objects written so far.
-    num_objects     = @images.array.size + @filter_area.count + @charts.array.size
+    num_objects     = images_size + @filter_area.count + charts_size
 
     # Skip this if there aren't any comments.
     return if num_comments == 0
