@@ -202,7 +202,7 @@ class Worksheet < BIFFWriter
     end
 
     def inside?(col)
-      col < @col_min || col > @col_max
+      @col_min <= col && col <= @col_max
     end
   end
 end

@@ -1463,7 +1463,7 @@ class Worksheet < BIFFWriter
     dummy, col = substitute_cellref("#{col}1") if col =~ /^\D/
 
     # Reject column if it is outside filter range.
-    if @filter_area.inside?(col)
+    unless @filter_area.inside?(col)
       raise "Column '#{col}' outside autofilter() column range " +
         "(#{@filter_area.col_min} .. #{@filter_area.col_max})"
     end
