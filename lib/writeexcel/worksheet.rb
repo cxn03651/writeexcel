@@ -37,6 +37,23 @@ module Writeexcel
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
+  class Outline
+    attr_accessor :row_level, :style, :below, :right
+    attr_writer   :visible
+
+    def initialize
+      @row_level = 0
+      @style     = 0
+      @below     = 1
+      @right     = 1
+      @visible   = true
+    end
+
+    def visible?
+      !!@visible
+    end
+  end
+
   class Collection
     def initialize
       @items = {}
@@ -413,11 +430,7 @@ class Worksheet < BIFFWriter
 
     @leading_zeros       = false
 
-    @outline_row_level   = 0
-    @outline_style       = 0
-    @outline_below       = 1
-    @outline_right       = 1
-    @outline_on          = 1
+    @outline             = Outline.new
 
     @write_match         = []
 
@@ -831,7 +844,7 @@ class Worksheet < BIFFWriter
     level = 0 if level < 0
     level = 7 if level > 7
 
-    @outline_row_level = level if level > @outline_row_level
+    @outline.row_level = level if level > @outline.row_level
 
     # Set the options flags.
     # 0x10: The fCollapsed flag indicates that the row contains the "+"
@@ -1038,12 +1051,12 @@ class Worksheet < BIFFWriter
   # "OUTLINES AND GROUPING IN EXCEL".
   #
   # The _visible_ parameter is used to control whether or not outlines are
-  # visible. Setting this parameter to 0 will cause all outlines on the
+  # visible. Setting this parameter to false will cause all outlines on the
   # worksheet to be hidden. They can be unhidden in Excel by means of the
-  # "Show Outline Symbols" command button. The default setting is 1 for
+  # "Show Outline Symbols" command button. The default setting is true for
   # visible outlines.
   #
-  #     worksheet.outline_settings(0)
+  #     worksheet.outline_settings(false)
   #
   # The _symbols__below parameter is used to control whether the row outline
   # symbol will appear above or below the outline level bar. The default
@@ -1066,13 +1079,13 @@ class Worksheet < BIFFWriter
   # The worksheet parameters controlled by outline_settings() are rarely used.
   #
   def outline_settings(*args)
-    @outline_on    = args[0] || 1
-    @outline_below = args[1] || 1
-    @outline_right = args[2] || 1
-    @outline_style = args[3] || 0
+    @outline.visible = args[0] || 1
+    @outline.below = args[1] || 1
+    @outline.right = args[2] || 1
+    @outline.style = args[3] || 0
 
-    # Ensure this is a boolean vale for Window2
-    @outline_on    = 1 if @outline_on == 0
+    # Ensure this is a boolean value for Window2
+    @outline.visible = true unless @outline.visible?
   end
 
   #
@@ -5991,7 +6004,7 @@ class Worksheet < BIFFWriter
     fDspZeros      = display_zeros? ? 1 : 0   # 4
     fDefaultHdr    = 1                 # 5
     fArabic        = @display_arabic || 0  # 6
-    fDspGuts       = @outline_on       # 7
+    fDspGuts       = @outline.visible? ? 1 : 0       # 7
     fFrozenNoSplit = @frozen_no_split  # 0 - bit
     fSelected      = selected? ? 1 : 0 # 1
     fPaged         = @active           # 2
@@ -6501,7 +6514,7 @@ class Worksheet < BIFFWriter
     dxRwGut     = 0x0000   # Size of row gutter
     dxColGut    = 0x0000   # Size of col gutter
 
-    row_level   = @outline_row_level
+    row_level   = @outline.row_level
 
     # Calculate the maximum column outline level. The equivalent calculation
     # for the row outline level is carried out in set_row().
@@ -6534,11 +6547,11 @@ class Worksheet < BIFFWriter
 
     # Set the option flags
     grbit |= 0x0001                        # Auto page breaks visible
-    grbit |= 0x0020 if @outline_style != 0 # Auto outline styles
-    grbit |= 0x0040 if @outline_below != 0 # Outline summary below
-    grbit |= 0x0080 if @outline_right != 0 # Outline summary right
+    grbit |= 0x0020 if @outline.style != 0 # Auto outline styles
+    grbit |= 0x0040 if @outline.below != 0 # Outline summary below
+    grbit |= 0x0080 if @outline.right != 0 # Outline summary right
     grbit |= 0x0100 if @fit_page      != 0 # Page setup fit to page
-    grbit |= 0x0400 if @outline_on    != 0 # Outline symbols displayed
+    grbit |= 0x0400 if @outline.visible?   # Outline symbols displayed
 
     header = [record, length].pack("vv")
     data   = [grbit].pack('v')
