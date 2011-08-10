@@ -38,8 +38,11 @@ class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
   class Comments
+    attr_writer :visible
+
     def initialize
       @comments = {}
+      @visible  = false
     end
 
     def <<(comment)
@@ -56,6 +59,10 @@ class Worksheet < BIFFWriter
         end
       end
       @array
+    end
+
+    def visible?
+      @visible
     end
   end
 
@@ -385,7 +392,6 @@ class Worksheet < BIFFWriter
     @charts              = {}
     @charts_array        = []
     @comments            = Comments.new
-    @comments_visible    = 0
 
     @num_images          = 0
     @image_mso_size      = 0
@@ -2215,8 +2221,8 @@ class Worksheet < BIFFWriter
   #     worksheet.write_comment('C3', 'Hello', :visible => 0)
   #
   #
-  def show_comments(val = nil)
-    @comments_visible = val ? val : 1
+  def show_comments(val = true)
+    @comments.visible = val ? true : false
   end
 
   #
@@ -7517,9 +7523,9 @@ class Worksheet < BIFFWriter
     # Note that the value used is the opposite of store_note().
     #
     if visible
-      visible = visible != 0           ? 0x0000 : 0x0002
+      visible = visible != 0       ? 0x0000 : 0x0002
     else
-      visible = @comments_visible != 0 ? 0x0000 : 0x0002
+      visible = @comments.visible? ? 0x0000 : 0x0002
     end
 
     data = [spid].pack('V')                            +
@@ -7951,9 +7957,9 @@ class Worksheet < BIFFWriter
     # The flag is also set in store_mso_opt_comment() but with the opposite
     # value.
     if visible
-      visible = visible != 0           ? 0x0002 : 0x0000
+      visible = visible != 0       ? 0x0002 : 0x0000
     else
-      visible = @comments_visible != 0 ? 0x0002 : 0x0000
+      visible = @comments.visible? ? 0x0002 : 0x0000
     end
 
     # Get the number of chars in the author string (not bytes).
