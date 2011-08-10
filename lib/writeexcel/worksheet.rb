@@ -37,28 +37,35 @@ module Writeexcel
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
-  class Comments
-    attr_writer :visible
-
+  class Collection
     def initialize
-      @comments = {}
-      @visible  = false
+      @items = {}
     end
 
-    def <<(comment)
-      @comments[comment.row] = { comment.col => comment }
+    def <<(item)
+      @items[item.row] = { item.col => item }
     end
 
     def array
       return @array if @array
 
       @array = []
-      @comments.keys.sort.each do |row|
-        @comments[row].keys.sort.each do |col|
-          @array << @comments[row][col]
+      @items.keys.sort.each do |row|
+        @items[row].keys.sort.each do |col|
+          @array << @items[row][col]
         end
       end
       @array
+    end
+
+  end
+
+  class Comments < Collection
+    attr_writer :visible
+
+    def initialize
+      super
+      @visible  = false
     end
 
     def visible?
