@@ -94,7 +94,7 @@ class Workbook < BIFFWriter
     @internal_fh           = 0
     @fh_out                = ""
 
-    @activesheet           = 0
+    @activesheet           = nil
     @firstsheet            = 0
     @str_total             = 0
     @str_unique            = 0
@@ -1118,12 +1118,14 @@ class Workbook < BIFFWriter
     calc_mso_sizes
 
     # Ensure that at least one worksheet has been selected.
-    @worksheets[0].select if @activesheet == 0
+    unless @activesheet
+      @activesheet = @worksheets.first
+      @activesheet.select
+    end
 
     # Calculate the number of selected sheet tabs and set the active sheet.
     @worksheets.each do |sheet|
       @selected    += 1 if sheet.selected?
-      sheet.active  = 1 if sheet.index == @activesheet
     end
 
     # Add Workbook globals
@@ -1680,9 +1682,8 @@ class Workbook < BIFFWriter
     ctabsel   = @selected              # Number of workbook tabs selected
     tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
-    tab_cur   = @activesheet           # Active worksheet
+    tab_cur   = @worksheets.index(@activesheet) # Active worksheet
     tab_first = @firstsheet            # 1st displayed worksheet
-
     header    = [record, length].pack("vv")
     data      = [
                   x_pos, y_pos, dx_win, dy_win,

@@ -379,7 +379,6 @@ class Worksheet < BIFFWriter
     @panes               = []
     @active_pane         = 3
     @frozen_no_split     = 1
-    @active              = 0
     @tab_color           = 0
 
     @first_row           = 0
@@ -628,7 +627,7 @@ class Worksheet < BIFFWriter
   def activate
     @hidden   = false  # Active worksheet can't be hidden.
     @selected = true
-    @workbook.activesheet = @index
+    @workbook.activesheet = self
   end
 
 
@@ -655,7 +654,7 @@ class Worksheet < BIFFWriter
 
     # A hidden worksheet shouldn't be active or selected.
     @selected  = false
-    @workbook.activesheet = 0
+    @workbook.activesheet = nil
     @workbook.firstsheet  = 0
   end
 
@@ -4814,10 +4813,6 @@ class Worksheet < BIFFWriter
     @validations.push(param)
   end
 
-  def active=(val)  # :nodoc:
-    @active = val
-  end
-
   def is_name_utf16be?  # :nodoc:
     if @name_utf16be == 0
       false
@@ -5037,6 +5032,10 @@ class Worksheet < BIFFWriter
   #
 
   private
+
+  def active?
+    self == @workbook.activesheet
+  end
 
   def frozen?
     @frozen
@@ -6002,7 +6001,7 @@ class Worksheet < BIFFWriter
     fDspGuts       = @outline.visible? ? 1 : 0       # 7
     fFrozenNoSplit = @frozen_no_split  # 0 - bit
     fSelected      = selected? ? 1 : 0 # 1
-    fPaged         = @active           # 2
+    fPaged         = active? ?   1 : 0 # 2
     fBreakPreview  = 0                # 3
 
     grbit             = fDspFmla
