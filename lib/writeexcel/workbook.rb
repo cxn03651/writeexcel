@@ -27,6 +27,7 @@ class Workbook < BIFFWriter
 
   class Worksheets < Array
     attr_accessor :activesheet
+    attr_writer :firstsheet
 
     def initialize
       @activesheet = nil
@@ -34,6 +35,10 @@ class Workbook < BIFFWriter
 
     def activesheet_index
       index(@activesheet)
+    end
+
+    def firstsheet_index
+      index(@firstsheet) || 0
     end
 
     def selected_count
@@ -46,7 +51,7 @@ class Workbook < BIFFWriter
   attr_reader :ext_refs
   attr_reader :str_table
   attr_reader :worksheets
-  attr_accessor :firstsheet
+
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
 
@@ -110,7 +115,6 @@ class Workbook < BIFFWriter
     @internal_fh           = 0
     @fh_out                = ""
 
-    @firstsheet            = 0
     @str_total             = 0
     @str_unique            = 0
     @str_table             = {}
@@ -1686,7 +1690,7 @@ class Workbook < BIFFWriter
     tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
     tab_cur   = @worksheets.activesheet_index # Active worksheet
-    tab_first = @firstsheet            # 1st displayed worksheet
+    tab_first = @worksheets.firstsheet_index  # 1st displayed worksheet
     header    = [record, length].pack("vv")
     data      = [
                   x_pos, y_pos, dx_win, dy_win,

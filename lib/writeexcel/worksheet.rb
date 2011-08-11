@@ -653,8 +653,8 @@ class Worksheet < BIFFWriter
 
     # A hidden worksheet shouldn't be active or selected.
     @selected  = false
-    @workbook.worksheets.activesheet = nil
-    @workbook.firstsheet  = 0
+    @workbook.worksheets.activesheet = @workbook.worksheets.first
+    @workbook.worksheets.firstsheet  = @workbook.worksheets.first
   end
 
 
@@ -681,7 +681,7 @@ class Worksheet < BIFFWriter
   #
   def set_first_sheet
     @hidden = false        # Active worksheet can't be hidden.
-    @workbook.firstsheet = index
+    @workbook.worksheets.firstsheet = self
   end
 
   #
