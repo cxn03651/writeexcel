@@ -6,9 +6,6 @@
 # all test is commented out because Workbook#calculate_extsst_size was set to
 # private method. Before that, all test passed.
 #
-#
-#
-#
 # Check that we calculate the correct bucket size and number for the EXTSST
 # record. The data is taken from actual Excel files.
 #
@@ -24,7 +21,8 @@ require 'stringio'
 class TC_extsst < Test::Unit::TestCase
 
   def setup
-    @tests = [  # Unique     Number of   Bucket
+    @tests = [
+      # Unique     Number of   Bucket
       # strings    buckets       size
       [0,          0,               8],
       [1,          1,               8],
@@ -65,7 +63,7 @@ class TC_extsst < Test::Unit::TestCase
 
       str_unique = test[0]
 
-      workbook.str_unique = str_unique
+      workbook.instance_variable_set(:@str_unique, test[0])
       workbook.__send__("calculate_extsst_size")
 
       assert_equal(test[1], workbook.extsst_buckets,

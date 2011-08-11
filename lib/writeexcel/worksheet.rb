@@ -2687,10 +2687,7 @@ class Worksheet < BIFFWriter
     str_header  = [str.length, encoding].pack('vC')
     str         = str_header + str
 
-    unless @workbook.str_table[str]
-      @workbook.str_table[str] = @workbook.str_unique
-      @workbook.str_unique += 1
-    end
+    update_workbook_str_table(str)
 
     @workbook.str_total += 1
 
@@ -2753,10 +2750,7 @@ class Worksheet < BIFFWriter
     str_header  = [num_chars, encoding].pack("vC")
     str         = str_header + str
 
-    unless @workbook.str_table[str]
-      @workbook.str_table[str] = @workbook.str_unique
-      @workbook.str_unique += 1
-    end
+    update_workbook_str_table(str)
 
     @workbook.str_total += 1
 
@@ -5032,6 +5026,10 @@ class Worksheet < BIFFWriter
   #
 
   private
+
+  def update_workbook_str_table(str)
+    @workbook.update_str_table(str)
+  end
 
   def active?
     self == @workbook.activesheet

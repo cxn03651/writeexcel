@@ -28,7 +28,7 @@ class Workbook < BIFFWriter
   attr_reader :url_format, :parser, :tempdir, :date_1904
   attr_reader :compatibility, :palette
   attr_reader :ext_refs
-  attr_reader :str_table, :str_unique
+  attr_reader :str_table
   attr_accessor :firstsheet, :activesheet, :str_total
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
@@ -805,10 +805,6 @@ class Workbook < BIFFWriter
     @add_doc_properties = true
   end
 
-  def str_unique=(val)  # :nodoc:
-    @str_unique = val
-  end
-
   def extsst_buckets  # :nodoc:
     @extsst_buckets
   end
@@ -827,6 +823,13 @@ class Workbook < BIFFWriter
 
   def localtime=(val)  # :nodoc:
     @localtime = val
+  end
+
+  def update_str_table(str)
+    unless @str_table[str]
+      @str_table[str] = @str_unique
+      @str_unique += 1
+    end
   end
 
   #==========================================
