@@ -25,11 +25,24 @@ class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
 
+  class Worksheets < Array
+    attr_accessor :activesheet
+
+    def initialize
+      @activesheet = nil
+    end
+
+    def activesheet_index
+      index(@activesheet)
+    end
+  end
+
   attr_reader :url_format, :parser, :tempdir, :date_1904
   attr_reader :compatibility, :palette
   attr_reader :ext_refs
   attr_reader :str_table
-  attr_accessor :firstsheet, :activesheet
+  attr_reader :worksheets
+  attr_accessor :firstsheet
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
 
@@ -86,7 +99,7 @@ class Workbook < BIFFWriter
     @chart_count           = 0
     @codepage              = 0x04E4
     @country               = 1
-    @worksheets            = []
+    @worksheets            = Worksheets.new
     @formats               = []
     @palette               = []
     @biff_only             = 0
@@ -94,7 +107,6 @@ class Workbook < BIFFWriter
     @internal_fh           = 0
     @fh_out                = ""
 
-    @activesheet           = nil
     @firstsheet            = 0
     @str_total             = 0
     @str_unique            = 0
@@ -1122,9 +1134,9 @@ class Workbook < BIFFWriter
     calc_mso_sizes
 
     # Ensure that at least one worksheet has been selected.
-    unless @activesheet
-      @activesheet = @worksheets.first
-      @activesheet.select
+    unless @worksheets.activesheet
+      @worksheets.activesheet = @worksheets.first
+      @worksheets.activesheet.select
     end
 
     # Calculate the number of selected sheet tabs and set the active sheet.
@@ -1686,7 +1698,7 @@ class Workbook < BIFFWriter
     ctabsel   = @selected              # Number of workbook tabs selected
     tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
-    tab_cur   = @worksheets.index(@activesheet) # Active worksheet
+    tab_cur   = @worksheets.activesheet_index # Active worksheet
     tab_first = @firstsheet            # 1st displayed worksheet
     header    = [record, length].pack("vv")
     data      = [

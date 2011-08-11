@@ -627,7 +627,7 @@ class Worksheet < BIFFWriter
   def activate
     @hidden   = false  # Active worksheet can't be hidden.
     @selected = true
-    @workbook.activesheet = self
+    @workbook.worksheets.activesheet = self
   end
 
 
@@ -654,7 +654,7 @@ class Worksheet < BIFFWriter
 
     # A hidden worksheet shouldn't be active or selected.
     @selected  = false
-    @workbook.activesheet = nil
+    @workbook.worksheets.activesheet = nil
     @workbook.firstsheet  = 0
   end
 
@@ -5028,7 +5028,7 @@ class Worksheet < BIFFWriter
   end
 
   def active?
-    self == @workbook.activesheet
+    self == @workbook.worksheets.activesheet
   end
 
   def frozen?
