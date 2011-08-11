@@ -35,6 +35,10 @@ class Workbook < BIFFWriter
     def activesheet_index
       index(@activesheet)
     end
+
+    def selected_count
+      self.select { |sheet| sheet.selected? }.size
+    end
   end
 
   attr_reader :url_format, :parser, :tempdir, :date_1904
@@ -92,7 +96,6 @@ class Workbook < BIFFWriter
     @parser                = Writeexcel::Formula.new(@byte_order)
     @tempdir               = nil
     @date_1904             = false
-    @selected              = 0
     @xf_index              = 0
     @biffsize              = 0
     @sheet_count           = 0
@@ -1139,11 +1142,6 @@ class Workbook < BIFFWriter
       @worksheets.activesheet.select
     end
 
-    # Calculate the number of selected sheet tabs and set the active sheet.
-    @worksheets.each do |sheet|
-      @selected    += 1 if sheet.selected?
-    end
-
     # Add Workbook globals
     add_workbook_globals
 
@@ -1695,7 +1693,7 @@ class Workbook < BIFFWriter
     dy_win    = 0x30ED                 # Height of window
 
     grbit     = 0x0038                 # Option flags
-    ctabsel   = @selected              # Number of workbook tabs selected
+    ctabsel   = @worksheets.selected_count  # Number of workbook tabs selected
     tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
     tab_cur   = @worksheets.activesheet_index # Active worksheet
