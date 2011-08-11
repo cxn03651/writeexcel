@@ -96,7 +96,6 @@ class Workbook < BIFFWriter
     @fh_out                = ""
 
     @shared_string_table   = SharedStringTable.new
-    @str_block_sizes       = []
     @extsst_offsets        = []  # array of [global_offset, local_offset]
     @extsst_buckets        = 0
     @extsst_bucket_size    = 0
@@ -2034,7 +2033,7 @@ class Workbook < BIFFWriter
   # downside of this is that the same algorithm repeated in store_shared_strings.
   #
   def calculate_shared_string_sizes       #:nodoc:
-    @str_block_sizes = @shared_string_table.block_sizes
+    str_block_sizes = @shared_string_table.block_sizes
 
     # Calculate the total length of the SST and associated CONTINUEs (if any).
     # The SST record will have a length even if it contains no strings.
@@ -2044,8 +2043,8 @@ class Workbook < BIFFWriter
     # when array = [a, b, c]  # array not empty?
     # length = 12 + a + 4 + b + 4 + c = 12 + a + b + c + 4 * (array.size - 1)
     #
-    length  = @str_block_sizes.inject(12){|result, item| result + item}
-    length += 4 * (@str_block_sizes.size - 1) unless @str_block_sizes.empty?
+    length  = str_block_sizes.inject(12){|result, item| result + item}
+    length += 4 * (str_block_sizes.size - 1) unless str_block_sizes.empty?
 
     length
   end
@@ -2104,7 +2103,7 @@ class Workbook < BIFFWriter
 
     # The SST and CONTINUE block sizes have been pre-calculated by
     # calculate_shared_string_sizes()
-    block_sizes    = @str_block_sizes
+    block_sizes    = @shared_string_table.block_sizes
 
     # The SST record is required even if it contains no strings. Thus we will
     # always have a length
