@@ -2686,10 +2686,10 @@ class Worksheet < BIFFWriter
     str_header  = [str.length, encoding].pack('vC')
     str         = str_header + str
 
-    update_workbook_str_table(str)
+    str_unique = update_workbook_str_table(str)
 
     header = [record, length].pack('vv')
-    data   = [row, col, xf, @workbook.str_table[str]].pack('vvvV')
+    data   = [row, col, xf, str_unique].pack('vvvV')
 
     # Store the data or write immediately depending on the compatibility mode.
     store_with_compatibility(row, col, header + data)
@@ -2747,10 +2747,10 @@ class Worksheet < BIFFWriter
     str_header  = [num_chars, encoding].pack("vC")
     str         = str_header + str
 
-    update_workbook_str_table(str)
+    str_unique = update_workbook_str_table(str)
 
     header = [record, length].pack("vv")
-    data   = [row, col, xf, @workbook.str_table[str]].pack("vvvV")
+    data   = [row, col, xf, str_unique].pack("vvvV")
 
     # Store the data or write immediately depending on the compatibility mode.
     store_with_compatibility(row, col, header + data)

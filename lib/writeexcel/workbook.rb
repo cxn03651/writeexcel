@@ -25,6 +25,50 @@ class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
 
+  class SharedString
+    attr_reader :string, :str_id
+
+    def initialize(string, str_id)
+      @string, @str_id = string, str_id
+    end
+  end
+
+  class SharedStringTable
+    attr_reader :str_total
+
+    def initialize
+      @shared_string_table = []
+      @string_to_shared_string = {}
+      @str_total = 0
+    end
+
+    def has_string?(string)
+      !!@string_to_shared_string[string]
+    end
+
+    def <<(string)
+      @str_total += 1
+      unless has_string?(string)
+        shared_string = SharedString.new(string, str_unique)
+        @shared_string_table << shared_string
+        @string_to_shared_string[string] = shared_string
+      end
+      id(string)
+    end
+
+    def strings
+      @shared_string_table.collect { |shared_string| shared_string.string }
+    end
+
+    def id(string)
+      @string_to_shared_string[string].str_id
+    end
+
+    def str_unique
+      @shared_string_table.size
+    end
+  end
+
   class Worksheets < Array
     attr_accessor :activesheet
     attr_writer :firstsheet
@@ -49,7 +93,6 @@ class Workbook < BIFFWriter
   attr_reader :url_format, :parser, :tempdir, :date_1904
   attr_reader :compatibility, :palette
   attr_reader :ext_refs
-  attr_reader :str_table
   attr_reader :worksheets
 
   BOF = 12  # :nodoc:
@@ -115,10 +158,7 @@ class Workbook < BIFFWriter
     @internal_fh           = 0
     @fh_out                = ""
 
-    @str_total             = 0
-    @str_unique            = 0
-    @str_table             = {}
-    @str_array             = []
+    @shared_string_table   = SharedStringTable.new
     @str_block_sizes       = []
     @extsst_offsets        = []  # array of [global_offset, local_offset]
     @extsst_buckets        = 0
@@ -834,11 +874,7 @@ class Workbook < BIFFWriter
   end
 
   def update_str_table(str)
-    unless @str_table[str]
-      @str_table[str] = @str_unique
-      @str_unique += 1
-    end
-    @str_total += 1
+    @shared_string_table << str
   end
 
   #==========================================
@@ -1275,7 +1311,7 @@ class Workbook < BIFFWriter
     offset += calculate_shared_string_sizes
 
     # Add the length of the EXTSST record.
-    offset += calculate_extsst_size
+    offset += calculate_extsst_size(@shared_string_table.str_unique)
 
     # Add the length of the SUPBOOK, EXTERNSHEET and NAME records
     offset += calculate_extern_sizes
@@ -2061,15 +2097,6 @@ class Workbook < BIFFWriter
   # downside of this is that the same algorithm repeated in store_shared_strings.
   #
   def calculate_shared_string_sizes       #:nodoc:
-    strings = Array.new(@str_unique)
-
-    @str_table.each_key do |key|
-      strings[@str_table[key]] = key
-    end
-    # The SST data could be very large, free some memory (maybe).
-    @str_table = nil
-    @str_array = strings
-
     # Iterate through the strings to calculate the CONTINUE block sizes.
     #
     # The SST blocks requires a specialised CONTINUE block, so we have to
@@ -2088,7 +2115,7 @@ class Workbook < BIFFWriter
     block_sizes    = []
     continue       = 0
 
-    strings.each do |string|
+    @shared_string_table.strings.each do |string|
       string_length = string.bytesize
 
       # Block length is the total length of the strings that will be
@@ -2212,8 +2239,6 @@ class Workbook < BIFFWriter
   # occurs wherever the start of the bucket string is written out via append().
   #
   def store_shared_strings       #:nodoc:
-    strings = @str_array
-
     record              = 0x00FC   # Record identifier
     length              = 0x0008   # Number of bytes to follow
     total               = 0x0000
@@ -2244,12 +2269,12 @@ class Workbook < BIFFWriter
 
     # Write the SST block header information
     header      = [record, length].pack("vv")
-    data        = [@str_total, @str_unique].pack("VV")
+    data        = [@shared_string_table.str_total, @shared_string_table.str_unique].pack("VV")
     append(header, data)
 
     # Iterate through the strings and write them out
-    return if strings.empty?
-    strings.each do |string|
+    return if @shared_string_table.strings.empty?
+    @shared_string_table.strings.each do |string|
 
       string_length = string.bytesize
 
@@ -2360,8 +2385,8 @@ class Workbook < BIFFWriter
   # size of 8. The following algorithm generates the same size/bucket ratio
   # as Excel.
   #
-  def calculate_extsst_size       #:nodoc:
-    unique_strings  = @str_unique
+  def calculate_extsst_size(str_unique)       #:nodoc:
+    unique_strings  = str_unique
 
     if unique_strings < 1024
       bucket_size = 8
