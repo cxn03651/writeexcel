@@ -172,8 +172,4 @@ class TC_rows < Test::Unit::TestCase
       assert_equal(@tests[i][1], rows[i], @tests[i][0])
     end
   end
-
-  def teardown
-  end
-
 end

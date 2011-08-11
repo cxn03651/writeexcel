@@ -32,10 +32,6 @@ class TC_mso_drawing_group < Test::Unit::TestCase
     @worksheet3 = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
 =begin
   def test_1_time
     count = 1

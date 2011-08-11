@@ -20,10 +20,6 @@ class TC_validation_dval < Test::Unit::TestCase
     @worksheet  = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_1
     obj_id     = 1
     dv_count   = 1

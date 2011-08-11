@@ -12,9 +12,6 @@ class TC_Format < Test::Unit::TestCase
     @format = Writeexcel::Format.new
   end
 
-  def teardown
-  end
-
   def test_set_format_properties
   end
 

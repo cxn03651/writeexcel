@@ -20,10 +20,6 @@ class TC_ChartGeneric < Test::Unit::TestCase
     @chart = Writeexcel::Chart.new(workbook, '', 'chart', 0)
   end
 
-  def teardown
-    @chart.cleanup
-  end
-
   ###############################################################################
   #
   # Test the _store_fbi method.

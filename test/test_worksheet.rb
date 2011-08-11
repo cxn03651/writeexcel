@@ -15,12 +15,6 @@ class TC_Worksheet < Test::Unit::TestCase
     @format  = Writeexcel::Format.new(:color=>"green")
   end
 
-  def teardown
-    @ws     = nil
-    @format = nil
-    @workbook.close
-  end
-
   def test_methods_exist
     assert_respond_to(@ws, :write)
     assert_respond_to(@ws, :write_blank)

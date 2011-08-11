@@ -21,10 +21,6 @@ class TC_validation_dv_strings < Test::Unit::TestCase
     @worksheet  = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_empty_string
     string      = ''
     max_length  = 32

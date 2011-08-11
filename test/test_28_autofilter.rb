@@ -153,9 +153,4 @@ class TC_28_autofilter < Test::Unit::TestCase
     ],
       ]
   end
-
-  def teardown
-    @workbook.close
-  end
-
 end

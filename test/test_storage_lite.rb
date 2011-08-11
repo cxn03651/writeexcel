@@ -11,9 +11,6 @@ class TC_OLEStorageLite < Test::Unit::TestCase
     @ole = OLEStorageLite.new
   end
 
-  def teardown
-  end
-
   def test_olestoragelite_new
     ole = OLEStorageLite.new
     assert_nil(ole.file)
@@ -54,12 +51,6 @@ class TC_OLEStorageLite < Test::Unit::TestCase
 end
 
 class TC_OLEStorageLitePPSFile < Test::Unit::TestCase
-  def setup
-  end
-
-  def teardown
-  end
-
   def test_constructor
     data = [
         { :name => 'name', :data => 'data' },

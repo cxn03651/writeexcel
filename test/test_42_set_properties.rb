@@ -29,9 +29,6 @@ class TC_set_properties < Test::Unit::TestCase
     @test_file = StringIO.new
   end
 
-  def teardown
-  end
-
   def test_same_as_previous_plus_creation_date
     smiley = '☺'   # chr 0x263A;    in perl
 

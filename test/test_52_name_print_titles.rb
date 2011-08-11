@@ -20,10 +20,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
     @workbook.not_using_tmpfile
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_repeat_rows_for_top_row_only
     worksheet1 = @workbook.add_worksheet
 

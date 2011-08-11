@@ -21,10 +21,6 @@ class TC_note < Test::Unit::TestCase
     @worksheet  = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_blank_author_name
     comment = Writeexcel::Worksheet::Comment.new(@worksheet, 2, 0, 'Test')
     row      = comment.row

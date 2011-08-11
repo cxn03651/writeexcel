@@ -21,10 +21,6 @@ class TC_txo < Test::Unit::TestCase
     @worksheet  = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_txo
     string     = 'aaa'
     caption    = " \t_store_txo()"

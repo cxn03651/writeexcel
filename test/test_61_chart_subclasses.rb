@@ -19,10 +19,6 @@ class TC_chart_subclasses < Test::Unit::TestCase
     @workbook = WriteExcel.new(io)
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_store_chart_type_of_column
     chart = Writeexcel::Chart.factory('Chart::Column', @workbook, nil, nil, nil)
     expected = %w(

@@ -12,10 +12,6 @@ class TC_BIFFWriter < Test::Unit::TestCase
     @ruby_file = StringIO.new
   end
 
-  def teardown
-    @biff = nil
-  end
-
   def test_append_no_error
     assert_nothing_raised{ @biff.append("World") }
   end

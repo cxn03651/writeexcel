@@ -20,10 +20,6 @@ class TC_ChartFormats < Test::Unit::TestCase
     @chart = @workbook.add_chart(:type => 'Chart::Column')
   end
 
-  def teardown
-    @workbook.close
-  end
-
 ###############################################################################
 #
 # Test. User defined colour as string.

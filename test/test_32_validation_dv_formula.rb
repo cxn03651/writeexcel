@@ -21,10 +21,6 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     @worksheet2 = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_integer_values
     formula      = '10'
 

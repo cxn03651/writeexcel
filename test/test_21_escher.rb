@@ -29,10 +29,6 @@ class TC_escher < Test::Unit::TestCase
     @worksheet = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_dummy
     assert(true)
   end

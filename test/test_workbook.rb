@@ -9,10 +9,6 @@ class TC_Workbook < Test::Unit::TestCase
     @workbook   = Workbook.new(@test_file)
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_new
     assert_kind_of(Workbook, @workbook)
   end
