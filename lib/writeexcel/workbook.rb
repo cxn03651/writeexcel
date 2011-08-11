@@ -29,7 +29,7 @@ class Workbook < BIFFWriter
   attr_reader :compatibility, :palette
   attr_reader :ext_refs
   attr_reader :str_table
-  attr_accessor :firstsheet, :activesheet, :str_total
+  attr_accessor :firstsheet, :activesheet
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
 
@@ -830,6 +830,7 @@ class Workbook < BIFFWriter
       @str_table[str] = @str_unique
       @str_unique += 1
     end
+    @str_total += 1
   end
 
   #==========================================

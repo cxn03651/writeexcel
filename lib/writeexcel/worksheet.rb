@@ -2689,8 +2689,6 @@ class Worksheet < BIFFWriter
 
     update_workbook_str_table(str)
 
-    @workbook.str_total += 1
-
     header = [record, length].pack('vv')
     data   = [row, col, xf, @workbook.str_table[str]].pack('vvvV')
 
@@ -2751,8 +2749,6 @@ class Worksheet < BIFFWriter
     str         = str_header + str
 
     update_workbook_str_table(str)
-
-    @workbook.str_total += 1
 
     header = [record, length].pack("vv")
     data   = [row, col, xf, @workbook.str_table[str]].pack("vvvV")
