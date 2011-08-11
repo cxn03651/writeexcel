@@ -360,12 +360,11 @@ class Worksheet < BIFFWriter
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
-  def initialize(workbook, name, index, name_utf16be)    # :nodoc:
+  def initialize(workbook, name, name_utf16be)    # :nodoc:
     super()
 
     @workbook            = workbook
     @name                = name
-    @index               = index
     @name_utf16be        = name_utf16be
 
     @type                = 0x0000
@@ -682,7 +681,7 @@ class Worksheet < BIFFWriter
   #
   def set_first_sheet
     @hidden = false        # Active worksheet can't be hidden.
-    @workbook.firstsheet = @index
+    @workbook.firstsheet = index
   end
 
   #
@@ -4814,11 +4813,7 @@ class Worksheet < BIFFWriter
   end
 
   def index  # :nodoc:
-    @index
-  end
-
-  def index=(val)  # :nodoc:
-    @index = val
+    @workbook.worksheets.index(self)
   end
 
   def type  # :nodoc:

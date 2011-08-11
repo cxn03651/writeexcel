@@ -239,19 +239,16 @@ class Workbook < BIFFWriter
   #     worksheet = workbook.add_worksheet(name, true)   # Smiley
   #
   def add_worksheet(sheetname = '', name_utf16be = false)
-    index = @worksheets.size
-
     name, name_utf16be = check_sheetname(sheetname, name_utf16be)
 
     init_data = [
                   self,
                   name,
-                  index,
                   name_utf16be
     ]
     worksheet = Writeexcel::Worksheet.new(*init_data)
-    @worksheets[index] = worksheet      # Store ref for iterator
-    @parser.set_ext_sheets(name, index) # Store names in Formula.rb
+    @worksheets << worksheet                      # Store ref for iterator
+    @parser.set_ext_sheets(name, worksheet.index) # Store names in Formula.rb
     worksheet
   end
 
@@ -330,7 +327,6 @@ class Workbook < BIFFWriter
   def add_chart(properties)
     name = ''
     name_utf16be = false
-    index    = @worksheets.size
 
     # Type must be specified so we can create the required chart instance.
     type = properties[:type]
@@ -349,19 +345,14 @@ class Workbook < BIFFWriter
     init_data = [
       self,
       name,
-      index,
       name_utf16be
     ]
 
     chart = Writeexcel::Chart.factory(type, *init_data)
     # If the chart isn't embedded let the workbook control it.
     if !embedded
-      @worksheets[index] = chart          # Store ref for iterator
+      @worksheets << chart          # Store ref for iterator
     else
-      # Set index to 0 so that the activate() and set_first_sheet() methods
-      # point back to the first worksheet if used for embedded charts.
-      chart.index = 0
-
       chart.set_embedded_config_data
     end
     chart
@@ -380,7 +371,6 @@ class Workbook < BIFFWriter
   # directory of the distro for a full explanation.
   #
   def add_chart_ext(filename, chartname, name_utf16be = false)
-    index    = @worksheets.size
     type = 'extarnal'
 
     name, name_utf16be = check_sheetname(chartname, name_utf16be)
@@ -388,12 +378,11 @@ class Workbook < BIFFWriter
     init_data = [
       filename,
       name,
-      index,
       name_utf16be
     ]
 
     chart = Writeexcel::Chart.factory(self, type, init_data)
-    @worksheets[index] = chart      # Store ref for iterator
+    @worksheets << chart      # Store ref for iterator
     chart
   end
 
