@@ -113,7 +113,7 @@ class OLEWriter       #:nodoc:
 
     @biff_size = size
 
-    if biff_size > BlockSize
+    if size > BlockSize
       @book_size = size
     else
       @book_size = BlockSize
