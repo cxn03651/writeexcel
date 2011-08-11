@@ -26,9 +26,10 @@ class Workbook < BIFFWriter
   require 'writeexcel/helper'
 
   attr_reader :url_format, :parser, :tempdir, :date_1904
-  attr_reader :compatibility, :palette, :sinfo
+  attr_reader :compatibility, :palette
   attr_reader :ext_refs
-
+  attr_reader :str_table, :str_unique
+  attr_accessor :firstsheet, :activesheet, :str_total
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
 
@@ -93,13 +94,11 @@ class Workbook < BIFFWriter
     @internal_fh           = 0
     @fh_out                = ""
 
-    @sinfo = {
-      :activesheet         => 0,
-      :firstsheet          => 0,
-      :str_total           => 0,
-      :str_unique          => 0,
-      :str_table           => {}
-    }
+    @activesheet           = 0
+    @firstsheet            = 0
+    @str_total             = 0
+    @str_unique            = 0
+    @str_table             = {}
     @str_array             = []
     @str_block_sizes       = []
     @extsst_offsets        = []  # array of [global_offset, local_offset]
@@ -375,8 +374,7 @@ class Workbook < BIFFWriter
       filename,
       name,
       index,
-      name_utf16be,
-      @sinfo
+      name_utf16be
     ]
 
     chart = Writeexcel::Chart.factory(self, type, init_data)
@@ -808,7 +806,7 @@ class Workbook < BIFFWriter
   end
 
   def str_unique=(val)  # :nodoc:
-    @sinfo[:str_unique] = val
+    @str_unique = val
   end
 
   def extsst_buckets  # :nodoc:
@@ -1120,12 +1118,12 @@ class Workbook < BIFFWriter
     calc_mso_sizes
 
     # Ensure that at least one worksheet has been selected.
-    @worksheets[0].select if @sinfo[:activesheet] == 0
+    @worksheets[0].select if @activesheet == 0
 
     # Calculate the number of selected sheet tabs and set the active sheet.
     @worksheets.each do |sheet|
       @selected    += 1 if sheet.selected?
-      sheet.active  = 1 if sheet.index == @sinfo[:activesheet]
+      sheet.active  = 1 if sheet.index == @activesheet
     end
 
     # Add Workbook globals
@@ -1682,8 +1680,8 @@ class Workbook < BIFFWriter
     ctabsel   = @selected              # Number of workbook tabs selected
     tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
-    tab_cur   = @sinfo[:activesheet]   # Active worksheet
-    tab_first = @sinfo[:firstsheet]    # 1st displayed worksheet
+    tab_cur   = @activesheet           # Active worksheet
+    tab_first = @firstsheet            # 1st displayed worksheet
 
     header    = [record, length].pack("vv")
     data      = [
@@ -2055,13 +2053,13 @@ class Workbook < BIFFWriter
   # downside of this is that the same algorithm repeated in store_shared_strings.
   #
   def calculate_shared_string_sizes       #:nodoc:
-    strings = Array.new(@sinfo[:str_unique])
+    strings = Array.new(@str_unique)
 
-    @sinfo[:str_table].each_key do |key|
-      strings[@sinfo[:str_table][key]] = key
+    @str_table.each_key do |key|
+      strings[@str_table[key]] = key
     end
     # The SST data could be very large, free some memory (maybe).
-    @sinfo[:str_table] = nil
+    @str_table = nil
     @str_array = strings
 
     # Iterate through the strings to calculate the CONTINUE block sizes.
@@ -2238,7 +2236,7 @@ class Workbook < BIFFWriter
 
     # Write the SST block header information
     header      = [record, length].pack("vv")
-    data        = [@sinfo[:str_total], @sinfo[:str_unique]].pack("VV")
+    data        = [@str_total, @str_unique].pack("VV")
     append(header, data)
 
     # Iterate through the strings and write them out
@@ -2355,7 +2353,7 @@ class Workbook < BIFFWriter
   # as Excel.
   #
   def calculate_extsst_size       #:nodoc:
-    unique_strings  = @sinfo[:str_unique]
+    unique_strings  = @str_unique
 
     if unique_strings < 1024
       bucket_size = 8

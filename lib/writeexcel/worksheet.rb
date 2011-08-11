@@ -628,7 +628,7 @@ class Worksheet < BIFFWriter
   def activate
     @hidden   = false  # Active worksheet can't be hidden.
     @selected = true
-    sinfo[:activesheet] = @index
+    @workbook.activesheet = @index
   end
 
 
@@ -655,8 +655,8 @@ class Worksheet < BIFFWriter
 
     # A hidden worksheet shouldn't be active or selected.
     @selected  = false
-    sinfo[:activesheet] = 0
-    sinfo[:firstsheet]  = 0
+    @workbook.activesheet = 0
+    @workbook.firstsheet  = 0
   end
 
 
@@ -683,7 +683,7 @@ class Worksheet < BIFFWriter
   #
   def set_first_sheet
     @hidden = false        # Active worksheet can't be hidden.
-    sinfo[:firstsheet] = @index
+    @workbook.firstsheet = @index
   end
 
   #
@@ -2688,15 +2688,15 @@ class Worksheet < BIFFWriter
     str_header  = [str.length, encoding].pack('vC')
     str         = str_header + str
 
-    unless sinfo[:str_table][str]
-      sinfo[:str_table][str] = sinfo[:str_unique]
-      sinfo[:str_unique] += 1
+    unless @workbook.str_table[str]
+      @workbook.str_table[str] = @workbook.str_unique
+      @workbook.str_unique += 1
     end
 
-    sinfo[:str_total] += 1
+    @workbook.str_total += 1
 
     header = [record, length].pack('vv')
-    data   = [row, col, xf, sinfo[:str_table][str]].pack('vvvV')
+    data   = [row, col, xf, @workbook.str_table[str]].pack('vvvV')
 
     # Store the data or write immediately depending on the compatibility mode.
     store_with_compatibility(row, col, header + data)
@@ -2754,15 +2754,15 @@ class Worksheet < BIFFWriter
     str_header  = [num_chars, encoding].pack("vC")
     str         = str_header + str
 
-    unless sinfo[:str_table][str]
-      sinfo[:str_table][str] = sinfo[:str_unique]
-      sinfo[:str_unique] += 1
+    unless @workbook.str_table[str]
+      @workbook.str_table[str] = @workbook.str_unique
+      @workbook.str_unique += 1
     end
 
-    sinfo[:str_total] += 1
+    @workbook.str_total += 1
 
     header = [record, length].pack("vv")
-    data   = [row, col, xf, sinfo[:str_table][str]].pack("vvvV")
+    data   = [row, col, xf, @workbook.str_table[str]].pack("vvvV")
 
     # Store the data or write immediately depending on the compatibility mode.
     store_with_compatibility(row, col, header + data)
@@ -5251,11 +5251,6 @@ class Worksheet < BIFFWriter
     else
       true
     end
-  end
-
-  # key: :activesheet, :firstsheet, :str_total, :str_unique, :str_table
-  def sinfo
-    @workbook.sinfo
   end
 
   #
