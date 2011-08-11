@@ -20,6 +20,7 @@ require 'writeexcel/formula'
 require 'writeexcel/olewriter'
 require 'writeexcel/storage_lite'
 require 'writeexcel/compatibility'
+require 'writeexcel/worksheets'
 
 class Workbook < BIFFWriter
   require 'writeexcel/properties'
@@ -66,27 +67,6 @@ class Workbook < BIFFWriter
 
     def str_unique
       @shared_string_table.size
-    end
-  end
-
-  class Worksheets < Array
-    attr_accessor :activesheet
-    attr_writer :firstsheet
-
-    def initialize
-      @activesheet = nil
-    end
-
-    def activesheet_index
-      index(@activesheet)
-    end
-
-    def firstsheet_index
-      index(@firstsheet) || 0
-    end
-
-    def selected_count
-      self.select { |sheet| sheet.selected? }.size
     end
   end
 
