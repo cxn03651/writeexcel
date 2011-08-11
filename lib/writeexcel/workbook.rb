@@ -2154,18 +2154,18 @@ class Workbook < BIFFWriter
     # Store the max size for the last block unless it is empty
     block_sizes.push(written +continue) if written +continue != 0
 
-    @str_block_sizes = block_sizes.dup
+    @str_block_sizes = block_sizes
 
     # Calculate the total length of the SST and associated CONTINUEs (if any).
     # The SST record will have a length even if it contains no strings.
     # This length is required to set the offsets in the BOUNDSHEET records since
     # they must be written before the SST records
     #
-    length  = 12
-    length +=     block_sizes.shift unless block_sizes.empty? # SST
-    while !block_sizes.empty? do
-      length += 4 + block_sizes.shift                         # CONTINUEs
-    end
+    # when array = [a, b, c]  # array not empty?
+    # length = 12 + a + 4 + b + 4 + c = 12 + a + b + c + 4 * (array.size - 1)
+    #
+    length  = @str_block_sizes.inject(12){|result, item| result + item}
+    length += 4 * (@str_block_sizes.size - 1) unless @str_block_sizes.empty?
 
     length
   end
