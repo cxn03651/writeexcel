@@ -41,6 +41,43 @@ module Writeexcel
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
+  class DataValidations < Array
+    #
+    # the count of the DV records to follow.
+    #
+    # Note, this could be wrapped into store_dv() but we may require separate
+    # handling of the object id at a later stage.
+    #
+    def count_dv_record   #:nodoc:
+      return if empty?
+
+      dval_record(-1, size)  # obj_id = -1
+    end
+
+    private
+
+    #
+    # Store the DV record which contains the number of and information common to
+    # all DV structures.
+    #    obj_id       # Object ID number.
+    #    dv_count     # Count of DV structs to follow.
+    #
+    def dval_record(obj_id, dv_count)   #:nodoc:
+      record      = 0x01B2       # Record identifier
+      length      = 0x0012       # Bytes to follow
+
+      flags       = 0x0004       # Option flags.
+      x_coord     = 0x00000000   # X coord of input box.
+      y_coord     = 0x00000000   # Y coord of input box.
+
+      # Pack the record.
+      header = [record, length].pack('vv')
+      data   = [flags, x_coord, y_coord, obj_id, dv_count].pack('vVVVV')
+
+      header + data
+    end
+  end
+
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
@@ -136,7 +173,7 @@ class Worksheet < BIFFWriter
 
     @db_indices          = []
 
-    @validations         = []
+    @validations         = DataValidations.new
 
     @table               = []
     @row_data            = {}
@@ -7628,12 +7665,7 @@ class Worksheet < BIFFWriter
   # handling of the object id at a later stage.
   #
   def store_validation_count   #:nodoc:
-    dv_count = @validations.size
-    obj_id   = -1
-
-    return if dv_count == 0
-
-    store_dval(obj_id , dv_count)
+    append(@validations.count_dv_record)
   end
 
   #
@@ -7660,27 +7692,6 @@ class Worksheet < BIFFWriter
         param[:show_error]
       )
     end
-  end
-
-  #
-  # Store the DV record which contains the number of and information common to
-  # all DV structures.
-  #    obj_id       # Object ID number.
-  #    dv_count     # Count of DV structs to follow.
-  #
-  def store_dval(obj_id, dv_count)   #:nodoc:
-    record      = 0x01B2       # Record identifier
-    length      = 0x0012       # Bytes to follow
-
-    flags       = 0x0004       # Option flags.
-    x_coord     = 0x00000000   # X coord of input box.
-    y_coord     = 0x00000000   # Y coord of input box.
-
-    # Pack the record.
-    header = [record, length].pack('vv')
-    data   = [flags, x_coord, y_coord, obj_id, dv_count].pack('vVVVV')
-
-    append(header, data)
   end
 
   #
