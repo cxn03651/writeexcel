@@ -79,10 +79,6 @@ class Worksheet < BIFFWriter
   end
 
   class DataValidation
-      attr_reader :cells, :validate, :criteria, :value, :maximum
-      attr_reader :input_title, :input_message, :error_title, :error_message, :error_type
-      attr_reader :ignore_blank, :dropdown, :show_input, :show_error
-
     def initialize(parser, param)
       @parser        = parser
       @cells         = param[:cells]
@@ -119,7 +115,7 @@ class Worksheet < BIFFWriter
     #    input_box         # Display input box.
     #    error_box         # Display error box.
     #
-    def dv_record(dv)  # :nodoc:
+    def dv_record  # :nodoc:
       record          = 0x01BE       # Record identifier
       length          = 0x0000       # Bytes to follow
 
@@ -129,38 +125,38 @@ class Worksheet < BIFFWriter
       str_lookup      = 0            # See below.
 
       # Set the string lookup flag for 'list' validations with a string array.
-      if dv.validate == 3 && dv.value.respond_to?(:to_ary)
+      if @validate == 3 && @value.respond_to?(:to_ary)
         str_lookup = 1
       end
 
       # The dropdown flag is stored as a negated value.
-      no_dropdown = dv.dropdown ? 0 : 1
+      no_dropdown = @dropdown ? 0 : 1
 
       # Set the required flags.
-      flags |= dv.validate
-      flags |= dv.error_type    << 4
-      flags |= str_lookup       << 7
-      flags |= dv.ignore_blank  << 8
-      flags |= no_dropdown      << 9
-      flags |= ime_mode         << 10
-      flags |= dv.show_input    << 18
-      flags |= dv.show_error    << 19
-      flags |= dv.criteria    << 20
+      flags |= @validate
+      flags |= @error_type   << 4
+      flags |= str_lookup    << 7
+      flags |= @ignore_blank << 8
+      flags |= no_dropdown   << 9
+      flags |= ime_mode      << 10
+      flags |= @show_input   << 18
+      flags |= @show_error   << 19
+      flags |= @criteria     << 20
 
       # Pack the validation formulas.
-      formula_1 = pack_dv_formula(dv.value)
-      formula_2 = pack_dv_formula(dv.maximum)
+      formula_1 = pack_dv_formula(@value)
+      formula_2 = pack_dv_formula(@maximum)
 
       # Pack the input and error dialog strings.
-      input_title   = pack_dv_string(dv.input_title,   32 )
-      error_title   = pack_dv_string(dv.error_title,   32 )
-      input_message = pack_dv_string(dv.input_message, 255)
-      error_message = pack_dv_string(dv.error_message, 255)
+      input_title   = pack_dv_string(@input_title,   32 )
+      error_title   = pack_dv_string(@error_title,   32 )
+      input_message = pack_dv_string(@input_message, 255)
+      error_message = pack_dv_string(@error_message, 255)
 
       # Pack the DV cell data.
-      dv_count = dv.cells.size
+      dv_count = @cells.size
       dv_data  = [dv_count].pack('v')
-      dv.cells.each do |range|
+      @cells.each do |range|
         dv_data += [range[0], range[2], range[1], range[3]].pack('vvvv')
       end
 
@@ -7863,7 +7859,7 @@ class Worksheet < BIFFWriter
     return if @validations.size == 0
 
     @validations.each do |data_validation|
-      append(data_validation.dv_record(data_validation))
+      append(data_validation.dv_record)
     end
   end
 
