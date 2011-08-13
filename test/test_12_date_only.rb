@@ -44,16 +44,16 @@ class TC_data_only < Test::Unit::TestCase
 
       next  unless line =~ /\S/      # Ignore blank lines
       next  if line =~ /^\s*#/       # Ignore comments
-      result, number, date = analyze(worksheet, line)
+      result, number, date = analyze(worksheet, line, true)
       assert_equal(result.to_i, number,
         "Testing convert_date_time: #{date} #{result}")
     end
   end
 
-  def analyze(worksheet, line)
+  def analyze(worksheet, line, date_1904 = false)
     count, date, result = line.split(/\s+/)
     count = count.to_i
-    number = worksheet.__send__("convert_date_time", date)
+    number = worksheet.__send__("convert_date_time", date, date_1904)
     number = -1 if number.nil?
     [result, number, date]
   end

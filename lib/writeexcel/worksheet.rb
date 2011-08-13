@@ -22,6 +22,7 @@ require 'writeexcel/outline'
 require 'writeexcel/col_info'
 require 'writeexcel/comments'
 require 'writeexcel/data_validations'
+require 'writeexcel/convert_date_time'
 
 class MaxSizeError < StandardError   #:nodoc:
 end
@@ -41,6 +42,7 @@ module Writeexcel
 #
 class Worksheet < BIFFWriter
   require 'writeexcel/helper'
+  include ConvertDateTime
 
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
@@ -3318,7 +3320,7 @@ class Worksheet < BIFFWriter
     return -2 if check_dimensions(row, col) != 0
 
     error     = 0
-    date_time = convert_date_time(str)
+    date_time = convert_date_time(str, date_1904?)
 
     if date_time
       error = write_number(row, col, date_time, args[3])
@@ -4288,209 +4290,16 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
 
-    # Check for a valid number of args.
-    return -1 if args.size != 5 && args.size != 3
-
-    # The final hashref contains the validation parameters.
-    param = args.pop
-
     # Make the last row/col the same as the first if not defined.
     row1, col1, row2, col2 = args
-    unless row2
-      row2 = row1
-      col2 = col1
-    end
-
-    # Check that row and col are valid without storing the values.
     return -2 if check_dimensions(row1, col1, 1, 1) != 0
-    return -2 if check_dimensions(row2, col2, 1, 1) != 0
+    return -2 if !row2.kind_of?(Hash) && check_dimensions(row2, col2, 1, 1) != 0
 
-    # Check that the last parameter is a hash list.
-    unless param.respond_to?(:to_hash)
-      #           carp "Last parameter '$param' in data_validation() must be a hash ref";
-      return -3
-    end
-
-    # List of valid input parameters.
-    valid_parameter = {
-      :validate          => 1,
-      :criteria          => 1,
-      :value             => 1,
-      :source            => 1,
-      :minimum           => 1,
-      :maximum           => 1,
-      :ignore_blank      => 1,
-      :dropdown          => 1,
-      :show_input        => 1,
-      :input_title       => 1,
-      :input_message     => 1,
-      :show_error        => 1,
-      :error_title       => 1,
-      :error_message     => 1,
-      :error_type        => 1,
-      :other_cells       => 1
-    }
-
-    # Check for valid input parameters.
-    param.each_key do |param_key|
-      unless valid_parameter.has_key?(param_key)
-        #               carp "Unknown parameter '$param_key' in data_validation()";
-        return -3
-      end
-    end
-
-    # Map alternative parameter names 'source' or 'minimum' to 'value'.
-    param[:value] = param[:source]  if param[:source]
-    param[:value] = param[:minimum] if param[:minimum]
-
-    # 'validate' is a required parameter.
-    unless param.has_key?(:validate)
-      #           carp "Parameter 'validate' is required in data_validation()";
-      return -3
-    end
-
-    # List of  valid validation types.
-    valid_type = {
-      'any'             => 0,
-      'any value'       => 0,
-      'whole number'    => 1,
-      'whole'           => 1,
-      'integer'         => 1,
-      'decimal'         => 2,
-      'list'            => 3,
-      'date'            => 4,
-      'time'            => 5,
-      'text length'     => 6,
-      'length'          => 6,
-      'custom'          => 7
-    }
-
-    # Check for valid validation types.
-    unless valid_type.has_key?(param[:validate].downcase)
-      #           carp "Unknown validation type '$param->{validate}' for parameter " .
-      #                "'validate' in data_validation()";
-      return -3
-    else
-      param[:validate] = valid_type[param[:validate].downcase]
-    end
-
-    # No action is required for validation type 'any'.
-    # TODO: we should perhaps store 'any' for message only validations.
-    return 0 if param[:validate] == 0
-
-    # The list and custom validations don't have a criteria so we use a default
-    # of 'between'.
-    if param[:validate] == 3 || param[:validate] == 7
-      param[:criteria]  = 'between'
-      param[:maximum]   = nil
-    end
-
-    # 'criteria' is a required parameter.
-    unless param.has_key?(:criteria)
-      #           carp "Parameter 'criteria' is required in data_validation()";
-      return -3
-    end
-
-    # List of valid criteria types.
-    criteria_type = {
-      'between'                     => 0,
-      'not between'                 => 1,
-      'equal to'                    => 2,
-      '='                           => 2,
-      '=='                          => 2,
-      'not equal to'                => 3,
-      '!='                          => 3,
-      '<>'                          => 3,
-      'greater than'                => 4,
-      '>'                           => 4,
-      'less than'                   => 5,
-      '<'                           => 5,
-      'greater than or equal to'    => 6,
-      '>='                          => 6,
-      'less than or equal to'       => 7,
-      '<='                          => 7
-    }
-
-    # Check for valid criteria types.
-    unless criteria_type.has_key?(param[:criteria].downcase)
-      #           carp "Unknown criteria type '$param->{criteria}' for parameter " .
-      #                "'criteria' in data_validation()";
-      return -3
-    else
-      param[:criteria] = criteria_type[param[:criteria].downcase]
-    end
-
-    # 'Between' and 'Not between' criteria require 2 values.
-    if param[:criteria] == 0 || param[:criteria] == 1
-      unless param.has_key?(:maximum)
-        #               carp "Parameter 'maximum' is required in data_validation() " .
-        #                    "when using 'between' or 'not between' criteria";
-        return -3
-      end
-    else
-      param[:maximum] = nil
-    end
-
-    # List of valid error dialog types.
-    error_type = {
-      'stop'        => 0,
-      'warning'     => 1,
-      'information' => 2
-    }
-
-    # Check for valid error dialog types.
-    if not param.has_key?(:error_type)
-      param[:error_type] = 0
-    elsif not error_type.has_key?(param[:error_type].downcase)
-      #           carp "Unknown criteria type '$param->{error_type}' for parameter " .
-      #                "'error_type' in data_validation()";
-      return -3
-    else
-      param[:error_type] = error_type[param[:error_type].downcase]
-    end
-
-    # Convert date/times value if required.
-    if param[:validate] == 4 || param[:validate] == 5
-      if param[:value] =~ /T/
-        date_time = convert_date_time(param[:value])
-        unless date_time
-          #                   carp "Invalid date/time value '$param->{value}' " .
-          #                        "in data_validation()";
-          return -3
-        else
-          param[:value] = date_time
-        end
-      end
-      if param[:maximum] && param[:maximum] =~ /T/
-        date_time = convert_date_time(param[:maximum])
-
-        unless date_time
-          #                   carp "Invalid date/time value '$param->{maximum}' " .
-          #                        "in data_validation()";
-          return -3
-        else
-          param[:maximum] = date_time
-        end
-      end
-    end
-
-    # Set some defaults if they haven't been defined by the user.
-    param[:ignore_blank]  = 1 unless param[:ignore_blank]
-    param[:dropdown]      = 1 unless param[:dropdown]
-    param[:show_input]    = 1 unless param[:show_input]
-    param[:show_error]    = 1 unless param[:show_error]
-
-    # These are the cells to which the validation is applied.
-    param[:cells] = [[row1, col1, row2, col2]]
-
-    # A (for now) undocumented parameter to pass additional cell ranges.
-    if param.has_key?(:other_cells)
-
-      param[:cells].push(param[:other_cells])
-    end
+    validation = DataValidation.factory(parser, date_1904?, *args)
+    return validation if (-3..-1).include?(validation)
 
     # Store the validation information until we close the worksheet.
-    @validations << DataValidation.new(parser, param)
+    @validations << validation
   end
 
   def is_name_utf16be?  # :nodoc:
@@ -5460,125 +5269,6 @@ class Worksheet < BIFFWriter
     end
 
     [dir_long, link_type, sheet_len, sheet]
-  end
-
-  #
-  # The function takes a date and time in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format
-  # and converts it to a decimal number representing a valid Excel date.
-  #
-  # Dates and times in Excel are represented by real numbers. The integer part of
-  # the number stores the number of days since the epoch and the fractional part
-  # stores the percentage of the day in seconds. The epoch can be either 1900 or
-  # 1904.
-  #
-  # Parameter: Date and time string in one of the following formats:
-  #               yyyy-mm-ddThh:mm:ss.ss  # Standard
-  #               yyyy-mm-ddT             # Date only
-  #                         Thh:mm:ss.ss  # Time only
-  #
-  # Returns:
-  #            A decimal number representing a valid Excel date, or
-  #            undef if the date is invalid.
-  #
-  def convert_date_time(date_time_string)       #:nodoc:
-    date_time = date_time_string
-
-    days      = 0 # Number of days since epoch
-    seconds   = 0 # Time expressed as fraction of 24h hours in seconds
-
-    # Strip leading and trailing whitespace.
-    date_time.sub!(/^\s+/, '')
-    date_time.sub!(/\s+$/, '')
-
-    # Check for invalid date char.
-    return nil if date_time =~ /[^0-9T:\-\.Z]/
-
-    # Check for "T" after date or before time.
-    return nil unless date_time =~ /\dT|T\d/
-
-    # Strip trailing Z in ISO8601 date.
-    date_time.sub!(/Z$/, '')
-
-    # Split into date and time.
-    date, time = date_time.split(/T/)
-
-    # We allow the time portion of the input DateTime to be optional.
-    if time
-      # Match hh:mm:ss.sss+ where the seconds are optional
-      if time =~ /^(\d\d):(\d\d)(:(\d\d(\.\d+)?))?/
-        hour   = $1.to_i
-        min    = $2.to_i
-        sec    = $4.to_f || 0
-      else
-        return nil # Not a valid time format.
-      end
-
-      # Some boundary checks
-      return nil if hour >= 24
-      return nil if min  >= 60
-      return nil if sec  >= 60
-
-      # Excel expresses seconds as a fraction of the number in 24 hours.
-      seconds = (hour * 60* 60 + min * 60 + sec) / (24.0 * 60 * 60)
-    end
-
-    # We allow the date portion of the input DateTime to be optional.
-    return seconds if date == ''
-
-    # Match date as yyyy-mm-dd.
-    if date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/
-      year   = $1.to_i
-      month  = $2.to_i
-      day    = $3.to_i
-    else
-      return nil  # Not a valid date format.
-    end
-
-    # Set the epoch as 1900 or 1904. Defaults to 1900.
-    # Special cases for Excel.
-    unless date_1904?
-      return      seconds if date == '1899-12-31' # Excel 1900 epoch
-      return      seconds if date == '1900-01-00' # Excel 1900 epoch
-      return 60 + seconds if date == '1900-02-29' # Excel false leapday
-    end
-
-
-    # We calculate the date by calculating the number of days since the epoch
-    # and adjust for the number of leap days. We calculate the number of leap
-    # days by normalising the year in relation to the epoch. Thus the year 2000
-    # becomes 100 for 4 and 100 year leapdays and 400 for 400 year leapdays.
-    #
-    epoch   = date_1904? ? 1904 : 1900
-    offset  = date_1904? ?    4 :    0
-    norm    = 300
-    range   = year -epoch
-
-    # Set month days and check for leap year.
-    mdays   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    leap    = 0
-    leap    = 1  if year % 4 == 0 && year % 100 != 0 || year % 400 == 0
-    mdays[1]   = 29 if leap != 0
-
-    # Some boundary checks
-    return nil if year  < epoch or year  > 9999
-    return nil if month < 1     or month > 12
-    return nil if day   < 1     or day   > mdays[month -1]
-
-    # Accumulate the number of days since the epoch.
-    days = day                               # Add days for current month
-    (0 .. month-2).each do |m|
-      days += mdays[m]                      # Add days for past months
-    end
-    days += range *365                       # Add days for past years
-    days += ((range)                /  4)    # Add leapdays
-    days -= ((range + offset)       /100)    # Subtract 100 year leapdays
-    days += ((range + offset + norm)/400)    # Add 400 year leapdays
-    days -= leap                             # Already counted above
-
-    # Adjust for Excel erroneously treating 1900 as a leap year.
-    days += 1 if !date_1904? and days > 59
-
-    days + seconds
   end
 
   def date_1904?     # :nodoc:
