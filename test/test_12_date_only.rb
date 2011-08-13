@@ -14,14 +14,17 @@
 require 'helper'
 require 'stringio'
 
+class ForTest
+  include ConvertDateTime
+end
+
 class TC_data_only < Test::Unit::TestCase
 
   def setup
-    @workbook = WriteExcel.new(StringIO.new)
+    @obj = ForTest.new
   end
 
   def test_the_dates_generated_by_excel_1900
-    worksheet = @workbook.add_worksheet
     data_generated_excel_1900.each do |line|
       line = line.sub(/^\s*/,'')
       braak if line =~ /^\s*# stop/  # For debugging
@@ -29,31 +32,29 @@ class TC_data_only < Test::Unit::TestCase
       next  unless line =~ /\S/      # Ignore blank lines
       next  if line =~ /^\s*#/       # Ignore comments
 
-      result, number, date = analyze(worksheet, line)
+      result, number, date = analyze(line)
       assert_equal(result.to_i, number,
         "Testing convert_date_time: #{date} #{result}")
     end
   end
 
   def test_the_dates_generated_by_excel_1904
-    @workbook.set_1904
-    worksheet = @workbook.add_worksheet
     data_generated_excel_1904.each do |line|
       line = line.sub(/^\s*/,'')
       braak if line =~ /^\s*# stop/  # For debugging
 
       next  unless line =~ /\S/      # Ignore blank lines
       next  if line =~ /^\s*#/       # Ignore comments
-      result, number, date = analyze(worksheet, line, true)
+      result, number, date = analyze(line, true)
       assert_equal(result.to_i, number,
         "Testing convert_date_time: #{date} #{result}")
     end
   end
 
-  def analyze(worksheet, line, date_1904 = false)
+  def analyze(line, date_1904 = false)
     count, date, result = line.split(/\s+/)
     count = count.to_i
-    number = worksheet.__send__("convert_date_time", date, date_1904)
+    number = @obj.convert_date_time(date, date_1904)
     number = -1 if number.nil?
     [result, number, date]
   end
