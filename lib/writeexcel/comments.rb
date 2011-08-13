@@ -385,8 +385,6 @@ class Worksheet < BIFFWriter
       # Pack the record.
       header  = [record, length].pack('vv')
       data    = [grbit, rotation, reserved, reserved, string_len, format_len, reserved].pack("vvVvvvV")
-#p unpack_record(header)
-#p unpack_record(data)
       @worksheet.append(header, data)
     end
 
