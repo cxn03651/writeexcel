@@ -4511,6 +4511,100 @@ class Worksheet < BIFFWriter
     @filter_area.count
   end
 
+  def store_parent_mso_record(dg_length, ids, spgr_length, spid)  # :nodoc:
+    store_mso_dg_container(dg_length)      +
+    store_mso_dg(*ids)                     +
+    store_mso_spgr_container(spgr_length)  +
+    store_mso_sp_container(40)             +
+    store_mso_spgr()                       +
+    store_mso_sp(0x0, spid, 0x0005)
+  end
+
+  #
+  # Write the Escher SpContainer record that is part of MSODRAWING.
+  #
+  def store_mso_sp_container(length)   #:nodoc:
+    type        = 0xF004
+    version     = 15
+    instance    = 0
+    data        = ''
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  #
+  # Write the Escher Sp record that is part of MSODRAWING.
+  #
+  def store_mso_sp(instance, spid, options)   #:nodoc:
+    type        = 0xF00A
+    version     = 2
+    data        = ''
+    length      = 8
+    data        = [spid, options].pack('VV')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  #
+  # Write the Escher Opt record that is part of MSODRAWING.
+  #
+  def store_mso_opt_image(spid)   #:nodoc:
+    type        = 0xF00B
+    version     = 3
+    instance    = 3
+    data        = ''
+    length      = nil
+
+    data = [0x4104].pack('v') +
+    [spid].pack('V')        +
+    [0x01BF].pack('v')      +
+    [0x00010000].pack('V')  +
+    [0x03BF].pack( 'v')     +
+    [0x00080000].pack( 'V')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  #
+  # Write the Escher ClientAnchor record that is part of MSODRAWING.
+  #    flag
+  #    col_start     # Col containing upper left corner of object
+  #    x1            # Distance to left side of object
+  #
+  #    row_start     # Row containing top left corner of object
+  #    y1            # Distance to top of object
+  #
+  #    col_end       # Col containing lower right corner of object
+  #    x2            # Distance to right side of object
+  #
+  #    row_end       # Row containing bottom right corner of object
+  #    y2            # Distance to bottom of object
+  #
+  def store_mso_client_anchor(flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2)   #:nodoc:
+    type        = 0xF010
+    version     = 0
+    instance    = 0
+    data        = ''
+    length      = 18
+
+    data = [flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2].pack('v9')
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
+  #
+  # Write the Escher ClientData record that is part of MSODRAWING.
+  #
+  def store_mso_client_data   #:nodoc:
+    type        = 0xF011
+    version     = 0
+    instance    = 0
+    data        = ''
+    length      = 0
+
+    add_mso_generic(type, version, instance, data, length)
+  end
+
   ###############################################################################
   #
   # Internal methods
@@ -6435,91 +6529,52 @@ class Worksheet < BIFFWriter
   # Store the collections of records that make up images.
   #
   def store_images   #:nodoc:
-    record          = 0x00EC           # Record identifier
-    length          = 0x0000           # Bytes to follow
+    # Skip this if there aren't any images.
+    return if @images.array.empty?
 
     ids             = @object_ids.dup
     spid            = ids.shift
 
-    images          = @images.array
-    num_images      = images.size
-
-    num_filters     = @filter_area.count
-    num_comments    = comments_size
-
-    # Skip this if there aren't any images.
-    return if num_images == 0
-
-    (0 .. num_images-1).each do |i|
-      row         =   images[i].row
-      col         =   images[i].col
-      name        =   images[i].filename
-      x_offset    =   images[i].x_offset
-      y_offset    =   images[i].y_offset
-      scale_x     =   images[i].scale_x
-      scale_y     =   images[i].scale_y
-      image_id    =   images[i].id
-      type        =   images[i].type
-      width       =   images[i].width
-      height      =   images[i].height
-
-      width  = width  * scale_x unless scale_x == 0
-      height = height * scale_y unless scale_y == 0
-
-      # Calculate the positions of image object.
-      vertices = position_object(col,row,x_offset,y_offset,width,height)
-
-      if (i == 0)
-        # Write the parent MSODRAWIING record.
-        dg_length   =  156 + 84*(num_images -1)
-        spgr_length =  132 + 84*(num_images -1)
-
-        dg_length   += 120 * charts_size
-        spgr_length += 120 * charts_size
-
-        dg_length   += 96 * num_filters
-        spgr_length += 96 * num_filters
-
-        dg_length   += 128 * num_comments
-        spgr_length += 128 * num_comments
-
-        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-        spid += 1
-        data +=
-          store_mso_sp_container(76)             +
-          store_mso_sp(75, spid, 0x0A00)
-        spid += 1
-        data +=
-          store_mso_opt_image(image_id)          +
-          store_mso_client_anchor(2, *vertices)  +
-          store_mso_client_data()
-      else
-        # Write the child MSODRAWIING record.
-        data = store_mso_sp_container(76)        +
-          store_mso_sp(75, spid, 0x0A00)
-          spid = spid + 1
-        data = data                              +
-          store_mso_opt_image(image_id)          +
-          store_mso_client_anchor(2, *vertices)  +
-          store_mso_client_data
-      end
-      length      = data.bytesize
-      header      = [record, length].pack("vv")
-      append(header, data)
-
-      store_obj_image(i+1)
+    for i in (0 .. @images.array.size - 1)
+      image = @images.array[i]
+      append(image.image_record(i, @images.array.size, charts_size, @filter_area.count, comments_size, ids, spid))
+      store_obj_image(i + 1)
     end
 
     @object_ids[0] = spid
   end
 
-  def store_parent_mso_record(dg_length, ids, spgr_length, spid)  # :nodoc:
-    store_mso_dg_container(dg_length)      +
-    store_mso_dg(*ids)                     +
-    store_mso_spgr_container(spgr_length)  +
-    store_mso_sp_container(40)             +
-    store_mso_spgr()                       +
-    store_mso_sp(0x0, spid, 0x0005)
+  def images_parent_msodrawing_record(num_images, charts_size, num_filters, num_comments, ids, spid, image_id, vertices)
+    dg_length   =  156 + 84*(num_images -1)
+    spgr_length =  132 + 84*(num_images -1)
+
+    dg_length   += 120 * charts_size
+    spgr_length += 120 * charts_size
+
+    dg_length   += 96 * num_filters
+    spgr_length += 96 * num_filters
+
+    dg_length   += 128 * num_comments
+    spgr_length += 128 * num_comments
+
+    data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+    spid += 1
+    data +=
+      store_mso_sp_container(76)             +
+      store_mso_sp(75, spid, 0x0A00)
+    spid += 1
+    data +=
+      store_mso_opt_image(image_id)          +
+      store_mso_client_anchor(2, *vertices)  +
+      store_mso_client_data()
+  end
+
+  def images_child_msodrawing_record(spid, image_id, vertices)
+    data = store_mso_sp_container(76) + store_mso_sp(75, spid, 0x0A00)
+    spid = spid + 1
+    data += store_mso_opt_image(image_id)    +
+      store_mso_client_anchor(2, *vertices)  +
+      store_mso_client_data
   end
 
   def store_child_mso_record(spid, *vertices)  # :nodoc:
@@ -6804,18 +6859,6 @@ class Worksheet < BIFFWriter
   end
 
   #
-  # Write the Escher SpContainer record that is part of MSODRAWING.
-  #
-  def store_mso_sp_container(length)   #:nodoc:
-    type        = 0xF004
-    version     = 15
-    instance    = 0
-    data        = ''
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-
-  #
   # Write the Escher Spgr record that is part of MSODRAWING.
   #
   def store_mso_spgr   #:nodoc:
@@ -6824,19 +6867,6 @@ class Worksheet < BIFFWriter
     instance    = 0
     data        = [0, 0, 0, 0].pack("VVVV")
     length      = 16
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-
-  #
-  # Write the Escher Sp record that is part of MSODRAWING.
-  #
-  def store_mso_sp(instance, spid, options)   #:nodoc:
-    type        = 0xF00A
-    version     = 2
-    data        = ''
-    length      = 8
-    data        = [spid, options].pack('VV')
 
     add_mso_generic(type, version, instance, data, length)
   end
@@ -6866,26 +6896,6 @@ class Worksheet < BIFFWriter
     ['000008830150000008BF011000110001'+'02000000003F0203000300BF03'].pack("H*")  +
     [visible].pack('v')                             +
     ['0A00'].pack('H*')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-
-  #
-  # Write the Escher Opt record that is part of MSODRAWING.
-  #
-  def store_mso_opt_image(spid)   #:nodoc:
-    type        = 0xF00B
-    version     = 3
-    instance    = 3
-    data        = ''
-    length      = nil
-
-    data = [0x4104].pack('v') +
-    [spid].pack('V')        +
-    [0x01BF].pack('v')      +
-    [0x00010000].pack('V')  +
-    [0x03BF].pack( 'v')     +
-    [0x00080000].pack( 'V')
 
     add_mso_generic(type, version, instance, data, length)
   end
@@ -6946,46 +6956,6 @@ class Worksheet < BIFFWriter
     [0x01040104].pack('V')   +
     [0x00BF].pack('v')       +        # Text -> fFitTextToShape
     [0x00080008].pack('V')
-  end
-
-  #
-  # Write the Escher ClientAnchor record that is part of MSODRAWING.
-  #    flag
-  #    col_start     # Col containing upper left corner of object
-  #    x1            # Distance to left side of object
-  #
-  #    row_start     # Row containing top left corner of object
-  #    y1            # Distance to top of object
-  #
-  #    col_end       # Col containing lower right corner of object
-  #    x2            # Distance to right side of object
-  #
-  #    row_end       # Row containing bottom right corner of object
-  #    y2            # Distance to bottom of object
-  #
-  def store_mso_client_anchor(flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2)   #:nodoc:
-    type        = 0xF010
-    version     = 0
-    instance    = 0
-    data        = ''
-    length      = 18
-
-    data = [flag, col_start, x1, row_start, y1, col_end, x2, row_end, y2].pack('v9')
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-
-  #
-  # Write the Escher ClientData record that is part of MSODRAWING.
-  #
-  def store_mso_client_data   #:nodoc:
-    type        = 0xF011
-    version     = 0
-    instance    = 0
-    data        = ''
-    length      = 0
-
-    add_mso_generic(type, version, instance, data, length)
   end
 
   #
