@@ -7,7 +7,8 @@ module Writeexcel
     attr_reader :data, :size, :checksum1, :checksum2
     attr_accessor :id, :type, :width, :height, :ref_count
 
-    def initialize(row, col, filename, x_offset = 0, y_offset = 0, scale_x = 1, scale_y = 1)
+    def initialize(worksheet, row, col, filename, x_offset = 0, y_offset = 0, scale_x = 1, scale_y = 1)
+      @worksheet = worksheet
       @row = row
       @col = col
       @filename = filename

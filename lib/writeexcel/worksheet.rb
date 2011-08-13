@@ -3823,7 +3823,7 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
     # args = [row, col, filename, x_offset, y_offset, scale_x, scale_y]
-    image = Image.new(*args)
+    image = Image.new(self, *args)
     raise "Insufficient arguments in insert_image()" unless args.size >= 3
     raise "Couldn't locate #{image.filename}: $!"    unless test(?e, image.filename)
 
