@@ -23,29 +23,32 @@ class TC_txo < Test::Unit::TestCase
 
   def test_txo
     string     = 'aaa'
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 1, 1, ' ')
     caption    = " \t_store_txo()"
     target     = %w(
                     B6 01 12 00 12 02 00 00 00 00 00 00 00 00 03 00
                     10 00 00 00 00 00
                    ).join(' ')
 
-    result     = unpack_record(@worksheet.__send__("store_txo", string.length))
+    result     = unpack_record(comment.__send__("store_txo", string.length))
     assert_equal(target, result, caption)
   end
 
   def test_first_continue_record_after_txo
     string     = 'aaa'
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 1, 1, ' ')
     caption    = " \t_store_txo_continue_1()"
     target     = %w(
                     3C 00 04 00 00 61 61 61
                    ).join(' ')
 
-    result     = unpack_record(@worksheet.__send__("store_txo_continue_1", string))
+    result     = unpack_record(comment.__send__("store_txo_continue_1", string))
     assert_equal(target, result, caption)
   end
 
   def test_second_continue_record_after_txo
     string     = 'aaa'
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 1, 1, ' ')
     caption    = " \t_store_txo_continue_2()"
     target     = %w(
                     3C 00 10 00 00 00 00 00 00 00 00 00 03 00 00 00
@@ -56,7 +59,7 @@ class TC_txo < Test::Unit::TestCase
                     [string.length, 0]
                  ]
 
-    result     = unpack_record(@worksheet.__send__("store_txo_continue_2", formats))
+    result     = unpack_record(comment.__send__("store_txo_continue_2", formats))
     assert_equal(target, result, caption)
   end
 

@@ -29,10 +29,6 @@ class TC_escher < Test::Unit::TestCase
     @worksheet = @workbook.add_worksheet
   end
 
-  def test_dummy
-    assert(true)
-  end
-
   def test_for_store_mso_dg_container
     caption = sprintf(" \t_store_mso_dg_container()")
     data    = [0xC8]
@@ -115,6 +111,7 @@ class TC_escher < Test::Unit::TestCase
 
   def test_for_store_mso_opt_comment
     caption = sprintf(" \t_store_mso_opt_comment()")
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 1, 1, ' ')
     data    = [0x80]
     target  = %w(
     93 00 0B F0 36 00 00 00
@@ -124,7 +121,7 @@ class TC_escher < Test::Unit::TestCase
     03 00 03 00 BF 03 02 00 0A 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_opt_comment", *data))
+    result  = unpack_record(comment.store_mso_opt_comment(*data))
 
     assert_equal(target, result, caption)
   end
@@ -140,8 +137,9 @@ class TC_escher < Test::Unit::TestCase
     assert_equal(target, result, caption)
   end
 
-  def test_for_store_obj_comment
-    caption = sprintf(" \t_store_obj_comment")
+  def test_for_obj_comment_record
+    caption = sprintf(" \t_obj_comment_record")
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 1, 1, ' ')
     data = [0x01]
     target  = %w(
     5D 00 34 00 15 00 12 00 19 00 01 00 11 40 00 00
@@ -150,18 +148,19 @@ class TC_escher < Test::Unit::TestCase
     00 00 00 00 00 00 00 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_obj_comment", *data))
+    result  = unpack_record(comment.obj_comment_record(*data))
 
     assert_equal(target, result, caption)
   end
 
   def test_for_store_mso_client_text_box
     caption = sprintf(" \t_store_mso_client_text_box")
+    comment = Writeexcel::Worksheet::Comment.new(@worksheet, 1, 1, ' ')
     target  = %w(
     00 00 0D F0 00 00 00 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_client_text_box"))
+    result  = unpack_record(comment.__send__("store_mso_client_text_box"))
 
     assert_equal(target, result, caption)
   end

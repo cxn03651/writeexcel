@@ -6759,65 +6759,23 @@ class Worksheet < BIFFWriter
   # to write the NOTE records directly after the MSODRAWIING records.
   #
   def store_comments   #:nodoc:
-    record          = 0x00EC           # Record identifier
-    length          = 0x0000           # Bytes to follow
+    return if @comments.array.empty?
 
     ids             = @object_ids.dup
     spid            = ids.shift
-
-    comments        = @comments.array
-    num_comments    = comments.size
+    num_comments    = comments_size
 
     # Number of objects written so far.
     num_objects     = images_size + @filter_area.count + charts_size
 
-    # Skip this if there aren't any comments.
-    return if num_comments == 0
-
-    (0 .. num_comments-1).each do |i|
-      row         = comments[i].row
-      col         = comments[i].col
-      str         = comments[i].string
-      encoding    = comments[i].encoding
-      visible     = comments[i].visible
-      color       = comments[i].color
-      vertices    = comments[i].vertices
-      str_len     = str.bytesize
-      str_len     = str_len / 2 if encoding != 0 # Num of chars not bytes.
-      formats     = [[0, 9], [str_len, 0]]
-
-      if i == 0 and num_objects == 0
-        # Write the parent MSODRAWIING record.
-        dg_length   = 200 + 128*(num_comments -1)
-        spgr_length = 176 + 128*(num_comments -1)
-
-        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-        spid += 1
-      else
-        data = ''
-      end
-      data +=
-        store_mso_sp_container(120)                    +
-        store_mso_sp(202, spid, 0x0A00)
-      spid += 1
-      data +=
-        store_mso_opt_comment(0x80, visible, color)    +
-        store_mso_client_anchor(3, *vertices)          +
-        store_mso_client_data
-      length      = data.bytesize
-      header      = [record, length].pack("vv")
-      append(header, data)
-
-      store_obj_comment(num_objects + i + 1)
-      store_mso_drawing_text_box()
-      store_txo(str_len)
-      store_txo_continue_1(str, encoding)
-      store_txo_continue_2(formats)
+    for i in (0 .. num_comments-1)
+      comment = @comments.array[i]
+      spid = comment.store_comment_record(i, num_objects, num_comments, ids, spid)
     end
 
     # Write the NOTE records after MSODRAWIING records.
     for i in (0 .. num_comments-1)
-      comment = comments[i]
+      comment = @comments.array[i]
       append(comment.note_record(num_objects + i + 1))
     end
   end
@@ -6866,35 +6824,6 @@ class Worksheet < BIFFWriter
     instance    = 0
     data        = [0, 0, 0, 0].pack("VVVV")
     length      = 16
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-
-  #
-  # Write the Escher Opt record that is part of MSODRAWING.
-  #
-  def store_mso_opt_comment(spid, visible = nil, colour = 0x50)   #:nodoc:
-    type        = 0xF00B
-    version     = 3
-    instance    = 9
-    data        = ''
-    length      = 54
-
-    # Use the visible flag if set by the user or else use the worksheet value.
-    # Note that the value used is the opposite of Comment#note_record.
-    #
-    if visible
-      visible = visible != 0       ? 0x0000 : 0x0002
-    else
-      visible = @comments.visible? ? 0x0000 : 0x0002
-    end
-
-    data = [spid].pack('V')                            +
-    ['0000BF00080008005801000000008101'].pack("H*") +
-    [colour].pack("C")                              +
-    ['000008830150000008BF011000110001'+'02000000003F0203000300BF03'].pack("H*")  +
-    [visible].pack('v')                             +
-    ['0A00'].pack('H*')
 
     add_mso_generic(type, version, instance, data, length)
   end
@@ -6955,47 +6884,6 @@ class Worksheet < BIFFWriter
     [0x01040104].pack('V')   +
     [0x00BF].pack('v')       +        # Text -> fFitTextToShape
     [0x00080008].pack('V')
-  end
-
-  #
-  # Write the OBJ record that is part of cell comments.
-  #    obj_id      # Object ID number.
-  #
-  def store_obj_comment(obj_id)   #:nodoc:
-    record      = 0x005D   # Record identifier
-    length      = 0x0034   # Bytes to follow
-
-    obj_type    = 0x0019   # Object type (comment).
-    data        = ''       # Record data.
-
-    sub_record  = 0x0000   # Sub-record identifier.
-    sub_length  = 0x0000   # Length of sub-record.
-    sub_data    = ''       # Data of sub-record.
-    options     = 0x4011
-    reserved    = 0x0000
-
-    # Add ftCmo (common object data) subobject
-    sub_record     = 0x0015   # ftCmo
-    sub_length     = 0x0012
-    sub_data       = [obj_type, obj_id, options, reserved, reserved, reserved].pack( "vvvVVV")
-    data           = [sub_record, sub_length].pack("vv") + sub_data
-
-    # Add ftNts (note structure) subobject
-    sub_record  = 0x000D   # ftNts
-    sub_length  = 0x0016
-    sub_data    = [reserved,reserved,reserved,reserved,reserved,reserved].pack( "VVVVVv")
-    data        += [sub_record, sub_length].pack("vv") + sub_data
-
-    # Add ftEnd (end of object) subobject
-    sub_record  = 0x0000   # ftNts
-    sub_length  = 0x0000
-    data        += [sub_record, sub_length].pack("vv")
-
-    # Pack the record.
-    header      = [record, length].pack("vv")
-
-    append(header, data)
-
   end
 
   #
@@ -7131,114 +7019,6 @@ class Worksheet < BIFFWriter
 
     # Pack the record.
     header  = [record, length].pack('vv')
-
-    append(header, data)
-  end
-
-  #
-  # Write the MSODRAWING ClientTextbox record that is part of comments.
-  #
-  def store_mso_drawing_text_box   #:nodoc:
-    record      = 0x00EC           # Record identifier
-    length      = 0x0008           # Bytes to follow
-
-    data        = store_mso_client_text_box()
-    header  = [record, length].pack('vv')
-
-    append(header, data)
-  end
-
-  #
-  # Write the Escher ClientTextbox record that is part of MSODRAWING.
-  #
-  def store_mso_client_text_box   #:nodoc:
-    type        = 0xF00D
-    version     = 0
-    instance    = 0
-    data        = ''
-    length      = 0
-
-    add_mso_generic(type, version, instance, data, length)
-  end
-
-  #
-  # Write the worksheet TXO record that is part of cell comments.
-  #    string_len           # Length of the note text.
-  #    format_len           # Length of the format runs.
-  #    rotation             # Options
-  #
-  def store_txo(string_len, format_len = 16, rotation = 0)   #:nodoc:
-    record      = 0x01B6               # Record identifier
-    length      = 0x0012               # Bytes to follow
-
-    grbit       = 0x0212               # Options
-    reserved    = 0x0000               # Options
-
-    # Pack the record.
-    header  = [record, length].pack('vv')
-    data    = [grbit, rotation, reserved, reserved,
-    string_len, format_len, reserved].pack("vvVvvvV")
-
-    append(header, data)
-  end
-
-  #
-  # Write the first CONTINUE record to follow the TXO record. It contains the
-  # text data.
-  #    string               # Comment string.
-  #    encoding             # Encoding of the string.
-  #
-  def store_txo_continue_1(string, encoding = 0)   #:nodoc:
-    record      = 0x003C               # Record identifier
-
-    # Split long comment strings into smaller continue blocks if necessary.
-    # We can't let BIFFwriter::_add_continue() handled this since an extra
-    # encoding byte has to be added similar to the SST block.
-    #
-    # We make the limit size smaller than the add_continue() size and even
-    # so that UTF16 chars occur in the same block.
-    #
-    limit = 8218
-    while string.bytesize > limit
-      string[0 .. limit] = ""
-      tmp_str = string
-      data    = [encoding].pack("C") +
-        ruby_18 { tmp_str } ||
-        ruby_19 { tmp_str.force_encoding('ASCII-8BIT') }
-      length  = data.bytesize
-      header  = [record, length].pack('vv')
-
-      append(header, data)
-    end
-
-    # Pack the record.
-    data    =
-      ruby_18 { [encoding].pack("C") + string } ||
-      ruby_19 { [encoding].pack("C") + string.force_encoding('ASCII-8BIT') }
-    length  = data.bytesize
-    header  = [record, length].pack('vv')
-
-    append(header, data)
-  end
-
-  #
-  # Write the second CONTINUE record to follow the TXO record. It contains the
-  # formatting information for the string.
-  #    formats           # Formatting information
-  #
-  def store_txo_continue_2(formats)   #:nodoc:
-    record      = 0x003C               # Record identifier
-    length      = 0x0000               # Bytes to follow
-
-    # Pack the record.
-    data = ''
-
-    formats.each do |a_ref|
-      data += [a_ref[0], a_ref[1], 0x0].pack('vvV')
-    end
-
-    length  = data.bytesize
-    header  = [record, length].pack("vv")
 
     append(header, data)
   end
