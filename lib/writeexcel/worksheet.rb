@@ -4605,6 +4605,10 @@ class Worksheet < BIFFWriter
     add_mso_generic(type, version, instance, data, length)
   end
 
+  def comments_visible?
+    @comments.visible?
+  end
+
   ###############################################################################
   #
   # Internal methods
@@ -6812,14 +6816,9 @@ class Worksheet < BIFFWriter
     end
 
     # Write the NOTE records after MSODRAWIING records.
-    (0 .. num_comments-1).each do |i|
-      row         = comments[i].row
-      col         = comments[i].col
-      author      = comments[i].author
-      author_enc  = comments[i].author_encoding
-      visible     = comments[i].visible
-
-      store_note(row, col, num_objects + i + 1, author, author_enc, visible)
+    for i in (0 .. num_comments-1)
+      comment = comments[i]
+      append(comment.note_record(num_objects + i + 1))
     end
   end
 
@@ -6882,7 +6881,7 @@ class Worksheet < BIFFWriter
     length      = 54
 
     # Use the visible flag if set by the user or else use the worksheet value.
-    # Note that the value used is the opposite of store_note().
+    # Note that the value used is the opposite of Comment#note_record.
     #
     if visible
       visible = visible != 0       ? 0x0000 : 0x0002
@@ -7242,44 +7241,6 @@ class Worksheet < BIFFWriter
     header  = [record, length].pack("vv")
 
     append(header, data)
-  end
-
-  #
-  # Write the worksheet NOTE record that is part of cell comments.
-  #
-  def store_note(row, col, obj_id, author = nil, author_enc = nil, visible = nil)   #:nodoc:
-    ruby_19 { author = [author].pack('a*') if author.ascii_only? }
-    record      = 0x001C               # Record identifier
-    length      = 0x000C               # Bytes to follow
-
-    author     = '' unless author
-    author_enc = 0  unless author_enc
-
-    # Use the visible flag if set by the user or else use the worksheet value.
-    # The flag is also set in store_mso_opt_comment() but with the opposite
-    # value.
-    if visible
-      visible = visible != 0       ? 0x0002 : 0x0000
-    else
-      visible = @comments.visible? ? 0x0002 : 0x0000
-    end
-
-    # Get the number of chars in the author string (not bytes).
-    num_chars  = author.bytesize
-    num_chars  = num_chars / 2 if author_enc != 0 && author_enc
-
-    # Null terminate the author string.
-    author =
-      ruby_18 { author + "\0" } ||
-      ruby_19 { author.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
-
-    # Pack the record.
-    data    = [row, col, visible, obj_id, num_chars, author_enc].pack("vvvvvC")
-
-    length  = data.bytesize + author.bytesize
-    header  = [record, length].pack("vv")
-
-    append(header, data, author)
   end
 
   #

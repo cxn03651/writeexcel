@@ -63,6 +63,46 @@ class Worksheet < BIFFWriter
       @vertices        = calc_vertices
     end
 
+    #
+    # Write the worksheet NOTE record that is part of cell comments.
+    #
+    def note_record(obj_id)   #:nodoc:
+      comment_author = author
+      comment_author_enc = author_encoding
+      ruby_19 { comment_author = [comment_author].pack('a*') if comment_author.ascii_only? }
+      record      = 0x001C               # Record identifier
+      length      = 0x000C               # Bytes to follow
+
+      comment_author     = '' unless comment_author
+      comment_author_enc = 0  unless author_encoding
+
+      # Use the visible flag if set by the user or else use the worksheet value.
+      # The flag is also set in store_mso_opt_comment() but with the opposite
+      # value.
+      if visible
+        comment_visible = visible != 0                 ? 0x0002 : 0x0000
+      else
+        comment_visible = @worksheet.comments_visible? ? 0x0002 : 0x0000
+      end
+
+      # Get the number of chars in the author string (not bytes).
+      num_chars  = comment_author.bytesize
+      num_chars  = num_chars / 2 if comment_author_enc != 0 && comment_author_enc
+
+      # Null terminate the author string.
+      comment_author =
+        ruby_18 { comment_author + "\0" } ||
+        ruby_19 { comment_author.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
+
+      # Pack the record.
+      data    = [row, col, comment_visible, obj_id, num_chars, comment_author_enc].pack("vvvvvC")
+
+      length  = data.bytesize + comment_author.bytesize
+      header  = [record, length].pack("vv")
+
+      header << data << comment_author
+    end
+
     private
 
     def params_with(options)
