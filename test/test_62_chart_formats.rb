@@ -32,7 +32,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_index = 0x0A
     expected_rgb   = 0x000000FF
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -44,7 +44,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_index = 0x08
     expected_rgb   = 0x00000000
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -56,7 +56,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_index = 0x09
     expected_rgb   = 0x00FFFFFF
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -75,7 +75,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_rgb   = 0x000000FF
 
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -93,7 +93,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_index = nil
     expected_rgb   = nil
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -105,7 +105,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_index = nil
     expected_rgb   = nil
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -123,7 +123,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_index = nil
     expected_rgb   = nil
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -141,7 +141,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     expected_index = nil
     expected_rgb   = nil
 
-    got_index, got_rgb = @chart.get_color_indices(color)
+    got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
     assert_equal(expected_index, got_index, caption1)
     assert_equal(expected_rgb,   got_rgb,   caption2)
@@ -172,7 +172,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     got      = []
 
     values.each do |user, excel|
-      got.push(@chart.get_line_pattern(user))
+      got.push(@chart.__send__("get_line_pattern", user))
       expected.push(excel)
     end
 
@@ -204,7 +204,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     got      = []
 
     values.each do |user, excel|
-      got.push(@chart.get_line_pattern(user))
+      got.push(@chart.__send__("get_line_pattern", user))
       expected.push(excel)
     end
 
@@ -232,7 +232,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     got      = []
 
     values.each do |user, excel|
-      got.push(@chart.get_line_weight(user))
+      got.push(@chart.__send__("get_line_weight", user))
       expected.push(excel)
     end
 
@@ -259,7 +259,7 @@ class TC_ChartFormats < Test::Unit::TestCase
     got      = []
 
     values.each do |user, excel|
-      got.push(@chart.get_line_weight(user))
+      got.push(@chart.__send__("get_line_weight", user))
       expected.push(excel)
     end
 

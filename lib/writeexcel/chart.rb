@@ -477,15 +477,42 @@ class Chart < Worksheet
   end
 
   #
-  # The parent Worksheet class needs to store some data in memory and some in
-  # temporary files for efficiency. The Chart* classes don't need to do this
-  # since they are dealing with smaller amounts of data so we override
-  # _prepend() to turn it into an _append() method. This allows for a more
-  # natural method calling order.
+  # Setup the default configuration data for an embedded chart.
   #
-  def prepend(*args)  # :nodoc:
-    @using_tmpfile = false
-    append(*args)
+  def set_embedded_config_data   # :nodoc:
+    @embedded = true
+
+    @chartarea = {
+      :visible          => 1,
+      :fg_color_index   => 0x4E,
+      :fg_color_rgb     => 0xFFFFFF,
+      :bg_color_index   => 0x4D,
+      :bg_color_rgb     => 0x000000,
+      :area_pattern     => 0x0001,
+      :area_options     => 0x0001,
+      :line_pattern     => 0x0000,
+      :line_weight      => 0x0000,
+      :line_color_index => 0x4D,
+      :line_color_rgb   => 0x000000,
+      :line_options     => 0x0009,
+    }
+
+    @config = default_config_data.merge({
+        :axisparent      => [ 0, 0x01D8, 0x031D, 0x0D79, 0x07E9              ],
+        :axisparent_pos  => [ 2, 2, 0x010C, 0x0292, 0x0E46, 0x09FD           ],
+        :chart           => [ 0x0000, 0x0000, 0x01847FE8, 0x00F47FE8         ],
+        :font_numbers    => [ 5, 10, 0x1DC4, 0x1284, 0x0000                  ],
+        :font_series     => [ 6, 10, 0x1DC4, 0x1284, 0x0001                  ],
+        :font_title      => [ 7, 12, 0x1DC4, 0x1284, 0x0000                  ],
+        :font_axes       => [ 8, 10, 0x1DC4, 0x1284, 0x0001                  ],
+        :legend          => [ 0x044E, 0x0E4A, 0x088D, 0x0123, 0x0, 0x1, 0xF  ],
+        :legend_pos      => [ 5, 2, 0x044E, 0x0E4A, 0, 0                     ],
+        :legend_text     => [ 0xFFFFFFD9, 0xFFFFFFC1, 0, 0, 0x00B1, 0x0000   ],
+        :series_text     => [ 0xFFFFFFD9, 0xFFFFFFC1, 0, 0, 0x00B1, 0x1020   ],
+        :title_text      => [ 0x060F, 0x004C, 0x038A, 0x016F, 0x0081, 0x1030 ],
+        :x_axis_text     => [ 0x07EF, 0x0C8F, 0x153, 0x123, 0x81, 0x00       ],
+        :y_axis_text     => [ 0x0057, 0x0564, 0xB5, 0x035D, 0x0281, 0x00, 90 ],
+    })
   end
 
   #
@@ -553,6 +580,21 @@ class Chart < Worksheet
 
     store_eof
   end
+
+  private
+
+  #
+  # The parent Worksheet class needs to store some data in memory and some in
+  # temporary files for efficiency. The Chart* classes don't need to do this
+  # since they are dealing with smaller amounts of data so we override
+  # _prepend() to turn it into an _append() method. This allows for a more
+  # natural method calling order.
+  #
+  def prepend(*args)  # :nodoc:
+    @using_tmpfile = false
+    append(*args)
+  end
+
 
   #
   # Write BIFF record Window2. Note, this overrides the parent Worksheet
@@ -704,7 +746,6 @@ class Chart < Worksheet
   def palette
     @workbook.palette
   end
-  private :palette
 
   #
   # Get the Excel chart index for line pattern that corresponds to the user
@@ -822,7 +863,6 @@ class Chart < Worksheet
       (v.nil? || v == [""] || v == '' || v == 0) ? f : t
     end
   end
-  private :_formula_type_from_param
 
   #
   # Write the SERIES chart substream.
@@ -878,7 +918,6 @@ class Chart < Worksheet
   def _formula_type(t, f, formula)   # :nodoc:
     (formula.nil? || formula == [""] || formula == '' || formula == 0) ? f : t
   end
-  private :_formula_type
 
   #
   # Write the X-axis TEXT substream.
@@ -1053,7 +1092,6 @@ class Chart < Worksheet
 
     store_end
   end
-  private :store_area_frame_stream_common
 
   #
   # Write the CHARTFORMAT chart substream.
@@ -1924,46 +1962,7 @@ class Chart < Worksheet
         :y_axis_text_pos => [ 2, 2, 0, 0, 0x17,  0x44                        ],
     }
   end
-  private :default_config_data
 
-  #
-  # Setup the default configuration data for an embedded chart.
-  #
-  def set_embedded_config_data   # :nodoc:
-    @embedded = true
-
-    @chartarea = {
-      :visible          => 1,
-      :fg_color_index   => 0x4E,
-      :fg_color_rgb     => 0xFFFFFF,
-      :bg_color_index   => 0x4D,
-      :bg_color_rgb     => 0x000000,
-      :area_pattern     => 0x0001,
-      :area_options     => 0x0001,
-      :line_pattern     => 0x0000,
-      :line_weight      => 0x0000,
-      :line_color_index => 0x4D,
-      :line_color_rgb   => 0x000000,
-      :line_options     => 0x0009,
-    }
-
-    @config = default_config_data.merge({
-        :axisparent      => [ 0, 0x01D8, 0x031D, 0x0D79, 0x07E9              ],
-        :axisparent_pos  => [ 2, 2, 0x010C, 0x0292, 0x0E46, 0x09FD           ],
-        :chart           => [ 0x0000, 0x0000, 0x01847FE8, 0x00F47FE8         ],
-        :font_numbers    => [ 5, 10, 0x1DC4, 0x1284, 0x0000                  ],
-        :font_series     => [ 6, 10, 0x1DC4, 0x1284, 0x0001                  ],
-        :font_title      => [ 7, 12, 0x1DC4, 0x1284, 0x0000                  ],
-        :font_axes       => [ 8, 10, 0x1DC4, 0x1284, 0x0001                  ],
-        :legend          => [ 0x044E, 0x0E4A, 0x088D, 0x0123, 0x0, 0x1, 0xF  ],
-        :legend_pos      => [ 5, 2, 0x044E, 0x0E4A, 0, 0                     ],
-        :legend_text     => [ 0xFFFFFFD9, 0xFFFFFFC1, 0, 0, 0x00B1, 0x0000   ],
-        :series_text     => [ 0xFFFFFFD9, 0xFFFFFFC1, 0, 0, 0x00B1, 0x1020   ],
-        :title_text      => [ 0x060F, 0x004C, 0x038A, 0x016F, 0x0081, 0x1030 ],
-        :x_axis_text     => [ 0x07EF, 0x0C8F, 0x153, 0x123, 0x81, 0x00       ],
-        :y_axis_text     => [ 0x0057, 0x0564, 0xB5, 0x035D, 0x0281, 0x00, 90 ],
-    })
-  end
 end  # class Chart
 
 end  # module Writeexcel
