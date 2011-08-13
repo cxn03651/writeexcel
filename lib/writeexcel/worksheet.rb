@@ -83,7 +83,8 @@ class Worksheet < BIFFWriter
       attr_reader :input_title, :input_message, :error_title, :error_message, :error_type
       attr_reader :ignore_blank, :dropdown, :show_input, :show_error
 
-    def initialize(param)
+    def initialize(worksheet, param)
+      @worksheet     = worksheet
       @cells         = param[:cells]
       @validate      = param[:validate]
       @criteria      = param[:criteria]
@@ -99,12 +100,176 @@ class Worksheet < BIFFWriter
       @show_input    = param[:show_input]
       @show_error    = param[:show_error]
     end
+
+    #
+    # Calclate the DV record that specifies the data validation criteria and options
+    # for a range of cells..
+    #    cells             # Aref of cells to which DV applies.
+    #    validate          # Type of data validation.
+    #    criteria          # Validation criteria.
+    #    value             # Value/Source/Minimum formula.
+    #    maximum           # Maximum formula.
+    #    input_title       # Title of input message.
+    #    input_message     # Text of input message.
+    #    error_title       # Title of error message.
+    #    error_message     # Text of input message.
+    #    error_type        # Error dialog type.
+    #    ignore_blank      # Ignore blank cells.
+    #    dropdown          # Display dropdown with list.
+    #    input_box         # Display input box.
+    #    error_box         # Display error box.
+    #
+    def dv_record(dv)  # :nodoc:
+      record          = 0x01BE       # Record identifier
+      length          = 0x0000       # Bytes to follow
+
+      flags           = 0x00000000   # DV option flags.
+
+      ime_mode        = 0            # IME input mode for far east fonts.
+      str_lookup      = 0            # See below.
+
+      # Set the string lookup flag for 'list' validations with a string array.
+      if dv.validate == 3 && dv.value.respond_to?(:to_ary)
+        str_lookup = 1
+      end
+
+      # The dropdown flag is stored as a negated value.
+      no_dropdown = dv.dropdown ? 0 : 1
+
+      # Set the required flags.
+      flags |= dv.validate
+      flags |= dv.error_type    << 4
+      flags |= str_lookup       << 7
+      flags |= dv.ignore_blank  << 8
+      flags |= no_dropdown      << 9
+      flags |= ime_mode         << 10
+      flags |= dv.show_input    << 18
+      flags |= dv.show_error    << 19
+      flags |= dv.criteria    << 20
+
+      # Pack the validation formulas.
+      formula_1 = @worksheet.pack_dv_formula(dv.value)
+      formula_2 = @worksheet.pack_dv_formula(dv.maximum)
+
+      # Pack the input and error dialog strings.
+      input_title   = pack_dv_string(dv.input_title,   32 )
+      error_title   = pack_dv_string(dv.error_title,   32 )
+      input_message = pack_dv_string(dv.input_message, 255)
+      error_message = pack_dv_string(dv.error_message, 255)
+
+      # Pack the DV cell data.
+      dv_count = dv.cells.size
+      dv_data  = [dv_count].pack('v')
+      dv.cells.each do |range|
+        dv_data += [range[0], range[2], range[1], range[3]].pack('vvvv')
+      end
+
+      # Pack the record.
+      data   = [flags].pack('V')     +
+        input_title                  +
+        error_title                  +
+        input_message                +
+        error_message                +
+        formula_1                    +
+        formula_2                    +
+        dv_data
+
+      header = [record, data.bytesize].pack('vv')
+
+      header + data
+    end
+
+    private
+
+    #
+    # Pack the strings used in the input and error dialog captions and messages.
+    # Captions are limited to 32 characters. Messages are limited to 255 chars.
+    #
+    def pack_dv_string(string = nil, max_length = 0)   #:nodoc:
+      str_length  = 0
+      encoding    = 0
+
+      # The default empty string is "\0".
+      unless string && string != ''
+        string =
+          ruby_18 { "\0" } || ruby_19 { "\0".encode('BINARY') }
+      end
+
+      # Excel limits DV captions to 32 chars and messages to 255.
+      if string.bytesize > max_length
+        string = string[0 .. max_length-1]
+      end
+
+      str_length = string.bytesize
+
+      ruby_19 { string = convert_to_ascii_if_ascii(string) }
+
+      # Handle utf8 strings
+      if is_utf8?(string)
+        str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
+        string = utf8_to_16le(string)
+        encoding = 1
+      end
+
+      ruby_18 { [str_length, encoding].pack('vC') + string } ||
+      ruby_19 { [str_length, encoding].pack('vC') + string.force_encoding('BINARY') }
+    end
   end
 
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
+
+  #
+  # Pack the formula used in the DV record. This is the same as an cell formula
+  # with some additional header information. Note, DV formulas in Excel use
+  # relative addressing (R1C1 and ptgXxxN) however we use the Formula.pm's
+  # default absolute addressing (A1 and ptgXxx).
+  #
+  def pack_dv_formula(formula = nil)   #:nodoc:
+    encoding    = 0
+    length      = 0
+    unused      = 0x0000
+    tokens      = []
+
+    # Return a default structure for unused formulas.
+    return [0, unused].pack('vv') unless formula && formula != ''
+
+    # Pack a list array ref as a null separated string.
+    if formula.respond_to?(:to_ary)
+      formula   = formula.join("\0")
+      formula   = '"' + formula + '"'
+    end
+
+    # Strip the = sign at the beginning of the formula string
+    formula = formula.to_s unless formula.respond_to?(:to_str)
+    formula.sub!(/^=/, '')
+
+    # In order to raise formula errors from the point of view of the calling
+    # program we use an eval block and re-raise the error from here.
+    #
+    tokens = parser.parse_formula(formula)   # ????
+
+    #       if ($@) {
+    #           $@ =~ s/\n$//;  # Strip the \n used in the Formula.pm die()
+    #           croak $@;       # Re-raise the error
+    #       }
+    #       else {
+    #           # TODO test for non valid ptgs such as Sheet2!A1
+    #       }
+
+    # Force 2d ranges to be a reference class.
+    tokens.each do |t|
+      t.sub!(/_range2d/, "_range2dR")
+      t.sub!(/_name/, "_nameR")
+    end
+
+    # Parse the tokens into a formula string.
+    formula = parser.parse_tokens(tokens)
+
+    [formula.length, unused].pack('vv') + formula
+  end
 
   attr_reader :title_range, :print_range, :filter_area
   #
@@ -4549,7 +4714,7 @@ class Worksheet < BIFFWriter
     end
 
     # Store the validation information until we close the worksheet.
-    @validations << DataValidation.new(param)
+    @validations << DataValidation.new(self, param)
   end
 
   def is_name_utf16be?  # :nodoc:
@@ -7698,170 +7863,8 @@ class Worksheet < BIFFWriter
     return if @validations.size == 0
 
     @validations.each do |data_validation|
-      store_dv(data_validation)
+      append(data_validation.dv_record(data_validation))
     end
-  end
-
-  #
-  # Store the DV record that specifies the data validation criteria and options
-  # for a range of cells..
-  #    cells             # Aref of cells to which DV applies.
-  #    validate          # Type of data validation.
-  #    criteria          # Validation criteria.
-  #    value             # Value/Source/Minimum formula.
-  #    maximum           # Maximum formula.
-  #    input_title       # Title of input message.
-  #    input_message     # Text of input message.
-  #    error_title       # Title of error message.
-  #    error_message     # Text of input message.
-  #    error_type        # Error dialog type.
-  #    ignore_blank      # Ignore blank cells.
-  #    dropdown          # Display dropdown with list.
-  #    input_box         # Display input box.
-  #    error_box         # Display error box.
-  #
-  def store_dv(dv)  # :nodoc:
-    record          = 0x01BE       # Record identifier
-    length          = 0x0000       # Bytes to follow
-
-    flags           = 0x00000000   # DV option flags.
-
-    ime_mode        = 0            # IME input mode for far east fonts.
-    str_lookup      = 0            # See below.
-
-    # Set the string lookup flag for 'list' validations with a string array.
-    if dv.validate == 3 && dv.value.respond_to?(:to_ary)
-      str_lookup = 1
-    end
-
-    # The dropdown flag is stored as a negated value.
-    no_dropdown = dv.dropdown ? 0 : 1
-
-    # Set the required flags.
-    flags |= dv.validate
-    flags |= dv.error_type    << 4
-    flags |= str_lookup       << 7
-    flags |= dv.ignore_blank  << 8
-    flags |= no_dropdown      << 9
-    flags |= ime_mode         << 10
-    flags |= dv.show_input    << 18
-    flags |= dv.show_error    << 19
-    flags |= dv.criteria    << 20
-
-    # Pack the validation formulas.
-    formula_1 = pack_dv_formula(dv.value)
-    formula_2 = pack_dv_formula(dv.maximum)
-
-    # Pack the input and error dialog strings.
-    input_title   = pack_dv_string(dv.input_title,   32 )
-    error_title   = pack_dv_string(dv.error_title,   32 )
-    input_message = pack_dv_string(dv.input_message, 255)
-    error_message = pack_dv_string(dv.error_message, 255)
-
-    # Pack the DV cell data.
-    dv_count = dv.cells.size
-    dv_data  = [dv_count].pack('v')
-    dv.cells.each do |range|
-      dv_data += [range[0], range[2], range[1], range[3]].pack('vvvv')
-    end
-
-    # Pack the record.
-    data   = [flags].pack('V')     +
-      input_title                  +
-      error_title                  +
-      input_message                +
-      error_message                +
-      formula_1                    +
-      formula_2                    +
-      dv_data
-
-    header = [record, data.bytesize].pack('vv')
-
-    append(header, data)
-  end
-
-  #
-  # Pack the strings used in the input and error dialog captions and messages.
-  # Captions are limited to 32 characters. Messages are limited to 255 chars.
-  #
-  def pack_dv_string(string = nil, max_length = 0)   #:nodoc:
-    str_length  = 0
-    encoding    = 0
-
-    # The default empty string is "\0".
-    unless string && string != ''
-      string =
-        ruby_18 { "\0" } || ruby_19 { "\0".encode('BINARY') }
-    end
-
-    # Excel limits DV captions to 32 chars and messages to 255.
-    if string.bytesize > max_length
-      string = string[0 .. max_length-1]
-    end
-
-    str_length = string.bytesize
-
-    ruby_19 { string = convert_to_ascii_if_ascii(string) }
-
-    # Handle utf8 strings
-    if is_utf8?(string)
-      str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
-      string = utf8_to_16le(string)
-      encoding = 1
-    end
-
-    ruby_18 { [str_length, encoding].pack('vC') + string } ||
-    ruby_19 { [str_length, encoding].pack('vC') + string.force_encoding('BINARY') }
-  end
-
-  #
-  # Pack the formula used in the DV record. This is the same as an cell formula
-  # with some additional header information. Note, DV formulas in Excel use
-  # relative addressing (R1C1 and ptgXxxN) however we use the Formula.pm's
-  # default absolute addressing (A1 and ptgXxx).
-  #
-  def pack_dv_formula(formula = nil)   #:nodoc:
-    encoding    = 0
-    length      = 0
-    unused      = 0x0000
-    tokens      = []
-
-    # Return a default structure for unused formulas.
-    return [0, unused].pack('vv') unless formula && formula != ''
-
-    # Pack a list array ref as a null separated string.
-    if formula.respond_to?(:to_ary)
-      formula   = formula.join("\0")
-      formula   = '"' + formula + '"'
-    end
-
-    # Strip the = sign at the beginning of the formula string
-    formula = formula.to_s unless formula.respond_to?(:to_str)
-    formula.sub!(/^=/, '')
-
-    # In order to raise formula errors from the point of view of the calling
-    # program we use an eval block and re-raise the error from here.
-    #
-    tokens = parser.parse_formula(formula)   # ????
-
-    #       if ($@) {
-    #           $@ =~ s/\n$//;  # Strip the \n used in the Formula.pm die()
-    #           croak $@;       # Re-raise the error
-    #       }
-    #       else {
-    #           # TODO test for non valid ptgs such as Sheet2!A1
-    #       }
-
-    # Force 2d ranges to be a reference class.
-    tokens.each do |t|
-      t.sub!(/_range2d/, "_range2dR")
-      t.sub!(/_name/, "_nameR")
-    end
-
-    # Parse the tokens into a formula string.
-    formula = parser.parse_tokens(tokens)
-
-    [formula.length, unused].pack('vv') + formula
   end
 
   def parser   # :nodoc:
