@@ -83,8 +83,8 @@ class Worksheet < BIFFWriter
       attr_reader :input_title, :input_message, :error_title, :error_message, :error_type
       attr_reader :ignore_blank, :dropdown, :show_input, :show_error
 
-    def initialize(worksheet, param)
-      @worksheet     = worksheet
+    def initialize(parser, param)
+      @parser        = parser
       @cells         = param[:cells]
       @validate      = param[:validate]
       @criteria      = param[:criteria]
@@ -148,8 +148,8 @@ class Worksheet < BIFFWriter
       flags |= dv.criteria    << 20
 
       # Pack the validation formulas.
-      formula_1 = @worksheet.pack_dv_formula(dv.value)
-      formula_2 = @worksheet.pack_dv_formula(dv.maximum)
+      formula_1 = pack_dv_formula(dv.value)
+      formula_2 = pack_dv_formula(dv.maximum)
 
       # Pack the input and error dialog strings.
       input_title   = pack_dv_string(dv.input_title,   32 )
@@ -214,62 +214,62 @@ class Worksheet < BIFFWriter
       ruby_18 { [str_length, encoding].pack('vC') + string } ||
       ruby_19 { [str_length, encoding].pack('vC') + string.force_encoding('BINARY') }
     end
+
+    #
+    # Pack the formula used in the DV record. This is the same as an cell formula
+    # with some additional header information. Note, DV formulas in Excel use
+    # relative addressing (R1C1 and ptgXxxN) however we use the Formula.pm's
+    # default absolute addressing (A1 and ptgXxx).
+    #
+    def pack_dv_formula(formula = nil)   #:nodoc:
+      encoding    = 0
+      length      = 0
+      unused      = 0x0000
+      tokens      = []
+
+      # Return a default structure for unused formulas.
+      return [0, unused].pack('vv') unless formula && formula != ''
+
+      # Pack a list array ref as a null separated string.
+      if formula.respond_to?(:to_ary)
+        formula   = formula.join("\0")
+        formula   = '"' + formula + '"'
+      end
+
+      # Strip the = sign at the beginning of the formula string
+      formula = formula.to_s unless formula.respond_to?(:to_str)
+      formula.sub!(/^=/, '')
+
+      # In order to raise formula errors from the point of view of the calling
+      # program we use an eval block and re-raise the error from here.
+      #
+      tokens = @parser.parse_formula(formula)   # ????
+
+      #       if ($@) {
+      #           $@ =~ s/\n$//;  # Strip the \n used in the Formula.pm die()
+      #           croak $@;       # Re-raise the error
+      #       }
+      #       else {
+      #           # TODO test for non valid ptgs such as Sheet2!A1
+      #       }
+
+      # Force 2d ranges to be a reference class.
+      tokens.each do |t|
+        t.sub!(/_range2d/, "_range2dR")
+        t.sub!(/_name/, "_nameR")
+      end
+
+      # Parse the tokens into a formula string.
+      formula = @parser.parse_tokens(tokens)
+
+      [formula.length, unused].pack('vv') + formula
+    end
   end
 
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
-
-  #
-  # Pack the formula used in the DV record. This is the same as an cell formula
-  # with some additional header information. Note, DV formulas in Excel use
-  # relative addressing (R1C1 and ptgXxxN) however we use the Formula.pm's
-  # default absolute addressing (A1 and ptgXxx).
-  #
-  def pack_dv_formula(formula = nil)   #:nodoc:
-    encoding    = 0
-    length      = 0
-    unused      = 0x0000
-    tokens      = []
-
-    # Return a default structure for unused formulas.
-    return [0, unused].pack('vv') unless formula && formula != ''
-
-    # Pack a list array ref as a null separated string.
-    if formula.respond_to?(:to_ary)
-      formula   = formula.join("\0")
-      formula   = '"' + formula + '"'
-    end
-
-    # Strip the = sign at the beginning of the formula string
-    formula = formula.to_s unless formula.respond_to?(:to_str)
-    formula.sub!(/^=/, '')
-
-    # In order to raise formula errors from the point of view of the calling
-    # program we use an eval block and re-raise the error from here.
-    #
-    tokens = parser.parse_formula(formula)   # ????
-
-    #       if ($@) {
-    #           $@ =~ s/\n$//;  # Strip the \n used in the Formula.pm die()
-    #           croak $@;       # Re-raise the error
-    #       }
-    #       else {
-    #           # TODO test for non valid ptgs such as Sheet2!A1
-    #       }
-
-    # Force 2d ranges to be a reference class.
-    tokens.each do |t|
-      t.sub!(/_range2d/, "_range2dR")
-      t.sub!(/_name/, "_nameR")
-    end
-
-    # Parse the tokens into a formula string.
-    formula = parser.parse_tokens(tokens)
-
-    [formula.length, unused].pack('vv') + formula
-  end
 
   attr_reader :title_range, :print_range, :filter_area
   #
@@ -4714,7 +4714,7 @@ class Worksheet < BIFFWriter
     end
 
     # Store the validation information until we close the worksheet.
-    @validations << DataValidation.new(self, param)
+    @validations << DataValidation.new(parser, param)
   end
 
   def is_name_utf16be?  # :nodoc:

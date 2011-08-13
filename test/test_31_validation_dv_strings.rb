@@ -19,7 +19,7 @@ class TC_validation_dv_strings < Test::Unit::TestCase
   def setup
     workbook   = WriteExcel.new(StringIO.new)
     worksheet  = workbook.add_worksheet
-    @data_validation = Writeexcel::Worksheet::DataValidation.new(worksheet, {})
+    @data_validation = Writeexcel::Worksheet::DataValidation.new(worksheet.__send__("parser"), {})
   end
 
   def test_empty_string
