@@ -105,31 +105,19 @@ class Worksheet < BIFFWriter
       flags |= @show_error   << 19
       flags |= @criteria     << 20
 
-      # Pack the validation formulas.
-      formula_1 = pack_dv_formula(@value)
-      formula_2 = pack_dv_formula(@maximum)
-
-      # Pack the input and error dialog strings.
-      input_title   = pack_dv_string(@input_title,   32 )
-      error_title   = pack_dv_string(@error_title,   32 )
-      input_message = pack_dv_string(@input_message, 255)
-      error_message = pack_dv_string(@error_message, 255)
-
       # Pack the DV cell data.
-      dv_count = @cells.size
-      dv_data  = [dv_count].pack('v')
-      @cells.each do |range|
-        dv_data += [range[0], range[2], range[1], range[3]].pack('vvvv')
+      dv_data = @cells.inject([@cells.size].pack('v')) do |result, range|
+        result + [range[0], range[2], range[1], range[3]].pack('vvvv')
       end
 
       # Pack the record.
       data   = [flags].pack('V')     +
-        input_title                  +
-        error_title                  +
-        input_message                +
-        error_message                +
-        formula_1                    +
-        formula_2                    +
+        pack_dv_string(@input_title,   32 ) +
+        pack_dv_string(@error_title,   32 ) +
+        pack_dv_string(@input_message, 255) +
+        pack_dv_string(@error_message, 255) +
+        pack_dv_formula(@value)             +
+        pack_dv_formula(@maximum)           +
         dv_data
 
       header = [record, data.bytesize].pack('vv')
