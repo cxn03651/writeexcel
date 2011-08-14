@@ -6548,39 +6548,6 @@ class Worksheet < BIFFWriter
     @object_ids[0] = spid
   end
 
-  def images_parent_msodrawing_record(num_images, charts_size, num_filters, num_comments, ids, spid, image_id, vertices)
-    dg_length   =  156 + 84*(num_images -1)
-    spgr_length =  132 + 84*(num_images -1)
-
-    dg_length   += 120 * charts_size
-    spgr_length += 120 * charts_size
-
-    dg_length   += 96 * num_filters
-    spgr_length += 96 * num_filters
-
-    dg_length   += 128 * num_comments
-    spgr_length += 128 * num_comments
-
-    data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-    spid += 1
-    data +=
-      store_mso_sp_container(76)             +
-      store_mso_sp(75, spid, 0x0A00)
-    spid += 1
-    data +=
-      store_mso_opt_image(image_id)          +
-      store_mso_client_anchor(2, *vertices)  +
-      store_mso_client_data()
-  end
-
-  def images_child_msodrawing_record(spid, image_id, vertices)
-    data = store_mso_sp_container(76) + store_mso_sp(75, spid, 0x0A00)
-    spid = spid + 1
-    data += store_mso_opt_image(image_id)    +
-      store_mso_client_anchor(2, *vertices)  +
-      store_mso_client_data
-  end
-
   def store_child_mso_record(spid, *vertices)  # :nodoc:
     store_mso_sp_container(88)             +
     store_mso_sp(201, spid, 0x0A00)        +
