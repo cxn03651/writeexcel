@@ -148,11 +148,11 @@ class BIFFWriter < WriteFile       #:nodoc:
   # option to bypass this function.
   #
   def add_continue(data)
-    record      = 0x003C # Record identifier
-    header  = [record, @limit].pack("vv")
-
     # Skip this if another method handles the continue blocks.
     return data if @ignore_continue
+
+    record  = 0x003C # Record identifier
+    header  = [record, @limit].pack("vv")
 
     # The first 2080/8224 bytes remain intact. However, we have to change
     # the length field of the record.
