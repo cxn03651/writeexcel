@@ -231,7 +231,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   def check_volatile(tokens)
     volatile = 0
 
-    (0..tokens.size - 1).each do |i|
+    tokens.each_index do |i|
       # If the next token is a function check if it is volatile.
       if tokens[i] == '_func' and @functions[tokens[i+1]][3] != 0
         volatile = 1

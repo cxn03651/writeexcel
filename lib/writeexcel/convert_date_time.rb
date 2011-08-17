@@ -102,10 +102,7 @@ module ConvertDateTime
     return nil if day   < 1     or day   > mdays[month -1]
 
     # Accumulate the number of days since the epoch.
-    days = day                               # Add days for current month
-    (0 .. month-2).each do |m|
-      days += mdays[m]                      # Add days for past months
-    end
+    days = mdays[0, month - 1].inject(day) {|result, mday| result + mday} # days from 1, Jan
     days += range *365                       # Add days for past years
     days += ((range)                /  4)    # Add leapdays
     days -= ((range + offset)       /100)    # Subtract 100 year leapdays

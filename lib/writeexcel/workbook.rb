@@ -1426,9 +1426,7 @@ class Workbook < BIFFWriter
     font    = format.get_font
 
     # Fonts are 0-indexed. According to the SDK there is no index 4,
-    (0..3).each do
-      append(font)
-    end
+    4.times { append(font) }
 
     # Add the default fonts for charts and comments. This aren't connected
     # to XF formats. Note, the font size, and some other properties of
