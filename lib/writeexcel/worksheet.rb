@@ -2286,7 +2286,7 @@ class Worksheet < BIFFWriter
     data   = [row, col, xf].pack('vvv')
     xl_double = [num].pack("d")
 
-    xl_double.reverse! if @byte_order != 0 && @byte_order != ''
+    xl_double.reverse! if @byte_order
 
     # Store the data or write immediately depending on the compatibility mode.
     if compatibility?
@@ -5763,9 +5763,9 @@ class Worksheet < BIFFWriter
     numHdr = [numHdr].pack('d')
     numFtr = [numFtr].pack('d')
 
-    if @byte_order != 0 && @byte_order != ''
-      numHdr = numHdr.reverse
-      numFtr = numFtr.reverse
+    if @byte_order
+      numHdr.reverse!
+      numFtr.reverse!
     end
 
     header = [record, length].pack('vv')
@@ -5873,7 +5873,7 @@ class Worksheet < BIFFWriter
     header  = [record, length].pack('vv')
     data    = [margin].pack('d')
 
-    data = data.reverse if @byte_order != 0 && @byte_order != ''
+    data.reverse! if @byte_order
 
     prepend(header, data)
   end
@@ -6524,7 +6524,7 @@ class Worksheet < BIFFWriter
   #
   def pack_number_doper(operator, number)   #:nodoc:
     number = [number].pack('d')
-    number.reverse! if @byte_order != '' && @byte_order != 0
+    number.reverse! if @byte_order
 
     [0x04, operator].pack('CC') + number
   end

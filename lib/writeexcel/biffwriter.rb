@@ -20,7 +20,7 @@ class BIFFWriter < WriteFile       #:nodoc:
   BIFF_Version = 0x0600
   BigEndian    = [1].pack("I") == [1].pack("N")
 
-  attr_reader :byte_order, :data, :datasize
+  attr_reader :data, :datasize
 
   ######################################################################
   # The args here aren't used by BIFFWriter, but they are needed by its
@@ -47,9 +47,9 @@ class BIFFWriter < WriteFile       #:nodoc:
     number  = hexdata.pack("C8")
 
     if number == teststr
-      @byte_order = 0    # Little Endian
+      @byte_order = false    # Little Endian
     elsif number == teststr.reverse
-      @byte_order = 1    # Big Endian
+      @byte_order = true     # Big Endian
     else
       # Give up. I'll fix this in a later version.
       raise( "Required floating point format not supported "  +
