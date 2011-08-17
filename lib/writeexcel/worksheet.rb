@@ -6715,10 +6715,6 @@ class Worksheet < BIFFWriter
     @object_ids[0] = spid
   end
 
-  def unpack_record(data)  # :nodoc:
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
   #
   # Store the collections of records that make up cell comments.
   #

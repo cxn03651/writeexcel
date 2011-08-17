@@ -446,10 +446,6 @@ class Worksheet < BIFFWriter
 
       @worksheet.append(header, data)
     end
-
-    def unpack_record(data)  # :nodoc:
-      data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-    end
   end
 end
 
