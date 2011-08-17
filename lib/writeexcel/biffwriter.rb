@@ -28,21 +28,9 @@ class BIFFWriter < WriteFile       #:nodoc:
   ######################################################################
 
   def initialize
+    super
     set_byte_order
-    @data            = ''
-    @datasize        = 0
-    @limit           = 8224
     @ignore_continue = false
-
-    # Open a tmp file to store the majority of the Worksheet data. If this fails,
-    # for example due to write permissions, store the data in memory. This can be
-    # slow for large files.
-    @filehandle = Tempfile.new('writeexcel')
-    @filehandle.binmode
-
-    # failed. store temporary data in memory.
-    @using_tmpfile = @filehandle ? true : false
-
   end
 
   ###############################################################################
