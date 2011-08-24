@@ -334,13 +334,13 @@ class Worksheet < BIFFWriter
       record      = 0x00EC           # Record identifier
       length      = data.bytesize
       header      = [record, length].pack("vv")
-      @worksheet.append(header, data)
+      append(header, data)
 
       spid
     end
 
     def store_obj_comment(obj_id)
-      @worksheet.append(obj_comment_record(obj_id))
+      append(obj_comment_record(obj_id))
     end
 
     #
@@ -353,7 +353,7 @@ class Worksheet < BIFFWriter
       data        = store_mso_client_text_box
       header  = [record, length].pack('vv')
 
-      @worksheet.append(header, data)
+      append(header, data)
     end
 
     #
@@ -385,7 +385,7 @@ class Worksheet < BIFFWriter
       # Pack the record.
       header  = [record, length].pack('vv')
       data    = [grbit, rotation, reserved, reserved, string_len, format_len, reserved].pack("vvVvvvV")
-      @worksheet.append(header, data)
+      append(header, data)
     end
 
     #
@@ -424,7 +424,7 @@ class Worksheet < BIFFWriter
       length  = data.bytesize
       header  = [record, length].pack('vv')
 
-      @worksheet.append(header, data)
+      append(header, data)
     end
 
     #
@@ -444,7 +444,11 @@ class Worksheet < BIFFWriter
       length  = data.bytesize
       header  = [record, length].pack("vv")
 
-      @worksheet.append(header, data)
+      append(header, data)
+    end
+
+    def append(*args)
+      @worksheet.append(*args)
     end
   end
 end
