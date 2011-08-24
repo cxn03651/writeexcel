@@ -6731,16 +6731,10 @@ class Worksheet < BIFFWriter
     # Number of objects written so far.
     num_objects     = images_size + @filter_area.count + charts_size
 
-    for i in (0 .. num_comments-1)
-      comment = @comments.array[i]
-      spid = comment.store_comment_record(i, num_objects, num_comments, ids, spid)
-    end
+    @comments.array.each_index { |i| spid = @comments.array[i].store_comment_record(i, num_objects, num_comments, ids, spid) }
 
     # Write the NOTE records after MSODRAWIING records.
-    for i in (0 .. num_comments-1)
-      comment = @comments.array[i]
-      append(comment.note_record(num_objects + i + 1))
-    end
+    @comments.array.each_index { |i| @comments.array[i].store_note_record(num_objects + i + 1) }
   end
 
   #

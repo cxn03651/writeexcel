@@ -80,7 +80,7 @@ class Worksheet < BIFFWriter
     #
     # Write the worksheet NOTE record that is part of cell comments.
     #
-    def note_record(obj_id)   #:nodoc:
+    def store_note_record(obj_id)   #:nodoc:
       comment_author = author
       comment_author_enc = author_encoding
       ruby_19 { comment_author = [comment_author].pack('a*') if comment_author.ascii_only? }
@@ -114,7 +114,7 @@ class Worksheet < BIFFWriter
       length  = data.bytesize + comment_author.bytesize
       header  = [record, length].pack("vv")
 
-      header << data << comment_author
+      append(header, data, comment_author)
     end
 
     #
