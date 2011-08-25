@@ -30,7 +30,7 @@ module Writeexcel
       process
     end
 
-    def image_record(i, num_images, num_charts, num_filters, num_comments, ids, spid)
+    def store_image_record(i, num_images, num_charts, num_filters, num_comments, ids, spid)
       image_width  = width
       image_height = height
 
@@ -51,7 +51,7 @@ module Writeexcel
       length = data.bytesize
       header = [record, length].pack("vv")
 
-      header + data
+      append(header, data)
     end
 
     private
@@ -209,6 +209,10 @@ module Writeexcel
       data += @worksheet.store_mso_opt_image(image_id)    +
         @worksheet.store_mso_client_anchor(2, *vertices)  +
         @worksheet.store_mso_client_data
+    end
+
+    def append(*args)
+      @worksheet.append(*args)
     end
   end
 end

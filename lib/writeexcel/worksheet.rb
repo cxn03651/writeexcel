@@ -6539,9 +6539,8 @@ class Worksheet < BIFFWriter
     ids             = @object_ids.dup
     spid            = ids.shift
 
-    for i in (0 .. @images.array.size - 1)
-      image = @images.array[i]
-      append(image.image_record(i, @images.array.size, charts_size, @filter_area.count, comments_size, ids, spid))
+    @images.array.each_index do |i|
+      @images.array[i].store_image_record(i, @images.array.size, charts_size, @filter_area.count, comments_size, ids, spid)
       store_obj_image(i + 1)
     end
 
