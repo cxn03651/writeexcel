@@ -7233,7 +7233,7 @@ class Worksheet < BIFFWriter
     # TODO. Won't work for external data refs. Also should use a more direct
     #       method.
     #
-    formula = "=#{@name}!A1"
+    formula = "='#{@name}'!A1"
     store_formula(formula)
 
     @object_ids[0] = spid
