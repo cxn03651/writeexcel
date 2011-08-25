@@ -77,6 +77,9 @@ when use urf8 string data.
 
 == Recent Changes
 
+v0.6.9
+* Bug fix. When sheetname is cell's A1 notation such as 'D1', Worksheet#autofilter causes exception.
+
 v0.6.8
 * Bug fix. Worksheet#protect doesn't work well.
 
