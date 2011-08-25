@@ -29,7 +29,7 @@ class TC_note < Test::Unit::TestCase
     target  = %w(
         1C 00 0C 00 02 00 00 00 00 00 01 00 00 00 00 00
     ).join(' ')
-    result = unpack_record(comment.note_record(obj_id))
+    result = unpack_record(comment.store_note_record(obj_id))
     assert_equal(target, result, caption)
   end
 
@@ -42,7 +42,7 @@ class TC_note < Test::Unit::TestCase
         1C 00 14 00 02 00 00 00 00 00 01 00 08 00 00 55
         73 65 72 6E 61 6D 65 00
     ).join(' ')
-    result = unpack_record(comment.note_record(obj_id))
+    result = unpack_record(comment.store_note_record(obj_id))
     assert_equal(target, result, caption)
   end
 
