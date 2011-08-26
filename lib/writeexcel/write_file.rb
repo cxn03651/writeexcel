@@ -52,7 +52,7 @@ class WriteFile
   def join_data(args)
     data =
       ruby_18 { args.join } ||
-      ruby_19 { args.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join }
+      ruby_19 { args.compact.collect{ |arg| arg.dup.force_encoding('ASCII-8BIT') }.join }
     # Add CONTINUE records if necessary
     data = add_continue(data) if data.bytesize > @limit
 
