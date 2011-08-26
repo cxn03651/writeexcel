@@ -204,6 +204,129 @@ class Worksheet < BIFFWriter
     def inside?(col)
       @col_min <= col && col <= @col_max
     end
+
+    def store
+      record          = 0x00EC           # Record identifier
+
+      ids             = @worksheet.object_ids.dup
+      spid            = ids.shift
+
+      # Number of objects written so far.
+      num_objects     = @worksheet.images_size + @worksheet.charts_size
+
+      (0 .. count-1).each do |i|
+        if i == 0 && num_objects
+          spid, data = write_parent_msodrawing_record(count, @worksheet.comments_size, ids, spid, vertices(i))
+        else
+          spid, data = write_child_msodrawing_record(spid, vertices(i))
+        end
+        length      = data.bytesize
+        header      = [record, length].pack("vv")
+        append(header, data)
+
+        store_obj_filter(num_objects + i + 1, col_min + i)
+      end
+      spid
+    end
+
+    private
+
+    def write_parent_msodrawing_record(num_filters, num_comments, ids, spid, vertices)
+      # Write the parent MSODRAWIING record.
+      dg_length   = 168 + 96 * (num_filters - 1)
+      spgr_length = 144 + 96 * (num_filters - 1)
+
+      dg_length   += 128 * num_comments
+      spgr_length += 128 * num_comments
+
+      data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+      spid += 1
+      data += store_child_mso_record(spid, *vertices)
+      spid += 1
+      [spid, data]
+    end
+
+    def write_child_msodrawing_record(spid, vertices)
+      data = store_child_mso_record(spid, *vertices)
+      spid += 1
+      [spid, data]
+    end
+
+    def store_parent_mso_record(dg_length, ids, spgr_length, spid)
+      @worksheet.__send__("store_parent_mso_record", dg_length, ids, spgr_length, spid)
+    end
+
+    def store_child_mso_record(spid, *vertices)
+      @worksheet.__send__("store_child_mso_record", spid, *vertices)
+    end
+
+    def vertices(i)
+      [
+        col_min + i,     0,
+        row_min,         0,
+        col_min + i + 1, 0,
+        row_min + 1,     0
+      ]
+    end
+
+    #
+    # Write the OBJ record that is part of filter records.
+    #    obj_id        # Object ID number.
+    #    col
+    #
+    def store_obj_filter(obj_id, col)   #:nodoc:
+      record      = 0x005D   # Record identifier
+      length      = 0x0046   # Bytes to follow
+
+      obj_type    = 0x0014   # Object type (combo box).
+      data        = ''       # Record data.
+
+      sub_record  = 0x0000   # Sub-record identifier.
+      sub_length  = 0x0000   # Length of sub-record.
+      sub_data    = ''       # Data of sub-record.
+      options     = 0x2101
+      reserved    = 0x0000
+
+      # Add ftCmo (common object data) subobject
+      sub_record  = 0x0015   # ftCmo
+      sub_length  = 0x0012
+      sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
+      data        = [sub_record, sub_length].pack('vv') + sub_data
+
+      # Add ftSbs Scroll bar subobject
+      sub_record  = 0x000C   # ftSbs
+      sub_length  = 0x0014
+      sub_data    = ['0000000000000000640001000A00000010000100'].pack('H*')
+      data        += [sub_record, sub_length].pack('vv') + sub_data
+
+      # Add ftLbsData (List box data) subobject
+      sub_record  = 0x0013   # ftLbsData
+      sub_length  = 0x1FEE   # Special case (undocumented).
+
+      # If the filter is active we set one of the undocumented flags.
+
+      if @worksheet.instance_variable_get(:@filter_cols)[col]
+        sub_data       = ['000000000100010300000A0008005700'].pack('H*')
+      else
+        sub_data       = ['00000000010001030000020008005700'].pack('H*')
+      end
+
+      data        += [sub_record, sub_length].pack('vv') + sub_data
+
+      # Add ftEnd (end of object) subobject
+      sub_record  = 0x0000   # ftNts
+      sub_length  = 0x0000
+      data        += [sub_record, sub_length].pack('vv')
+
+      # Pack the record.
+      header  = [record, length].pack('vv')
+
+      append(header, data)
+    end
+
+    def append(*args)
+      @worksheet.append(*args)
+    end
   end
 end
 

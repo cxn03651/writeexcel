@@ -49,7 +49,7 @@ class Worksheet < BIFFWriter
   StrMax   = 0      # :nodoc:
   Buffer   = 4096   # :nodoc:
 
-  attr_reader :title_range, :print_range, :filter_area
+  attr_reader :title_range, :print_range, :filter_area, :object_ids
   #
   # Constructor. Creates a new Worksheet object from a BIFFwriter object
   #
@@ -6653,55 +6653,10 @@ class Worksheet < BIFFWriter
   # Store the collections of records that make up filters.
   #
   def store_filters   #:nodoc:
-    record          = 0x00EC           # Record identifier
-    length          = 0x0000           # Bytes to follow
-
-    ids             = @object_ids.dup
-    spid            = ids.shift
-
-    filter_area     = @filter_area
-    num_filters     = @filter_area.count
-
-    num_comments    = comments_size
-
-    # Number of objects written so far.
-    num_objects     = images_size + charts_size
-
     # Skip this if there aren't any filters.
-    return if num_filters == 0
+    return if @filter_area.count == 0
 
-    (0 .. num_filters-1).each do |i|
-      vertices = [
-        @filter_area.col_min + i,     0,
-        @filter_area.row_min,         0,
-        @filter_area.col_min + i + 1, 0,
-        @filter_area.row_min + 1,     0
-      ]
-
-      if i == 0 && num_objects
-        # Write the parent MSODRAWIING record.
-        dg_length   = 168 + 96 * (num_filters -1)
-        spgr_length = 144 + 96 * (num_filters -1)
-
-        dg_length   += 128 * num_comments
-        spgr_length += 128 * num_comments
-
-        data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
-        spid += 1
-        data += store_child_mso_record(spid, *vertices)
-        spid += 1
-
-      else
-        # Write the child MSODRAWIING record.
-        data = store_child_mso_record(spid, *vertices)
-        spid += 1
-      end
-      length      = data.bytesize
-      header      = [record, length].pack("vv")
-      append(header, data)
-
-      store_obj_filter(num_objects + i + 1, @filter_area.col_min + i)
-    end
+    spid = @filter_area.store
 
     # Simulate the EXTERNSHEET link between the filter and data using a formula
     # such as '=Sheet1!A1'.
@@ -6922,61 +6877,6 @@ class Worksheet < BIFFWriter
 
     append(header, data)
 
-  end
-
-  #
-  # Write the OBJ record that is part of filter records.
-  #    obj_id        # Object ID number.
-  #    col
-  #
-  def store_obj_filter(obj_id, col)   #:nodoc:
-    record      = 0x005D   # Record identifier
-    length      = 0x0046   # Bytes to follow
-
-    obj_type    = 0x0014   # Object type (combo box).
-    data        = ''       # Record data.
-
-    sub_record  = 0x0000   # Sub-record identifier.
-    sub_length  = 0x0000   # Length of sub-record.
-    sub_data    = ''       # Data of sub-record.
-    options     = 0x2101
-    reserved    = 0x0000
-
-    # Add ftCmo (common object data) subobject
-    sub_record  = 0x0015   # ftCmo
-    sub_length  = 0x0012
-    sub_data    = [obj_type, obj_id, options, reserved, reserved, reserved].pack('vvvVVV')
-    data        = [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftSbs Scroll bar subobject
-    sub_record  = 0x000C   # ftSbs
-    sub_length  = 0x0014
-    sub_data    = ['0000000000000000640001000A00000010000100'].pack('H*')
-    data        += [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftLbsData (List box data) subobject
-    sub_record  = 0x0013   # ftLbsData
-    sub_length  = 0x1FEE   # Special case (undocumented).
-
-    # If the filter is active we set one of the undocumented flags.
-
-    if @filter_cols[col]
-      sub_data       = ['000000000100010300000A0008005700'].pack('H*')
-    else
-      sub_data       = ['00000000010001030000020008005700'].pack('H*')
-    end
-
-    data        += [sub_record, sub_length].pack('vv') + sub_data
-
-    # Add ftEnd (end of object) subobject
-    sub_record  = 0x0000   # ftNts
-    sub_length  = 0x0000
-    data        += [sub_record, sub_length].pack('vv')
-
-    # Pack the record.
-    header  = [record, length].pack('vv')
-
-    append(header, data)
   end
 
   #
