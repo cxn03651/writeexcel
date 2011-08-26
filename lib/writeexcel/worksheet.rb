@@ -4938,7 +4938,7 @@ class Worksheet < BIFFWriter
 
     chars.collect! do |char|
       i += 1
-      char     = char[0] << i
+      char     = char.ord << i
       low_15   = char & 0x7fff
       high_15  = char & 0x7fff << 15
       high_15  = high_15 >> 15
