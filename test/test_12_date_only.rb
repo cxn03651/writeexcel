@@ -25,7 +25,7 @@ class TC_data_only < Test::Unit::TestCase
   end
 
   def test_the_dates_generated_by_excel_1900
-    data_generated_excel_1900.each do |line|
+    data_generated_excel_1900.each_line do |line|
       line = line.sub(/^\s*/,'')
       braak if line =~ /^\s*# stop/  # For debugging
 
@@ -39,7 +39,7 @@ class TC_data_only < Test::Unit::TestCase
   end
 
   def test_the_dates_generated_by_excel_1904
-    data_generated_excel_1904.each do |line|
+    data_generated_excel_1904.each_line do |line|
       line = line.sub(/^\s*/,'')
       braak if line =~ /^\s*# stop/  # For debugging
 
