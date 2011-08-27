@@ -1281,8 +1281,6 @@ class Workbook < BIFFWriter
   def calc_mso_sizes       #:nodoc:
     mso_size        = 0    # Size of the MSODRAWINGGROUP record
     max_spid        = 1024 # spidMax
-    num_clusters    = 1    # cidcl
-    shapes_saved    = 0    # cspSaved
     drawings_saved  = 0    # cdgSaved
     clusters        = []
 
@@ -1297,52 +1295,23 @@ class Workbook < BIFFWriter
     #
     @worksheets.each do |sheet|
       next unless sheet.type == 0x0000
+      next if sheet.num_shapes == 1
 
-      num_images     = sheet.num_images
-      num_comments   = sheet.comments_size
-      num_charts     = sheet.charts_size
-      num_filters    = sheet.filter_count
-
-      next if num_images + num_comments + num_charts + num_filters == 0
-
-      # Include 1 parent MSODRAWING shape, per sheet, in the shape count.
-      num_shapes    = 1 + num_images   +  num_comments +
-                          num_charts   +  num_filters
-      shapes_saved += num_shapes
-      mso_size     += sheet.image_mso_size
-
-      # Add a drawing object for each sheet with comments.
-      drawings_saved += 1
-
-      # For each sheet start the spids at the next 1024 interval.
-      max_spid   = 1024 * (1 + Integer((max_spid -1)/1024.0))
-      start_spid = max_spid
-
-      # Max spid for each sheet and eventually for the workbook.
-      max_spid  += num_shapes
-
-      # Store the cluster ids
-      i = num_shapes
-      while i > 0
-        num_clusters  += 1
-        mso_size      += 8
-        size           = i > 1024 ? 1024 : i
-
-        clusters.push([drawings_saved, size])
-        i -= 1024
-      end
-
-      # Pass calculated values back to the worksheet
-      sheet.object_ids = [start_spid, drawings_saved, num_shapes, max_spid -1]
+      mso_size, drawings_saved, max_spid, start_spid =
+        sheet.push_object_ids(mso_size, drawings_saved, max_spid, start_spid, clusters)
     end
 
 
     # Calculate the MSODRAWINGGROUP size if we have stored some shapes.
-    mso_size              += 86 if mso_size != 0 # Smallest size is 86+8=94
+    mso_size += 86 if mso_size != 0 # Smallest size is 86+8=94
+
+    shapes_saved = sheets.collect { |sheet| sheet.num_shapes }.
+                   select { |num_shapes| num_shapes > 1 }.
+                   inject(0) { |result, num_shapes| result + num_shapes }
 
     @mso_size      = mso_size
     @mso_clusters  = [
-      max_spid, num_clusters, shapes_saved,
+      max_spid, clusters.size + 1, shapes_saved,
       drawings_saved, clusters
     ]
   end

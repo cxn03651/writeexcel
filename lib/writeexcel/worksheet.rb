@@ -4348,10 +4348,6 @@ class Worksheet < BIFFWriter
     @hidden = val
   end
 
-  def object_ids=(val)  # :nodoc:
-    @object_ids = val
-  end
-
   def num_images  # :nodoc:
     @num_images
   end
@@ -4639,6 +4635,42 @@ class Worksheet < BIFFWriter
     data      = [@offset, grbit, cch, encoding].pack("VvCC")
 
     header + data + sheetname
+  end
+
+  def num_shapes
+    1 + num_images + comments_size + charts_size + filter_count
+  end
+
+  def push_object_ids(mso_size, drawings_saved, max_spid, start_spid, clusters)
+    mso_size     += image_mso_size
+
+    # Add a drawing object for each sheet with comments.
+    drawings_saved += 1
+
+    # For each sheet start the spids at the next 1024 interval.
+    max_spid   = 1024 * (1 + Integer((max_spid -1)/1024.0))
+    start_spid = max_spid
+
+    # Max spid for each sheet and eventually for the workbook.
+    max_spid  += num_shapes
+
+    # Store the cluster ids
+    mso_size += 8 * (num_shapes / 1024 + 1)
+    push_cluster(num_shapes, drawings_saved, clusters)
+
+    # Pass calculated values back to the worksheet
+    @object_ids = [start_spid, drawings_saved, num_shapes, max_spid -1]
+
+    [mso_size, drawings_saved, max_spid, start_spid]
+  end
+
+  def push_cluster(num_shapes, drawings_saved, clusters)
+    i = num_shapes
+    while i > 0
+      size = i > 1024 ? 1024 : i
+      clusters << [drawings_saved, size]
+      i -= 1024
+    end
   end
 
   ###############################################################################
