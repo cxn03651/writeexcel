@@ -4609,6 +4609,38 @@ class Worksheet < BIFFWriter
     @comments.visible?
   end
 
+  #
+  # Excel BIFF BOUNDSHEET record.
+  #
+  #    sheetname  # Worksheet name
+  #    offset     # Location of worksheet BOF
+  #    type       # Worksheet type
+  #    hidden     # Worksheet hidden flag
+  #    encoding   # Sheet name encoding
+  #
+  def boundsheet       #:nodoc:
+    hidden    = self.hidden? ? 1 : 0
+    encoding  = self.is_name_utf16be? ? 1 : 0
+
+    record    = 0x0085                  # Record identifier
+    length    = 0x08 + @name.bytesize   # Number of bytes to follow
+
+    cch       = @name.bytesize          # Length of sheet name
+
+    # Character length is num of chars not num of bytes
+    cch /= 2 if is_name_utf16be?
+
+    # Change the UTF-16 name from BE to LE
+    sheetname = is_name_utf16be? ? @name.unpack('v*').pack('n*') : @name
+
+    grbit     = @type | hidden
+
+    header    = [record, length].pack("vv")
+    data      = [@offset, grbit, cch, encoding].pack("VvCC")
+
+    header + data + sheetname
+  end
+
   ###############################################################################
   #
   # Internal methods

@@ -1682,29 +1682,7 @@ class Workbook < BIFFWriter
   #    encoding   # Sheet name encoding
   #
   def store_boundsheet(sheet)       #:nodoc:
-    sheetname = sheet.name
-    offset    = sheet.offset
-    type      = sheet.type
-    hidden    = sheet.hidden? ? 1 : 0
-    encoding  = sheet.is_name_utf16be? ? 1 : 0
-
-    record    = 0x0085                      # Record identifier
-    length    = 0x08 + sheetname.bytesize   # Number of bytes to follow
-
-    cch       = sheetname.bytesize          # Length of sheet name
-
-    grbit     = type | hidden
-
-    # Character length is num of chars not num of bytes
-    cch /= 2 if encoding != 0
-
-    # Change the UTF-16 name from BE to LE
-    sheetname = sheetname.unpack('v*').pack('n*') if encoding != 0
-
-    header    = [record, length].pack("vv")
-    data      = [offset, grbit, cch, encoding].pack("VvCC")
-
-    append(header, data, sheetname)
+    append(sheet.boundsheet)
   end
 
   #
