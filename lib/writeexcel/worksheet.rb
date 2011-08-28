@@ -3240,23 +3240,20 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
 
-    return -1 if (args.size < 3)                 # Check the number of args
+    return -1 if args.size < 3                    # Check the number of args
 
-    row       = args[0]                           # Zero indexed row
-    col       = args[1]                           # Zero indexed column
-    str       = args[2]
+    row, col, str, format = args
 
     # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
+    return -2 unless check_dimensions(row, col) == 0
 
-    error     = 0
     date_time = convert_date_time(str, date_1904?)
 
     if date_time
       error = write_number(row, col, date_time, args[3])
     else
       # The date isn't valid so write it as a string.
-      write_string(row, col, str, args[3])
+      write_string(row, col, str, format)
       error = -3
     end
     error
