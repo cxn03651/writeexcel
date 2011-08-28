@@ -41,12 +41,12 @@ class TC_escher < Test::Unit::TestCase
 
   def test_for_store_mso_dg
     caption = sprintf(" \t_store_mso_dg()")
-    data    = [1, 2, 1025]
+    @worksheet.instance_variable_set(:@object_ids, Writeexcel::Worksheet::ObjectIds.new(nil, 1, 2, 1025))
     target  = %w( 10 00 08 F0
     08 00 00 00 02 00 00 00 01 04 00 00
     ).join(' ')
 
-    result  = unpack_record(@worksheet.__send__("store_mso_dg", *data))
+    result  = unpack_record(@worksheet.__send__("store_mso_dg"))
 
     assert_equal(target, result, caption)
   end

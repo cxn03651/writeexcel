@@ -63,11 +63,11 @@ class Worksheet < BIFFWriter
       @vertices        = calc_vertices
     end
 
-    def store_comment_record(i, num_objects, num_comments, ids, spid)
+    def store_comment_record(i, num_objects, num_comments, spid)
       str_len  = string.bytesize
       str_len  = str_len / 2 if encoding != 0 # Num of chars not bytes.
 
-      spid = store_comment_mso_drawing_record(i, num_objects, num_comments, ids, spid, visible, color, vertices)
+      spid = store_comment_mso_drawing_record(i, num_objects, num_comments, spid, visible, color, vertices)
       store_obj_comment(num_objects + i + 1)
       store_mso_drawing_text_box
       store_txo(str_len)
@@ -314,13 +314,13 @@ class Worksheet < BIFFWriter
       )
     end
 
-    def store_comment_mso_drawing_record(i, num_objects, num_comments, ids, spid, visible, color, vertices)
+    def store_comment_mso_drawing_record(i, num_objects, num_comments, spid, visible, color, vertices)
       if i == 0 && num_objects == 0
         # Write the parent MSODRAWIING record.
         dg_length   = 200 + 128 * (num_comments - 1)
         spgr_length = 176 + 128 * (num_comments - 1)
 
-        data = @worksheet.store_parent_mso_record(dg_length, ids, spgr_length, spid)
+        data = @worksheet.store_parent_mso_record(dg_length, spgr_length, spid)
         spid += 1
       else
         data = ''

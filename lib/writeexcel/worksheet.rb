@@ -44,6 +44,18 @@ class Worksheet < BIFFWriter
   require 'writeexcel/helper'
   include ConvertDateTime
 
+  class ObjectIds
+    attr_accessor :spid
+    attr_reader :drawings_saved, :num_shapes, :max_spid
+
+    def initialize(spid, drawings_saved, num_shapes, max_spid)
+      @spid = spid
+      @drawings_saved = drawings_saved
+      @num_shapes = num_shapes
+      @max_spid = max_spid
+    end
+  end
+
   RowMax   = 65536  # :nodoc:
   ColMax   = 256    # :nodoc:
   StrMax   = 0      # :nodoc:
@@ -125,7 +137,6 @@ class Worksheet < BIFFWriter
 
     @write_match         = []
 
-    @object_ids          = []
     @images              = Collection.new
     @charts              = Collection.new
     @comments            = Comments.new
@@ -4507,9 +4518,9 @@ class Worksheet < BIFFWriter
     @filter_area.count
   end
 
-  def store_parent_mso_record(dg_length, ids, spgr_length, spid)  # :nodoc:
+  def store_parent_mso_record(dg_length, spgr_length, spid)  # :nodoc:
     store_mso_dg_container(dg_length)      +
-    store_mso_dg(*ids)                     +
+    store_mso_dg                           +
     store_mso_spgr_container(spgr_length)  +
     store_mso_sp_container(40)             +
     store_mso_spgr()                       +
@@ -4659,7 +4670,7 @@ class Worksheet < BIFFWriter
     push_cluster(num_shapes, drawings_saved, clusters)
 
     # Pass calculated values back to the worksheet
-    @object_ids = [start_spid, drawings_saved, num_shapes, max_spid -1]
+    @object_ids = ObjectIds.new(start_spid, drawings_saved, num_shapes, max_spid -1)
 
     [mso_size, drawings_saved, max_spid, start_spid]
   end
@@ -6600,15 +6611,14 @@ class Worksheet < BIFFWriter
     # Skip this if there aren't any images.
     return if @images.array.empty?
 
-    ids             = @object_ids.dup
-    spid            = ids.shift
+    spid = @object_ids.spid
 
     @images.array.each_index do |i|
-      @images.array[i].store_image_record(i, @images.array.size, charts_size, @filter_area.count, comments_size, ids, spid)
+      @images.array[i].store_image_record(i, @images.array.size, charts_size, @filter_area.count, comments_size, spid)
       store_obj_image(i + 1)
     end
 
-    @object_ids[0] = spid
+    @object_ids.spid = spid
   end
 
   def store_child_mso_record(spid, *vertices)  # :nodoc:
@@ -6623,11 +6633,13 @@ class Worksheet < BIFFWriter
   # Store the collections of records that make up charts.
   #
   def store_charts   #:nodoc:
+      # Skip this if there aren't any charts.
+      return if charts_size == 0
+
       record          = 0x00EC           # Record identifier
       length          = 0x0000           # Bytes to follow
 
-      ids             = @object_ids.dup
-      spid            = ids.shift
+      spid            = @object_ids.spid
 
       charts          = @charts.array
       num_charts      = charts_size
@@ -6637,9 +6649,6 @@ class Worksheet < BIFFWriter
 
       # Number of objects written so far.
       num_objects     = images_size
-
-      # Skip this if there aren't any charts.
-      return if num_charts == 0
 
       (0 .. num_charts-1 ).each do |i|
         chart       =   charts[i].chart
@@ -6656,7 +6665,7 @@ class Worksheet < BIFFWriter
           dg_length   += 128 *num_comments
           spgr_length += 128 *num_comments
 
-          data  = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+          data  = store_parent_mso_record(dg_length, spgr_length, spid)
           spid += 1
           data += store_mso_sp_container_sp(spid)
           spid += 1
@@ -6682,7 +6691,7 @@ class Worksheet < BIFFWriter
       #
       store_formula("='#{@name}'!A1")
 
-      @object_ids[0] = spid
+      @object_ids.spid = spid
   end
 
   def store_mso_sp_container_sp(spid)  # :nodoc:
@@ -6730,7 +6739,7 @@ class Worksheet < BIFFWriter
     formula = "=#{@name}!A1"
     store_formula(formula)
 
-    @object_ids[0] = spid
+    @object_ids.spid = spid
   end
 
   #
@@ -6742,14 +6751,13 @@ class Worksheet < BIFFWriter
   def store_comments   #:nodoc:
     return if @comments.array.empty?
 
-    ids             = @object_ids.dup
-    spid            = ids.shift
+    spid = @object_ids.spid
     num_comments    = comments_size
 
     # Number of objects written so far.
     num_objects     = images_size + @filter_area.count + charts_size
 
-    @comments.array.each_index { |i| spid = @comments.array[i].store_comment_record(i, num_objects, num_comments, ids, spid) }
+    @comments.array.each_index { |i| spid = @comments.array[i].store_comment_record(i, num_objects, num_comments, spid) }
 
     # Write the NOTE records after MSODRAWIING records.
     @comments.array.each_index { |i| @comments.array[i].store_note_record(num_objects + i + 1) }
@@ -6769,13 +6777,13 @@ class Worksheet < BIFFWriter
   #
   # Write the Escher Dg record that is part of MSODRAWING.
   #
-  def store_mso_dg(instance, num_shapes, max_spid)   #:nodoc:
+  def store_mso_dg   #:nodoc:
     type        = 0xF008
     version     = 0
     length      = 8
-    data        = [num_shapes, max_spid].pack("VV")
+    data        = [@object_ids.num_shapes, @object_ids.max_spid].pack("VV")
 
-    add_mso_generic(type, version, instance, data, length)
+    add_mso_generic(type, version, @object_ids.drawings_saved, data, length)
   end
 
   #

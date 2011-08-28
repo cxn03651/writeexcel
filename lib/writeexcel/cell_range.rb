@@ -208,15 +208,14 @@ class Worksheet < BIFFWriter
     def store
       record          = 0x00EC           # Record identifier
 
-      ids             = @worksheet.object_ids.dup
-      spid            = ids.shift
+      spid            = @worksheet.object_ids.spid
 
       # Number of objects written so far.
       num_objects     = @worksheet.images_size + @worksheet.charts_size
 
       (0 .. count-1).each do |i|
         if i == 0 && num_objects
-          spid, data = write_parent_msodrawing_record(count, @worksheet.comments_size, ids, spid, vertices(i))
+          spid, data = write_parent_msodrawing_record(count, @worksheet.comments_size, spid, vertices(i))
         else
           spid, data = write_child_msodrawing_record(spid, vertices(i))
         end
@@ -231,7 +230,7 @@ class Worksheet < BIFFWriter
 
     private
 
-    def write_parent_msodrawing_record(num_filters, num_comments, ids, spid, vertices)
+    def write_parent_msodrawing_record(num_filters, num_comments, spid, vertices)
       # Write the parent MSODRAWIING record.
       dg_length   = 168 + 96 * (num_filters - 1)
       spgr_length = 144 + 96 * (num_filters - 1)
@@ -239,7 +238,7 @@ class Worksheet < BIFFWriter
       dg_length   += 128 * num_comments
       spgr_length += 128 * num_comments
 
-      data = store_parent_mso_record(dg_length, ids, spgr_length, spid)
+      data = store_parent_mso_record(dg_length, spgr_length, spid)
       spid += 1
       data += store_child_mso_record(spid, *vertices)
       spid += 1
@@ -252,8 +251,8 @@ class Worksheet < BIFFWriter
       [spid, data]
     end
 
-    def store_parent_mso_record(dg_length, ids, spgr_length, spid)
-      @worksheet.__send__("store_parent_mso_record", dg_length, ids, spgr_length, spid)
+    def store_parent_mso_record(dg_length, spgr_length, spid)
+      @worksheet.__send__("store_parent_mso_record", dg_length, spgr_length, spid)
     end
 
     def store_child_mso_record(spid, *vertices)
