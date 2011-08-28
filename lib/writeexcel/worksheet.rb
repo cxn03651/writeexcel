@@ -2828,18 +2828,15 @@ class Worksheet < BIFFWriter
 
     return -1 if args.size < 3   # Check the number of args
 
-    row       = args[0]      # Zero indexed row
-    col       = args[1]      # Zero indexed column
-    formula   = args[2].dup  # The formula text string
-    value     = args[4]      # The formula text string
-
-    xf        = xf_record_index(row, col, args[3])  # The cell format
+    row, col, formula, format, value = args
 
     # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
+    return -2 unless check_dimensions(row, col) == 0
+
+    xf        = xf_record_index(row, col, format)  # The cell format
 
     # Strip the = sign at the beginning of the formula string
-    formula.sub!(/^=/, '')
+    formula = formula.sub(/^=/, '')
 
     # Parse the formula using the parser in Formula.pm
     # nakamura add:  to get byte_stream, set second arg TRUE
