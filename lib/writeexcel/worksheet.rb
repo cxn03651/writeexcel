@@ -2849,61 +2849,6 @@ class Worksheet < BIFFWriter
 
   #
   # :call-seq:
-  #   store_formula(formula)  # formula : text string of formula
-  #
-  # Pre-parse a formula. This is used in conjunction with repeat_formula()
-  # to repetitively rewrite a formula without re-parsing it.
-  #
-  # The store_formula() method is used in conjunction with repeat_formula()
-  #  to speed up the generation of repeated formulas. See
-  # "Improving performance when working with formulas" in
-  # "FORMULAS AND FUNCTIONS IN EXCEL".
-  #
-  # The store_formula() method pre-parses a textual representation of a
-  # formula and stores it for use at a later stage by the repeat_formula()
-  # method.
-  #
-  # store_formula() carries the same speed penalty as write_formula(). However,
-  # in practice it will be used less frequently.
-  #
-  # The return value of this method is a scalar that can be thought of as a
-  # reference to a formula.
-  #
-  #     sin = worksheet.store_formula('=SIN(A1)')
-  #     cos = worksheet.store_formula('=COS(A1)')
-  #
-  #     worksheet.repeat_formula('B1', sin, format, 'A1', 'A2')
-  #     worksheet.repeat_formula('C1', cos, format, 'A1', 'A2')
-  #
-  # Although store_formula() is a worksheet method the return value can be used
-  # in any worksheet:
-  #
-  #     now = worksheet.store_formula('=NOW()')
-  #
-  #     worksheet1.repeat_formula('B1', now)
-  #     worksheet2.repeat_formula('B1', now)
-  #     worksheet3.repeat_formula('B1', now)
-  #
-  def store_formula(formula)       #:nodoc:
-    # Strip the = sign at the beginning of the formula string
-    formula.sub!(/^=/, '')
-
-    # In order to raise formula errors from the point of view of the calling
-    # program we use an eval block and re-raise the error from here.
-    #
-    tokens = parser.parse_formula(formula)
-
-    #       if ($@) {
-    #           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
-    #           croak $@       # Re-raise the error
-    #       }
-
-    # Return the parsed tokens in an anonymous array
-    [*tokens]
-  end
-
-  #
-  # :call-seq:
   #    repeat_formula(row, col,    formula, format, pat, rep, (pat2, rep2,, ...) -> Fixnum
   #    repeat_formula(A1_notation, formula, format, pat, rep, (pat2, rep2,, ...) -> Fixnum
   #
@@ -4689,6 +4634,61 @@ class Worksheet < BIFFWriter
 
   def display_zeros?
     !@hide_zeros
+  end
+
+  #
+  # :call-seq:
+  #   store_formula(formula)  # formula : text string of formula
+  #
+  # Pre-parse a formula. This is used in conjunction with repeat_formula()
+  # to repetitively rewrite a formula without re-parsing it.
+  #
+  # The store_formula() method is used in conjunction with repeat_formula()
+  #  to speed up the generation of repeated formulas. See
+  # "Improving performance when working with formulas" in
+  # "FORMULAS AND FUNCTIONS IN EXCEL".
+  #
+  # The store_formula() method pre-parses a textual representation of a
+  # formula and stores it for use at a later stage by the repeat_formula()
+  # method.
+  #
+  # store_formula() carries the same speed penalty as write_formula(). However,
+  # in practice it will be used less frequently.
+  #
+  # The return value of this method is a scalar that can be thought of as a
+  # reference to a formula.
+  #
+  #     sin = worksheet.store_formula('=SIN(A1)')
+  #     cos = worksheet.store_formula('=COS(A1)')
+  #
+  #     worksheet.repeat_formula('B1', sin, format, 'A1', 'A2')
+  #     worksheet.repeat_formula('C1', cos, format, 'A1', 'A2')
+  #
+  # Although store_formula() is a worksheet method the return value can be used
+  # in any worksheet:
+  #
+  #     now = worksheet.store_formula('=NOW()')
+  #
+  #     worksheet1.repeat_formula('B1', now)
+  #     worksheet2.repeat_formula('B1', now)
+  #     worksheet3.repeat_formula('B1', now)
+  #
+  def store_formula(formula)       #:nodoc:
+    # Strip the = sign at the beginning of the formula string
+    formula.sub!(/^=/, '')
+
+    # In order to raise formula errors from the point of view of the calling
+    # program we use an eval block and re-raise the error from here.
+    #
+    tokens = parser.parse_formula(formula)
+
+    #       if ($@) {
+    #           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
+    #           croak $@       # Re-raise the error
+    #       }
+
+    # Return the parsed tokens in an anonymous array
+    [*tokens]
   end
 
   def set_header_footer_common(type, string, margin, encoding)  # :nodoc:
