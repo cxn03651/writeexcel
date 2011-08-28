@@ -2358,14 +2358,9 @@ class Worksheet < BIFFWriter
 
     return -1 if (args.size < 3)                # Check the number of args
 
-    record      = 0x00FD                        # Record identifier
-    length      = 0x000A                        # Bytes to follow
-
-    row         = args[0]                       # Zero indexed row
-    col         = args[1]                       # Zero indexed column
-    str         = args[2].to_s
-    strlen      = str.bytesize
-    xf          = xf_record_index(row, col, args[3])   # The cell format
+    row, col, str, format = args
+    str = str.to_s
+    xf  = xf_record_index(row, col, format)    # The cell format
     encoding    = 0x0
     str_error   = 0
 
@@ -2378,10 +2373,10 @@ class Worksheet < BIFFWriter
     end
 
     # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
+    return -2 unless check_dimensions(row, col) == 0
 
     # Limit the string to the max number of chars.
-    if (strlen > 32767)
+    if str.bytesize > 32767
       str       = str[0, 32767]
       str_error = -3
     end
@@ -2392,6 +2387,8 @@ class Worksheet < BIFFWriter
 
     str_unique = update_workbook_str_table(str)
 
+    record      = 0x00FD                        # Record identifier
+    length      = 0x000A                        # Bytes to follow
     header = [record, length].pack('vv')
     data   = [row, col, xf, str_unique].pack('vvvV')
 
