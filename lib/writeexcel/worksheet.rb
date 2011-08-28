@@ -2471,18 +2471,12 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
 
-    return -1 if (args.size < 3)                     # Check the number of args
+    return -1 if (args.size < 3)                  # Check the number of args
 
-    record      = 0x00FD                          # Record identifier
-    length      = 0x000A                          # Bytes to follow
-
-    row         = args[0]                         # Zero indexed row
-    col         = args[1]                         # Zero indexed column
-    str         = args[2]
-    format      = args[3]                         # The cell format
+    row, col, str, format = args
 
     # Change from UTF16 big-endian to little endian
-    str = str.unpack('n*').pack("v*")
+    str = utf16be_to_16le(str)
 
     write_utf16be_string(row, col, str, format)
   end
