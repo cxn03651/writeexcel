@@ -3452,16 +3452,14 @@ class Worksheet < BIFFWriter
 
     return -1 if args.size < 3   # Check the number of args
 
-    row = args[0]
-    col = args[1]
+    row, col, comment, params = args
 
     # Check for pairs of optional arguments, i.e. an odd number of args.
     # raise "Uneven number of additional arguments" if args.size % 2 == 0
 
     # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
+    return -2 unless check_dimensions(row, col) == 0
 
-    params = args[3]
     if params && params[:start_cell]
       params[:start_row], params[:start_col] = substitute_cellref(params[:start_cell])
     end
