@@ -2526,16 +2526,15 @@ class Worksheet < BIFFWriter
     # Don't write a blank cell unless it has a format
     return 0 unless args[2]
 
-    record  = 0x0201                        # Record identifier
-    length  = 0x0006                        # Number of bytes to follow
-
-    row     = args[0]                       # Zero indexed row
-    col     = args[1]                       # Zero indexed column
-    xf      = xf_record_index(row, col, args[2])   # The cell format
+    row, col, format = args
 
     # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
+    return -2 unless check_dimensions(row, col) == 0
 
+    xf = xf_record_index(row, col, format)   # The cell format
+
+    record  = 0x0201                         # Record identifier
+    length  = 0x0006                         # Number of bytes to follow
     header    = [record, length].pack('vv')
     data      = [row, col, xf].pack('vvv')
 
