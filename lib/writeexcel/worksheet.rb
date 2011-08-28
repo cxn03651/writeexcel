@@ -2944,25 +2944,23 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
 
-    return -1 if (args.size < 2)   # Check the number of args
+    return -1 if args.size < 2   # Check the number of args
 
-    row         = args.shift    # Zero indexed row
-    col         = args.shift    # Zero indexed column
-    formula_ref = args.shift    # Array ref with formula tokens
-    format      = args.shift    # XF format
-    pairs       = args          # Pattern/replacement pairs
+    row, col, formula, format, *pairs = args
+
+    # Check that row and col are valid and store max and min values
+    return -2 unless check_dimensions(row, col) == 0
 
     # Enforce an even number of arguments in the pattern/replacement list
-    raise "Odd number of elements in pattern/replacement list" if pairs.size % 2 != 0
+    raise "Odd number of elements in pattern/replacement list" unless pairs.size % 2 == 0
 
     # Check that formula is an array ref
-    raise "Not a valid formula" unless formula_ref.respond_to?(:to_ary)
+    raise "Not a valid formula" unless formula.respond_to?(:to_ary)
 
-    tokens  = formula_ref.join("\t").split("\t")
+    tokens  = formula.join("\t").split("\t")
 
     # Ensure that there are tokens to substitute
     raise "No tokens in formula" if tokens.empty?
-
 
     # As a temporary and undocumented measure we allow the user to specify the
     # result of the formula by appending a result => value pair to the end
@@ -2973,7 +2971,7 @@ class Worksheet < BIFFWriter
       pairs.pop
     end
 
-    while (!pairs.empty?)
+    while !pairs.empty?
       pattern = pairs.shift
       replace = pairs.shift
 
@@ -2983,14 +2981,11 @@ class Worksheet < BIFFWriter
     end
 
     # Change the parameters in the formula cached by the Formula.pm object
-    formula   = parser.parse_tokens(tokens)
+    formula  = parser.parse_tokens(tokens)
 
     raise "Unrecognised token in formula" unless formula
 
-    xf        = xf_record_index(row, col, format) # The cell format
-
-    # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
+    xf = xf_record_index(row, col, format) # The cell format
 
     store_formula_common(row, col, xf, value, formula)
     0
