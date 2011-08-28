@@ -2445,7 +2445,7 @@ class Worksheet < BIFFWriter
     raise "Uneven number of bytes in Unicode string" if num_bytes % 2 != 0
 
     # Change from UTF16 big-endian to little endian
-    str = str.unpack('n*').pack('v*')
+    str = utf16be_to_16le(str)
 
     # Add the encoding and length header to the string.
     str_header  = [num_chars, encoding].pack("vC")

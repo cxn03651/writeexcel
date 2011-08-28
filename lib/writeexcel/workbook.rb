@@ -1700,7 +1700,7 @@ class Workbook < BIFFWriter
     if encoding == 1
       raise "Uneven number of bytes in Unicode font name" if cch % 2 != 0
       cch /= 2 if encoding != 0
-      format  = format.unpack('n*').pack('v*')
+      format  = utf16be_to_16le(format)
     end
 
 =begin

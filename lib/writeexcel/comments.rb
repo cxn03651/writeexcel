@@ -285,7 +285,7 @@ class Worksheet < BIFFWriter
       if encoding != 0
         raise "Uneven number of bytes in #{type} string" if string.bytesize % 2 != 0
         # Change from UTF-16BE to UTF-16LE
-        string = string.unpack('n*').pack('v*')
+        string = utf16be_to_16le(string)
       # Handle utf8 strings
       else
         if is_utf8?(string)
