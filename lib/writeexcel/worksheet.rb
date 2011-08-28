@@ -3170,12 +3170,10 @@ class Worksheet < BIFFWriter
     args = row_col_notation(args)
 
     # Catch non array refs passed by user.
-    unless args[2].respond_to?(:to_ary)
-      raise "Not an array ref in call to write_row()"
-    end
+    raise "Not an array ref in call to write_row()" unless args[2].respond_to?(:to_ary)
 
     row, col, tokens, options = args
-    error   = 0
+    error   = false
     if tokens
       tokens.each do |token|
         # write() will deal with any nested arrays
@@ -3186,7 +3184,7 @@ class Worksheet < BIFFWriter
         row += 1
       end
     end
-    error
+    error || 0
   end
 
   #
