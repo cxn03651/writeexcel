@@ -2416,24 +2416,21 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
 
-    return -1 if (args.size < 3)                     # Check the number of args
+    return -1 if args.size < 3                  # Check the number of args
 
     record      = 0x00FD                        # Record identifier
     length      = 0x000A                        # Bytes to follow
 
-    row         = args[0]                         # Zero indexed row
-    col         = args[1]                         # Zero indexed column
-    strlen      = args[2].bytesize
-    str         = args[2]
+    row, col, str = args
     xf          = xf_record_index(row, col, args[3]) # The cell format
     encoding    = 0x1
     str_error   = 0
 
     # Check that row and col are valid and store max and min values
-    return -2 if check_dimensions(row, col) != 0
+    return -2 unless check_dimensions(row, col) == 0
 
     # Limit the utf16 string to the max number of chars (not bytes).
-    if strlen > 32767* 2
+    if str.bytesize > 32767* 2
       str       = str[0..32767*2]
       str_error = -3
     end
@@ -2442,7 +2439,7 @@ class Worksheet < BIFFWriter
     num_chars = (num_bytes / 2).to_i
 
     # Check for a valid 2-byte char string.
-    raise "Uneven number of bytes in Unicode string" if num_bytes % 2 != 0
+    raise "Uneven number of bytes in Unicode string" unless num_bytes % 2 == 0
 
     # Change from UTF16 big-endian to little endian
     str = utf16be_to_16le(str)
