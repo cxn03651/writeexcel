@@ -3603,9 +3603,8 @@ class Worksheet < BIFFWriter
     # Check the number of args
     return -1 if args.size < 5
 
-    # Reverse the order of _string_ and $format if necessary. We work on a copy
-    # in order to protect the callers args. We don't use "local @_" in case of
-    # perl50005 threads.
+    # Reverse the order of _string_ and _format_ if necessary. We work on a copy
+    # in order to protect the callers args.
     #
     args[5], args[6] = [ args[6], args[5] ] if args[5].respond_to?(:xf_index)
 
