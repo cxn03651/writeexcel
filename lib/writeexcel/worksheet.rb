@@ -6672,7 +6672,7 @@ class Worksheet < BIFFWriter
     # Skip this if there aren't any filters.
     return if @filter_area.count == 0
 
-    spid = @filter_area.store
+    @object_ids.spid = @filter_area.store
 
     # Simulate the EXTERNSHEET link between the filter and data using a formula
     # such as '=Sheet1!A1'.
@@ -6681,8 +6681,6 @@ class Worksheet < BIFFWriter
     #
     formula = "=#{@name}!A1"
     store_formula(formula)
-
-    @object_ids.spid = spid
   end
 
   #
