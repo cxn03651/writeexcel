@@ -6889,15 +6889,8 @@ class Worksheet < BIFFWriter
   #    obj_id     # Object ID number.
   #
   def store_obj_chart(obj_id)   #:nodoc:
-    record      = 0x005D   # Record identifier
-    length      = 0x001A   # Bytes to follow
-
     obj_type    = 0x0005   # Object type (chart).
-    data        = ''       # Record data.
 
-    sub_record  = 0x0000   # Sub-record identifier.
-    sub_length  = 0x0000   # Length of sub-record.
-    sub_data    = ''       # Data of sub-record.
     options     = 0x6011
     reserved    = 0x0000
 
@@ -6913,6 +6906,8 @@ class Worksheet < BIFFWriter
     data        += [sub_record, sub_length].pack('vv')
 
     # Pack the record.
+    record      = 0x005D   # Record identifier
+    length      = 0x001A   # Bytes to follow
     header  = [record, length].pack('vv')
 
     append(header, data)
