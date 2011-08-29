@@ -6601,65 +6601,40 @@ class Worksheet < BIFFWriter
   # Store the collections of records that make up charts.
   #
   def store_charts   #:nodoc:
-      # Skip this if there aren't any charts.
-      return if charts_size == 0
+    # Skip this if there aren't any charts.
+    return if charts_size == 0
 
-      record          = 0x00EC           # Record identifier
-      length          = 0x0000           # Bytes to follow
+    record = 0x00EC           # Record identifier
 
-      spid            = @object_ids.spid
+    charts = @charts.array
 
-      charts          = @charts.array
-      num_charts      = charts_size
+    charts.each_index do |i|
+      data = ''
+      if i == 0 && images_size == 0
+        dg_length    = 192 + 120 * (charts_size - 1) + 96 * filter_count + 128 * comments_size
+        spgr_length  = dg_length - 24
 
-      num_filters     = @filter_area.count
-      num_comments    = comments_size
-
-      # Number of objects written so far.
-      num_objects     = images_size
-
-      (0 .. num_charts-1 ).each do |i|
-        chart       =   charts[i].chart
-        vertices    =   charts[i].vertices
-
-        if i == 0 && num_objects == 0
-          # Write the parent MSODRAWIING record.
-          dg_length    = 192 + 120*(num_charts -1)
-          spgr_length  = 168 + 120*(num_charts -1)
-
-          dg_length   +=  96 *num_filters
-          spgr_length +=  96 *num_filters
-
-          dg_length   += 128 *num_comments
-          spgr_length += 128 *num_comments
-
-          data  = store_parent_mso_record(dg_length, spgr_length, spid)
-          spid += 1
-          data += store_mso_sp_container_sp(spid)
-          spid += 1
-          data += store_mso_opt_chart_client_anchor_client_data(*vertices)
-        else
-          # Write the child MSODRAWIING record.
-          data  = store_mso_sp_container_sp(spid)
-          spid += 1
-          data += store_mso_opt_chart_client_anchor_client_data(*vertices)
-        end
-        length      = data.bytesize
-        header      = [record, length].pack("vv")
-        append(header, data)
-
-        store_obj_chart(num_objects + i + 1)
-        store_chart_binary(chart)
+        # Write the parent MSODRAWIING record.
+        data += store_parent_mso_record(dg_length, spgr_length, @object_ids.spid)
+        @object_ids.spid += 1
       end
+      data += store_mso_sp_container_sp(@object_ids.spid)
+      data += store_mso_opt_chart_client_anchor_client_data(*charts[i].vertices)
+      length = data.bytesize
+      header = [record, length].pack("vv")
+      append(header, data)
 
-      # Simulate the EXTERNSHEET link between the chart and data using a formula
-      # such as '=Sheet1!A1'.
-      # TODO. Won't work for external data refs. Also should use a more direct
-      #       method.
-      #
-      store_formula("='#{@name}'!A1")
+      store_obj_chart(images_size + i + 1)
+      store_chart_binary(charts[i].chart)
+      @object_ids.spid += 1
+    end
 
-      @object_ids.spid = spid
+    # Simulate the EXTERNSHEET link between the chart and data using a formula
+    # such as '=Sheet1!A1'.
+    # TODO. Won't work for external data refs. Also should use a more direct
+    #       method.
+    #
+    store_formula("='#{@name}'!A1")
   end
 
   def store_mso_sp_container_sp(spid)  # :nodoc:
