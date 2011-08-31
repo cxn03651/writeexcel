@@ -234,7 +234,7 @@ class Worksheet < BIFFWriter
     # Pack the strings used in the input and error dialog captions and messages.
     # Captions are limited to 32 characters. Messages are limited to 255 chars.
     #
-    def pack_dv_string(string = nil, max_length = 0)   #:nodoc:
+    def pack_dv_string(string, max_length)   #:nodoc:
       # The default empty string is "\0".
       string = ruby_18 { "\0" } || ruby_19 { "\0".encode('BINARY') } unless string && string != ''
 
