@@ -83,7 +83,6 @@ class Worksheet < BIFFWriter
     #
     def dv_record  # :nodoc:
       record          = 0x01BE       # Record identifier
-      length          = 0x0000       # Bytes to follow
 
       flags           = 0x00000000   # DV option flags.
 
@@ -91,9 +90,7 @@ class Worksheet < BIFFWriter
       str_lookup      = 0            # See below.
 
       # Set the string lookup flag for 'list' validations with a string array.
-      if @validate == 3 && @value.respond_to?(:to_ary)
-        str_lookup = 1
-      end
+      str_lookup = @validate == 3 && @value.respond_to?(:to_ary) ? 1 : 0
 
       # The dropdown flag is stored as a negated value.
       no_dropdown = @dropdown ? 0 : 1
