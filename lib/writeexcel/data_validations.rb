@@ -263,20 +263,14 @@ class Worksheet < BIFFWriter
     # relative addressing (R1C1 and ptgXxxN) however we use the Formula.pm's
     # default absolute addressing (A1 and ptgXxx).
     #
-    def pack_dv_formula(formula = nil)   #:nodoc:
-      encoding    = 0
-      length      = 0
+    def pack_dv_formula(formula)   #:nodoc:
       unused      = 0x0000
-      tokens      = []
 
       # Return a default structure for unused formulas.
       return [0, unused].pack('vv') unless formula && formula != ''
 
       # Pack a list array ref as a null separated string.
-      if formula.respond_to?(:to_ary)
-        formula   = formula.join("\0")
-        formula   = '"' + formula + '"'
-      end
+      formula   = %!"#{formula.join("\0")}"! if formula.respond_to?(:to_ary)
 
       # Strip the = sign at the beginning of the formula string
       formula = formula.to_s unless formula.respond_to?(:to_str)
