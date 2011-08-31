@@ -20,13 +20,17 @@ require 'writeexcel/formula'
 require 'writeexcel/olewriter'
 require 'writeexcel/storage_lite'
 require 'writeexcel/compatibility'
+require 'writeexcel/shared_string_table'
+require 'writeexcel/worksheets'
 
 class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
 
   attr_reader :url_format, :parser, :tempdir, :date_1904
-  attr_reader :compatibility, :palette, :sinfo
+  attr_reader :compatibility, :palette
+  attr_reader :ext_refs
+  attr_reader :worksheets
 
   BOF = 12  # :nodoc:
   EOF = 4   # :nodoc:
@@ -77,14 +81,13 @@ class Workbook < BIFFWriter
     @parser                = Writeexcel::Formula.new(@byte_order)
     @tempdir               = nil
     @date_1904             = false
-    @selected              = 0
     @xf_index              = 0
     @biffsize              = 0
     @sheet_count           = 0
     @chart_count           = 0
     @codepage              = 0x04E4
     @country               = 1
-    @worksheets            = []
+    @worksheets            = Worksheets.new
     @formats               = []
     @palette               = []
     @biff_only             = 0
@@ -92,15 +95,7 @@ class Workbook < BIFFWriter
     @internal_fh           = 0
     @fh_out                = ""
 
-    @sinfo = {
-      :activesheet         => 0,
-      :firstsheet          => 0,
-      :str_total           => 0,
-      :str_unique          => 0,
-      :str_table           => {}
-    }
-    @str_array             = []
-    @str_block_sizes       = []
+    @shared_string_table   = SharedStringTable.new
     @extsst_offsets        = []  # array of [global_offset, local_offset]
     @extsst_buckets        = 0
     @extsst_bucket_size    = 0
@@ -224,19 +219,16 @@ class Workbook < BIFFWriter
   #     worksheet = workbook.add_worksheet(name, true)   # Smiley
   #
   def add_worksheet(sheetname = '', name_utf16be = false)
-    index = @worksheets.size
-
     name, name_utf16be = check_sheetname(sheetname, name_utf16be)
 
     init_data = [
                   self,
                   name,
-                  index,
                   name_utf16be
     ]
     worksheet = Writeexcel::Worksheet.new(*init_data)
-    @worksheets[index] = worksheet      # Store ref for iterator
-    @parser.set_ext_sheets(name, index) # Store names in Formula.rb
+    @worksheets << worksheet                      # Store ref for iterator
+    @parser.set_ext_sheets(name, worksheet.index) # Store names in Formula.rb
     worksheet
   end
 
@@ -315,7 +307,6 @@ class Workbook < BIFFWriter
   def add_chart(properties)
     name = ''
     name_utf16be = false
-    index    = @worksheets.size
 
     # Type must be specified so we can create the required chart instance.
     type = properties[:type]
@@ -334,19 +325,14 @@ class Workbook < BIFFWriter
     init_data = [
       self,
       name,
-      index,
       name_utf16be
     ]
 
     chart = Writeexcel::Chart.factory(type, *init_data)
     # If the chart isn't embedded let the workbook control it.
     if !embedded
-      @worksheets[index] = chart          # Store ref for iterator
+      @worksheets << chart          # Store ref for iterator
     else
-      # Set index to 0 so that the activate() and set_first_sheet() methods
-      # point back to the first worksheet if used for embedded charts.
-      chart.index = 0
-
       chart.set_embedded_config_data
     end
     chart
@@ -365,7 +351,6 @@ class Workbook < BIFFWriter
   # directory of the distro for a full explanation.
   #
   def add_chart_ext(filename, chartname, name_utf16be = false)
-    index    = @worksheets.size
     type = 'extarnal'
 
     name, name_utf16be = check_sheetname(chartname, name_utf16be)
@@ -373,13 +358,11 @@ class Workbook < BIFFWriter
     init_data = [
       filename,
       name,
-      index,
-      name_utf16be,
-      @sinfo
+      name_utf16be
     ]
 
     chart = Writeexcel::Chart.factory(self, type, init_data)
-    @worksheets[index] = chart      # Store ref for iterator
+    @worksheets << chart      # Store ref for iterator
     chart
   end
 
@@ -398,7 +381,7 @@ class Workbook < BIFFWriter
     args.each { |arg| fmts = fmts.merge(arg) }
     format = Writeexcel::Format.new(@xf_index, @default_formats.merge(fmts))
     @xf_index += 1
-    formats.push format # Store format reference
+    @formats.push format # Store format reference
     format
   end
 
@@ -806,10 +789,6 @@ class Workbook < BIFFWriter
     @add_doc_properties = true
   end
 
-  def str_unique=(val)  # :nodoc:
-    @sinfo[:str_unique] = val
-  end
-
   def extsst_buckets  # :nodoc:
     @extsst_buckets
   end
@@ -828,6 +807,10 @@ class Workbook < BIFFWriter
 
   def localtime=(val)  # :nodoc:
     @localtime = val
+  end
+
+  def update_str_table(str)
+    @shared_string_table << str
   end
 
   #==========================================
@@ -1119,25 +1102,13 @@ class Workbook < BIFFWriter
     calc_mso_sizes
 
     # Ensure that at least one worksheet has been selected.
-    @worksheets[0].select if @sinfo[:activesheet] == 0
-
-    # Calculate the number of selected sheet tabs and set the active sheet.
-    @worksheets.each do |sheet|
-      @selected    += 1 if sheet.selected?
-      sheet.active  = 1 if sheet.index == @sinfo[:activesheet]
+    unless @worksheets.activesheet
+      @worksheets.activesheet = @worksheets.first
+      @worksheets.activesheet.select
     end
 
     # Add Workbook globals
-    store_bof(0x0005)
-    store_codepage
-    store_window1
-    store_hideobj
-    store_1904
-    store_all_fonts
-    store_all_num_formats
-    store_all_xfs
-    store_all_styles
-    store_palette
+    add_workbook_globals
 
     # Calculate the offsets required by the BOUNDSHEET records
     calc_sheet_offsets
@@ -1164,6 +1135,19 @@ class Workbook < BIFFWriter
 
     # Store the workbook in an OLE container
     store_ole_file
+  end
+
+  def add_workbook_globals
+    store_bof(0x0005)
+    store_codepage
+    store_window1
+    store_hideobj
+    store_1904
+    store_all_fonts
+    store_all_num_formats
+    store_all_xfs
+    store_all_styles
+    store_palette
   end
 
   #
@@ -1263,7 +1247,7 @@ class Workbook < BIFFWriter
     offset += calculate_shared_string_sizes
 
     # Add the length of the EXTSST record.
-    offset += calculate_extsst_size
+    offset += calculate_extsst_size(@shared_string_table.str_unique)
 
     # Add the length of the SUPBOOK, EXTERNSHEET and NAME records
     offset += calculate_extern_sizes
@@ -1296,10 +1280,7 @@ class Workbook < BIFFWriter
   #
   def calc_mso_sizes       #:nodoc:
     mso_size        = 0    # Size of the MSODRAWINGGROUP record
-    start_spid      = 1024 # Initial spid for each sheet
     max_spid        = 1024 # spidMax
-    num_clusters    = 1    # cidcl
-    shapes_saved    = 0    # cspSaved
     drawings_saved  = 0    # cdgSaved
     clusters        = []
 
@@ -1314,52 +1295,23 @@ class Workbook < BIFFWriter
     #
     @worksheets.each do |sheet|
       next unless sheet.type == 0x0000
+      next if sheet.num_shapes == 1
 
-      num_images     = sheet.num_images
-      num_comments   = sheet.prepare_comments
-      num_charts     = sheet.prepare_charts
-      num_filters    = sheet.filter_count
-
-      next if num_images + num_comments + num_charts + num_filters == 0
-
-      # Include 1 parent MSODRAWING shape, per sheet, in the shape count.
-      num_shapes    = 1 + num_images   +  num_comments +
-                          num_charts   +  num_filters
-      shapes_saved += num_shapes
-      mso_size     += sheet.image_mso_size
-
-      # Add a drawing object for each sheet with comments.
-      drawings_saved += 1
-
-      # For each sheet start the spids at the next 1024 interval.
-      max_spid   = 1024 * (1 + Integer((max_spid -1)/1024.0))
-      start_spid = max_spid
-
-      # Max spid for each sheet and eventually for the workbook.
-      max_spid  += num_shapes
-
-      # Store the cluster ids
-      i = num_shapes
-      while i > 0
-        num_clusters  += 1
-        mso_size      += 8
-        size           = i > 1024 ? 1024 : i
-
-        clusters.push([drawings_saved, size])
-        i -= 1024
-      end
-
-      # Pass calculated values back to the worksheet
-      sheet.object_ids = [start_spid, drawings_saved, num_shapes, max_spid -1]
+      mso_size, drawings_saved, max_spid, start_spid =
+        sheet.push_object_ids(mso_size, drawings_saved, max_spid, start_spid, clusters)
     end
 
 
     # Calculate the MSODRAWINGGROUP size if we have stored some shapes.
-    mso_size              += 86 if mso_size != 0 # Smallest size is 86+8=94
+    mso_size += 86 if mso_size != 0 # Smallest size is 86+8=94
+
+    shapes_saved = sheets.collect { |sheet| sheet.num_shapes }.
+                   select { |num_shapes| num_shapes > 1 }.
+                   inject(0) { |result, num_shapes| result + num_shapes }
 
     @mso_size      = mso_size
     @mso_clusters  = [
-      max_spid, num_clusters, shapes_saved,
+      max_spid, clusters.size + 1, shapes_saved,
       drawings_saved, clusters
     ]
   end
@@ -1384,7 +1336,7 @@ class Workbook < BIFFWriter
 
     @worksheets.each do |sheet|
       next unless sheet.type == 0x0000
-      next if sheet.prepare_images == 0
+      next if sheet.images_size == 0
 
       num_images      = 0
       image_mso_size  = 0
@@ -1439,13 +1391,11 @@ class Workbook < BIFFWriter
   # Store the Excel FONT records.
   #
   def store_all_fonts       #:nodoc:
-    format  = formats[15]   # The default cell format.
+    format  = @formats[15]   # The default cell format.
     font    = format.get_font
 
     # Fonts are 0-indexed. According to the SDK there is no index 4,
-    (0..3).each do
-      append(font)
-    end
+    4.times { append(font) }
 
     # Add the default fonts for charts and comments. This aren't connected
     # to XF formats. Note, the font size, and some other properties of
@@ -1502,7 +1452,7 @@ class Workbook < BIFFWriter
     # Fonts that are marked as '_font_only' are always stored. These are used
     # mainly for charts and may not have an associated XF record.
 
-    formats.each do |fmt|
+    @formats.each do |fmt|
       key = fmt.get_font_key
       if fmt.font_only == 0 and !fonts[key].nil?
         # FONT has already been used
@@ -1532,7 +1482,7 @@ class Workbook < BIFFWriter
     # Iterate through the XF objects and write a FORMAT record if it isn't a
     # built-in format type and if the FORMAT string hasn't already been used.
     #
-    formats.each do |format|
+    @formats.each do |format|
       num_format = format.num_format
       encoding   = format.num_format_enc
 
@@ -1561,7 +1511,7 @@ class Workbook < BIFFWriter
   # Write all XF records.
   #
   def store_all_xfs       #:nodoc:
-    formats.each do |format|
+    @formats.each do |format|
       xf = format.get_xf
       append(xf)
     end
@@ -1624,90 +1574,31 @@ class Workbook < BIFFWriter
 
   def create_autofilter_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
-      index = worksheet.index
-
-      # Write a Name record if Autofilter has been defined
-      if worksheet.filter_count != 0
-        store_name_short(
-          worksheet.index,
-          0x0D, # NAME type = Filter Database
-          @ext_refs["#{index}:#{index}"],
-          worksheet.filter_area[0],
-          worksheet.filter_area[1],
-          worksheet.filter_area[2],
-          worksheet.filter_area[3],
-          1     # Hidden
-        )
-      end
+      append(*worksheet.autofilter_name_record_short(true))
     end
   end
 
   def create_print_area_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
-      index  = worksheet.index
-
-      # Write a Name record if the print area has been defined
-      if !worksheet.print_rowmin.nil?
-        store_name_short(
-          worksheet.index,
-          0x06, # NAME type = Print_Area
-          @ext_refs["#{index}:#{index}"],
-          worksheet.print_rowmin,
-          worksheet.print_rowmax,
-          worksheet.print_colmin,
-          worksheet.print_colmax
-        )
-      end
+      append(*worksheet.print_area_name_record_short)
     end
   end
 
   def create_print_title_name_records(sorted_worksheets)       #:nodoc:
     sorted_worksheets.each do |worksheet|
-      index = worksheet.index
-      rowmin = worksheet.title_rowmin
-      rowmax = worksheet.title_rowmax
-      colmin = worksheet.title_colmin
-      colmax = worksheet.title_colmax
-      key = "#{index}:#{index}"
-      ref = @ext_refs[key]
-
       # Determine if row + col, row, col or nothing has been defined
       # and write the appropriate record
       #
-      if rowmin && colmin
+      if worksheet.title_range.row_min && worksheet.title_range.col_min
         # Row and column titles have been defined.
         # Row title has been defined.
-        store_name_long(
-          worksheet.index,
-          0x07, # NAME type = Print_Titles
-          ref,
-          rowmin,
-          rowmax,
-          colmin,
-          colmax
-        )
-      elsif rowmin
+        append(*worksheet.print_title_name_record_long)
+      elsif worksheet.title_range.row_min
         # Row title has been defined.
-        store_name_short(
-          worksheet.index,
-          0x07, # NAME type = Print_Titles
-          ref,
-          rowmin,
-          rowmax,
-          0x00,
-          0xff
-        )
-      elsif colmin
+        append(*worksheet.print_title_name_record_short)
+      elsif worksheet.title_range.col_min
         # Column title has been defined.
-        store_name_short(
-          worksheet.index,
-          0x07, # NAME type = Print_Titles
-          ref,
-          0x0000,
-          0xffff,
-          colmin,
-          colmax
-        )
+        append(*worksheet.print_title_name_record_short)
       else
         # Nothing left to do
       end
@@ -1734,12 +1625,11 @@ class Workbook < BIFFWriter
     dy_win    = 0x30ED                 # Height of window
 
     grbit     = 0x0038                 # Option flags
-    ctabsel   = @selected              # Number of workbook tabs selected
+    ctabsel   = @worksheets.selected_count  # Number of workbook tabs selected
     tab_ratio = 0x0258                 # Tab to scrollbar ratio
 
-    tab_cur   = @sinfo[:activesheet]   # Active worksheet
-    tab_first = @sinfo[:firstsheet]    # 1st displayed worksheet
-
+    tab_cur   = @worksheets.activesheet_index # Active worksheet
+    tab_first = @worksheets.firstsheet_index  # 1st displayed worksheet
     header    = [record, length].pack("vv")
     data      = [
                   x_pos, y_pos, dx_win, dy_win,
@@ -1761,29 +1651,7 @@ class Workbook < BIFFWriter
   #    encoding   # Sheet name encoding
   #
   def store_boundsheet(sheet)       #:nodoc:
-    sheetname = sheet.name
-    offset    = sheet.offset
-    type      = sheet.type
-    hidden    = sheet.hidden? ? 1 : 0
-    encoding  = sheet.is_name_utf16be? ? 1 : 0
-
-    record    = 0x0085                      # Record identifier
-    length    = 0x08 + sheetname.bytesize   # Number of bytes to follow
-
-    cch       = sheetname.bytesize          # Length of sheet name
-
-    grbit     = type | hidden
-
-    # Character length is num of chars not num of bytes
-    cch /= 2 if encoding != 0
-
-    # Change the UTF-16 name from BE to LE
-    sheetname = sheetname.unpack('v*').pack('n*') if encoding != 0
-
-    header    = [record, length].pack("vv")
-    data      = [offset, grbit, cch, encoding].pack("VvCC")
-
-    append(header, data, sheetname)
+    append(sheet.boundsheet)
   end
 
   #
@@ -1832,7 +1700,7 @@ class Workbook < BIFFWriter
     if encoding == 1
       raise "Uneven number of bytes in Unicode font name" if cch % 2 != 0
       cch /= 2 if encoding != 0
-      format  = format.unpack('n*').pack('v*')
+      format  = utf16be_to_16le(format)
     end
 
 =begin
@@ -1964,135 +1832,6 @@ class Workbook < BIFFWriter
   end
 
   #
-  # Store the NAME record in the short format that is used for storing the print
-  # area, repeat rows only and repeat columns only.
-  #
-  #    index            # Sheet index
-  #    type
-  #    ext_ref          # TODO
-  #    rowmin           # Start row
-  #    rowmax           # End row
-  #    colmin           # Start column
-  #    colmax           # end column
-  #    hidden           # Name is hidden
-  #
-  def store_name_short(index, type, ext_ref, rowmin, rowmax, colmin, colmax, hidden = nil)       #:nodoc:
-    record          = 0x0018       # Record identifier
-    length          = 0x001b       # Number of bytes to follow
-
-    grbit           = 0x0020       # Option flags
-    chkey           = 0x00         # Keyboard shortcut
-    cch             = 0x01         # Length of text name
-    cce             = 0x000b       # Length of text definition
-    unknown01       = 0x0000       #
-    ixals           = index + 1    # Sheet index
-    unknown02       = 0x00         #
-    cch_cust_menu   = 0x00         # Length of cust menu text
-    cch_description = 0x00         # Length of description text
-    cch_helptopic   = 0x00         # Length of help topic text
-    cch_statustext  = 0x00         # Length of status bar text
-    rgch            = type         # Built-in name type
-    unknown03       = 0x3b         #
-
-    grbit           = 0x0021 if hidden
-
-    header          = [record, length].pack("vv")
-    data            = [grbit].pack("v")
-    data           += [chkey].pack("C")
-    data           += [cch].pack("C")
-    data           += [cce].pack("v")
-    data           += [unknown01].pack("v")
-    data           += [ixals].pack("v")
-    data           += [unknown02].pack("C")
-    data           += [cch_cust_menu].pack("C")
-    data           += [cch_description].pack("C")
-    data           += [cch_helptopic].pack("C")
-    data           += [cch_statustext].pack("C")
-    data           += [rgch].pack("C")
-    data           += [unknown03].pack("C")
-    data           += [ext_ref].pack("v")
-
-    data           += [rowmin].pack("v")
-    data           += [rowmax].pack("v")
-    data           += [colmin].pack("v")
-    data           += [colmax].pack("v")
-
-    append(header, data)
-  end
-
-  #
-  # Store the NAME record in the long format that is used for storing the repeat
-  # rows and columns when both are specified. This share a lot of code with
-  # store_name_short() but we use a separate method to keep the code clean.
-  # Code abstraction for reuse can be carried too far, and I should know. ;-)
-  #
-  #    index             # Sheet index
-  #    type
-  #    ext_ref           # TODO
-  #    rowmin            # Start row
-  #    rowmax            # End row
-  #    colmin            # Start column
-  #    colmax            # end column
-  #
-  def store_name_long(index, type, ext_ref, rowmin, rowmax, colmin, colmax)       #:nodoc:
-    record          = 0x0018       # Record identifier
-    length          = 0x002a       # Number of bytes to follow
-
-    grbit           = 0x0020       # Option flags
-    chkey           = 0x00         # Keyboard shortcut
-    cch             = 0x01         # Length of text name
-    cce             = 0x001a       # Length of text definition
-    unknown01       = 0x0000       #
-    ixals           = index + 1    # Sheet index
-    unknown02       = 0x00         #
-    cch_cust_menu   = 0x00         # Length of cust menu text
-    cch_description = 0x00         # Length of description text
-    cch_helptopic   = 0x00         # Length of help topic text
-    cch_statustext  = 0x00         # Length of status bar text
-    rgch            = type         # Built-in name type
-
-    unknown03       = 0x29
-    unknown04       = 0x0017
-    unknown05       = 0x3b
-
-    header          = [record, length].pack("vv")
-    data            = [grbit].pack("v")
-    data           += [chkey].pack("C")
-    data           += [cch].pack("C")
-    data           += [cce].pack("v")
-    data           += [unknown01].pack("v")
-    data           += [ixals].pack("v")
-    data           += [unknown02].pack("C")
-    data           += [cch_cust_menu].pack("C")
-    data           += [cch_description].pack("C")
-    data           += [cch_helptopic].pack("C")
-    data           += [cch_statustext].pack("C")
-    data           += [rgch].pack("C")
-
-    # Column definition
-    data           += [unknown03].pack("C")
-    data           += [unknown04].pack("v")
-    data           += [unknown05].pack("C")
-    data           += [ext_ref].pack("v")
-    data           += [0x0000].pack("v")
-    data           += [0xffff].pack("v")
-    data           += [colmin].pack("v")
-    data           += [colmax].pack("v")
-
-    # Row definition
-    data           += [unknown05].pack("C")
-    data           += [ext_ref].pack("v")
-    data           += [rowmin].pack("v")
-    data           += [rowmax].pack("v")
-    data           += [0x00].pack("v")
-    data           += [0xff].pack("v")
-    # End of data
-    data           += [0x10].pack("C")
-
-    append(header, data)
-  end
-
-  #
   # Stores the PALETTE biff record.
   #
   def store_palette       #:nodoc:
@@ -2173,25 +1912,22 @@ class Workbook < BIFFWriter
     end
 
     @worksheets.each do |worksheet|
-
-      rowmin      = worksheet.title_rowmin
-      colmin      = worksheet.title_colmin
       key         = "#{index}:#{index}"
       index += 1
 
       # Add area NAME records
       #
-      if worksheet.print_rowmin
+      if worksheet.print_range.row_min
         add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       end
 
       # Add title  NAME records
       #
-      if rowmin and colmin
+      if worksheet.title_range.row_min && worksheet.title_range.col_min
         add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 46
-      elsif rowmin or colmin
+      elsif worksheet.title_range.row_min || worksheet.title_range.col_min
         add_ext_refs(ext_refs, key) unless ext_refs[key]
         length += 31
       else
@@ -2242,111 +1978,18 @@ class Workbook < BIFFWriter
   # downside of this is that the same algorithm repeated in store_shared_strings.
   #
   def calculate_shared_string_sizes       #:nodoc:
-    strings = Array.new(@sinfo[:str_unique])
-
-    @sinfo[:str_table].each_key do |key|
-      strings[@sinfo[:str_table][key]] = key
-    end
-    # The SST data could be very large, free some memory (maybe).
-    @sinfo[:str_table] = nil
-    @str_array = strings
-
-    # Iterate through the strings to calculate the CONTINUE block sizes.
-    #
-    # The SST blocks requires a specialised CONTINUE block, so we have to
-    # ensure that the maximum data block size is less than the limit used by
-    # add_continue() in BIFFwriter.pm. For simplicity we use the same size
-    # for the SST and CONTINUE records:
-    #   8228 : Maximum Excel97 block size
-    #     -4 : Length of block header
-    #     -8 : Length of additional SST header information
-    #     -8 : Arbitrary number to keep within add_continue() limit
-    # = 8208
-    #
-    continue_limit = 8208
-    block_length   = 0
-    written        = 0
-    block_sizes    = []
-    continue       = 0
-
-    strings.each do |string|
-      string_length = string.bytesize
-
-      # Block length is the total length of the strings that will be
-      # written out in a single SST or CONTINUE block.
-      #
-      block_length += string_length
-
-      # We can write the string if it doesn't cross a CONTINUE boundary
-      if block_length < continue_limit
-        written += string_length
-        next
-      end
-
-      # Deal with the cases where the next string to be written will exceed
-      # the CONTINUE boundary. If the string is very long it may need to be
-      # written in more than one CONTINUE record.
-      encoding      = string.unpack("xx C")[0]
-      split_string  = 0
-      while block_length >= continue_limit
-        header_length, space_remaining, align, split_string =
-          split_string_setup(encoding, split_string, continue_limit, written, continue)
-
-        if space_remaining > header_length
-          # Write as much as possible of the string in the current block
-          written      += space_remaining
-
-          # Reduce the current block length by the amount written
-          block_length -= continue_limit -continue -align
-
-          # Store the max size for this block
-          block_sizes.push(continue_limit -align)
-
-          # If the current string was split then the next CONTINUE block
-          # should have the string continue flag (grbit) set unless the
-          # split string fits exactly into the remaining space.
-          #
-          if block_length > 0
-            continue = 1
-          else
-            continue = 0
-          end
-        else
-          # Store the max size for this block
-          block_sizes.push(written +continue)
-
-          # Not enough space to start the string in the current block
-          block_length -= continue_limit -space_remaining -continue
-          continue = 0
-        end
-
-        # If the string (or substr) is small enough we can write it in the
-        # new CONTINUE block. Else, go through the loop again to write it in
-        # one or more CONTINUE blocks
-        #
-        if block_length < continue_limit
-          written = block_length
-        else
-          written = 0
-        end
-      end
-    end
-
-    # Store the max size for the last block unless it is empty
-    block_sizes.push(written +continue) if written +continue != 0
-
-    @str_block_sizes = block_sizes.dup
+    str_block_sizes = @shared_string_table.block_sizes
 
     # Calculate the total length of the SST and associated CONTINUEs (if any).
     # The SST record will have a length even if it contains no strings.
     # This length is required to set the offsets in the BOUNDSHEET records since
     # they must be written before the SST records
     #
-    length  = 12
-    length +=     block_sizes.shift unless block_sizes.empty? # SST
-    while !block_sizes.empty? do
-      length += 4 + block_sizes.shift                         # CONTINUEs
-    end
+    # when array = [a, b, c]  # array not empty?
+    # length = 12 + a + 4 + b + 4 + c = 12 + a + b + c + 4 * (array.size - 1)
+    #
+    length  = str_block_sizes.inject(12){|result, item| result + item}
+    length += 4 * (str_block_sizes.size - 1) unless str_block_sizes.empty?
 
     length
   end
@@ -2393,8 +2036,6 @@ class Workbook < BIFFWriter
   # occurs wherever the start of the bucket string is written out via append().
   #
   def store_shared_strings       #:nodoc:
-    strings = @str_array
-
     record              = 0x00FC   # Record identifier
     length              = 0x0008   # Number of bytes to follow
     total               = 0x0000
@@ -2407,7 +2048,7 @@ class Workbook < BIFFWriter
 
     # The SST and CONTINUE block sizes have been pre-calculated by
     # calculate_shared_string_sizes()
-    block_sizes    = @str_block_sizes
+    block_sizes    = @shared_string_table.block_sizes
 
     # The SST record is required even if it contains no strings. Thus we will
     # always have a length
@@ -2425,12 +2066,12 @@ class Workbook < BIFFWriter
 
     # Write the SST block header information
     header      = [record, length].pack("vv")
-    data        = [@sinfo[:str_total], @sinfo[:str_unique]].pack("VV")
+    data        = [@shared_string_table.str_total, @shared_string_table.str_unique].pack("VV")
     append(header, data)
 
     # Iterate through the strings and write them out
-    return if strings.empty?
-    strings.each do |string|
+    return if @shared_string_table.strings.empty?
+    @shared_string_table.strings.each do |string|
 
       string_length = string.bytesize
 
@@ -2541,8 +2182,8 @@ class Workbook < BIFFWriter
   # size of 8. The following algorithm generates the same size/bucket ratio
   # as Excel.
   #
-  def calculate_extsst_size       #:nodoc:
-    unique_strings  = @sinfo[:str_unique]
+  def calculate_extsst_size(str_unique)       #:nodoc:
+    unique_strings  = str_unique
 
     if unique_strings < 1024
       bucket_size = 8
@@ -2628,7 +2269,7 @@ class Workbook < BIFFWriter
     block_count = 1
 
     # Ignore the base class add_continue() method.
-    @ignore_continue = 1
+    @ignore_continue = true
 
     # Case 1 above. Just return the data as it is.
     if data.bytesize <= limit
@@ -2661,7 +2302,7 @@ class Workbook < BIFFWriter
     append(header, data)
 
     # Turn the base class add_continue() method back on.
-    @ignore_continue = 0
+    @ignore_continue = false
   end
 
   def devide_string(string, nth)       #:nodoc:
@@ -2819,10 +2460,6 @@ class Workbook < BIFFWriter
 
   def add_doc_properties
     @add_doc_properties ||= false
-  end
-
-  def formats
-    @formats
   end
 
   def defined_names

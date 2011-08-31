@@ -376,7 +376,7 @@ class Format < Colors
     if (encoding == 1)
       raise "Uneven number of bytes in Unicode font name" if cch % 2 != 0
       cch  /= 2 if encoding !=0
-      rgch  = rgch.unpack('n*').pack('v*')
+      rgch  = utf16be_to_16le(rgch)
     end
 
     record     = 0x31

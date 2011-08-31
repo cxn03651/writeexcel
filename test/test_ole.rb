@@ -99,8 +99,4 @@ class TC_OLE < Test::Unit::TestCase
     #assert_nothing_raised{ @ole.close }
     #assert_equal(512, File.size(@file))
   end
-
-  def teardown
-    @ole.close rescue nil
-  end
 end

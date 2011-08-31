@@ -19,7 +19,7 @@ module Writeexcel
 class Formula < ExcelFormulaParser       #:nodoc:
   require 'writeexcel/helper'
 
-  attr_accessor :byte_order, :workbook, :ext_sheets, :ext_refs, :ext_ref_count
+  attr_accessor :workbook, :ext_sheets, :ext_refs, :ext_ref_count
 
   def initialize(byte_order)
     @byte_order     = byte_order
@@ -231,7 +231,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
   def check_volatile(tokens)
     volatile = 0
 
-    (0..tokens.size - 1).each do |i|
+    tokens.each_index do |i|
       # If the next token is a function check if it is volatile.
       if tokens[i] == '_func' and @functions[tokens[i+1]][3] != 0
         volatile = 1
@@ -268,7 +268,7 @@ class Formula < ExcelFormulaParser       #:nodoc:
       return [@ptg['ptgInt'], num.to_i].pack("Cv")
     else  # A float
       num = [num.to_f].pack("d")
-      num.reverse! if @byte_order != 0 && @byte_order != ''
+      num.reverse! if @byte_order
       return [@ptg['ptgNum']].pack("C") + num
     end
   end

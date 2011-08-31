@@ -19,10 +19,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     @workbook   = WriteExcel.new(StringIO.new)
     @worksheet  = @workbook.add_worksheet
     @worksheet2 = @workbook.add_worksheet
-  end
-
-  def teardown
-    @workbook.close
+    @data_validation = Writeexcel::Worksheet::DataValidation.new(@worksheet.__send__("parser"), {})
   end
 
   def test_integer_values
@@ -38,7 +35,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -55,7 +52,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -72,7 +69,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -89,7 +86,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -106,7 +103,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -123,7 +120,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -140,7 +137,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -157,7 +154,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -174,7 +171,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 
@@ -191,7 +188,7 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     bytes[3]   = '00'
     target     = bytes.join(" ")
 
-    result     = unpack_record(@worksheet.__send__("pack_dv_formula", formula))
+    result     = unpack_record(@data_validation.__send__("pack_dv_formula", formula))
     assert_equal(target, result, caption)
   end
 

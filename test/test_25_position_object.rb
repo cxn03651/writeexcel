@@ -25,10 +25,6 @@ class TC_position_object < Test::Unit::TestCase
     @worksheet  = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
 ###############################################################################
 #
 # Tests extracted from images imported into Excel.

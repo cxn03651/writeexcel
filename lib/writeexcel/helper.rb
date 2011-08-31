@@ -19,6 +19,9 @@
   end
   private :convert_to_ascii_if_ascii
 
+  def utf16be_to_16le(utf16be)
+    utf16be.unpack('n*').pack('v*')
+  end
 
   def utf8_to_16be(utf8)
     ruby_18 { NKF.nkf('-w16B0 -m0 -W', utf8) } ||

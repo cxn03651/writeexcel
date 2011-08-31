@@ -98,7 +98,7 @@ class OLEWriter       #:nodoc:
 
   ###############################################################################
   #
-  # set_size($biffsize)
+  # set_size(biffsize)
   #
   # Set the size of the data to be written to the OLE stream
   #
@@ -112,13 +112,7 @@ class OLEWriter       #:nodoc:
     end
 
     @biff_size = size
-
-    if size > BlockSize
-      @book_size = size
-    else
-      @book_size = BlockSize
-    end
-
+    @book_size = [size, BlockSize].max
     @size_allowed = true
   end
 

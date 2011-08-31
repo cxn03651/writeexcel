@@ -20,7 +20,7 @@ class BIFFWriter < WriteFile       #:nodoc:
   BIFF_Version = 0x0600
   BigEndian    = [1].pack("I") == [1].pack("N")
 
-  attr_reader :byte_order, :data, :datasize
+  attr_reader :data, :datasize
 
   ######################################################################
   # The args here aren't used by BIFFWriter, but they are needed by its
@@ -28,21 +28,9 @@ class BIFFWriter < WriteFile       #:nodoc:
   ######################################################################
 
   def initialize
+    super
     set_byte_order
-    @data            = ''
-    @datasize        = 0
-    @limit           = 8224
-    @ignore_continue = 0
-
-    # Open a tmp file to store the majority of the Worksheet data. If this fails,
-    # for example due to write permissions, store the data in memory. This can be
-    # slow for large files.
-    @filehandle = Tempfile.new('writeexcel')
-    @filehandle.binmode
-
-    # failed. store temporary data in memory.
-    @using_tmpfile = @filehandle ? true : false
-
+    @ignore_continue = false
   end
 
   ###############################################################################
@@ -59,9 +47,9 @@ class BIFFWriter < WriteFile       #:nodoc:
     number  = hexdata.pack("C8")
 
     if number == teststr
-      @byte_order = 0    # Little Endian
+      @byte_order = false    # Little Endian
     elsif number == teststr.reverse
-      @byte_order = 1    # Big Endian
+      @byte_order = true     # Big Endian
     else
       # Give up. I'll fix this in a later version.
       raise( "Required floating point format not supported "  +
@@ -160,37 +148,23 @@ class BIFFWriter < WriteFile       #:nodoc:
   # option to bypass this function.
   #
   def add_continue(data)
-    record      = 0x003C # Record identifier
-
     # Skip this if another method handles the continue blocks.
-    return data if @ignore_continue != 0
+    return data if @ignore_continue
+
+    record  = 0x003C # Record identifier
+    header  = [record, @limit].pack("vv")
 
     # The first 2080/8224 bytes remain intact. However, we have to change
     # the length field of the record.
     #
-
-    # in perl
-    #  $tmp = substr($data, 0, $limit, "");
-    if data.bytesize > @limit
-      tmp = data[0, @limit]
-      data[0, @limit] = ''
-    else
-      tmp = data.dup
-      data = ''
-    end
-
-    tmp[2, 2] = [@limit-4].pack('v')
-
-    # Strip out chunks of 2080/8224 bytes +4 for the header.
-    while (data.bytesize > @limit)
-      header  = [record, @limit].pack("vv")
-      tmp     += header + data[0, @limit]
-      data[0, @limit] = ''
-    end
-
-    # Mop up the last of the data
-    header  = [record, data.bytesize].pack("vv")
-    tmp     += header + data
+    data_array = split_by_length(data, @limit)
+    first_data = data_array.shift
+    last_data  = data_array.pop || ''
+    first_data[2, 2] = [@limit-4].pack('v')
+    first_data <<
+      data_array.join(header) <<
+      [record, last_data.bytesize].pack('vv') <<
+      last_data
   end
 
   ###############################################################################
@@ -233,5 +207,17 @@ class BIFFWriter < WriteFile       #:nodoc:
   # override Object#inspect
   def inspect          # :nodoc:
     to_s
+  end
+
+  private
+
+  def split_by_length(data, length)
+    array = []
+    s = 0
+    while s < data.length
+      array << data[s, length]
+      s += length
+    end
+    array
   end
 end

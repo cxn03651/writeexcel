@@ -14,10 +14,6 @@ class TC_merge_formats < Test::Unit::TestCase
     @worksheet.set_column('G:G', nil, @merged_format)
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_some
     # Test 1   Normal usage.
     assert_nothing_raised { @worksheet.write('A1',    'Test', @non_merged_format) }

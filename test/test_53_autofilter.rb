@@ -20,10 +20,6 @@ class TC_autofilter < Test::Unit::TestCase
     @workbook.not_using_tmpfile
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_autofilter_on_one_sheet
     worksheet1 = @workbook.add_worksheet
 

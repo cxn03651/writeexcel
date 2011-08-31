@@ -22,10 +22,6 @@ class TC_data_time < Test::Unit::TestCase
     @fit_delta = 0.5/(24*60*60*1000)
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def fit_cmp(a, b)
     return (a-b).abs < @fit_delta
   end

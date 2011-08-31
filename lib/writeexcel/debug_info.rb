@@ -31,7 +31,11 @@ if defined?($writeexcel_debug)
         print " in #{info[:method]}" if info[:method]
         print "\n"
       end
-      print data.unpack('C*').map! {|byte| sprintf("%02X", byte) }.join(' ') + "\n\n"
+      print unpack_record(data) + "\n\n"
+    end
+
+    def unpack_record(data)  # :nodoc:
+      data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
     end
   end
 end

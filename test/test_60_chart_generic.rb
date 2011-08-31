@@ -17,11 +17,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
   def setup
     io = StringIO.new
     workbook = WriteExcel.new(io)
-    @chart = Writeexcel::Chart.new(workbook, '', 'chart', 0)
-  end
-
-  def teardown
-    @chart.cleanup
+    @chart = Writeexcel::Chart.new(workbook, '', 'chart')
   end
 
   ###############################################################################
@@ -33,13 +29,13 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         60 10 0A 00 B8 38 A1 22 C8 00 00 00 05 00
       ).join(' ')
-    got = unpack_record(@chart.store_fbi(5, 10, 0x38B8, 0x22A1, 0x0000))
+    got = unpack_record(@chart.__send__("store_fbi", 5, 10, 0x38B8, 0x22A1, 0x0000))
     assert_equal(expected, got, caption)
 
     expected = %w(
         60 10 0A 00 B8 38 A1 22 C8 00 00 00 06 00
       ).join(' ')
-    got = unpack_record(@chart.store_fbi(6, 10, 0x38B8, 0x22A1, 0x0000))
+    got = unpack_record(@chart.__send__("store_fbi", 6, 10, 0x38B8, 0x22A1, 0x0000))
     assert_equal(expected, got, caption)
   end
 
@@ -54,7 +50,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         38 B8 C2 01
       ).join(' ')
     values = [0x0000, 0x0000, 0x02DD51E0, 0x01C2B838]
-    got = unpack_record(@chart.store_chart(*values))
+    got = unpack_record(@chart.__send__("store_chart", *values))
     assert_equal(expected, got, caption)
  end
 
@@ -67,7 +63,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         03 10 0C 00 01 00 01 00 08 00 08 00 01 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_series(8, 8))
+    got = unpack_record(@chart.__send__("store_series", 8, 8))
     assert_equal(expected, got, caption)
  end
 
@@ -80,7 +76,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         33 10 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_begin)
+    got = unpack_record(@chart.__send__("store_begin"))
     assert_equal(expected, got, caption)
   end
 
@@ -93,7 +89,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         34 10 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_end)
+    got = unpack_record(@chart.__send__("store_end"))
     assert_equal(expected, got, caption)
   end
 
@@ -107,7 +103,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         51 10 08 00 00 01 00 00 00 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_ai(*values))
+    got = unpack_record(@chart.__send__("store_ai", *values))
     assert_equal(expected, got, caption)
 
     values = [1, 2, ['3B00000000070000000000'].pack('H*')]
@@ -115,7 +111,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         51 10 13 00 01 02 00 00 00 00 0B 00 3B 00 00 00
         00 07 00 00 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_ai(*values))
+    got = unpack_record(@chart.__send__("store_ai", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -128,13 +124,13 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         06 10 08 00 FF FF 00 00 00 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_dataformat(0, 0, 0xFFFF))
+    got = unpack_record(@chart.__send__("store_dataformat", 0, 0, 0xFFFF))
     assert_equal(expected, got, caption)
 
     expected = %w(
         06 10 08 00 00 00 00 00 FD FF 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_dataformat(0, 0xFFFD, 0))
+    got = unpack_record(@chart.__send__("store_dataformat", 0, 0xFFFD, 0))
     assert_equal(expected, got, caption)
   end
 
@@ -147,7 +143,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         5F 10 02 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_3dbarshape)
+    got = unpack_record(@chart.__send__("store_3dbarshape"))
     assert_equal(expected, got, caption)
   end
 
@@ -160,7 +156,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         45 10 02 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_sertocrt)
+    got = unpack_record(@chart.__send__("store_sertocrt"))
     assert_equal(expected, got, caption)
   end
 
@@ -173,7 +169,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         44 10 04 00 0E 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_shtprops)
+    got = unpack_record(@chart.__send__("store_shtprops"))
     assert_equal(expected, got, caption)
   end
 
@@ -186,7 +182,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         24 10 02 00 02 00
       ).join(' ')
-    got = unpack_record(@chart.store_defaulttext)
+    got = unpack_record(@chart.__send__("store_defaulttext"))
     assert_equal(expected, got, caption)
   end
 
@@ -201,7 +197,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         06 FF FF FF 00 00 00 00 00 00 00 00 B1 00 4D 00
         00 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_charttext)
+    got = unpack_record(@chart.__send__("store_charttext"))
     assert_equal(expected, got, caption)
   end
 
@@ -214,7 +210,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         26 10 02 00 05 00
       ).join(' ')
-    got = unpack_record(@chart.store_fontx(5))
+    got = unpack_record(@chart.__send__("store_fontx", 5))
     assert_equal(expected, got, caption)
   end
 
@@ -227,7 +223,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         46 10 02 00 01 00
       ).join(' ')
-    got = unpack_record(@chart.store_axesused(1))
+    got = unpack_record(@chart.__send__("store_axesused", 1))
     assert_equal(expected, got, caption)
   end
 
@@ -242,7 +238,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         00 00 36 0B 00 00
       ).join(' ')
     values = [0, 0x00F8, 0x01F5, 0x0E7F, 0x0B36]
-    got = unpack_record(@chart.store_axisparent(*values))
+    got = unpack_record(@chart.__send__("store_axisparent", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -256,7 +252,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         1D 10 12 00 00 00 00 00 00 00 00 00 00 00 00 00
         00 00 00 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_axis(0))
+    got = unpack_record(@chart.__send__("store_axis", 0))
     assert_equal(expected, got, caption)
   end
 
@@ -269,7 +265,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         20 10 08 00 01 00 01 00 01 00 01 00
       ).join(' ')
-    got = unpack_record(@chart.store_catserrange)
+    got = unpack_record(@chart.__send__("store_catserrange"))
     assert_equal(expected, got, caption)
   end
 
@@ -283,7 +279,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         62 10 12 00 00 00 00 00 01 00 00 00 01 00 00 00
         00 00 00 00 EF 00
       ).join(' ')
-    got = unpack_record(@chart.store_axcext)
+    got = unpack_record(@chart.__send__("store_axcext"))
     assert_equal(expected, got, caption)
   end
 
@@ -298,7 +294,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         00 00 00 00 00 00 00 00 00 00 00 00 23 00 4D 00
         00 00
       ).join(' ')
-    got = unpack_record(@chart.store_tick)
+    got = unpack_record(@chart.__send__("store_tick"))
     assert_equal(expected, got, caption)
   end
 
@@ -313,7 +309,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
         00 00 00 00 00 00 00 00 00 00 00 00 1F 01
       ).join(' ')
-    got = unpack_record(@chart.store_valuerange)
+    got = unpack_record(@chart.__send__("store_valuerange"))
     assert_equal(expected, got, caption)
   end
 
@@ -326,7 +322,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         21 10 02 00 01 00
       ).join(' ')
-    got = unpack_record(@chart.store_axislineformat)
+    got = unpack_record(@chart.__send__("store_axislineformat"))
     assert_equal(expected, got, caption)
   end
 
@@ -340,7 +336,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         07 10 0C 00 00 00 00 00 00 00 FF FF 09 00 4D 00
       ).join(' ')
     values = [0x00000000, 0x0000, 0xFFFF, 0x0009, 0x004D]
-    got = unpack_record(@chart.store_lineformat(*values))
+    got = unpack_record(@chart.__send__("store_lineformat", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -353,7 +349,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         32 10 04 00 00 00 03 00
       ).join(' ')
-    got = unpack_record(@chart.store_frame(0x00, 0x03))
+    got = unpack_record(@chart.__send__("store_frame", 0x00, 0x03))
     assert_equal(expected, got, caption)
   end
 
@@ -368,7 +364,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         16 00 4F 00
       ).join(' ')
     values = [0x00C0C0C0, 0x00, 0x01, 0x00, 0x16, 0x4F]
-    got = unpack_record(@chart.store_areaformat(*values))
+    got = unpack_record(@chart.__send__("store_areaformat", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -382,7 +378,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         14 10 14 00 00 00 00 00 00 00 00 00 00 00 00 00
         00 00 00 00 00 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_chartformat)
+    got = unpack_record(@chart.__send__("store_chartformat"))
     assert_equal(expected, got, caption)
   end
 
@@ -397,7 +393,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         9C 00 00 00 00 01 0F 00
       ).join(' ')
     values = [0x05F9, 0x0EE9, 0x047D, 0x009C, 0x00, 0x01, 0x000F]
-    got = unpack_record(@chart.store_legend(*values))
+    got = unpack_record(@chart.__send__("store_legend", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -412,7 +408,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         00 00 00 00 00 00 00 00
       ).join(' ')
     values = [5, 2, 0x0E83, 0x06F9, 0, 0]
-    got = unpack_record(@chart.store_pos(*values))
+    got = unpack_record(@chart.__send__("store_pos", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -428,7 +424,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         20 10 00 00
       ).join(' ')
     values = [0xFFFFFF46, 0xFFFFFF06, 0, 0, 0x00B1, 0x1020]
-    got = unpack_record(@chart.store_text(*values))
+    got = unpack_record(@chart.__send__("store_text", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -441,7 +437,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         64 10 08 00 00 00 01 00 00 00 01 00
       ).join(' ')
-    got = unpack_record(@chart.store_plotgrowth)
+    got = unpack_record(@chart.__send__("store_plotgrowth"))
     assert_equal(expected, got, caption)
   end
 
@@ -457,7 +453,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         69 65 73 31
       ).join(' ')
     str = 'Name for Series1'
-    got = unpack_record(@chart.store_seriestext(str, 0))
+    got = unpack_record(@chart.__send__("store_seriestext", str, 0))
     assert_equal(expected, got, caption)
   end
 
@@ -473,7 +469,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         69 00 65 00 73 00 31 00
       ).join(' ')
     str = 'Name for Series1'.unpack('C*').pack('n*')
-    got = unpack_record(@chart.store_seriestext(str, 1))
+    got = unpack_record(@chart.__send__("store_seriestext", str, 1))
     assert_equal(expected, got, caption)
   end
 
@@ -486,7 +482,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         27 10 06 00 01 00 00 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_objectlink(1))
+    got = unpack_record(@chart.__send__("store_objectlink", 1))
     assert_equal(expected, got, caption)
   end
 
@@ -499,7 +495,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         0B 10 02 00 00 00
       ).join(' ')
-    got = unpack_record(@chart.store_pieformat)
+    got = unpack_record(@chart.__send__("store_pieformat"))
     assert_equal(expected, got, caption)
   end
 
@@ -514,7 +510,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         4D 00 4D 00 3C 00 00 00
       ).join(' ')
     values = [0x00, 0x00, 0x02, 0x01, 0x4D, 0x4D, 0x3C]
-    got = unpack_record(@chart.store_markerformat(*values))
+    got = unpack_record(@chart.__send__("store_markerformat", *values))
     assert_equal(expected, got, caption)
   end
 
@@ -527,7 +523,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         3D 10 02 00 96 00
       ).join(' ')
-    got = unpack_record(@chart.store_dropbar)
+    got = unpack_record(@chart.__send__("store_dropbar"))
     assert_equal(expected, got, caption)
   end
 
@@ -540,7 +536,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         1C 10 02 00 01 00
       ).join(' ')
-    got = unpack_record(@chart.store_chartline)
+    got = unpack_record(@chart.__send__("store_chartline"))
     assert_equal(expected, got, caption)
   end
 
@@ -553,7 +549,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     expected = %w(
         4A 10 02 00 01 00
       ).join(' ')
-    got = unpack_record(@chart.store_serparent(1))
+    got = unpack_record(@chart.__send__("store_serparent", 1))
     assert_equal(expected, got, caption)
   end
 
@@ -568,7 +564,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
       ).join(' ')
     values = [0x00, 0x01, 0x00, 0x00]
-    got = unpack_record(@chart.store_serauxtrend(*values))
+    got = unpack_record(@chart.__send__("store_serauxtrend", *values))
     assert_equal(expected, got, caption)
   end
 

@@ -20,10 +20,6 @@ class TC_Name_Stored < Test::Unit::TestCase
     @worksheet  = @workbook.add_worksheet
   end
 
-  def teardown
-    @workbook.close
-  end
-
   def test_print_area_name_with_simple_range
     caption        = " \tNAME for worksheet1.print_area('A1:B12')"
     name           = [0x06].pack('C')

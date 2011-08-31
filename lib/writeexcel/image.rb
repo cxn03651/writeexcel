@@ -7,7 +7,8 @@ module Writeexcel
     attr_reader :data, :size, :checksum1, :checksum2
     attr_accessor :id, :type, :width, :height, :ref_count
 
-    def initialize(row, col, filename, x_offset = 0, y_offset = 0, scale_x = 1, scale_y = 1)
+    def initialize(worksheet, row, col, filename, x_offset = 0, y_offset = 0, scale_x = 1, scale_y = 1)
+      @worksheet = worksheet
       @row = row
       @col = col
       @filename = filename
@@ -27,6 +28,30 @@ module Writeexcel
       @checksum1 = image_checksum(@data)
       @checksum2 = @checksum1
       process
+    end
+
+    def store_image_record(i, num_images, num_charts, num_filters, num_comments, spid)
+      image_width  = width
+      image_height = height
+
+      image_width  = width  * scale_x unless scale_x == 0
+      image_height = height * scale_y unless scale_y == 0
+
+      # Calculate the positions of image object.
+      vertices = @worksheet.position_object(col, row, x_offset, y_offset, image_width, image_height)
+
+      if (i == 0)
+        data = images_parent_msodrawing_record(num_images, num_charts, num_filters, num_comments, spid, id, vertices)
+      else
+        data = images_child_msodrawing_record(spid, id, vertices)
+      end
+      record = 0x00EC           # Record identifier
+      length = 0x0000           # Bytes to follow
+
+      length = data.bytesize
+      header = [record, length].pack("vv")
+
+      append(header, data)
     end
 
     private
@@ -153,6 +178,41 @@ module Writeexcel
 
     def get_checksum_method       #:nodoc:
       @checksum_method = 3
+    end
+
+    def images_parent_msodrawing_record(num_images, charts_size, num_filters, num_comments, spid, image_id, vertices)
+      dg_length   =  156 + 84*(num_images - 1)
+      spgr_length =  132 + 84*(num_images - 1)
+
+      dg_length   += 120 * charts_size
+      spgr_length += 120 * charts_size
+
+      dg_length   += 96 * num_filters
+      spgr_length += 96 * num_filters
+
+      dg_length   += 128 * num_comments
+      spgr_length += 128 * num_comments
+
+      data = @worksheet.store_parent_mso_record(dg_length, spgr_length, spid)
+      spid += 1
+      data += @worksheet.store_mso_sp_container(76)
+      data += @worksheet.store_mso_sp(75, spid, 0x0A00)
+      spid += 1
+      data += @worksheet.store_mso_opt_image(image_id)
+      data += @worksheet.store_mso_client_anchor(2, *vertices)
+      data += @worksheet.store_mso_client_data
+    end
+
+    def images_child_msodrawing_record(spid, image_id, vertices)
+      data = @worksheet.store_mso_sp_container(76) + store_mso_sp(75, spid, 0x0A00)
+      spid = spid + 1
+      data += @worksheet.store_mso_opt_image(image_id)    +
+        @worksheet.store_mso_client_anchor(2, *vertices)  +
+        @worksheet.store_mso_client_data
+    end
+
+    def append(*args)
+      @worksheet.append(*args)
     end
   end
 end

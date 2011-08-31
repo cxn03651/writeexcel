@@ -27,10 +27,6 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
     @plotarea_caption2 = " \tChart: plotarea format - area";
   end
 
-  def teardown
-    @workbook.close
-  end
-
   ###############################################################################
   #
   # 1. Test the chartarea format methods. See the set_*area() properties below.
@@ -610,7 +606,7 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
   def reset_chart(chart, embedded = nil)
     # Reset the chart data.
     chart.data = ''
-    chart.set_default_properties
+    chart.__send__("set_default_properties")
 
     if embedded
       chart.set_embedded_config_data
@@ -622,7 +618,7 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
   # Extract Line and Area format records from the Chartarea Frame stream.
   #
   def get_chartarea_formats(chart)
-    chart.store_chartarea_frame_stream
+    chart.__send__("store_chartarea_frame_stream")
 
     line = unpack_record(chart.data[12, 16])
     area = unpack_record(chart.data[28, 20])
@@ -635,7 +631,7 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
   # Extract Line and Area format records from the Chartarea Frame stream.
   #
   def get_plotarea_formats(chart)
-    chart.store_plotarea_frame_stream
+    chart.__send__("store_plotarea_frame_stream")
 
     line = unpack_record(chart.data[12, 16])
     area = unpack_record(chart.data[28, 20])
