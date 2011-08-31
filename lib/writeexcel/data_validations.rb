@@ -235,21 +235,11 @@ class Worksheet < BIFFWriter
     # Captions are limited to 32 characters. Messages are limited to 255 chars.
     #
     def pack_dv_string(string = nil, max_length = 0)   #:nodoc:
-      str_length  = 0
-      encoding    = 0
-
       # The default empty string is "\0".
-      unless string && string != ''
-        string =
-          ruby_18 { "\0" } || ruby_19 { "\0".encode('BINARY') }
-      end
+      string = ruby_18 { "\0" } || ruby_19 { "\0".encode('BINARY') } unless string && string != ''
 
       # Excel limits DV captions to 32 chars and messages to 255.
-      if string.bytesize > max_length
-        string = string[0 .. max_length-1]
-      end
-
-      str_length = string.bytesize
+      string = string[0 .. max_length-1] if string.bytesize > max_length
 
       ruby_19 { string = convert_to_ascii_if_ascii(string) }
 
@@ -258,6 +248,9 @@ class Worksheet < BIFFWriter
         str_length = string.gsub(/[^\Wa-zA-Z_\d]/, ' ').bytesize   # jlength
         string = utf8_to_16le(string)
         encoding = 1
+      else
+        str_length = string.bytesize
+        encoding = 0
       end
 
       ruby_18 { [str_length, encoding].pack('vC') + string } ||
