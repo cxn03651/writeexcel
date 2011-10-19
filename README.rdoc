@@ -76,6 +76,8 @@ You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'
 when use urf8 string data.
 
 == Recent Changes
+v0.6.10
+* Bug fix. method missing split_string_setup() in shared_string_table.rb. see https://github.com/cxn03651/writeexcel/pull/13
 
 v0.6.9
 * Bug fix. When sheetname is cell's A1 notation such as 'D1', Worksheet#autofilter causes exception.
