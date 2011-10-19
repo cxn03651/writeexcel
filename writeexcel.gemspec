@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{writeexcel}
-  s.version = "0.6.9"
+  s.version = "0.6.10"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Hideo NAKAMURA"]
-  s.date = %q{2011-08-25}
+  s.date = %q{2011-10-20}
   s.description = %q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
   s.email = %q{cxn03651@msj.biglobe.ne.jp}
   s.extra_rdoc_files = [
@@ -102,6 +102,7 @@ Gem::Specification.new do |s|
     "lib/writeexcel.rb",
     "lib/writeexcel/biffwriter.rb",
     "lib/writeexcel/caller_info.rb",
+    "lib/writeexcel/cell_range.rb",
     "lib/writeexcel/chart.rb",
     "lib/writeexcel/charts/area.rb",
     "lib/writeexcel/charts/bar.rb",
@@ -111,9 +112,14 @@ Gem::Specification.new do |s|
     "lib/writeexcel/charts/pie.rb",
     "lib/writeexcel/charts/scatter.rb",
     "lib/writeexcel/charts/stock.rb",
+    "lib/writeexcel/col_info.rb",
     "lib/writeexcel/colors.rb",
+    "lib/writeexcel/comments.rb",
     "lib/writeexcel/compatibility.rb",
+    "lib/writeexcel/convert_date_time.rb",
+    "lib/writeexcel/data_validations.rb",
     "lib/writeexcel/debug_info.rb",
+    "lib/writeexcel/embedded_chart.rb",
     "lib/writeexcel/excelformula.y",
     "lib/writeexcel/excelformulaparser.rb",
     "lib/writeexcel/format.rb",
@@ -121,10 +127,13 @@ Gem::Specification.new do |s|
     "lib/writeexcel/helper.rb",
     "lib/writeexcel/image.rb",
     "lib/writeexcel/olewriter.rb",
+    "lib/writeexcel/outline.rb",
     "lib/writeexcel/properties.rb",
+    "lib/writeexcel/shared_string_table.rb",
     "lib/writeexcel/storage_lite.rb",
     "lib/writeexcel/workbook.rb",
     "lib/writeexcel/worksheet.rb",
+    "lib/writeexcel/worksheets.rb",
     "lib/writeexcel/write_file.rb",
     "test/excelfile/Chart1.xls",
     "test/excelfile/Chart2.xls",
@@ -236,6 +245,7 @@ Gem::Specification.new do |s|
     "test/test_62_chart_formats.rb",
     "test/test_63_chart_area_formats.rb",
     "test/test_biff.rb",
+    "test/test_big_workbook.rb",
     "test/test_compatibility.rb",
     "test/test_example_match.rb",
     "test/test_format.rb",
