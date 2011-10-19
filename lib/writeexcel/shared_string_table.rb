@@ -102,7 +102,7 @@ class Workbook < BIFFWriter
         split_string  = 0
         while block_length >= continue_limit
           header_length, space_remaining, align, split_string =
-            split_string_setup(encoding, split_string, continue_limit, written, continue)
+            Workbook.split_string_setup(encoding, split_string, continue_limit, written, continue)
 
           if space_remaining > header_length
             # Write as much as possible of the string in the current block

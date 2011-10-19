@@ -12,6 +12,7 @@
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
 require 'nkf'
+require 'forwardable'
 require 'writeexcel/biffwriter'
 require 'writeexcel/worksheet'
 require 'writeexcel/chart'
@@ -26,6 +27,8 @@ require 'writeexcel/worksheets'
 class Workbook < BIFFWriter
   require 'writeexcel/properties'
   require 'writeexcel/helper'
+
+  extend Forwardable
 
   attr_reader :url_format, :parser, :tempdir, :date_1904
   attr_reader :compatibility, :palette
@@ -1994,7 +1997,7 @@ class Workbook < BIFFWriter
     length
   end
 
-  def split_string_setup(encoding, split_string, continue_limit, written, continue)       #:nodoc:
+  def self.split_string_setup(encoding, split_string, continue_limit, written, continue)       #:nodoc:
     # We need to avoid the case where a string is continued in the first
     # n bytes that contain the string header information.
     header_length   = 3 # Min string + header size -1
@@ -2024,6 +2027,8 @@ class Workbook < BIFFWriter
     end
     [header_length, space_remaining, align, split_string]
   end
+
+  def_delegator self, :split_string_setup
 
   #
   # Write all of the workbooks strings into an indexed array.
