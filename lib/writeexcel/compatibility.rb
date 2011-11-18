@@ -36,11 +36,13 @@ class String #:nodoc:
     end
   end
 
+=begin
   unless "".respond_to?(:ascii_only?)
     def ascii_only?
       !!(self =~ /[^!"#\$%&'\(\)\*\+,\-\.\/\:\;<=>\?@0-9A-Za-z_\[\\\]\{\}^` ~\0\n]/)
     end
   end
+=end
 end
 
 unless File.respond_to?(:binread)

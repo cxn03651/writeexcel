@@ -204,7 +204,7 @@ module Writeexcel
     end
 
     def images_child_msodrawing_record(spid, image_id, vertices)
-      data = @worksheet.store_mso_sp_container(76) + store_mso_sp(75, spid, 0x0A00)
+      data = @worksheet.store_mso_sp_container(76) + @worksheet.store_mso_sp(75, spid, 0x0A00)
       spid = spid + 1
       data += @worksheet.store_mso_opt_image(image_id)    +
         @worksheet.store_mso_client_anchor(2, *vertices)  +
