@@ -2271,6 +2271,26 @@ workbook.close
     compare_file("#{PERL_OUTDIR}/colors.xls", @file)
   end
 
+  def test_comments0
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet
+
+    worksheet.write(0, 0, 'Hello a1')
+    worksheet.write(0, 1, 'Hello b1')
+    worksheet.write(1, 0, 'Hello a2')
+    worksheet.write(1, 1, 'Hello b2')
+
+    worksheet.write_comment('A1', 'This is a comment a1', :author=>'arr')
+    worksheet.write_comment('A2', 'This is a comment a2', :author=>'arr')
+    worksheet.write_comment('B1', 'This is a comment b1', :author=>'arr')
+    worksheet.write_comment('B2', 'This is a comment b2', :author=>'arr')
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/comments0.xls", @file)
+  end
+
   def test_comments1
     workbook  = WriteExcel.new(@file)
     worksheet = workbook.add_worksheet

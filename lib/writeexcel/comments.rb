@@ -9,7 +9,11 @@ class Worksheet < BIFFWriter
     end
 
     def <<(item)
-      @items[item.row] = { item.col => item }
+      if @items[item.row]
+        @items[item.row][item.col] = item
+      else
+        @items[item.row] = { item.col => item }
+      end
     end
 
     def array
@@ -109,7 +113,7 @@ class Worksheet < BIFFWriter
         ruby_19 { comment_author.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
 
       # Pack the record.
-      data    = [row, col, comment_visible, obj_id, num_chars, comment_author_enc].pack("vvvvvC")
+      data    = [@row, @col, comment_visible, obj_id, num_chars, comment_author_enc].pack("vvvvvC")
 
       length  = data.bytesize + comment_author.bytesize
       header  = [record, length].pack("vv")
