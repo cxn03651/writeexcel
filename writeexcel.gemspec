@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "writeexcel"
-  s.version = "0.6.11"
+  s.version = "0.6.12"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Hideo NAKAMURA"]
-  s.date = "2011-11-22"
+  s.date = "2011-12-21"
   s.description = "Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells."
   s.email = "cxn03651@msj.biglobe.ne.jp"
   s.extra_rdoc_files = [
@@ -80,6 +80,7 @@ Gem::Specification.new do |s|
     "examples/set_first_sheet.rb",
     "examples/stats.rb",
     "examples/stocks.rb",
+    "examples/store_formula.rb",
     "examples/tab_colors.rb",
     "examples/utf8.rb",
     "examples/write_arrays.rb",
@@ -199,6 +200,7 @@ Gem::Specification.new do |s|
     "test/perl_output/set_first_sheet.xls",
     "test/perl_output/stats.xls",
     "test/perl_output/stocks.xls",
+    "test/perl_output/store_formula.xls",
     "test/perl_output/tab_colors.xls",
     "test/perl_output/unicode_cyrillic.xls",
     "test/perl_output/utf8.xls",
