@@ -3228,4 +3228,19 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/set_first_sheet.xls", @file)
   end
+
+  def test_store_formula
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet()
+
+    formula = worksheet.store_formula('=A1 * 3 + 50')
+    (0 .. 999).each do |row|
+      worksheet.repeat_formula(row, 1, formula, nil, 'A1', "A#{row + 1}")
+    end
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/store_formula.xls", @file)
+  end
 end

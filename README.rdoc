@@ -76,6 +76,9 @@ You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'
 when use urf8 string data.
 
 == Recent Changes
+v0.6.12
+* Bug fix issue 17. Worksheet#store_formula shouldn't be private
+
 v0.6.11
 * Bug fix issue 15. Worksheet#write_comment on the same row overwrite other comments.
 

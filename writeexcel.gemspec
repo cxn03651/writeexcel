@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{writeexcel}
-  s.version = "0.6.10"
+  s.name = "writeexcel"
+  s.version = "0.6.12"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Hideo NAKAMURA"]
-  s.date = %q{2011-10-20}
-  s.description = %q{Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells.}
-  s.email = %q{cxn03651@msj.biglobe.ne.jp}
+  s.date = "2011-12-21"
+  s.description = "Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells."
+  s.email = "cxn03651@msj.biglobe.ne.jp"
   s.extra_rdoc_files = [
     "README.rdoc"
   ]
@@ -80,6 +80,7 @@ Gem::Specification.new do |s|
     "examples/set_first_sheet.rb",
     "examples/stats.rb",
     "examples/stocks.rb",
+    "examples/store_formula.rb",
     "examples/tab_colors.rb",
     "examples/utf8.rb",
     "examples/write_arrays.rb",
@@ -156,6 +157,7 @@ Gem::Specification.new do |s|
     "test/perl_output/chart_line.xls",
     "test/perl_output/chess.xls",
     "test/perl_output/colors.xls",
+    "test/perl_output/comments0.xls",
     "test/perl_output/comments1.xls",
     "test/perl_output/comments2.xls",
     "test/perl_output/data_validate.xls",
@@ -198,6 +200,7 @@ Gem::Specification.new do |s|
     "test/perl_output/set_first_sheet.xls",
     "test/perl_output/stats.xls",
     "test/perl_output/stocks.xls",
+    "test/perl_output/store_formula.xls",
     "test/perl_output/tab_colors.xls",
     "test/perl_output/unicode_cyrillic.xls",
     "test/perl_output/utf8.xls",
@@ -258,10 +261,10 @@ Gem::Specification.new do |s|
     "writeexcel.gemspec",
     "writeexcel.rdoc"
   ]
-  s.homepage = %q{http://wiki.github.com/cxn03651/writeexcel/}
+  s.homepage = "http://wiki.github.com/cxn03651/writeexcel/"
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.6.2}
-  s.summary = %q{Write to a cross-platform Excel binary file.}
+  s.rubygems_version = "1.8.10"
+  s.summary = "Write to a cross-platform Excel binary file."
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
