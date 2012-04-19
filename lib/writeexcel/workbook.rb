@@ -1697,6 +1697,7 @@ class Workbook < BIFFWriter
     if is_utf8?(format)
       format = utf8_to_16be(format)
       encoding = 1
+      cch = format.bytesize
     end
 
     # Handle Unicode format strings.
