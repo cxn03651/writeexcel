@@ -4906,7 +4906,7 @@ class Worksheet < BIFFWriter
   # Ex: ("A4", "Hello") is converted to (3, 0, "Hello").
   #
   def substitute_cellref(cell, *args)       #:nodoc:
-    return [*args] if cell.respond_to?(:coerce) # Numeric
+    return [cell, *args] if cell.respond_to?(:coerce) # Numeric
 
     cell.upcase!
 
