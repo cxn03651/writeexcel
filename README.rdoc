@@ -76,6 +76,9 @@ You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'
 when use urf8 string data.
 
 == Recent Changes
+v0.6.14
+* Buf fix Issues 20. If more than 10 sheets, sheet reference mix up
+
 v0.6.13
 * Bug fix issue 19. Workbook#store_num_format, format written in utf8 raise exception.
 
