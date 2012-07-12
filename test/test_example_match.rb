@@ -3243,4 +3243,47 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/store_formula.xls", @file)
   end
+
+  def test_more_than_10_sheets_reference
+    workbook  = WriteExcel.new(@file)
+
+    worksheet1  = workbook.add_worksheet
+    worksheet2  = workbook.add_worksheet
+    worksheet3  = workbook.add_worksheet
+    worksheet4  = workbook.add_worksheet
+    worksheet5  = workbook.add_worksheet
+    worksheet6  = workbook.add_worksheet
+    worksheet7  = workbook.add_worksheet
+    worksheet8  = workbook.add_worksheet
+    worksheet9  = workbook.add_worksheet
+    worksheet10 = workbook.add_worksheet
+    worksheet11 = workbook.add_worksheet
+
+    worksheet2.write(0, 0,  'worksheet2')
+    worksheet3.write(0, 0,  'worksheet3')
+    worksheet4.write(0, 0,  'worksheet4')
+    worksheet5.write(0, 0,  'worksheet5')
+    worksheet6.write(0, 0,  'worksheet6')
+    worksheet7.write(0, 0,  'worksheet7')
+    worksheet8.write(0, 0,  'worksheet8')
+    worksheet9.write(0, 0,  'worksheet9')
+    worksheet10.write(0, 0,  'worksheet10')
+    worksheet11.write(0, 0,  'worksheet11')
+
+    worksheet1.write(0, 2, '=Sheet2!A1')
+    worksheet1.write(0, 3, '=Sheet3!A1')
+    worksheet1.write(0, 4, '=Sheet4!A1')
+    worksheet1.write(0, 5, '=Sheet5!A1')
+    worksheet1.write(0, 6, '=Sheet6!A1')
+    worksheet1.write(0, 7, '=Sheet7!A1')
+    worksheet1.write(0, 8, '=Sheet8!A1')
+    worksheet1.write(0, 9, '=Sheet9!A1')
+    worksheet1.write(0, 10, '=Sheet10!A1')
+    worksheet1.write(0, 11, '=Sheet11!A1')
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/more_than_10_sheets_reference.xls", @file)
+  end
 end
