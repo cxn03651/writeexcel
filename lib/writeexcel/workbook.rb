@@ -1764,7 +1764,9 @@ class Workbook < BIFFWriter
     record      = 0x0017                   # Record identifier
 
     # Get the external refs
-    ext = @ext_refs.keys.sort
+
+    ext = @ext_refs.keys.sort {|a, b| a.split(':')[0].to_i <=> b.split(':')[0].to_i}
+
 
     # Change the external refs from stringified "1:1" to [1, 1]
     ext.map! {|e| e.split(/:/).map! {|v| v.to_i} }
