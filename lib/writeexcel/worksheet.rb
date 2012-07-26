@@ -988,8 +988,9 @@ class Worksheet < BIFFWriter
     colLast  = args[3]
     string   = args[4]
     format   = args[5]
+    encoding = nil
 
-    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |rwFirst, colFirst, string, format, nil|
+    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |rwFirst, colFirst, string, format, encoding|
       write_date_time(rwFirst, colFirst, string, format)
     end
   end

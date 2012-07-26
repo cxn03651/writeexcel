@@ -76,6 +76,9 @@ You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'
 when use urf8 string data.
 
 == Recent Changes
+v0.6.16
+* typo fix
+
 v0.6.15
 * add Worksheet#merge_range_with_date_time : write datetime string to merged cells
 
