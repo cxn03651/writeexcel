@@ -959,43 +959,39 @@ class Worksheet < BIFFWriter
     format   = args[5]
     encoding = args[6] ? 1 : 0
 
-    # Temp code to prevent merged formats in non-merged cells.
-    error = "Error: refer to merge_range() in the documentation. " +
-    "Can't use previously non-merged format in merged cells"
-
-    raise error if format.used_merge == -1
-    format.used_merge = 0   # Until the end of this function.
-
-    # Set the merge_range property of the format object. For BIFF8+.
-    format.set_merge_range
-
-    # Excel doesn't allow a single cell to be merged
-    raise "Can't merge single cell" if rwFirst  == rwLast and
-    colFirst == colLast
-
-    # Swap last row/col with first row/col as necessary
-    rwFirst,  rwLast  = rwLast,  rwFirst  if rwFirst  > rwLast
-    colFirst, colLast = colLast, colFirst if colFirst > colLast
-
-    # Write the first cell
-    if encoding != 0
-      write_utf16be_string(rwFirst, colFirst, string, format)
-    else
-      write(rwFirst, colFirst, string, format)
-    end
-
-    # Pad out the rest of the area with formatted blank cells.
-    (rwFirst .. rwLast).each do |row|
-      (colFirst .. colLast).each do |col|
-        next if row == rwFirst and col == colFirst
-        write_blank(row, col, format)
+    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |rwFirst, colFirst, string, format, encoding|
+      if encoding != 0
+        write_utf16be_string(rwFirst, colFirst, string, format)
+      else
+        write(rwFirst, colFirst, string, format)
       end
     end
+  end
 
-    merge_cells(rwFirst, colFirst, rwLast, colLast)
+  # 
+  # :call-seq:
+  #   merge_range_with_date_time(first_row, first_col, last_row, last_col, token, format)
+  #
+  # Write to meged cells, a datetime string in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format as a
+  # number representing an Excel date. format is optional.
+  # 
+  def merge_range_with_date_time(*args)
+    # Check for a cell reference in A1 notation and substitute row and column
+    args = row_col_notation(args)
 
-    # Temp code to prevent merged formats in non-merged cells.
-    format.used_merge = 1
+    raise "Incorrect number of arguments" if args.size != 6 and args.size != 7
+    raise "Format argument is not a format object" unless args[5].respond_to?(:xf_index)
+
+    rwFirst  = args[0]
+    colFirst = args[1]
+    rwLast   = args[2]
+    colLast  = args[3]
+    string   = args[4]
+    format   = args[5]
+
+    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |rwFirst, colFirst, string, format, nil|
+      write_date_time(rwFirst, colFirst, string, format)
+    end
   end
 
   #
@@ -4700,6 +4696,42 @@ class Worksheet < BIFFWriter
       @margin_footer   = margin
       @footer_encoding = encoding
     end
+  end
+
+  def merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding)
+    # Temp code to prevent merged formats in non-merged cells.
+    error = "Error: refer to merge_range() in the documentation. " +
+    "Can't use previously non-merged format in merged cells"
+
+    raise error if format.used_merge == -1
+    format.used_merge = 0   # Until the end of this function.
+
+    # Set the merge_range property of the format object. For BIFF8+.
+    format.set_merge_range
+
+    # Excel doesn't allow a single cell to be merged
+    raise "Can't merge single cell" if rwFirst  == rwLast and
+    colFirst == colLast
+
+    # Swap last row/col with first row/col as necessary
+    rwFirst,  rwLast  = rwLast,  rwFirst  if rwFirst  > rwLast
+    colFirst, colLast = colLast, colFirst if colFirst > colLast
+
+    # Write the first cell
+    yield(rwFirst, colFirst, string, format, encoding)
+
+    # Pad out the rest of the area with formatted blank cells.
+    (rwFirst .. rwLast).each do |row|
+      (colFirst .. colLast).each do |col|
+        next if row == rwFirst and col == colFirst
+        write_blank(row, col, format)
+      end
+    end
+
+    merge_cells(rwFirst, colFirst, rwLast, colLast)
+
+    # Temp code to prevent merged formats in non-merged cells.
+    format.used_merge = 1
   end
 
   #
