@@ -16,12 +16,25 @@ tmtags
 ## REDCAR
 .redcar
 
-## PROJECT::GENERAL
-coverage
-rdoc
-pkg
-
 ## PROJECT::SPECIFIC
 
 ## NETBEANS
 nbproject
+
+*.gem
+*.rbc
+.bundle
+.config
+.yardoc
+Gemfile.lock
+InstalledFiles
+_yardoc
+coverage
+doc/
+lib/bundler/man
+pkg
+rdoc
+spec/reports
+test/tmp
+test/version_tmp
+tmp
