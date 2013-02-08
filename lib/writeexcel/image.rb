@@ -102,7 +102,7 @@ module Writeexcel
     def check_verify(data)
       # Check that the file is big enough to be a bitmap.
       raise "#{@filename} doesn't contain enough data." if data.bytesize <= 0x36
-      raise "#{@filename}: largest image width #{width} supported is 65k." if @width > 0xFFFF
+      raise "#{@filename}: largest image width #{@width} supported is 65k." if @width > 0xFFFF
       raise "#{@filename}: largest image height supported is 65k." if @height > 0xFFFF
 
       # Read the bitmap planes and bpp data. Verify them.
@@ -111,7 +111,7 @@ module Writeexcel
       raise "#{@filename}: only 1 plane supported in bitmap image." unless planes == 1
 
       # Read the bitmap compression. Verify compression.
-      compression = data.unpack("x30 V")
+      compression = data.unpack("x30 V")[0]
       raise "#{@filename}: compression not supported in bitmap image." unless compression == 0
     end
 
