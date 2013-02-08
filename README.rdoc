@@ -90,6 +90,9 @@ You must save source file in UTF8 and run ruby with -Ku option or set $KCODE='u'
 when use urf8 string data.
 
 == Recent Changes
+v0.6.17
+* Bug fix in compatibility_mode.
+
 v0.6.16
 * typo fix
 
