@@ -26,7 +26,7 @@
   def utf8_to_16be(utf8)
     ruby_18 { NKF.nkf('-w16B0 -m0 -W', utf8) } ||
     ruby_19 do
-      utf16be = NKF.nkf('-w16B0 -m0 -W', utf8)
+      utf16be = utf8.encode('UTF-16BE')
       utf16be.force_encoding('UTF-16BE')
     end
   end
@@ -35,7 +35,7 @@
   def utf8_to_16le(utf8)
     ruby_18 { NKF.nkf('-w16L0 -m0 -W', utf8) } ||
     ruby_19 do
-      utf16le = NKF.nkf('-w16L0 -m0 -W', utf8)
+      utf16le = utf8.encode('UTF-16LE')
       utf16le.force_encoding('UTF-16LE')
     end
   end
