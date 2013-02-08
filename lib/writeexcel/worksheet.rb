@@ -4901,9 +4901,13 @@ class Worksheet < BIFFWriter
   end
 
   def store_to_table(row, col, data)  # :nodoc:
-    tmp = []
-    tmp[col] = data
-    @table[row] = tmp
+    if @table[row]
+      @table[row][col] = data
+    else
+      tmp = []
+      tmp[col] = data
+      @table[row] = tmp
+    end
   end
 
   def compatibility?

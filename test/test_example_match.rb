@@ -3286,4 +3286,17 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/more_than_10_sheets_reference.xls", @file)
   end
+
+  def test_compatibility_mode
+    workbook  = WriteExcel.new(@file)
+    workbook.compatibility_mode
+
+    worksheet = workbook.add_worksheet('DataSheet')
+    worksheet.write_string(0,0,'Cell00')
+    worksheet.write_string(0,1,'Cell01')
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/compatibility_mode.xls", @file)
+  end
 end
