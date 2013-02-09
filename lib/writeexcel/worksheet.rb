@@ -968,13 +968,13 @@ class Worksheet < BIFFWriter
     end
   end
 
-  # 
+  #
   # :call-seq:
   #   merge_range_with_date_time(first_row, first_col, last_row, last_col, token, format)
   #
   # Write to meged cells, a datetime string in ISO8601 "yyyy-mm-ddThh:mm:ss.ss" format as a
   # number representing an Excel date. format is optional.
-  # 
+  #
   def merge_range_with_date_time(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
@@ -2297,13 +2297,7 @@ class Worksheet < BIFFWriter
     xl_double.reverse! if @byte_order
 
     # Store the data or write immediately depending on the compatibility mode.
-    if compatibility?
-      tmp = []
-      tmp[col] = header + data + xl_double
-      @table[row] = tmp
-    else
-      append(header, data, xl_double)
-    end
+    store_with_compatibility(row, col, header + data + xl_double)
 
     0
   end
