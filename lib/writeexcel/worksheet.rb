@@ -5292,7 +5292,7 @@ class Worksheet < BIFFWriter
 
 
     # Write the visible label but protect against url recursion in write().
-    str = url.sub!(/\#/, ' - ') unless str
+    str = url.sub(/\#/, ' - ') unless str
     error        = write_string(row1, col1, str, xf)
     return error if error == -2
 
@@ -5306,7 +5306,7 @@ class Worksheet < BIFFWriter
     dir_long, link_type, sheet_len, sheet = analyze_link(url, absolute)
 
     # Pack the link type
-    link_type      = link_type.pack("V")
+    link_type      = [link_type].pack("V")
 
     # Calculate the up-level dir count e.g. (..\..\..\ == 3)
     up_count    = 0
