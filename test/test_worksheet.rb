@@ -115,6 +115,20 @@ class TC_Worksheet < Test::Unit::TestCase
     assert_equal('internal:Sheet2!A1', internal_url)
   end
 
+  def test_write_url_should_not_change_external_url_string
+    external_url = 'external:c:\temp\foo.xls#Sheet2!A1'
+    @ws.write_url(1, 1, external_url)
+
+    assert_equal('external:c:\temp\foo.xls#Sheet2!A1', external_url)
+  end
+
+  def test_write_url_should_not_change_external_net_url_string
+    external_net_url = 'external://NETWORK/share/foo.xls'
+    @ws.write_url(1, 1, external_net_url)
+
+    assert_equal('external://NETWORK/share/foo.xls', external_net_url)
+  end
+
   def assert_equal_filesize(target, test, msg = "Bad file size")
     assert_equal(File.size(target),File.size(test),msg)
   end

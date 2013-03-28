@@ -5276,7 +5276,7 @@ class Worksheet < BIFFWriter
   def write_url_external(row1, col1, row2, col2, url, str = nil, format = nil)       #:nodoc:
     # Network drives are different. We will handle them separately
     # MS/Novell network drives and shares start with \\
-    if url =~ /^external:\\\\/
+    if url =~ /^external:(\\\\|\/\/)/
       return write_url_external_net(row1, col1, row2, col2, url, str, format)
     end
 
@@ -5287,9 +5287,7 @@ class Worksheet < BIFFWriter
 
     # Strip URL type and change Unix dir separator to Dos style (if needed)
     #
-    url.sub!(/^external:/, '')
-    url.gsub!(%r|/|, '\\')
-
+    url = url.sub(/^external:/, '').gsub(%r|/|, '\\')
 
     # Write the visible label but protect against url recursion in write().
     str = url.sub(/\#/, ' - ') unless str
@@ -5372,11 +5370,10 @@ class Worksheet < BIFFWriter
 
     # Strip URL type and change Unix dir separator to Dos style (if needed)
     #
-    url.sub!(/^external:/, '')
-    url.gsub!(%r|/|, '\\')
+    url = url.sub(/^external:/, '').gsub!(%r|/|, '\\')
 
     # Write the visible label but protect against url recursion in write().
-    str = url.sub!(/\#/, ' - ') unless str
+    str = url.sub(/\#/, ' - ') unless str
     error        = write_string(row1, col1, str, xf)
     return error if error == -2
 
