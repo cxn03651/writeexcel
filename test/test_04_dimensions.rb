@@ -378,6 +378,13 @@ class TC_dimensions < Test::Unit::TestCase
     assert_equal(expected, results)
   end
 
+  def test_store_formula_should_not_change_formula_string
+    formula = '=SUM(A1:D1)'
+    @worksheet.store_formula(formula)
+
+    assert_equal('=SUM(A1:D1)', formula)
+  end
+
   def test_merge_range
     formula = @worksheet.__send__("store_formula", '=A1 * 3 + 50')
     @worksheet.merge_range('C6:E8', 'Test', @format)

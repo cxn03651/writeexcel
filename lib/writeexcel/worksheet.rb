@@ -2876,13 +2876,10 @@ class Worksheet < BIFFWriter
   #     worksheet3.repeat_formula('B1', now)
   #
   def store_formula(formula)       #:nodoc:
-    # Strip the = sign at the beginning of the formula string
-    formula.sub!(/^=/, '')
-
     # In order to raise formula errors from the point of view of the calling
     # program we use an eval block and re-raise the error from here.
     #
-    tokens = parser.parse_formula(formula)
+    tokens = parser.parse_formula(formula.sub(/^=/, ''))
 
     #       if ($@) {
     #           $@ =~ s/\n$//  # Strip the \n used in the Formula.pm die()
