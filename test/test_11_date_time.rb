@@ -26,6 +26,13 @@ class TC_data_time < Test::Unit::TestCase
     return (a-b).abs < @fit_delta
   end
 
+  def test_convert_date_time_should_not_change_date_time_string
+    date_time = ' 1899-12-31T00:00:00.0004Z '
+    @worksheet.convert_date_time(date_time)
+
+    assert_equal(' 1899-12-31T00:00:00.0004Z ', date_time)
+  end
+
   def test_float_comparison_function
     # pass: diff < @fit_delta
     date_time = '1899-12-31T00:00:00.0004'

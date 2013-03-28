@@ -21,6 +21,15 @@ class TC_validation_dval < Test::Unit::TestCase
     @validations = Writeexcel::Worksheet::DataValidations.new
   end
 
+  def teardown
+    if @workbook.instance_variable_get(:@filehandle)
+      @workbook.instance_variable_get(:@filehandle).close(true)
+    end
+    if @worksheet.instance_variable_get(:@filehandle)
+      @worksheet.instance_variable_get(:@filehandle).close(true)
+    end
+  end
+
   def test_1
     obj_id     = 1
     dv_count   = 1

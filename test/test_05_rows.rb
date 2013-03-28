@@ -19,6 +19,15 @@ class TC_rows < Test::Unit::TestCase
   def setup
   end
 
+  def teardown
+    if @workbook.instance_variable_get(:@filehandle)
+      @workbook.instance_variable_get(:@filehandle).close(true)
+    end
+    if @worksheet.instance_variable_get(:@filehandle)
+      @worksheet.instance_variable_get(:@filehandle).close(true)
+    end
+  end
+
   def test_1
     file  = StringIO.new
     workbook = WriteExcel.new(file)

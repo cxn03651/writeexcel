@@ -55,6 +55,15 @@ class TC_extsst < Test::Unit::TestCase
     ]
   end
 
+  def teardown
+    if @workbook.instance_variable_get(:@filehandle)
+      @workbook.instance_variable_get(:@filehandle).close(true)
+    end
+    if @worksheet.instance_variable_get(:@filehandle)
+      @worksheet.instance_variable_get(:@filehandle).close(true)
+    end
+  end
+
   def test_to_tests
     @tests.each do |test|
       io = StringIO.new

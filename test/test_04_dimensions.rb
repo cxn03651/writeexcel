@@ -24,6 +24,15 @@ class TC_dimensions < Test::Unit::TestCase
     @smiley              = [0x263a].pack('n')
   end
 
+  def teardown
+    if @workbook.instance_variable_get(:@filehandle)
+      @workbook.instance_variable_get(:@filehandle).close(true)
+    end
+    if @worksheet.instance_variable_get(:@filehandle)
+      @worksheet.instance_variable_get(:@filehandle).close(true)
+    end
+  end
+
   def test_no_worksheet_cell_data
     data     = @worksheet.__send__("store_dimensions")
 

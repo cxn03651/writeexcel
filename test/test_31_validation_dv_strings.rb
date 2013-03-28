@@ -22,6 +22,15 @@ class TC_validation_dv_strings < Test::Unit::TestCase
     @data_validation = Writeexcel::Worksheet::DataValidation.new(worksheet.__send__("parser"), {})
   end
 
+  def teardown
+    if @workbook.instance_variable_get(:@filehandle)
+      @workbook.instance_variable_get(:@filehandle).close(true)
+    end
+    if @worksheet.instance_variable_get(:@filehandle)
+      @worksheet.instance_variable_get(:@filehandle).close(true)
+    end
+  end
+
   def test_empty_string
     string      = ''
     max_length  = 32
