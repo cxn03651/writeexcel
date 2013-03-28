@@ -201,6 +201,13 @@ class TC_validation_dv_formula < Test::Unit::TestCase
     assert_equal(target, result, caption)
   end
 
+  def test_pack_dv_formula_should_not_change_formula_string
+    formula = '=SUM(A1:D1)'
+    @data_validation.__send__("pack_dv_formula", formula)
+
+    assert_equal('=SUM(A1:D1)', formula)
+  end
+
   ###############################################################################
   #
   # Unpack the binary data into a format suitable for printing in tests.

@@ -271,12 +271,11 @@ class Worksheet < BIFFWriter
 
       # Strip the = sign at the beginning of the formula string
       formula = formula.to_s unless formula.respond_to?(:to_str)
-      formula.sub!(/^=/, '')
 
       # In order to raise formula errors from the point of view of the calling
       # program we use an eval block and re-raise the error from here.
       #
-      tokens = @parser.parse_formula(formula)   # ????
+      tokens = @parser.parse_formula(formula.sub(/^=/, ''))   # ????
 
       #       if ($@) {
       #           $@ =~ s/\n$//;  # Strip the \n used in the Formula.pm die()
