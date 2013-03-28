@@ -5216,7 +5216,7 @@ class Worksheet < BIFFWriter
     xf     = format || url_format        # The cell format
 
     # Strip URL type
-    url.sub!(/^internal:/, '')
+    url = url.sub(/^internal:/, '')
 
     # Write the visible label but protect against url recursion in write().
     str          = url unless str

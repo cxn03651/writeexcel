@@ -15,6 +15,15 @@ class TC_Worksheet < Test::Unit::TestCase
     @format  = Writeexcel::Format.new(:color=>"green")
   end
 
+  def teardown
+    if @workbook.instance_variable_get(:@filehandle)
+      @workbook.instance_variable_get(:@filehandle).close(true)
+    end
+    if @ws.instance_variable_get(:@filehandle)
+      @ws.instance_variable_get(:@filehandle).close(true)
+    end
+  end
+
   def test_methods_exist
     assert_respond_to(@ws, :write)
     assert_respond_to(@ws, :write_blank)
@@ -99,6 +108,12 @@ class TC_Worksheet < Test::Unit::TestCase
     assert_equal(@sheetname, @ws.name)
   end
 
+  def test_write_url_should_not_change_internal_url_string
+    internal_url = 'internal:Sheet2!A1'
+    @ws.write_url(0, 0, internal_url)
+
+    assert_equal('internal:Sheet2!A1', internal_url)
+  end
 
   def assert_equal_filesize(target, test, msg = "Bad file size")
     assert_equal(File.size(target),File.size(test),msg)
