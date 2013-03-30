@@ -5219,7 +5219,7 @@ class Worksheet < BIFFWriter
     url = url.sub(/^internal:/, '')
 
     # Write the visible label but protect against url recursion in write().
-    str          = url unless str
+    str          = url.dup unless str
     error        = write_string(row1, col1, str, xf)
     return error if error == -2
 
@@ -5233,13 +5233,14 @@ class Worksheet < BIFFWriter
     encoding    = 0
 
     # Convert an Utf8 URL type and to a null terminated wchar string.
-    if is_utf8?(str)
-      # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
-      url.sub!(/^(.+)!/, "'\1'!") if not url =~ /^'/
-      # URL is null terminated.
-      ruby_18 { url = utf8_to_16be(url) + "\0\0" } ||
-      ruby_19 { url = url.encode('UTF-16LE') + "\0\0".encode('UTF-16LE') }
-      encoding = 1
+    ruby_18 do
+      if is_utf8?(url)
+        # Quote sheet name if not already, i.e., Sheet!A1 to 'Sheet!A1'.
+        url = "'#{sheetname_from_url(url)}'!#{cell_from_url(url)}" if not url =~ /^'/
+        # URL is null terminated.
+        ruby_18 { url = utf8_to_16be(url) + "\0\0" } ||
+          encoding = 1
+      end
     end
 
     # Convert an Ascii URL type and to a null terminated wchar string.
@@ -5249,7 +5250,7 @@ class Worksheet < BIFFWriter
     end
 
     # Pack the length of the URL as chars (not wchars)
-    url_len     = [(url.length/2).to_i].pack("V")
+    url_len     = [(url.bytesize/2).to_i].pack("V")
 
     # Calculate the data length
     length         = 0x24 + url.bytesize
@@ -5262,6 +5263,16 @@ class Worksheet < BIFFWriter
     append( header, data, unknown1, options, url_len, url)
 
     error
+  end
+
+  def sheetname_from_url(url)
+    sheetname, cell = url.split('!')
+    sheetname
+  end
+
+  def cell_from_url(url)
+    sheetname, cell = url.split('!')
+    cell
   end
 
   #
