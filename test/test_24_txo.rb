@@ -71,13 +71,4 @@ class TC_txo < Test::Unit::TestCase
     result     = unpack_record(comment.__send__("store_txo_continue_2", formats))
     assert_equal(target, result, caption)
   end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
 end

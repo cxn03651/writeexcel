@@ -43,11 +43,6 @@ class TC_OLEStorageLite < Test::Unit::TestCase
       assert_equal(str, result)
     end
   end
-
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
 end
 
 class TC_OLEStorageLitePPSFile < Test::Unit::TestCase
@@ -108,9 +103,4 @@ class TC_OLEStorageLitePPSFile < Test::Unit::TestCase
       assert_equal(d, pps_file.read)
     end
   end
-
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
 end

@@ -638,8 +638,4 @@ class TC_ChartAreaFormats < Test::Unit::TestCase
 
     [line, area]
   end
-
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
 end

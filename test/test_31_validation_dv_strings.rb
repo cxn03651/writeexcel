@@ -120,13 +120,4 @@ class TC_validation_dv_strings < Test::Unit::TestCase
     result     = unpack_record(@data_validation.__send__("pack_dv_string", string, max_length))
     assert_equal(target, result, caption)
   end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
 end

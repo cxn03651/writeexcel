@@ -176,13 +176,4 @@ class TC_property_types < Test::Unit::TestCase
     result     = unpack_record( pack_VT_FILETIME(filetime) )
     assert_equal(target, result, caption)
   end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
 end

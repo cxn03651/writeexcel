@@ -207,13 +207,4 @@ class TC_validation_dv_formula < Test::Unit::TestCase
 
     assert_equal('=SUM(A1:D1)', formula)
   end
-
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
 end

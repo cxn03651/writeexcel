@@ -567,8 +567,4 @@ class TC_ChartGeneric < Test::Unit::TestCase
     got = unpack_record(@chart.__send__("store_serauxtrend", *values))
     assert_equal(expected, got, caption)
   end
-
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
 end

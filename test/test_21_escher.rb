@@ -492,14 +492,6 @@ class TC_escher < Test::Unit::TestCase
     assert_equal(target, result, caption)
   end
 
-  ###############################################################################
-  #
-  # Unpack the binary data into a format suitable for printing in tests.
-  #
-  def unpack_record(data)
-    data.unpack('C*').map! {|c| sprintf("%02X", c) }.join(' ')
-  end
-
   def data_for_test
     return [
       [   'DggContainer',                 # Caption
