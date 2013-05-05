@@ -669,15 +669,18 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
     iAllW = iAll
     iBdCntW  = iAllW / iBlCnt
     iBdCntW += 1 if iAllW % iBlCnt > 0
-    iBdCnt = 0
-    #0.1 Calculate BD count
-    iBlCnt -= 1 #the BlCnt is reduced in the count of the last sect is used for a pointer the next Bl
-    iBBleftover = iAll - i1stBdMax
-    if iAll >i1stBdMax
-      iBdCnt, iBdExL, iBBleftover = calc_idbcnt_idbexl_ibbleftover(iBBleftover, iBlCnt, iBdCnt, iBdExL)
+    iBdCnt = ((iAll + iBdCntW) / iBlCnt).to_i
+    iBdCnt += ((iAllW + iBdCntW) % iBlCnt) == 0 ? 0 : 1
+    if iBdCnt > i1stBdL
+      #0.1 Calculate BD count
+      iBlCnt -= 1 #the BlCnt is reduced in the count of the last sect is used for a pointer the next Bl
+      iBBleftover = iAll - i1stBdMax
+      if iAll >i1stBdMax
+        iBdCnt, iBdExL, iBBleftover = calc_idbcnt_idbexl_ibbleftover(iBBleftover, iBlCnt, iBdCnt, iBdExL)
+      end
+      iBdCnt += i1stBdL
+      #print "iBdCnt = iBdCnt \n"
     end
-    iBdCnt += i1stBdL
-    #print "iBdCnt = iBdCnt \n"
 
     #1.Save Header
     data = [
@@ -694,8 +697,8 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
           [iBBcnt+iSBDcnt].pack("V"),        #ROOT START
           [0].pack("V"),
           [0x1000].pack("V"),
-          [0].pack("V"),                     #Small Block Depot
-          [1].pack("V")
+          [iSBDcnt == 0 ? -2 : 0].pack("V"),                     #Small Block Depot
+          [iSBDcnt].pack("V")
       ]
     file.write(
       ruby_18 { data.join('') } ||
