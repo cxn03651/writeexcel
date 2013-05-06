@@ -3421,4 +3421,38 @@ workbook.close
     # do assertion
     compare_file("#{PERL_OUTDIR}/compatibility_mode_write_number.xls", @file)
   end
+
+  def test_properties
+    workbook  = WriteExcel.new(@file)
+
+    #
+    # adjust @localtime to target xls file.
+    #
+    workbook.instance_variable_set(
+                                   :@localtime,
+                                   Time.local(2013, 5, 5, 22, 37, 42)
+                                   )
+
+    worksheet = workbook.add_worksheet
+
+    workbook.set_properties(
+                            :title    => 'This is an example spreadsheet',
+                            :subject  => 'With document properties',
+                            :author   => 'Hideo NAKAMURA',
+                            :manager  => 'John McNamara',
+                            :company  => 'Rubygem',
+                            :category => 'Example spreadsheets',
+                            :keywords => 'Sample, Example, Properties',
+                            :comments => 'Created with Ruby and WriteExcel'
+                            )
+
+
+    worksheet.set_column('A:A', 50)
+    worksheet.write('A1', 'Select File->Properties to see the file properties')
+
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/properties.xls", @file)
+  end
 end
