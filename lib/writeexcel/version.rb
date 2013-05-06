@@ -1,5 +1,5 @@
 require 'writeexcel'
 
 class WriteExcel < Workbook
-  VERSION = "0.6.19"
+  VERSION = "1.0.0"
 end
