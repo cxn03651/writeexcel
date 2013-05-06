@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/ruby
 # -*- coding: utf-8 -*-
 
 ##############################################################################
@@ -15,7 +15,7 @@ require 'writeexcel'
 
 workbook  = WriteExcel.new('properties.xls')
 worksheet = workbook.add_worksheet
-bp =1
+
 workbook.set_properties(
     :title    => 'This is an example spreadsheet',
     :subject  => 'With document properties',
