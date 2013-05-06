@@ -4,8 +4,6 @@ class Worksheet < BIFFWriter
   require 'writeexcel/helper'
 
   class ColInfo
-    attr_reader :level
-
     #
     #   new(firstcol, lastcol, width, [format, hidden, level, collapsed])
     #
