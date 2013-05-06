@@ -226,14 +226,16 @@ def pack_VT_FILETIME(localtime)       #:nodoc:
 
   epoch = DateTime.new(1601, 1, 1)
 
+  t = localtime.getgm
+
   datetime = DateTime.new(
-                localtime.year,
-                localtime.mon,
-                localtime.mday,
-                localtime.hour,
-                localtime.min,
-                localtime.sec,
-                localtime.usec
+                t.year,
+                t.mon,
+                t.mday,
+                t.hour,
+                t.min,
+                t.sec,
+                t.usec
               )
   bignum = (datetime - epoch) * 86400 * 1e7.to_i
   high, low = bignum.divmod 1 << 32
