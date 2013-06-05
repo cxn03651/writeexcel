@@ -84,7 +84,7 @@ Example Code:
 == Recent Change
 v1.0.0
 * Bug fix in Workbook#set_properties.
-s
+
 v0.6.19
 * Bug fix in Worksheet#write_url_internal
 
