@@ -15,7 +15,7 @@ require 'writeexcel'
 
 workbook  = WriteExcel.new('properties_jp.xls')
 worksheet = workbook.add_worksheet
-bp =1
+
 workbook.set_properties(
     :title    => 'スプレッドシートの作成例',
     :subject  => 'ファイルのプロパティをセット',

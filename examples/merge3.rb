@@ -24,7 +24,6 @@ worksheet = workbook.add_worksheet()
 [1, 3,6,7].each { |row| worksheet.set_row(row, 30) }
 worksheet.set_column('B:D', 20)
 
-bp=1
 ###############################################################################
 #
 # Example 1: Merge cells containing a hyperlink using write_url_range()

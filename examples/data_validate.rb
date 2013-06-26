@@ -134,7 +134,6 @@ worksheet.data_validation(row, 1,
 #
 txt = 'Select a value from a drop down list'
 row += 2
-bp=1
 worksheet.write(row, 0, txt)
 worksheet.data_validation(row, 1,
     {

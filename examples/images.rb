@@ -21,7 +21,6 @@ worksheet1 = workbook.add_worksheet('Image 1')
 worksheet2 = workbook.add_worksheet('Image 2')
 worksheet3 = workbook.add_worksheet('Image 3')
 worksheet4 = workbook.add_worksheet('Image 4')
-bp=1
 
 # Insert a basic image
 worksheet1.write('A10', "Image inserted into worksheet.")

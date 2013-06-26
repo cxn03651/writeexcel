@@ -318,7 +318,6 @@ class TC_example_match < Test::Unit::TestCase
     west.write(0, 1, 100000)
 
     # Set the active worksheet
-    bp=1
     south.activate()
 
     # Set the width of the first column
@@ -701,7 +700,7 @@ class TC_example_match < Test::Unit::TestCase
     #
     txt = 'Select a value from a drop down list'
     row += 2
-    bp=1
+
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
         {
@@ -1156,7 +1155,6 @@ class TC_example_match < Test::Unit::TestCase
     worksheet2 = workbook.add_worksheet('Image 2')
     worksheet3 = workbook.add_worksheet('Image 3')
     worksheet4 = workbook.add_worksheet('Image 4')
-    bp=1
 
     # Insert a basic image
     worksheet1.write('A10', "Image inserted into worksheet.")

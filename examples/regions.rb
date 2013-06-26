@@ -40,7 +40,6 @@ east.write(0, 1, 150000)
 west.write(0, 1, 100000)
 
 # Set the active worksheet
-bp=1
 south.activate()
 
 # Set the width of the first column
