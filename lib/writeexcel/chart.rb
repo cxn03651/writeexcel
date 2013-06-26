@@ -1107,7 +1107,7 @@ class Chart < Worksheet
 
     # Note, the CHARTFORMATLINK record is only written by Excel.
 
-    if @legend[:visible]
+    if @legend[:visible] != 0
         store_legend_stream
     end
 
