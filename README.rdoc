@@ -82,67 +82,11 @@ Example Code:
 * and ......
 
 == Recent Change
+v1.0.1
+* Bug fix issue 25. bug in Chart#set_legend.
+
 v1.0.0
 * Bug fix in Workbook#set_properties.
-
-v0.6.19
-* Bug fix in Worksheet#write_url_internal
-
-v0.6.18
-* Bug fix in compatibility_mode (Worksheet#write_number).
-
-v0.6.17
-* Bug fix in compatibility_mode (Worksheet#write_string).
-
-v0.6.16
-* typo fix
-
-v0.6.15
-* add Worksheet#merge_range_with_date_time : write datetime string to merged cells
-
-v0.6.14
-* Buf fix Issues 20. If more than 10 sheets, sheet reference mix up
-
-v0.6.13
-* Bug fix issue 19. Workbook#store_num_format, format written in utf8 raise exception.
-
-v0.6.12
-* Bug fix issue 17. Worksheet#store_formula shouldn't be private
-
-v0.6.11
-* Bug fix issue 15. Worksheet#write_comment on the same row overwrite other comments.
-
-v0.6.10
-* Bug fix. method missing split_string_setup() in shared_string_table.rb. see https://github.com/cxn03651/writeexcel/pull/13
-
-v0.6.9
-* Bug fix. When sheetname is cell's A1 notation such as 'D1', Worksheet#autofilter causes exception.
-
-v0.6.8
-* Bug fix. Worksheet#protect doesn't work well.
-
-v0.6.7
-* Bug fix. Worksheet#set_first_sheet doesn't work well.
-* Bug fix. Worksheet#hide_zero doesn't work well.
-* Bug fix. Worksheet#set_column - col width doesn't set to zero when pass hidden 1.
-'
-v0.6.6
-* add private method to avoid warning: private attribute?
-
-v0.6.5
-* Bug fix. if workbook already has worksheet of utf8 name, Workbook#add_worksheet, Workbook#add_chart, Workbook#add_chart_ext raise exception when add new worksheet of utf8 name.
-
-v0.6.4
-* Bug fix. endless loop when inserted image size > 8224bytes.
-
-v0.6.3
-* Bug fix. endless loop when inserted image size > 8224.
-
-v0.6.1
-* Bug fix. to avoid output stack trace for debug when defined $debug such as Rails 2.3.8 development console.
-
-v0.6.0
-* Bug fix. to avoid destroy to_json method when using with Rails 3
 
 == Author
 
