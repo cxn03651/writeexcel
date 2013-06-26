@@ -346,7 +346,7 @@ class Chart < Worksheet
   def set_legend(params = {})
     if params.has_key?(:position)
       if params[:position].downcase == 'none'
-        legend[:visible] = 0
+        @legend[:visible] = 0
       end
     end
   end
