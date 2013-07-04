@@ -20,4 +20,5 @@ Gem::Specification.new do |gem|
     "LICENSE.txt",
     "README.rdoc"
   ]
+  gem.add_development_dependency 'simplecov'
 end

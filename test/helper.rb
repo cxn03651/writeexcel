@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 require 'rubygems'
+require 'simplecov'
 require 'test/unit'
+
+SimpleCov.start
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
