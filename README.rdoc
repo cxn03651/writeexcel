@@ -93,7 +93,7 @@ v1.0.0
 Original was written in Perl by John McNamara (jmcnamara@cpan.org).
 
 Convert to ruby by Hideo Nakamura (cxn03651@msj.biglobe.ne.jp)
-Copyright (c) 2009-2013 Hideo NAKAMURA. See LICENSE for details.
+Copyright (c) 2009-2013 Hideo NAKAMURA. See LICENSE.txt for details.
 
 == License
 
