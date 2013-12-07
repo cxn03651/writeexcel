@@ -9,9 +9,10 @@ class TestProperties < Test::Unit::TestCase
   end
 
   def test_pack_VT_FILETIME
+    filetime =
     assert_equal(
                  '40 00 00 00 00 FD 2D ED CE 48 CE 01',
-                 unpack_record(pack_VT_FILETIME(Time.local(2013, 5, 4, 22, 54, 42)))
+                 unpack_record(pack_VT_FILETIME(Time.gm(2013, 5, 4, 13, 54, 42)))
                  )
   end
 
