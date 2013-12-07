@@ -27,7 +27,7 @@ class TestProperties < Test::Unit::TestCase
                                         [4, "VT_LPSTR", "Hideo NAKAMURA"],
                                         [5, "VT_LPSTR", "Sample, Example, Properties"],
                                         [6, "VT_LPSTR", "Created with Ruby and WriteExcel"],
-                                        [12, "VT_FILETIME", Time.local(2013, 5, 4, 21, 47, 16)]
+                                        [12, "VT_FILETIME", Time.gm(2013, 5, 4, 12, 47, 16)]
                                        ]
                                              ))
                  )
