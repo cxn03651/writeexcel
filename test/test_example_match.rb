@@ -3428,7 +3428,7 @@ workbook.close
     #
     workbook.instance_variable_set(
                                    :@localtime,
-                                   Time.local(2013, 5, 5, 22, 37, 42)
+                                   Time.gm(2013, 5, 5, 13, 37, 42).localtime("+09:00")
                                    )
 
     worksheet = workbook.add_worksheet
