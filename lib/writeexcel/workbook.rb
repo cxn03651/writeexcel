@@ -872,7 +872,7 @@ class Workbook < BIFFWriter
     check_sheetname_valid_chars(name, name_utf16be)
 
     # Handle utf8 strings
-    if is_utf8?(name)
+    if !name_utf16be && is_utf8?(name)
       name = utf8_to_16be(name)
       name_utf16be = true
     end
@@ -920,13 +920,15 @@ class Workbook < BIFFWriter
       raise "Invalid character []:*?/\\ in worksheet name: #{name}"
     else
       # Extract any 8bit clean chars from the UTF16 name and validate them.
-      str = name.dup
+      str = nil
+      ruby_18 { str = name.dup }
+      ruby_19 { str = name.dup.force_encoding("binary") }
       while str =~ /../m
         hi, lo = $~[0].unpack('aa')
+        str = $~.post_match
         if hi == "\0" and lo =~ invalid_char
           raise 'Invalid character []:*?/\\ in worksheet name: ' + name
         end
-        str = $~.post_match
       end
     end
   end
