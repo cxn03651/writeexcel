@@ -3421,14 +3421,16 @@ workbook.close
   end
 
   def test_properties
+    tz = ENV["TZ"]
     workbook  = WriteExcel.new(@file)
 
     #
     # adjust @localtime to target xls file.
     #
+    ENV["TZ"] = "Japan"
     workbook.instance_variable_set(
                                    :@localtime,
-                                   Time.gm(2013, 5, 5, 13, 37, 42).localtime("+09:00")
+                                   Time.gm(2013, 5, 5, 13, 37, 42).localtime
                                    )
 
     worksheet = workbook.add_worksheet
@@ -3452,6 +3454,8 @@ workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/properties.xls", @file)
+
+    ENV["TZ"] = tz
   end
 
   def test_chart_legend
