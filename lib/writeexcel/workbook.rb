@@ -920,9 +920,7 @@ class Workbook < BIFFWriter
       raise "Invalid character []:*?/\\ in worksheet name: #{name}"
     else
       # Extract any 8bit clean chars from the UTF16 name and validate them.
-      str = nil
-      ruby_18 { str = name.dup }
-      ruby_19 { str = name.dup.force_encoding("binary") }
+      str = ruby_19 { name.dup.force_encoding("binary") } || ruby_18 { name.dup }
       while str =~ /../m
         hi, lo = $~[0].unpack('aa')
         str = $~.post_match
