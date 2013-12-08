@@ -914,19 +914,27 @@ class Workbook < BIFFWriter
 
   def check_sheetname_valid_chars(name, name_utf16be)       #:nodoc:
     # Check that sheetname doesn't contain any invalid characters
-    invalid_char    = %r![\[\]:*?/\\]!
-    if !name_utf16be && name =~ invalid_char
-      # Check ASCII names
+    invalid_chars    = %r![\[\]:*?/\\]!
+
+    if ascii_sheetname_invalid_chars?(name, name_utf16be, invalid_chars) ||
+        non_ascii_sheetname_invalid_chars?(name, invalid_chars)
       raise "Invalid character []:*?/\\ in worksheet name: #{name}"
-    else
-      # Extract any 8bit clean chars from the UTF16 name and validate them.
-      str = ruby_19 { name.dup.force_encoding("binary") } || ruby_18 { name.dup }
-      while str =~ /../m
-        hi, lo = $~[0].unpack('aa')
-        str = $~.post_match
-        if hi == "\0" and lo =~ invalid_char
-          raise 'Invalid character []:*?/\\ in worksheet name: ' + name
-        end
+    end
+  end
+
+  def ascii_sheetname_invalid_chars?(name, name_utf16be, invalid_chars)  # :nodoc:
+    # Check ASCII names
+    !name_utf16be && name =~ invalid_chars
+  end
+
+  def non_ascii_sheetname_invalid_chars?(name, invalid_chars)   # :nodoc:
+    # Extract any 8bit clean chars from the UTF16 name and validate them.
+    str = ruby_19 { name.dup.force_encoding("binary") } || ruby_18 { name.dup }
+    while str =~ /../m
+      hi, lo = $~[0].unpack('aa')
+      str = $~.post_match
+      if hi == "\0" and lo =~ invalid_chars
+        raise 'Invalid character []:*?/\\ in worksheet name: ' + name
       end
     end
   end
