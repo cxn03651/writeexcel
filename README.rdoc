@@ -82,6 +82,10 @@ Example Code:
 * and ......
 
 == Recent Change
+v1.0.2
+* Bug fix issue 28. bug in non ascii worksheet names.
+* Bug fix in testcase issue 28. fail due to defferent timezone.
+
 v1.0.1
 * Bug fix issue 25. bug in Chart#set_legend.
 
