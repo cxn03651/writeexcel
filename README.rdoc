@@ -2,6 +2,8 @@
 
 Write to a cross-platform Excel binary file.
 
+{<img src="https://badge.fury.io/rb/writeexcel.png" alt="Gem Version" />}[http://badge.fury.io/rb/writeexcel]
+
 == Description
 
 This library is converted from Spreadsheet::WriteExcel module of Perl.
