@@ -3336,6 +3336,26 @@ workbook.close
     compare_file("#{PERL_OUTDIR}/set_first_sheet.xls", @file)
   end
 
+  def test_sheet_name
+    workbook = WriteExcel.new(@file)
+
+    worksheet = workbook.add_worksheet("Second")
+    worksheet.write(0, 0, 2)
+
+    worksheet = workbook.add_worksheet("First")
+    worksheet.write(0, 0, 1)
+
+    worksheet = workbook.add_worksheet("Third")
+    worksheet.write(0, 0, "First :")
+    worksheet.write_formula(0, 1, %q{='First'!A1})
+    worksheet.write(1, 0, "Second :")
+    worksheet.write_formula(1, 1, %q{='Second'!A1})
+    workbook.close
+
+    # do assertion
+    compare_file("#{PERL_OUTDIR}/sheet_name.xls", @file)
+  end
+
   def test_store_formula
     workbook  = WriteExcel.new(@file)
     worksheet = workbook.add_worksheet()
