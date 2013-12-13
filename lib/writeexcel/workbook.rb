@@ -1773,8 +1773,7 @@ class Workbook < BIFFWriter
 
     # Get the external refs
 
-    ext = @ext_refs.keys.sort {|a, b| a.split(':')[0].to_i <=> b.split(':')[0].to_i}
-
+    ext = @ext_refs.keys.sort {|a, b| @ext_refs[a].to_i <=> @ext_refs[b].to_i}
 
     # Change the external refs from stringified "1:1" to [1, 1]
     ext.map! {|e| e.split(/:/).map! {|v| v.to_i} }
