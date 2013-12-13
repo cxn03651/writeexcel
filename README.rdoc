@@ -82,6 +82,9 @@ Example Code:
 * and ......
 
 == Recent Change
+v1.0.3
+* Bug fix issue 29. bug in extern sheet reference.
+
 v1.0.2
 * Bug fix issue 28. bug in non ascii worksheet names.
 * Bug fix in testcase issue 28. fail due to defferent timezone.
