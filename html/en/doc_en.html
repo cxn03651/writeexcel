@@ -269,7 +269,7 @@ a number and a formula to the first worksheet in an Excel workbook called ruby.x
 
     # Write a number and a formula using A1 notation
     worksheet.write(&#39;A3&#39;, 1.2345)
-    worksheet.write(&#39;A4&#39;, &#39;=SIN(PI/4)&#39;)
+    worksheet.write(&#39;A4&#39;, &#39;=SIN(PI()/4)&#39;)
 
     workbook.close
 </pre>
@@ -885,7 +885,7 @@ name="write"
     worksheet.write(&#39;A10&#39;, &#39;internal:Sheet1!A1&#39;  ) # write_url
     worksheet.write(&#39;A11&#39;, &#39;external:c:\foo.xls&#39; ) # write_url
     worksheet.write(&#39;A12&#39;, &#39;=A3 + 3*A4&#39;          ) # write_formula
-    worksheet.write(&#39;A13&#39;, &#39;=SIN(PI/4)&#39;        ) # write_formula
+    worksheet.write(&#39;A13&#39;, &#39;=SIN(PI()/4)&#39;        ) # write_formula
     worksheet.write(&#39;A14&#39;, array                 ) # write_row
     worksheet.write(&#39;A15&#39;, [array]               ) # write_col
 </pre>
@@ -1279,7 +1279,7 @@ name="write_formula"
 
 <pre>
     worksheet.write_formula(0, 0, &#39;=B3 + B4&#39;  )
-    worksheet.write_formula(1, 0, &#39;=SIN(PI/4)&#39;)
+    worksheet.write_formula(1, 0, &#39;=SIN(PI()/4)&#39;)
     worksheet.write_formula(2, 0, &#39;=SUM(B1:B5)&#39; )
     worksheet.write_formula(&#39;A4&#39;, &#39;=IF(A3&#62;1,&#34;Yes&#34;, &#34;No&#34;)&#39;   )
     worksheet.write_formula(&#39;A5&#39;, &#39;=AVERAGE(1, 2, 3, 4)&#39;    )
@@ -5946,4 +5946,3 @@ name="COPYRIGHT"
 <!-- end doc -->
 
 </body></html>
-
