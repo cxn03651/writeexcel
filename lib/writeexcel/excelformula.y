@@ -63,77 +63,80 @@ end
 
 class ExcelFormulaParserError < StandardError; end
 
-class Node
+module Writeexcel
 
-   def exec_list(nodes)
-      v = nil
-      nodes.each { |i| v = i.evaluate }
-      v
+   class Node
+   
+      def exec_list(nodes)
+         v = nil
+         nodes.each { |i| v = i.evaluate }
+         v
+      end
+   
+      def excelformulaparser_error(msg)
+         raise ExcelFormulaParserError,
+                  "in #{fname}:#{lineno}: #{msg}"
+      end
+   
    end
-
-   def excelformulaparser_error(msg)
-      raise ExcelFormulaParserError,
-               "in #{fname}:#{lineno}: #{msg}"
+   
+   class RootNode < Node
+   
+      def initialize(tree)
+         @tree = tree
+      end
+   
+      def evaluate
+         exec_list @tree
+      end
+   
    end
-
-end
-
-class RootNode < Node
-
-   def initialize(tree)
-      @tree = tree
+   
+   
+   class FuncallNode < Node
+   
+      def initialize(func, args)
+         @func = func
+         @args = args
+      end
+   
+      def evaluate
+         arg = @args.collect {|i| i.evaluate }
+         out = []
+         arg.each { |i| o.push i }
+         o.push @func
+         p o
+      end
+   
    end
-
-   def evaluate
-      exec_list @tree
+   
+   class NumberNode < Node
+   
+      def initialize(val)
+         @val = val
+      end
+   
+      def evaluate
+         p @val
+      end
+   
    end
-
-end
-
-
-class FuncallNode < Node
-
-   def initialize(func, args)
-      @func = func
-      @args = args
-   end
-
-   def evaluate
-      arg = @args.collect {|i| i.evaluate }
-      out = []
-      arg.each { |i| o.push i }
-      o.push @func
-      p o
-   end
-
-end
-
-class NumberNode < Node
-
-   def initialize(val)
-      @val = val
-   end
-
-   def evaluate
-      p @val
-   end
-
-end
-
-class OperateNode < Node
-
-   def initialize(op, left, right)
-      @op = op
-      @left = left
-      @right = right
-   end
-
-   def evaluate
-      o = []
-      o.push @left
-      o.push @right
-      o.push @op
-      p o
+   
+   class OperateNode < Node
+   
+      def initialize(op, left, right)
+         @op = op
+         @left = left
+         @right = right
+      end
+   
+      def evaluate
+         o = []
+         o.push @left
+         o.push @right
+         o.push @op
+         p o
+      end
    end
 end
 
