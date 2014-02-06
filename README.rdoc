@@ -84,6 +84,9 @@ Example Code:
 * and ......
 
 == Recent Change
+v1.0.4
+* put formula parsers classes in a module to avoid namespace conflicts. (thanks Kevin)
+
 v1.0.3
 * Bug fix issue 29. bug in extern sheet reference.
 
