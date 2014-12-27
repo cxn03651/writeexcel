@@ -84,6 +84,9 @@ Example Code:
 * and ......
 
 == Recent Change
+v1.0.5
+* use test-unit gem instead of test/unit.
+
 v1.0.4
 * put formula parsers classes in a module to avoid namespace conflicts. (thanks Kevin)
 
