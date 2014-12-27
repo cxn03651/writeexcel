@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook called simple.xls and add a worksheet

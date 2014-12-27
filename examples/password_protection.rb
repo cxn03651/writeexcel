@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'writeexcel'
 
   workbook = WriteExcel.new('password_protection.xls')

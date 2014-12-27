@@ -7,7 +7,6 @@
 #
 # copyright 2013 Hideo NAKAMURA, cxn03651@msj.biglobe.ne.jp
 #
-require 'rubygems'
 require 'writeexcel'
 
 # Create a new workbook called chart_legend.xls and add a worksheet

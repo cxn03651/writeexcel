@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-require 'rubygems'
 require 'simplecov'
 require 'test/unit'
 

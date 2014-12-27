@@ -1,7 +1,6 @@
 #!/usr/bin/ruby -w
 # -*- coding:utf-8 -*-
 
-require 'rubygems'
 require 'writeexcel'
 
 workbook = WriteExcel.new('set_first_sheet.xls')
