@@ -680,13 +680,11 @@ class Formula < ExcelFormulaParser       #:nodoc:
       'ptgRefNV'          => 0x4C,
       'ptgAreaNV'         => 0x4D,
       'ptgMemAreaNV'      => 0x4E,
-      'ptgMemNoMemN'      => 0x4F,
       'ptgFuncCEV'        => 0x58,
       'ptgNameXV'         => 0x59,
       'ptgRef3dV'         => 0x5A,
       'ptgArea3dV'        => 0x5B,
       'ptgRefErr3dV'      => 0x5C,
-      'ptgAreaErr3d'      => 0x5D,
       'ptgArrayA'         => 0x60,
       'ptgFuncA'          => 0x61,
       'ptgFuncVarA'       => 0x62,
@@ -702,13 +700,11 @@ class Formula < ExcelFormulaParser       #:nodoc:
       'ptgRefNA'          => 0x6C,
       'ptgAreaNA'         => 0x6D,
       'ptgMemAreaNA'      => 0x6E,
-      'ptgMemNoMemN'      => 0x6F,
       'ptgFuncCEA'        => 0x78,
       'ptgNameXA'         => 0x79,
       'ptgRef3dA'         => 0x7A,
       'ptgArea3dA'        => 0x7B,
-      'ptgRefErr3dA'      => 0x7C,
-      'ptgAreaErr3d'      => 0x7D
+      'ptgRefErr3dA'      => 0x7C
     }
 
     # Thanks to Michael Meeks and Gnumeric for the initial arg values.
