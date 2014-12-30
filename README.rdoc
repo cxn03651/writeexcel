@@ -3,6 +3,7 @@
 Write to a cross-platform Excel binary file.
 
 {<img src="https://badge.fury.io/rb/writeexcel.png" alt="Gem Version" />}[http://badge.fury.io/rb/writeexcel]
+{<img src="https://travis-ci.org/cxn03651/writeexcel.svg?branch=master" alt="Build Status" />}[https://travis-ci.org/cxn03651/writeexcel]
 
 == Description
 
