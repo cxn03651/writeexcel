@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-require 'simplecov'
+# require 'simplecov'
 require 'test/unit'
 
-SimpleCov.start
+# SimpleCov.start
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
