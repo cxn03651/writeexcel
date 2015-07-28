@@ -42,9 +42,9 @@
   private :utf8_to_16le
 
   def ascii_to_16be(ascii)
-    ascii.unpack("C*").pack("n*")
-    ruby_19 { ascii.force_encoding('UTF-16BE') }
-    ascii
+    str_16be = ascii.unpack("C*").pack("n*")
+    ruby_19 { str_16be.force_encoding('UTF-16BE') }
+    str_16be
   end
   private :ascii_to_16be
 
