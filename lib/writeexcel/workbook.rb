@@ -130,6 +130,13 @@ class Workbook < BIFFWriter
 
     # Set colour palette.
     set_palette_xl97
+
+    return unless block_given?
+    begin
+      yield self
+    ensure
+      close
+    end
   end
 
   #
