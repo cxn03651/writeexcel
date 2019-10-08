@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # require 'simplecov'
 require 'test/unit'
-
+require 'mimemagic'
 # SimpleCov.start
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
