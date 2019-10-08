@@ -24,4 +24,5 @@ Gem::Specification.new do |gem|
     "README.rdoc"
   ]
   gem.add_development_dependency 'simplecov'
+  gem.add_development_dependency 'mimemagic'
 end
