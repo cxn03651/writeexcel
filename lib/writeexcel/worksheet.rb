@@ -56,10 +56,10 @@ class Worksheet < BIFFWriter
     end
   end
 
-  RowMax   = 65536  # :nodoc:
-  ColMax   = 256    # :nodoc:
-  StrMax   = 0      # :nodoc:
-  Buffer   = 4096   # :nodoc:
+  RowMax   = 1048576  # :nodoc:
+  ColMax   = 16384    # :nodoc:
+  StrMax   = 0        # :nodoc:
+  Buffer   = 4096     # :nodoc:
 
   attr_reader :title_range, :print_range, :filter_area, :object_ids
   #
