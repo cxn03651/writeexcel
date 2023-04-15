@@ -672,7 +672,7 @@ class Worksheet < BIFFWriter
   #
   def set_column(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
+    if args[0].respond_to?(:=~) && args[0] =~ /^\D/
       row1, firstcol, row2, lastcol, *data = substitute_cellref(*args)
     else
       firstcol, lastcol, *data = args
