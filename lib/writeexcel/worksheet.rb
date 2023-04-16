@@ -672,7 +672,7 @@ class Worksheet < BIFFWriter
   #
   def set_column(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
+    if args[0].respond_to?(:=~) && args[0] =~ /^\D/
       row1, firstcol, row2, lastcol, *data = substitute_cellref(*args)
     else
       firstcol, lastcol, *data = args
@@ -6950,6 +6950,9 @@ class Worksheet < BIFFWriter
 
   # Check for a cell reference in A1 notation and substitute row and column
   def row_col_notation(args)   # :nodoc:
+    # ruby 3.2 no longer handles =~ for various types
+    return args unless args[0].respond_to?(:=~)
+    
     if args[0] =~ /^\D/
       substitute_cellref(*args)
     else
