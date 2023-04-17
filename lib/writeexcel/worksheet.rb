@@ -2209,10 +2209,8 @@ class Worksheet < BIFFWriter
     # Check for a cell reference in A1 notation and substitute row and column
     args = row_col_notation(args)
 
-    token = args[2]
-
     # Handle undefs as blanks
-    token ||= ''
+    token = args[2] || ''
 
     # First try user defined matches.
     @write_match.each do |aref|
@@ -2223,7 +2221,7 @@ class Worksheet < BIFFWriter
         match = eval("#{sub} self, args")
         return match if match
       end
-    end
+    end if token.respond_to?(:=~)
 
     # Match an array ref.
     if token.respond_to?(:to_ary)
@@ -2231,16 +2229,16 @@ class Worksheet < BIFFWriter
     elsif token.respond_to?(:coerce)  # Numeric
       write_number(*args)
       # Match http, https or ftp URL
-    elsif token =~ %r|^[fh]tt?ps?://|
+    elsif token.respond_to?(:=~) && token =~ %r|^[fh]tt?ps?://|
       write_url(*args)
       # Match mailto:
-    elsif token =~ %r|^mailto:|
+    elsif token.respond_to?(:=~) && token =~ %r|^mailto:|
       write_url(*args)
       # Match internal or external sheet link
-    elsif token =~ %r!^(?:in|ex)ternal:!
+    elsif token.respond_to?(:=~) && token =~ %r!^(?:in|ex)ternal:!
       write_url(*args)
       # Match formula
-    elsif token =~ /^=/
+    elsif token.respond_to?(:=~) && token =~ /^=/
       write_formula(*args)
       # Match blank
     elsif token == ''
