@@ -59,11 +59,11 @@ module Writeexcel
     # Process the image and extract dimensions.
     def process
       case filetype
-      when 'PNG'
+      when 'png'
         process_png(@data)
-      when 'JPG'
+      when 'jpg', 'jpeg'
         process_jpg(@data)
-      when 'BMP'
+      when 'bmp'
         process_bmp(@data)
         # The 14 byte header of the BMP is stripped off.
         @data[0, 13] = ''
@@ -75,13 +75,7 @@ module Writeexcel
     end
 
     def filetype
-      return 'PNG' if @data.unpack('x A3')[0] ==  'PNG'
-      return 'BMP' if @data.unpack('A2')[0] == 'BM'
-      if data.unpack('n')[0] == 0xFFD8
-        return 'JPG' if @data.unpack('x6 A4')[0] == 'JFIF' || @data.unpack('x6 A4')[0] == 'Exif'
-      else
-        raise "Unsupported image format for file: #{@filename}\n"
-      end
+      MimeMagic.by_magic(@data).subtype
     end
 
     # Extract width and height information from a PNG file.
