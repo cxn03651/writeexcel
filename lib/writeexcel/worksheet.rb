@@ -6544,7 +6544,7 @@ class Worksheet < BIFFWriter
       # Handle utf8 strings
       if is_utf8?(string)
         string = utf8_to_16be(string)
-        encodign = 1
+        encoding = 1
       end
 
       string =
