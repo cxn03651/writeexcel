@@ -17,7 +17,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_position_object < Test::Unit::TestCase
+class TC_position_object < Minitest::Test
 
   def setup
     @test_file  = StringIO.new

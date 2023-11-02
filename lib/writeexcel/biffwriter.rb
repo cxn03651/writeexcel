@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# frozen_string_literal: true
 #
 # BIFFwriter - An abstract base class for Excel workbooks and worksheets.
 #
@@ -187,7 +188,7 @@ class BIFFWriter < WriteFile       #:nodoc:
     # The header contains version and instance info packed into 2 bytes.
     header  = version | (instance << 4)
 
-    record  = [header, type, length].pack('vvV') + data
+    [header, type, length].pack('vvV') + data
   end
 
   def not_using_tmpfile

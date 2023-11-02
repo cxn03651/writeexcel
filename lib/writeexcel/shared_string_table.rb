@@ -109,10 +109,10 @@ class Workbook < BIFFWriter
             written      += space_remaining
 
             # Reduce the current block length by the amount written
-            block_length -= continue_limit -continue -align
+            block_length -= continue_limit - continue - align
 
             # Store the max size for this block
-            block_sizes.push(continue_limit -align)
+            block_sizes.push(continue_limit - align)
 
             # If the current string was split then the next CONTINUE block
             # should have the string continue flag (grbit) set unless the
@@ -125,10 +125,10 @@ class Workbook < BIFFWriter
             end
           else
             # Store the max size for this block
-            block_sizes.push(written +continue)
+            block_sizes.push(written + continue)
 
             # Not enough space to start the string in the current block
-            block_length -= continue_limit -space_remaining -continue
+            block_length -= continue_limit - space_remaining - continue
             continue = 0
           end
 
@@ -145,7 +145,7 @@ class Workbook < BIFFWriter
       end
 
       # Store the max size for the last block unless it is empty
-      block_sizes.push(written +continue) if written +continue != 0
+      block_sizes.push(written + continue) if written + continue != 0
 
       block_sizes
     end

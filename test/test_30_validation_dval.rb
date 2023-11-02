@@ -13,7 +13,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_validation_dval < Test::Unit::TestCase
+class TC_validation_dval < Minitest::Test
 
   def setup
     @workbook   = WriteExcel.new(StringIO.new)

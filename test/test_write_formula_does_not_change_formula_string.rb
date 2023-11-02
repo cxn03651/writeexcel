@@ -3,7 +3,7 @@ require 'helper'
 require 'writeexcel'
 require 'stringio'
 
-class TestWriteFormula < Test::Unit::TestCase
+class TestWriteFormula < Minitest::Test
   def setup
     @workbook = WriteExcel.new(StringIO.new)
     @worksheet = @workbook.add_worksheet('')

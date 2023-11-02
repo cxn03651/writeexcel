@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# frozen_string_literal: true
 ##############################################################################
 #
 # Format - A class for defining Excel formatting.
@@ -1572,4 +1573,3 @@ class Format < Colors
 end  # class Format
 
 end  # module Writeexcel
-

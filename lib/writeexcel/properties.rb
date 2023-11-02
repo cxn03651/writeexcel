@@ -178,7 +178,7 @@ end
 #
 def pack_VT_I2(value)       #:nodoc:
     type    = 0x0002
-    data = [type, value].pack('VV')
+    [type, value].pack('VV')
 end
 
 ###############################################################################

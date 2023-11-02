@@ -3,13 +3,12 @@
 require 'helper'
 require 'stringio'
 
-class TestProperties < Test::Unit::TestCase
+class TestProperties < Minitest::Test
   def setup
     @workbook = WriteExcel.new(StringIO.new)
   end
 
   def test_pack_VT_FILETIME
-    filetime =
     assert_equal(
                  '40 00 00 00 00 FD 2D ED CE 48 CE 01',
                  unpack_record(pack_VT_FILETIME(Time.gm(2013, 5, 4, 13, 54, 42)))

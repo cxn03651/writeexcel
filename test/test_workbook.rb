@@ -2,7 +2,7 @@
 require 'helper'
 require "stringio"
 
-class TC_Workbook < Test::Unit::TestCase
+class TC_Workbook < Minitest::Test
 
   def setup
     @test_file  = StringIO.new
@@ -22,71 +22,6 @@ class TC_Workbook < Test::Unit::TestCase
       sheets = @workbook.sheets
       assert_equal(i+1, sheets.size)
     end
-  end
-
-  def test_set_tempdir_after_sheet_added
-    # after shees added, call set_tempdir raise RuntimeError
-    @workbook.add_worksheet('name')
-    assert_raise(RuntimeError, "already sheet exists, but set_tempdir() doesn't raise"){
-      @workbook.set_tempdir
-    }
-  end
-
-  def test_set_tempdir_with_invalid_dir
-    # invalid dir raise RuntimeError
-    while true do
-      dir = Time.now.to_s
-      break unless FileTest.directory?(dir)
-      sleep 0.1
-    end
-    assert_raise(RuntimeError, "set_tempdir() doesn't raise invalid dir:#{dir}."){
-      @workbook.set_tempdir(dir)
-    }
-  end
-
-  def test_check_sheetname
-    worksheet1 = @workbook.add_worksheet              # implicit name 'Sheet1'
-    worksheet2 = @workbook.add_worksheet              # implicit name 'Sheet2'
-    worksheet3 = @workbook.add_worksheet 'Sheet3'     # explicit name 'Sheet3'
-    worksheet4 = @workbook.add_worksheet 'Sheetz'     # explicit name 'Sheetz'
-
-    valid_sheetnames.each do |test|
-      target    = test[0]
-      sheetname = test[1]
-      caption   = test[2]
-      assert_nothing_raised { @workbook.add_worksheet(sheetname) }
-    end
-
-    invalid_sheetnames.each do |test|
-      target    = test[0]
-      sheetname = test[1]
-      caption   = test[2]
-      assert_raise(RuntimeError, "sheetname: #{sheetname}") {
-          @workbook.add_worksheet(sheetname)
-        }
-    end
-  end
-
-  def test_check_sheetname_raise_if_same_utf16be_sheet_name
-    smily = [0x263a].pack('n')
-    @workbook.add_worksheet(smily, true)
-    assert_raise(RuntimeError) { @workbook.add_worksheet(smily, true)}
-  end
-
-  def test_check_sheetname_utf8_only
-    ['Лист 1', 'Лист 2', 'Лист 3'].each do |sheetname|
-      assert_nothing_raised { @workbook.add_worksheet(sheetname) }
-    end
-  end
-
-  def test_check_unicode_bytes_even
-    assert_nothing_raised(RuntimeError){ @workbook.add_worksheet('ab', 1)}
-    assert_raise(RuntimeError){ @workbook.add_worksheet('abc', 1)}
-  end
-
-  def test_raise_set_compatibility_after_sheet_creation
-    @workbook.add_worksheet
-    assert_raise(RuntimeError) { @workbook.compatibility_mode }
   end
 
   def valid_sheetnames

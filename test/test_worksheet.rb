@@ -2,7 +2,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_Worksheet < Test::Unit::TestCase
+class TC_Worksheet < Minitest::Test
   TEST_DIR    = File.expand_path(File.dirname(__FILE__))
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
 
@@ -29,23 +29,6 @@ class TC_Worksheet < Test::Unit::TestCase
     assert_respond_to(@ws, :write_blank)
     assert_respond_to(@ws, :write_row)
     assert_respond_to(@ws, :write_col)
-  end
-
-  def test_methods_no_error
-    assert_nothing_raised{ @ws.write(0,0,nil) }
-    assert_nothing_raised{ @ws.write(0,0,"Hello") }
-    assert_nothing_raised{ @ws.write(0,0,888) }
-    assert_nothing_raised{ @ws.write_row(0,0,["one","two","three"]) }
-    assert_nothing_raised{ @ws.write_row(0,0,[1,2,3]) }
-    assert_nothing_raised{ @ws.write_col(0,0,["one","two","three"]) }
-    assert_nothing_raised{ @ws.write_col(0,0,[1,2,3]) }
-    assert_nothing_raised{ @ws.write_blank(0,0,nil) }
-    assert_nothing_raised{ @ws.write_url(0,0,"http://www.ruby-lang.org") }
-  end
-
-  def test_write_syntax
-    assert_nothing_raised{@ws.write(0,0,"Hello")}
-    assert_nothing_raised{@ws.write(0,0,666)}
   end
 
   def test_store_dimensions

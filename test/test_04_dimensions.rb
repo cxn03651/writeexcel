@@ -14,7 +14,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_dimensions < Test::Unit::TestCase
+class TC_dimensions < Minitest::Test
 
   def setup
     @workbook            = WriteExcel.new(StringIO.new)
@@ -386,7 +386,7 @@ class TC_dimensions < Test::Unit::TestCase
   end
 
   def test_merge_range
-    formula = @worksheet.__send__("store_formula", '=A1 * 3 + 50')
+    @worksheet.__send__("store_formula", '=A1 * 3 + 50')
     @worksheet.merge_range('C6:E8', 'Test', @format)
 
     data     = @worksheet.__send__("store_dimensions")

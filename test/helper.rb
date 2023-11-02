@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
-# require 'simplecov'
-require 'test/unit'
+# frozen_string_literal: true
 
-# SimpleCov.start
+require 'bundler'
+
+begin
+  Bundler.setup(:default, :development)
+rescue Bundler::BundlerError => e
+  warn e.message
+  warn "Run `bundle install` to install missing gems"
+  exit e.status_code
+end
+require 'minitest/autorun'
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'writeexcel'
 
-class Test::Unit::TestCase
+class Minitest::Test
   ###############################################################################
   #
   # Unpack the binary data into a format suitable for printing in tests.

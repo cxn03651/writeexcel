@@ -22,7 +22,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_escher < Test::Unit::TestCase
+class TC_escher < Minitest::Test
 
   def setup
     @workbook  = WriteExcel.new(StringIO.new)

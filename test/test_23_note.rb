@@ -14,7 +14,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_note < Test::Unit::TestCase
+class TC_note < Minitest::Test
 
   def setup
     @workbook   = WriteExcel.new(StringIO.new)

@@ -55,8 +55,6 @@ class OLEStorageLite       #:nodoc:
     end
     done << no
 
-    rootblock = info[:root_start]
-
     #1. Get Information about itself
     pps = _getNthPps(no, info, data)
 
@@ -76,7 +74,6 @@ class OLEStorageLite       #:nodoc:
   private :_getPpsTree
 
   def _getPpsSearch(no, info, name, data, icase, done = nil)
-    rootblock = info[:root_start]
     #1. Check it self
     if done
       return [] if done.include?(no)
@@ -589,7 +586,6 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
       rh_info[:fileh] = sFile.binmode
     end
 
-    iBlk = 0
     #1. Make an array of PPS (for Save)
     aList=[]
     if bNoAs
@@ -728,7 +724,6 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
   private :_saveHeader
 
   def _saveBigData(iStBlk, aList, rh_info)
-    iRes = 0
     file = rh_info[:fileh]
 
     #1.Write Big (ge 0x1000) Data into Block
@@ -810,7 +805,7 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
       aPrev = aWk[0, iPos]
       aWk[0..iPos-1] = []
       aNext = aWk[1, iCnt - iPos - 1]
-      aWk[1..(1 + iCnt - iPos -1 -1)] = []
+      aWk[1..(1 + iCnt - iPos - 1 - 1)] = []
       pps_array[iPos].prev_pps = _savePpsSetPnt(aPrev, aList, rh_info)
       pps_array[iPos].next_pps = _savePpsSetPnt(aNext, aList, rh_info)
       pps_array[iPos].dir_pps  = _savePpsSetPnt(pps_array[iPos].child, aList, rh_info)
@@ -834,12 +829,10 @@ class OLEStorageLitePPSRoot < OLEStorageLitePPS       #:nodoc:
       return pps_array[0].no
     #1.3 Array
     else
-      iCnt = pps_array.size
       #1.3.1 Define Center
       iPos = 0  #int($iCnt/ 2);     #$iCnt
 
       aWk = pps_array.dup
-      aPrev = aWk[1, 1]
       aWk[1..1] = []
       aNext = aWk[1..aWk.size]      #, $iCnt - $iPos -1);
       pps_array[iPos].prev_pps = _savePpsSetPnt2(pps_array, aList, rh_info)
@@ -975,7 +968,7 @@ class OLEStorageLitePPSFile < OLEStorageLitePPS       #:nodoc:
     @pps_file.binmode
   end
 
-  def append (data)
+  def append(data)
     return if data.nil?
     if @pps_file
       @pps_file << data

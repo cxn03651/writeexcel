@@ -2,7 +2,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_example_match < Test::Unit::TestCase
+class TC_example_match < Minitest::Test
 
   TEST_DIR    = File.expand_path(File.dirname(__FILE__))
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
@@ -62,9 +62,9 @@ class TC_example_match < Test::Unit::TestCase
 
     # Set up several sheets with the same data.
     workbook.sheets.each do |worksheet|
-        worksheet.set_column('A:D', 12)
-        worksheet.set_row(0, 20, bold)
-        worksheet.write('A1', headings)
+      worksheet.set_column('A:D', 12)
+      worksheet.set_row(0, 20, bold)
+      worksheet.write('A1', headings)
     end
 
     ###############################################################################
@@ -95,17 +95,17 @@ class TC_example_match < Test::Unit::TestCase
     row = 1
 
     data.each do |row_data|
-        region = row_data[0]
+      region = row_data[0]
 
-        if region == 'East'
-            # Row is visible.
-        else
-            # Hide row.
-            worksheet2.set_row(row, nil, nil, 1)
-        end
+      if region == 'East'
+      # Row is visible.
+      else
+        # Hide row.
+        worksheet2.set_row(row, nil, nil, 1)
+      end
 
-        worksheet2.write(row, 0, row_data)
-        row += 1
+      worksheet2.write(row, 0, row_data)
+      row += 1
     end
 
 
@@ -125,17 +125,17 @@ class TC_example_match < Test::Unit::TestCase
     row = 1
 
     data.each do |row_data|
-        region = row_data[0]
+      region = row_data[0]
 
-        if region == 'East' || region == 'South'
-            # Row is visible.
-        else
-            # Hide row.
-            worksheet3.set_row(row, nil, nil, 1)
-        end
+      if region == 'East' || region == 'South'
+      # Row is visible.
+      else
+        # Hide row.
+        worksheet3.set_row(row, nil, nil, 1)
+      end
 
-        worksheet3.write(row, 0, row_data)
-        row += 1
+      worksheet3.write(row, 0, row_data)
+      row += 1
     end
 
 
@@ -156,18 +156,18 @@ class TC_example_match < Test::Unit::TestCase
     row = 1
 
     data.each do |row_data|
-        region = row_data[0]
-        volume = row_data[2]
+      region = row_data[0]
+      volume = row_data[2]
 
-        if region == 'East' && volume >  3000   && volume < 8000
-            # Row is visible.
-        else
-            # Hide row.
-            worksheet4.set_row(row, nil, nil, 1)
-        end
+      if region == 'East' && volume >  3000   && volume < 8000
+      # Row is visible.
+      else
+        # Hide row.
+        worksheet4.set_row(row, nil, nil, 1)
+      end
 
-        worksheet4.write(row, 0, row_data)
-        row += 1
+      worksheet4.write(row, 0, row_data)
+      row += 1
     end
 
 
@@ -189,17 +189,17 @@ class TC_example_match < Test::Unit::TestCase
     row = 1
 
     data.each do |row_data|
-        region = row_data[0]
+      region = row_data[0]
 
-        if region == ''
-            # Row is visible.
-        else
-            # Hide row.
-            worksheet5.set_row(row, nil, nil, 1)
-        end
+      if region == ''
+      # Row is visible.
+      else
+        # Hide row.
+        worksheet5.set_row(row, nil, nil, 1)
+      end
 
-        worksheet5.write(row, 0, row_data)
-        row += 1
+      worksheet5.write(row, 0, row_data)
+      row += 1
     end
 
 
@@ -218,17 +218,17 @@ class TC_example_match < Test::Unit::TestCase
     row = 1
 
     data.each do |row_data|
-        region = row_data[0]
+      region = row_data[0]
 
-        if region != ''
-            # Row is visible.
-        else
-            # Hide row.
-            worksheet6.set_row(row, nil, nil, 1)
-        end
+      if region != ''
+      # Row is visible.
+      else
+        # Hide row.
+        worksheet6.set_row(row, nil, nil, 1)
+      end
 
-        worksheet6.write(row, 0, row_data)
-        row += 1
+      worksheet6.write(row, 0, row_data)
+      row += 1
     end
 
     workbook.close
@@ -308,7 +308,7 @@ class TC_example_match < Test::Unit::TestCase
 
     # Add a caption to each worksheet
     workbook.sheets.each do |worksheet|
-        worksheet.write(0, 0, "Sales", format)
+      worksheet.write(0, 0, "Sales", format)
     end
 
     # Write some data
@@ -436,7 +436,7 @@ class TC_example_match < Test::Unit::TestCase
     italy     = WriteExcel.new(file2)
     ita_links = italy.add_worksheet('Links')
     ita_sales = italy.add_worksheet('Sales')
-    ita_data  = italy.add_worksheet('Product Data')
+    italy.add_worksheet('Product Data')
 
     file3 = StringIO.new
     china     = WriteExcel.new(file3)
@@ -586,13 +586,13 @@ class TC_example_match < Test::Unit::TestCase
 
     # Add a format for the header cells.
     header_format = workbook.add_format(
-                                                :border      => 1,
-                                                :bg_color    => 43,
-                                                :bold        => 1,
-                                                :text_wrap   => 1,
-                                                :valign      => 'vcenter',
-                                                :indent      => 1
-                                             )
+      :border      => 1,
+      :bg_color    => 43,
+      :bold        => 1,
+      :text_wrap   => 1,
+      :valign      => 'vcenter',
+      :indent      => 1
+    )
 
     # Set up layout of the worksheet.
     worksheet.set_column('A:A', 64)
@@ -625,12 +625,12 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'integer',
-            :criteria        => 'between',
-            :minimum         => 1,
-            :maximum         => 10
-        })
+                              {
+                                :validate        => 'integer',
+                                :criteria        => 'between',
+                                :minimum         => 1,
+                                :maximum         => 10
+                              })
 
 
     #
@@ -641,12 +641,12 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'integer',
-            :criteria        => 'not between',
-            :minimum         => '=E3',
-            :maximum         => '=F3'
-        })
+                              {
+                                :validate        => 'integer',
+                                :criteria        => 'not between',
+                                :minimum         => '=E3',
+                                :maximum         => '=F3'
+                              })
 
 
     #
@@ -657,11 +657,11 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'integer',
-            :criteria        => '>',
-            :value           => 0
-        })
+                              {
+                                :validate        => 'integer',
+                                :criteria        => '>',
+                                :value           => 0
+                              })
 
 
     #
@@ -672,11 +672,11 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'integer',
-            :criteria        => '<',
-            :value           => 10
-        })
+                              {
+                                :validate        => 'integer',
+                                :criteria        => '<',
+                                :value           => 10
+                              })
 
 
     #
@@ -687,12 +687,12 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'decimal',
-            :criteria        => 'between',
-            :minimum         => 0.1,
-            :maximum         => 0.5
-        })
+                              {
+                                :validate        => 'decimal',
+                                :criteria        => 'between',
+                                :minimum         => 0.1,
+                                :maximum         => 0.5
+                              })
 
 
     #
@@ -703,10 +703,10 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'list',
-            :source          => ['open', 'high', 'close']
-        })
+                              {
+                                :validate        => 'list',
+                                :source          => ['open', 'high', 'close']
+                              })
 
 
     #
@@ -717,10 +717,10 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'list',
-            :source          => '=E4:G4'
-        })
+                              {
+                                :validate        => 'list',
+                                :source          => '=E4:G4'
+                              })
 
 
     #
@@ -731,12 +731,12 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'date',
-            :criteria        => 'between',
-            :minimum         => '2008-01-01T',
-            :maximum         => '2008-12-12T'
-        })
+                              {
+                                :validate        => 'date',
+                                :criteria        => 'between',
+                                :minimum         => '2008-01-01T',
+                                :maximum         => '2008-12-12T'
+                              })
 
 
     #
@@ -747,12 +747,12 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'time',
-            :criteria        => 'between',
-            :minimum         => 'T06:00',
-            :maximum         => 'T12:00'
-        })
+                              {
+                                :validate        => 'time',
+                                :criteria        => 'between',
+                                :minimum         => 'T06:00',
+                                :maximum         => 'T12:00'
+                              })
 
 
     #
@@ -763,11 +763,11 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'length',
-            :criteria        => '>',
-            :value           => 3
-        })
+                              {
+                                :validate        => 'length',
+                                :criteria        => '>',
+                                :value           => 3
+                              })
 
 
     #
@@ -778,10 +778,10 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate        => 'custom',
-            :value           => '=AND(F5=50,G5=60)'
-        })
+                              {
+                                :validate        => 'custom',
+                                :value           => '=AND(F5=50,G5=60)'
+                              })
 
 
     #
@@ -792,14 +792,14 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate      => 'integer',
-            :criteria      => 'between',
-            :minimum       => 1,
-            :maximum       => 100,
-            :input_title   => 'Enter an integer:',
-            :input_message => 'between 1 and 100'
-        })
+                              {
+                                :validate      => 'integer',
+                                :criteria      => 'between',
+                                :minimum       => 1,
+                                :maximum       => 100,
+                                :input_title   => 'Enter an integer:',
+                                :input_message => 'between 1 and 100'
+                              })
 
 
     #
@@ -810,16 +810,16 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate      => 'integer',
-            :criteria      => 'between',
-            :minimum       => 1,
-            :maximum       => 100,
-            :input_title   => 'Enter an integer:',
-            :input_message => 'between 1 and 100',
-            :error_title   => 'Input value is not valid!',
-            :error_message => 'It should be an integer between 1 and 100'
-        })
+                              {
+                                :validate      => 'integer',
+                                :criteria      => 'between',
+                                :minimum       => 1,
+                                :maximum       => 100,
+                                :input_title   => 'Enter an integer:',
+                                :input_message => 'between 1 and 100',
+                                :error_title   => 'Input value is not valid!',
+                                :error_message => 'It should be an integer between 1 and 100'
+                              })
 
 
     #
@@ -830,17 +830,17 @@ class TC_example_match < Test::Unit::TestCase
 
     worksheet.write(row, 0, txt)
     worksheet.data_validation(row, 1,
-        {
-            :validate      => 'integer',
-            :criteria      => 'between',
-            :minimum       => 1,
-            :maximum       => 100,
-            :input_title   => 'Enter an integer:',
-            :input_message => 'between 1 and 100',
-            :error_title   => 'Input value is not valid!',
-            :error_message => 'It should be an integer between 1 and 100',
-            :error_type    => 'information'
-        })
+                              {
+                                :validate      => 'integer',
+                                :criteria      => 'between',
+                                :minimum       => 1,
+                                :maximum       => 100,
+                                :input_title   => 'Enter an integer:',
+                                :input_message => 'between 1 and 100',
+                                :error_title   => 'Input value is not valid!',
+                                :error_message => 'It should be an integer between 1 and 100',
+                                :error_type    => 'information'
+                              })
 
     workbook.close
 
@@ -880,16 +880,16 @@ class TC_example_match < Test::Unit::TestCase
 
     # Create a merged format
     format = workbook.add_format(
-                                        :center_across   => 1,
-                                        :bold            => 1,
-                                        :size            => 15,
-                                        :pattern         => 1,
-                                        :border          => 6,
-                                        :color           => 'white',
-                                        :fg_color        => 'green',
-                                        :border_color    => 'yellow',
-                                        :align           => 'vcenter'
-                                  )
+      :center_across   => 1,
+      :bold            => 1,
+      :size            => 15,
+      :pattern         => 1,
+      :border          => 6,
+      :color           => 'white',
+      :fg_color        => 'green',
+      :border_color    => 'yellow',
+      :align           => 'vcenter'
+    )
 
     # Only one cell should contain text, the others should be blank.
     worksheet.write(2, 1, "Center across selection", format)
@@ -914,11 +914,11 @@ class TC_example_match < Test::Unit::TestCase
     # and the standard Excel 5+ merge property.
     #
     format1 = workbook.add_format(
-                                        :center_across   => 1,
-                                        :border          => 1,
-                                        :underline       => 1,
-                                        :color           => 'blue'
-                                 )
+      :center_across   => 1,
+      :border          => 1,
+      :underline       => 1,
+      :color           => 'blue'
+    )
 
     # Write the cells to be merged
     worksheet.write_url_range('B2:D2', 'http://www.perl.com', format1)
@@ -932,12 +932,12 @@ class TC_example_match < Test::Unit::TestCase
     # Example 2: Merge cells containing a hyperlink using merge_range().
     #
     format2 = workbook.add_format(
-                                        :border      => 1,
-                                        :underline   => 1,
-                                        :color       => 'blue',
-                                        :align       => 'center',
-                                        :valign      => 'vcenter'
-                                 )
+      :border      => 1,
+      :underline   => 1,
+      :color       => 'blue',
+      :align       => 'center',
+      :valign      => 'vcenter'
+    )
 
     # Merge 3 cells
     worksheet.merge_range('B4:D4', 'http://www.perl.com', format2)
@@ -966,12 +966,12 @@ class TC_example_match < Test::Unit::TestCase
     # Example 1: Text centered vertically and horizontally
     #
     format1 = workbook.add_format(
-                                        :border  => 6,
-                                        :bold    => 1,
-                                        :color   => 'red',
-                                        :valign  => 'vcenter',
-                                        :align   => 'center'
-                                       )
+      :border  => 6,
+      :bold    => 1,
+      :color   => 'red',
+      :valign  => 'vcenter',
+      :align   => 'center'
+    )
 
     worksheet.merge_range('B2:D3', 'Vertical and horizontal', format1)
 
@@ -981,12 +981,12 @@ class TC_example_match < Test::Unit::TestCase
     # Example 2: Text aligned to the top and left
     #
     format2 = workbook.add_format(
-                                        :border  => 6,
-                                        :bold    => 1,
-                                        :color   => 'red',
-                                        :valign  => 'top',
-                                        :align   => 'left'
-                                      )
+      :border  => 6,
+      :bold    => 1,
+      :color   => 'red',
+      :valign  => 'top',
+      :align   => 'left'
+    )
 
     worksheet.merge_range('B5:D6', 'Aligned to the top and left', format2)
 
@@ -995,12 +995,12 @@ class TC_example_match < Test::Unit::TestCase
     # Example 3:  Text aligned to the bottom and right
     #
     format3 = workbook.add_format(
-                                        :border  => 6,
-                                        :bold    => 1,
-                                        :color   => 'red',
-                                        :valign  => 'bottom',
-                                        :align   => 'right'
-                                      )
+      :border  => 6,
+      :bold    => 1,
+      :color   => 'red',
+      :valign  => 'bottom',
+      :align   => 'right'
+    )
 
     worksheet.merge_range('B8:D9', 'Aligned to the bottom and right', format3)
 
@@ -1009,12 +1009,12 @@ class TC_example_match < Test::Unit::TestCase
     # Example 4:  Text justified (i.e. wrapped) in the cell
     #
     format4 = workbook.add_format(
-                                        :border  => 6,
-                                        :bold    => 1,
-                                        :color   => 'red',
-                                        :valign  => 'top',
-                                        :align   => 'justify'
-                                      )
+      :border  => 6,
+      :bold    => 1,
+      :color   => 'red',
+      :valign  => 'top',
+      :align   => 'justify'
+    )
 
     worksheet.merge_range('B11:D12', 'Justified: '+'so on and '*18, format4)
 
@@ -1040,13 +1040,13 @@ class TC_example_match < Test::Unit::TestCase
     # Rotation 1, letters run from top to bottom
     #
     format1 = workbook.add_format(
-                                        :border      => 6,
-                                        :bold        => 1,
-                                        :color       => 'red',
-                                        :valign      => 'vcentre',
-                                        :align       => 'centre',
-                                        :rotation    => 270
-                                      )
+      :border      => 6,
+      :bold        => 1,
+      :color       => 'red',
+      :valign      => 'vcentre',
+      :align       => 'centre',
+      :rotation    => 270
+    )
 
 
     worksheet.merge_range('B4:B9', 'Rotation 270', format1)
@@ -1057,13 +1057,13 @@ class TC_example_match < Test::Unit::TestCase
     # Rotation 2, 90° anticlockwise
     #
     format2 = workbook.add_format(
-                                        :border      => 6,
-                                        :bold        => 1,
-                                        :color       => 'red',
-                                        :valign      => 'vcentre',
-                                        :align       => 'centre',
-                                        :rotation    => 90
-                                      )
+      :border      => 6,
+      :bold        => 1,
+      :color       => 'red',
+      :valign      => 'vcentre',
+      :align       => 'centre',
+      :rotation    => 90
+    )
 
 
     worksheet.merge_range('D4:D9', 'Rotation 90', format2)
@@ -1075,13 +1075,13 @@ class TC_example_match < Test::Unit::TestCase
     # Rotation 3, 90° clockwise
     #
     format3 = workbook.add_format(
-                                        :border      => 6,
-                                        :bold        => 1,
-                                        :color       => 'red',
-                                        :valign      => 'vcentre',
-                                        :align       => 'centre',
-                                        :rotation    => -90
-                                      )
+      :border      => 6,
+      :bold        => 1,
+      :color       => 'red',
+      :valign      => 'vcentre',
+      :align       => 'centre',
+      :rotation    => -90
+    )
 
 
     worksheet.merge_range('F4:F9', 'Rotation -90', format3)
@@ -1103,14 +1103,14 @@ class TC_example_match < Test::Unit::TestCase
 
     # Format for the merged cells.
     format = workbook.add_format(
-               :border      => 6,
-               :bold        => 1,
-               :color       => 'red',
-               :size        => 20,
-               :valign      => 'vcentre',
-               :align       => 'left',
-               :indent      => 1
-      )
+      :border      => 6,
+      :bold        => 1,
+      :color       => 'red',
+      :size        => 20,
+      :valign      => 'vcentre',
+      :align       => 'left',
+      :indent      => 1
+    )
 
     ###############################################################################
     #
@@ -1192,7 +1192,7 @@ class TC_example_match < Test::Unit::TestCase
   def test_tab_colors
     workbook   = WriteExcel.new(@file)
 
-    worksheet1 =  workbook.add_worksheet
+    workbook.add_worksheet
     worksheet2 =  workbook.add_worksheet
     worksheet3 =  workbook.add_worksheet
     worksheet4 =  workbook.add_worksheet
@@ -1363,31 +1363,31 @@ class TC_example_match < Test::Unit::TestCase
     # the format codes change the appearance of the date.
     #
     date_formats = [
-        'dd/mm/yy',
-        'mm/dd/yy',
-        '',
-        'd mm yy',
-        'dd mm yy',
-        '',
-        'dd m yy',
-        'dd mm yy',
-        'dd mmm yy',
-        'dd mmmm yy',
-        '',
-        'dd mm y',
-        'dd mm yyy',
-        'dd mm yyyy',
-        '',
-        'd mmmm yyyy',
-        '',
-        'dd/mm/yy',
-        'dd/mm/yy hh:mm',
-        'dd/mm/yy hh:mm:ss',
-        'dd/mm/yy hh:mm:ss.000',
-        '',
-        'hh:mm',
-        'hh:mm:ss',
-        'hh:mm:ss.000',
+      'dd/mm/yy',
+      'mm/dd/yy',
+      '',
+      'd mm yy',
+      'dd mm yy',
+      '',
+      'dd m yy',
+      'dd mm yy',
+      'dd mmm yy',
+      'dd mmmm yy',
+      '',
+      'dd mm y',
+      'dd mm yyy',
+      'dd mm yyyy',
+      '',
+      'd mmmm yyyy',
+      '',
+      'dd/mm/yy',
+      'dd/mm/yy hh:mm',
+      'dd/mm/yy hh:mm:ss',
+      'dd/mm/yy hh:mm:ss.000',
+      '',
+      'hh:mm',
+      'hh:mm:ss',
+      'hh:mm:ss.000',
     ]
 
     # Write the same date and time using each of the above formats. The empty
@@ -1400,9 +1400,9 @@ class TC_example_match < Test::Unit::TestCase
 
       # Create a format for the date or time.
       format =  workbook.add_format(
-                                  :num_format => date_format,
-                                  :align      => 'left'
-                                 )
+        :num_format => date_format,
+        :align      => 'left'
+      )
 
       # Write the same date using different formats.
       worksheet.write_date_time(row, 0, '2004-08-01T12:30:45.123', format)
@@ -1430,10 +1430,10 @@ class TC_example_match < Test::Unit::TestCase
     format2   = workbook.add_format(:diag_type     => 2)
     format3   = workbook.add_format(:diag_type     => 3)
     format4   = workbook.add_format(
-                                  :diag_type       => 3,
-                                  :diag_border     => 7,
-                                  :diag_color      => 'red'
-                )
+      :diag_type       => 3,
+      :diag_border     => 7,
+      :diag_color      => 'red'
+    )
 
     worksheet.write('B3',  'Text', format1)
     worksheet.write('B6',  'Text', format2)
@@ -1476,11 +1476,11 @@ class TC_example_match < Test::Unit::TestCase
     worksheet2  = workbook.add_worksheet('Variables')
 
     header2     = '&LPage &P of &N'+
-                      '&CFilename: &F' +
-                      '&RSheetname: &A'
+                  '&CFilename: &F' +
+                  '&RSheetname: &A'
 
     footer2     = '&LCurrent date: &D'+
-                      '&RCurrent time: &T'
+                  '&RCurrent time: &T'
 
     worksheet2.set_header(header2)
     worksheet2.set_footer(footer2)
@@ -1499,12 +1499,12 @@ class TC_example_match < Test::Unit::TestCase
     worksheet3 = workbook.add_worksheet('Mixed fonts')
 
     header3    = '&C' +
-                     '&"Courier New,Bold"Hello ' +
-                     '&"Arial,Italic"World'
+                 '&"Courier New,Bold"Hello ' +
+                 '&"Arial,Italic"World'
 
     footer3    = '&C' +
-                     '&"Symbol"e' +
-                     '&"Arial" = mc&X2'
+                 '&"Symbol"e' +
+                 '&"Arial" = mc&X2'
 
     worksheet3.set_header(header3)
     worksheet3.set_footer(footer3)
@@ -1548,106 +1548,106 @@ class TC_example_match < Test::Unit::TestCase
 
   def test_demo
     workbook   = WriteExcel.new(@file)
-worksheet  = workbook.add_worksheet('Demo')
-worksheet2 = workbook.add_worksheet('Another sheet')
-worksheet3 = workbook.add_worksheet('And another')
+    worksheet  = workbook.add_worksheet('Demo')
+    workbook.add_worksheet('Another sheet')
+    workbook.add_worksheet('And another')
 
-bold       = workbook.add_format(:bold => 1)
+    bold       = workbook.add_format(:bold => 1)
 
-#######################################################################
-#
-# Write a general heading
-#
-worksheet.set_column('A:A', 36, bold)
-worksheet.set_column('B:B', 20       )
-worksheet.set_row(0,     40       )
+    #######################################################################
+    #
+    # Write a general heading
+    #
+    worksheet.set_column('A:A', 36, bold)
+    worksheet.set_column('B:B', 20       )
+    worksheet.set_row(0,     40       )
 
-heading  = workbook.add_format(
-                                :bold    => 1,
-                                :color   => 'blue',
-                                :size    => 16,
-                                :merge   => 1,
-                                :align  => 'vcenter'
-                              )
+    heading  = workbook.add_format(
+      :bold    => 1,
+      :color   => 'blue',
+      :size    => 16,
+      :merge   => 1,
+      :align  => 'vcenter'
+    )
 
-headings = ['Features of Spreadsheet::WriteExcel', '']
-worksheet.write_row('A1', headings, heading)
-
-
-#######################################################################
-#
-# Some text examples
-#
-text_format  = workbook.add_format(
-                                    :bold    => 1,
-                                    :italic  => 1,
-                                    :color   => 'red',
-                                    :size    => 18,
-                                    :font    =>'Lucida Calligraphy'
-                                  )
-
-# A phrase in Cyrillic
-unicode = [
-            "042d0442043e002004440440043004370430002004"+
-            "3d043000200440044304410441043a043e043c0021"
-          ].pack('H*')
-
-worksheet.write('A2', "Text")
-worksheet.write('B2', "Hello Excel")
-worksheet.write('A3', "Formatted text")
-worksheet.write('B3', "Hello Excel", text_format)
-worksheet.write('A4', "Unicode text")
-worksheet.write_utf16be_string('B4', unicode)
+    headings = ['Features of Spreadsheet::WriteExcel', '']
+    worksheet.write_row('A1', headings, heading)
 
 
-#######################################################################
-#
-# Some numeric examples
-#
-num1_format  = workbook.add_format(:num_format => '$#,##0.00')
-num2_format  = workbook.add_format(:num_format => ' d mmmm yyy')
+    #######################################################################
+    #
+    # Some text examples
+    #
+    text_format  = workbook.add_format(
+      :bold    => 1,
+      :italic  => 1,
+      :color   => 'red',
+      :size    => 18,
+      :font    =>'Lucida Calligraphy'
+    )
 
-worksheet.write('A5', "Numbers")
-worksheet.write('B5', 1234.56)
-worksheet.write('A6', "Formatted numbers")
-worksheet.write('B6', 1234.56, num1_format)
-worksheet.write('A7', "Formatted numbers")
-worksheet.write('B7', 37257, num2_format)
+    # A phrase in Cyrillic
+    unicode = [
+      "042d0442043e002004440440043004370430002004"+
+      "3d043000200440044304410441043a043e043c0021"
+    ].pack('H*')
 
-
-#######################################################################
-#
-# Formulae
-#
-worksheet.set_selection('B8')
-worksheet.write('A8', 'Formulas and functions, "=SIN(PI()/4)"')
-worksheet.write('B8', '=SIN(PI()/4)')
-
-
-#######################################################################
-#
-# Hyperlinks
-#
-worksheet.write('A9', "Hyperlinks")
-worksheet.write('B9',  'http://www.perl.com/' )
+    worksheet.write('A2', "Text")
+    worksheet.write('B2', "Hello Excel")
+    worksheet.write('A3', "Formatted text")
+    worksheet.write('B3', "Hello Excel", text_format)
+    worksheet.write('A4', "Unicode text")
+    worksheet.write_utf16be_string('B4', unicode)
 
 
-#######################################################################
-#
-# Images
-#
-worksheet.write('A10', "Images")
-worksheet.insert_image('B10', "#{TEST_DIR}/republic.png", 16, 8)
+    #######################################################################
+    #
+    # Some numeric examples
+    #
+    num1_format  = workbook.add_format(:num_format => '$#,##0.00')
+    num2_format  = workbook.add_format(:num_format => ' d mmmm yyy')
+
+    worksheet.write('A5', "Numbers")
+    worksheet.write('B5', 1234.56)
+    worksheet.write('A6', "Formatted numbers")
+    worksheet.write('B6', 1234.56, num1_format)
+    worksheet.write('A7', "Formatted numbers")
+    worksheet.write('B7', 37257, num2_format)
 
 
-#######################################################################
-#
-# Misc
-#
-worksheet.write('A18', "Page/printer setup")
-worksheet.write('A19', "Multiple worksheets")
+    #######################################################################
+    #
+    # Formulae
+    #
+    worksheet.set_selection('B8')
+    worksheet.write('A8', 'Formulas and functions, "=SIN(PI()/4)"')
+    worksheet.write('B8', '=SIN(PI()/4)')
 
-workbook.close
+
+    #######################################################################
+    #
+    # Hyperlinks
+    #
+    worksheet.write('A9', "Hyperlinks")
+    worksheet.write('B9',  'http://www.perl.com/' )
+
+
+    #######################################################################
+    #
+    # Images
+    #
+    worksheet.write('A10', "Images")
+    worksheet.insert_image('B10', "#{TEST_DIR}/republic.png", 16, 8)
+
+
+    #######################################################################
+    #
+    # Misc
+    #
+    worksheet.write('A18', "Page/printer setup")
+    worksheet.write('A19', "Multiple worksheets")
+
+    workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/demo.xls", @file)
@@ -1656,12 +1656,12 @@ workbook.close
   def test_unicode_cyrillic
     # Create a Russian worksheet name in utf8.
     sheet   = [0x0421, 0x0442, 0x0440, 0x0430, 0x043D, 0x0438,
-                         0x0446, 0x0430].pack("U*")
+               0x0446, 0x0430].pack("U*")
 
     # Create a Russian string.
     str     = [0x0417, 0x0434, 0x0440, 0x0430, 0x0432, 0x0441,
-                       0x0442, 0x0432, 0x0443, 0x0439, 0x0020, 0x041C,
-                       0x0438, 0x0440, 0x0021].pack("U*")
+               0x0442, 0x0432, 0x0443, 0x0439, 0x0020, 0x041C,
+               0x0438, 0x0440, 0x0021].pack("U*")
 
     workbook  = WriteExcel.new(@file)
     worksheet = workbook.add_worksheet(sheet + '1')
@@ -1678,7 +1678,7 @@ workbook.close
   def test_defined_name
     workbook   = WriteExcel.new(@file)
     worksheet1 = workbook.add_worksheet
-    worksheet2 = workbook.add_worksheet
+    workbook.add_worksheet
 
     workbook.define_name('Exchange_rate', '=0.96')
     workbook.define_name('Sales',         '=Sheet1!$G$1:$H$10')
@@ -1699,444 +1699,444 @@ workbook.close
   end
 
   def test_chart_area
-workbook  = WriteExcel.new(@file)
-worksheet = workbook.add_worksheet
-bold      = workbook.add_format(:bold => 1)
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format(:bold => 1)
 
-# Add the data to the worksheet that the charts will refer to.
-headings = [ 'Category', 'Values 1', 'Values 2' ]
-data = [
-    [ 2, 3, 4, 5, 6, 7 ],
-    [ 1, 4, 5, 2, 1, 5 ],
-    [ 3, 6, 7, 5, 4, 3 ]
-]
+    # Add the data to the worksheet that the charts will refer to.
+    headings = [ 'Category', 'Values 1', 'Values 2' ]
+    data = [
+      [ 2, 3, 4, 5, 6, 7 ],
+      [ 1, 4, 5, 2, 1, 5 ],
+      [ 3, 6, 7, 5, 4, 3 ]
+    ]
 
-worksheet.write('A1', headings, bold)
-worksheet.write('A2', data)
+    worksheet.write('A1', headings, bold)
+    worksheet.write('A2', data)
 
 
-###############################################################################
-#
-# Example 1. A minimal chart.
-#
-chart1 = workbook.add_chart(:type => 'Chart::Area')
+    ###############################################################################
+    #
+    # Example 1. A minimal chart.
+    #
+    chart1 = workbook.add_chart(:type => 'Chart::Area')
 
-# Add values only. Use the default categories.
-chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+    # Add values only. Use the default categories.
+    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-###############################################################################
-#
-# Example 2. A minimal chart with user specified categories (X axis)
-#            and a series name.
-#
-chart2 = workbook.add_chart(:type => 'Chart::Area')
+    ###############################################################################
+    #
+    # Example 2. A minimal chart with user specified categories (X axis)
+    #            and a series name.
+    #
+    chart2 = workbook.add_chart(:type => 'Chart::Area')
 
-# Configure the series.
-chart2.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart2.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-###############################################################################
-#
-# Example 3. Same as previous chart but with added title and axes labels.
-#
-chart3 = workbook.add_chart(:type => 'Chart::Area')
+    ###############################################################################
+    #
+    # Example 3. Same as previous chart but with added title and axes labels.
+    #
+    chart3 = workbook.add_chart(:type => 'Chart::Area')
 
-# Configure the series.
-chart3.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart3.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart3.set_title( :name => 'Results of sample analysis' )
-chart3.set_x_axis( :name => 'Sample number' )
-chart3.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart3.set_title( :name => 'Results of sample analysis' )
+    chart3.set_x_axis( :name => 'Sample number' )
+    chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 4. Same as previous chart but with an added series
-#
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Area')
+    ###############################################################################
+    #
+    # Example 4. Same as previous chart but with an added series
+    #
+    chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Area')
 
-# Configure the series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add another series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$C$2:$C$7',
-    :name       => 'Test data series 2'
-)
+    # Add another series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$C$2:$C$7',
+      :name       => 'Test data series 2'
+    )
 
-# Add some labels.
-chart4.set_title( :name => 'Results of sample analysis' )
-chart4.set_x_axis( :name => 'Sample number' )
-chart4.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart4.set_title( :name => 'Results of sample analysis' )
+    chart4.set_x_axis( :name => 'Sample number' )
+    chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 5. Same as Example 3 but as an embedded chart.
-#
-chart5 = workbook.add_chart(:type => 'Chart::Area', :embedded => 1)
+    ###############################################################################
+    #
+    # Example 5. Same as Example 3 but as an embedded chart.
+    #
+    chart5 = workbook.add_chart(:type => 'Chart::Area', :embedded => 1)
 
-# Configure the series.
-chart5.add_series(
-  :categories => '=Sheet1!$A$2:$A$7',
-  :values     => '=Sheet1!$B$2:$B$7',
-  :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart5.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart5.set_title(:name => 'Results of sample analysis' )
-chart5.set_x_axis(:name => 'Sample number')
-chart5.set_y_axis(:name => 'Sample length (cm)')
+    # Add some labels.
+    chart5.set_title(:name => 'Results of sample analysis' )
+    chart5.set_x_axis(:name => 'Sample number')
+    chart5.set_y_axis(:name => 'Sample length (cm)')
 
-# Insert the chart into the main worksheet.
-worksheet.insert_chart('E2', chart5)
+    # Insert the chart into the main worksheet.
+    worksheet.insert_chart('E2', chart5)
 
-# File save
-workbook.close
+    # File save
+    workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_area.xls", @file)
   end
 
   def test_chart_bar
-workbook  = WriteExcel.new(@file)
-worksheet = workbook.add_worksheet
-bold      = workbook.add_format(:bold => 1)
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format(:bold => 1)
 
-# Add the data to the worksheet that the charts will refer to.
-headings = [ 'Category', 'Values 1', 'Values 2' ]
-data = [
-    [ 2, 3, 4, 5, 6, 7 ],
-    [ 1, 4, 5, 2, 1, 5 ],
-    [ 3, 6, 7, 5, 4, 3 ]
-]
+    # Add the data to the worksheet that the charts will refer to.
+    headings = [ 'Category', 'Values 1', 'Values 2' ]
+    data = [
+      [ 2, 3, 4, 5, 6, 7 ],
+      [ 1, 4, 5, 2, 1, 5 ],
+      [ 3, 6, 7, 5, 4, 3 ]
+    ]
 
-worksheet.write('A1', headings, bold)
-worksheet.write('A2', data)
+    worksheet.write('A1', headings, bold)
+    worksheet.write('A2', data)
 
 
-###############################################################################
-#
-# Example 1. A minimal chart.
-#
-chart1 = workbook.add_chart(:type => 'Chart::Bar')
+    ###############################################################################
+    #
+    # Example 1. A minimal chart.
+    #
+    chart1 = workbook.add_chart(:type => 'Chart::Bar')
 
-# Add values only. Use the default categories.
-chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+    # Add values only. Use the default categories.
+    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-###############################################################################
-#
-# Example 2. A minimal chart with user specified categories (X axis)
-#            and a series name.
-#
-chart2 = workbook.add_chart(:type => 'Chart::Bar')
+    ###############################################################################
+    #
+    # Example 2. A minimal chart with user specified categories (X axis)
+    #            and a series name.
+    #
+    chart2 = workbook.add_chart(:type => 'Chart::Bar')
 
-# Configure the series.
-chart2.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart2.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-###############################################################################
-#
-# Example 3. Same as previous chart but with added title and axes labels.
-#
-chart3 = workbook.add_chart(:type => 'Chart::Bar')
+    ###############################################################################
+    #
+    # Example 3. Same as previous chart but with added title and axes labels.
+    #
+    chart3 = workbook.add_chart(:type => 'Chart::Bar')
 
-# Configure the series.
-chart3.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart3.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart3.set_title( :name => 'Results of sample analysis' )
-chart3.set_x_axis( :name => 'Sample number' )
-chart3.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart3.set_title( :name => 'Results of sample analysis' )
+    chart3.set_x_axis( :name => 'Sample number' )
+    chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 4. Same as previous chart but with an added series
-#
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Bar')
+    ###############################################################################
+    #
+    # Example 4. Same as previous chart but with an added series
+    #
+    chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Bar')
 
-# Configure the series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add another series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$C$2:$C$7',
-    :name       => 'Test data series 2'
-)
+    # Add another series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$C$2:$C$7',
+      :name       => 'Test data series 2'
+    )
 
-# Add some labels.
-chart4.set_title( :name => 'Results of sample analysis' )
-chart4.set_x_axis( :name => 'Sample number' )
-chart4.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart4.set_title( :name => 'Results of sample analysis' )
+    chart4.set_x_axis( :name => 'Sample number' )
+    chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 5. Same as Example 3 but as an embedded chart.
-#
-chart5 = workbook.add_chart(:type => 'Chart::Bar', :embedded => 1)
+    ###############################################################################
+    #
+    # Example 5. Same as Example 3 but as an embedded chart.
+    #
+    chart5 = workbook.add_chart(:type => 'Chart::Bar', :embedded => 1)
 
-# Configure the series.
-chart5.add_series(
-  :categories => '=Sheet1!$A$2:$A$7',
-  :values     => '=Sheet1!$B$2:$B$7',
-  :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart5.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart5.set_title(:name => 'Results of sample analysis' )
-chart5.set_x_axis(:name => 'Sample number')
-chart5.set_y_axis(:name => 'Sample length (cm)')
+    # Add some labels.
+    chart5.set_title(:name => 'Results of sample analysis' )
+    chart5.set_x_axis(:name => 'Sample number')
+    chart5.set_y_axis(:name => 'Sample length (cm)')
 
-# Insert the chart into the main worksheet.
-worksheet.insert_chart('E2', chart5)
+    # Insert the chart into the main worksheet.
+    worksheet.insert_chart('E2', chart5)
 
-# File save
-workbook.close
+    # File save
+    workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_bar.xls", @file)
   end
 
   def test_chart_column
-workbook  = WriteExcel.new(@file)
-worksheet = workbook.add_worksheet
-bold      = workbook.add_format(:bold => 1)
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format(:bold => 1)
 
-# Add the data to the worksheet that the charts will refer to.
-headings = [ 'Category', 'Values 1', 'Values 2' ]
-data = [
-    [ 2, 3, 4, 5, 6, 7 ],
-    [ 1, 4, 5, 2, 1, 5 ],
-    [ 3, 6, 7, 5, 4, 3 ]
-]
+    # Add the data to the worksheet that the charts will refer to.
+    headings = [ 'Category', 'Values 1', 'Values 2' ]
+    data = [
+      [ 2, 3, 4, 5, 6, 7 ],
+      [ 1, 4, 5, 2, 1, 5 ],
+      [ 3, 6, 7, 5, 4, 3 ]
+    ]
 
-worksheet.write('A1', headings, bold)
-worksheet.write('A2', data)
+    worksheet.write('A1', headings, bold)
+    worksheet.write('A2', data)
 
 
-###############################################################################
-#
-# Example 1. A minimal chart.
-#
-chart1 = workbook.add_chart(:type => 'Chart::Column')
+    ###############################################################################
+    #
+    # Example 1. A minimal chart.
+    #
+    chart1 = workbook.add_chart(:type => 'Chart::Column')
 
-# Add values only. Use the default categories.
-chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+    # Add values only. Use the default categories.
+    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-###############################################################################
-#
-# Example 2. A minimal chart with user specified categories (X axis)
-#            and a series name.
-#
-chart2 = workbook.add_chart(:type => 'Chart::Column')
+    ###############################################################################
+    #
+    # Example 2. A minimal chart with user specified categories (X axis)
+    #            and a series name.
+    #
+    chart2 = workbook.add_chart(:type => 'Chart::Column')
 
-# Configure the series.
-chart2.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart2.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-###############################################################################
-#
-# Example 3. Same as previous chart but with added title and axes labels.
-#
-chart3 = workbook.add_chart(:type => 'Chart::Column')
+    ###############################################################################
+    #
+    # Example 3. Same as previous chart but with added title and axes labels.
+    #
+    chart3 = workbook.add_chart(:type => 'Chart::Column')
 
-# Configure the series.
-chart3.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart3.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart3.set_title( :name => 'Results of sample analysis' )
-chart3.set_x_axis( :name => 'Sample number' )
-chart3.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart3.set_title( :name => 'Results of sample analysis' )
+    chart3.set_x_axis( :name => 'Sample number' )
+    chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 4. Same as previous chart but with an added series
-#
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Column')
+    ###############################################################################
+    #
+    # Example 4. Same as previous chart but with an added series
+    #
+    chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Column')
 
-# Configure the series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add another series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$C$2:$C$7',
-    :name       => 'Test data series 2'
-)
+    # Add another series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$C$2:$C$7',
+      :name       => 'Test data series 2'
+    )
 
-# Add some labels.
-chart4.set_title( :name => 'Results of sample analysis' )
-chart4.set_x_axis( :name => 'Sample number' )
-chart4.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart4.set_title( :name => 'Results of sample analysis' )
+    chart4.set_x_axis( :name => 'Sample number' )
+    chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 5. Same as Example 3 but as an embedded chart.
-#
-chart5 = workbook.add_chart(:type => 'Chart::Column', :embedded => 1)
+    ###############################################################################
+    #
+    # Example 5. Same as Example 3 but as an embedded chart.
+    #
+    chart5 = workbook.add_chart(:type => 'Chart::Column', :embedded => 1)
 
-# Configure the series.
-chart5.add_series(
-  :categories => '=Sheet1!$A$2:$A$7',
-  :values     => '=Sheet1!$B$2:$B$7',
-  :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart5.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart5.set_title(:name => 'Results of sample analysis' )
-chart5.set_x_axis(:name => 'Sample number')
-chart5.set_y_axis(:name => 'Sample length (cm)')
+    # Add some labels.
+    chart5.set_title(:name => 'Results of sample analysis' )
+    chart5.set_x_axis(:name => 'Sample number')
+    chart5.set_y_axis(:name => 'Sample length (cm)')
 
-# Insert the chart into the main worksheet.
-worksheet.insert_chart('E2', chart5)
+    # Insert the chart into the main worksheet.
+    worksheet.insert_chart('E2', chart5)
 
-# File save
-workbook.close
+    # File save
+    workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_column.xls", @file)
   end
 
   def test_chart_line
-workbook  = WriteExcel.new(@file)
-worksheet = workbook.add_worksheet
-bold      = workbook.add_format(:bold => 1)
+    workbook  = WriteExcel.new(@file)
+    worksheet = workbook.add_worksheet
+    bold      = workbook.add_format(:bold => 1)
 
-# Add the data to the worksheet that the charts will refer to.
-headings = [ 'Category', 'Values 1', 'Values 2' ]
-data = [
-    [ 2, 3, 4, 5, 6, 7 ],
-    [ 1, 4, 5, 2, 1, 5 ],
-    [ 3, 6, 7, 5, 4, 3 ]
-]
+    # Add the data to the worksheet that the charts will refer to.
+    headings = [ 'Category', 'Values 1', 'Values 2' ]
+    data = [
+      [ 2, 3, 4, 5, 6, 7 ],
+      [ 1, 4, 5, 2, 1, 5 ],
+      [ 3, 6, 7, 5, 4, 3 ]
+    ]
 
-worksheet.write('A1', headings, bold)
-worksheet.write('A2', data)
+    worksheet.write('A1', headings, bold)
+    worksheet.write('A2', data)
 
 
-###############################################################################
-#
-# Example 1. A minimal chart.
-#
-chart1 = workbook.add_chart(:type => 'Chart::Line')
+    ###############################################################################
+    #
+    # Example 1. A minimal chart.
+    #
+    chart1 = workbook.add_chart(:type => 'Chart::Line')
 
-# Add values only. Use the default categories.
-chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
+    # Add values only. Use the default categories.
+    chart1.add_series( :values => '=Sheet1!$B$2:$B$7' )
 
-###############################################################################
-#
-# Example 2. A minimal chart with user specified categories (X axis)
-#            and a series name.
-#
-chart2 = workbook.add_chart(:type => 'Chart::Line')
+    ###############################################################################
+    #
+    # Example 2. A minimal chart with user specified categories (X axis)
+    #            and a series name.
+    #
+    chart2 = workbook.add_chart(:type => 'Chart::Line')
 
-# Configure the series.
-chart2.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart2.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-###############################################################################
-#
-# Example 3. Same as previous chart but with added title and axes labels.
-#
-chart3 = workbook.add_chart(:type => 'Chart::Line')
+    ###############################################################################
+    #
+    # Example 3. Same as previous chart but with added title and axes labels.
+    #
+    chart3 = workbook.add_chart(:type => 'Chart::Line')
 
-# Configure the series.
-chart3.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart3.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart3.set_title( :name => 'Results of sample analysis' )
-chart3.set_x_axis( :name => 'Sample number' )
-chart3.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart3.set_title( :name => 'Results of sample analysis' )
+    chart3.set_x_axis( :name => 'Sample number' )
+    chart3.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 4. Same as previous chart but with an added series
-#
-chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Line')
+    ###############################################################################
+    #
+    # Example 4. Same as previous chart but with an added series
+    #
+    chart4 = workbook.add_chart(:name => 'Results Chart', :type => 'Chart::Line')
 
-# Configure the series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$B$2:$B$7',
-    :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add another series.
-chart4.add_series(
-    :categories => '=Sheet1!$A$2:$A$7',
-    :values     => '=Sheet1!$C$2:$C$7',
-    :name       => 'Test data series 2'
-)
+    # Add another series.
+    chart4.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$C$2:$C$7',
+      :name       => 'Test data series 2'
+    )
 
-# Add some labels.
-chart4.set_title( :name => 'Results of sample analysis' )
-chart4.set_x_axis( :name => 'Sample number' )
-chart4.set_y_axis( :name => 'Sample length (cm)' )
+    # Add some labels.
+    chart4.set_title( :name => 'Results of sample analysis' )
+    chart4.set_x_axis( :name => 'Sample number' )
+    chart4.set_y_axis( :name => 'Sample length (cm)' )
 
-###############################################################################
-#
-# Example 5. Same as Example 3 but as an embedded chart.
-#
-chart5 = workbook.add_chart(:type => 'Chart::Line', :embedded => 1)
+    ###############################################################################
+    #
+    # Example 5. Same as Example 3 but as an embedded chart.
+    #
+    chart5 = workbook.add_chart(:type => 'Chart::Line', :embedded => 1)
 
-# Configure the series.
-chart5.add_series(
-  :categories => '=Sheet1!$A$2:$A$7',
-  :values     => '=Sheet1!$B$2:$B$7',
-  :name       => 'Test data series 1'
-)
+    # Configure the series.
+    chart5.add_series(
+      :categories => '=Sheet1!$A$2:$A$7',
+      :values     => '=Sheet1!$B$2:$B$7',
+      :name       => 'Test data series 1'
+    )
 
-# Add some labels.
-chart5.set_title(:name => 'Results of sample analysis' )
-chart5.set_x_axis(:name => 'Sample number')
-chart5.set_y_axis(:name => 'Sample length (cm)')
+    # Add some labels.
+    chart5.set_title(:name => 'Results of sample analysis' )
+    chart5.set_x_axis(:name => 'Sample number')
+    chart5.set_y_axis(:name => 'Sample length (cm)')
 
-# Insert the chart into the main worksheet.
-worksheet.insert_chart('E2', chart5)
+    # Insert the chart into the main worksheet.
+    worksheet.insert_chart('E2', chart5)
 
-# File save
-workbook.close
+    # File save
+    workbook.close
 
     # do assertion
     compare_file("#{PERL_OUTDIR}/chart_line.xls", @file)
@@ -2154,9 +2154,9 @@ workbook.close
     # Define the property hashes
     #
     black = {
-              'fg_color'  => 'black',
-              'pattern'   => 1,
-            }
+      'fg_color'  => 'black',
+      'pattern'   => 1,
+    }
 
     top     = { 'top'    => 6 }
     bottom  = { 'bottom' => 6 }
@@ -2294,23 +2294,23 @@ workbook.close
     ]
 
     colors = {
-                    0x08 => 'black',
-                    0x0C => 'blue',
-                    0x10 => 'brown',
-                    0x0F => 'cyan',
-                    0x17 => 'gray',
-                    0x11 => 'green',
-                    0x0B => 'lime',
-                    0x0E => 'magenta',
-                    0x12 => 'navy',
-                    0x35 => 'orange',
-                    0x21 => 'pink',
-                    0x14 => 'purple',
-                    0x0A => 'red',
-                    0x16 => 'silver',
-                    0x09 => 'white',
-                    0x0D => 'yellow',
-            }
+      0x08 => 'black',
+      0x0C => 'blue',
+      0x10 => 'brown',
+      0x0F => 'cyan',
+      0x17 => 'gray',
+      0x11 => 'green',
+      0x0B => 'lime',
+      0x0E => 'magenta',
+      0x12 => 'navy',
+      0x35 => 'orange',
+      0x21 => 'pink',
+      0x14 => 'purple',
+      0x0A => 'red',
+      0x16 => 'silver',
+      0x09 => 'white',
+      0x0D => 'yellow',
+    }
 
     worksheet1 = workbook.add_worksheet('Named colors')
 
@@ -2329,9 +2329,9 @@ workbook.close
     #
     order.each do |index|
       format = workbook.add_format(
-          :fg_color => colors[index],
-          :pattern  => 1,
-          :border   => 1
+        :fg_color => colors[index],
+        :pattern  => 1,
+        :border   => 1
       )
 
       worksheet1.write(i + 1, 0, index,                    center)
@@ -2357,9 +2357,9 @@ workbook.close
 
     (8..63).each do |i|
       format = workbook.add_format(
-          :fg_color => i,
-          :pattern  => 1,
-          :border   => 1
+        :fg_color => i,
+        :pattern  => 1,
+        :border   => 1
       )
 
       worksheet2.write((i - 7), 0, i,                    center)
@@ -2699,7 +2699,7 @@ workbook.close
 
     worksheet7.write(cell, cell_text, text_wrap)
     worksheet7.write_comment(cell, comment, :author  => author,
-                                            :author_encoding => 1)
+                             :author_encoding => 1)
 
     # UTF-8 string.
     author    = '☺'    # smiley
@@ -2922,12 +2922,12 @@ workbook.close
     # Example 3: Create a worksheet with outlined columns.
     #
     data = [
-                ['Month', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', ' Total'],
-                ['North', 50,    20,    15,    25,    65,    80,    '=SUM(B2:G2)'],
-                ['South', 10,    20,    30,    50,    50,    50,    '=SUM(B3:G3)'],
-                ['East',  45,    75,    50,    15,    75,    100,   '=SUM(B4:G4)'],
-                ['West',  15,    15,    55,    35,    20,    50,    '=SUM(B5:G6)']
-            ]
+      ['Month', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', ' Total'],
+      ['North', 50,    20,    15,    25,    65,    80,    '=SUM(B2:G2)'],
+      ['South', 10,    20,    30,    50,    50,    50,    '=SUM(B3:G3)'],
+      ['East',  45,    75,    50,    15,    75,    100,   '=SUM(B4:G4)'],
+      ['West',  15,    15,    55,    35,    20,    50,    '=SUM(B5:G6)']
+    ]
 
     # Add bold format to the first row
     worksheet3.set_row(0, nil, bold)
@@ -3218,7 +3218,7 @@ workbook.close
 
     (0..8).each { |i| worksheet1.write(0, i, 'Scroll down', header) }
     (1..100).each do |i|
-     (0..8).each { |j| worksheet1.write(i, j, i + 1, center) }
+      (0..8).each { |j| worksheet1.write(i, j, i + 1, center) }
     end
 
     #######################################################################
@@ -3449,22 +3449,22 @@ workbook.close
     #
     ENV["TZ"] = "Japan"
     workbook.instance_variable_set(
-                                   :@localtime,
-                                   Time.gm(2013, 5, 5, 13, 37, 42).localtime
-                                   )
+      :@localtime,
+      Time.gm(2013, 5, 5, 13, 37, 42).localtime
+    )
 
     worksheet = workbook.add_worksheet
 
     workbook.set_properties(
-                            :title    => 'This is an example spreadsheet',
-                            :subject  => 'With document properties',
-                            :author   => 'Hideo NAKAMURA',
-                            :manager  => 'John McNamara',
-                            :company  => 'Rubygem',
-                            :category => 'Example spreadsheets',
-                            :keywords => 'Sample, Example, Properties',
-                            :comments => 'Created with Ruby and WriteExcel'
-                            )
+      :title    => 'This is an example spreadsheet',
+      :subject  => 'With document properties',
+      :author   => 'Hideo NAKAMURA',
+      :manager  => 'John McNamara',
+      :company  => 'Rubygem',
+      :category => 'Example spreadsheets',
+      :keywords => 'Sample, Example, Properties',
+      :comments => 'Created with Ruby and WriteExcel'
+    )
 
 
     worksheet.set_column('A:A', 50)
@@ -3486,10 +3486,10 @@ workbook.close
     # Add the worksheet data that the charts will refer to.
     headings = [ 'Category', 'Values 1', 'Values 2' ]
     data = [
-            [ 2, 3, 4, 5, 6, 7 ],
-            [ 1, 4, 5, 2, 1, 5 ],
-            [ 3, 6, 7, 5, 4, 3 ]
-           ]
+      [ 2, 3, 4, 5, 6, 7 ],
+      [ 1, 4, 5, 2, 1, 5 ],
+      [ 3, 6, 7, 5, 4, 3 ]
+    ]
 
     worksheet.write('A1', headings, bold)
     worksheet.write('A2', data)

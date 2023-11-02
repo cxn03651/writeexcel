@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# frozen_string_literal: true
 ###############################################################################
 #
 # Chart - A writer class for Excel Charts.
@@ -649,8 +650,6 @@ class Chart < Worksheet
   # information required for _store_series() and the SERIES record.
   #
   def parse_series_formula(formula)  # :nodoc:
-    encoding = 0
-    length   = 0
     count    = 0
     tokens = []
 
@@ -677,7 +676,7 @@ class Chart < Worksheet
 
     # Extract the range from the parse formula.
     if formula.ord == 0x3B
-        ptg, ext_ref, row_1, row_2, col_1, col_2 = formula.unpack('Cv5')
+        row_1, row_2 = formula.unpack('Cv5')[2, 2]
 
         # TODO. Remove high bit on relative references.
         count = row_2 - row_1 + 1

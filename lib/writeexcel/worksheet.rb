@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# frozen_string_literal: true
 ###############################################################################
 #
 # Worksheet - A writer class for Excel Worksheets.
@@ -536,7 +537,7 @@ class Worksheet < BIFFWriter
     # not be obtained exactly due to rounding in Excel.
     #
     if height
-      miyRw = height *20
+      miyRw = height * 20
     else
       miyRw = 0xff # The default row height
       height = 0
@@ -673,7 +674,10 @@ class Worksheet < BIFFWriter
   def set_column(*args)
     # Check for a cell reference in A1 notation and substitute row and column
     if args[0].respond_to?(:=~) && args[0] =~ /^\D/
-      row1, firstcol, row2, lastcol, *data = substitute_cellref(*args)
+      array = substitute_cellref(*args)
+      firstcol = array[1]
+      lastcol = array[3]
+      *data = array[4, array.length - 4]
     else
       firstcol, lastcol, *data = args
     end
@@ -1211,7 +1215,7 @@ class Worksheet < BIFFWriter
 
     # Check for a column reference in A1 notation and substitute.
     # Convert col ref to a cell ref and then to a col number.
-    dummy, col = substitute_cellref("#{col}1") if col =~ /^\D/
+    col = substitute_cellref("#{col}1")[1] if col.to_s =~ /^\D/
 
     # Reject column if it is outside filter range.
     unless @filter_area.inside?(col)
@@ -1615,8 +1619,10 @@ class Worksheet < BIFFWriter
   #
   def repeat_columns(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0] =~ /^\D/
-      row1, firstcol, row2, lastcol = substitute_cellref(*args)
+    if args[0].to_s =~ /^\D/
+      array = substitute_cellref(*args)
+      firstcol = array[1]
+      lastcol = array[3]
     else
       firstcol, lastcol = args
     end
@@ -3493,7 +3499,8 @@ class Worksheet < BIFFWriter
 
     return -1 if args.size < 3   # Check the number of args
 
-    row, col, comment, params = args
+    row, col = args
+    params = args[3]
 
     # Check for pairs of optional arguments, i.e. an odd number of args.
     # raise "Uneven number of additional arguments" if args.size % 2 == 0
@@ -4455,10 +4462,10 @@ class Worksheet < BIFFWriter
     y2 =  256.0 * height / size_row(row_end)
 
     # Simulate ceil() without calling POSIX::ceil().
-    x1 = (x1 +0.5).to_i
-    y1 = (y1 +0.5).to_i
-    x2 = (x2 +0.5).to_i
-    y2 = (y2 +0.5).to_i
+    x1 = (x1 + 0.5).to_i
+    y1 = (y1 + 0.5).to_i
+    x2 = (x2 + 0.5).to_i
+    y2 = (y2 + 0.5).to_i
 
     [
       col_start, x1,
@@ -4613,7 +4620,7 @@ class Worksheet < BIFFWriter
     drawings_saved += 1
 
     # For each sheet start the spids at the next 1024 interval.
-    max_spid   = 1024 * (1 + Integer((max_spid -1)/1024.0))
+    max_spid   = 1024 * (1 + Integer((max_spid - 1) / 1024.0))
     start_spid = max_spid
 
     # Max spid for each sheet and eventually for the workbook.
@@ -4624,7 +4631,7 @@ class Worksheet < BIFFWriter
     push_cluster(num_shapes, drawings_saved, clusters)
 
     # Pass calculated values back to the worksheet
-    @object_ids = ObjectIds.new(start_spid, drawings_saved, num_shapes, max_spid -1)
+    @object_ids = ObjectIds.new(start_spid, drawings_saved, num_shapes, max_spid - 1)
 
     [mso_size, drawings_saved, max_spid, start_spid]
   end
@@ -4664,7 +4671,7 @@ class Worksheet < BIFFWriter
   def set_header_footer_common(type, string, margin, encoding)  # :nodoc:
     ruby_19 { string = convert_to_ascii_if_ascii(string) }
 
-    limit    = encoding != 0 ? 255 *2 : 255
+    limit    = encoding != 0 ? 255 * 2 : 255
 
     # Handle utf8 strings
     if is_utf8?(string)
@@ -4819,7 +4826,7 @@ class Worksheet < BIFFWriter
     # Special handling of "Top" filter expressions.
     if tokens[0] =~ /^top|bottom$/i
       value = tokens[1]
-      if (value =~ /\D/ or value.to_i < 1 or value.to_i > 500)
+      if (value.to_s =~ /\D/ or value.to_i < 1 or value.to_i > 500)
         raise "The value '#{value}' in expression '#{expression}' " +
         "must be in the range 1 to 500"
       end
@@ -4848,7 +4855,7 @@ class Worksheet < BIFFWriter
     end
 
     # Special handling for Blanks/NonBlanks.
-    if (token =~ /^blanks|nonblanks$/i)
+    if (token.to_s =~ /^blanks|nonblanks$/i)
       # Only allow Equals or NotEqual in this context.
       if (operator != 2 and operator != 5)
         raise "The operator '#{tokens[1]}' in expression '#{expression}' " +
@@ -4874,7 +4881,7 @@ class Worksheet < BIFFWriter
 
     # if the string token contains an Excel match character then change the
     # operator type to indicate a non "simple" equality.
-    if (operator == 2 and token =~ /[*?]/)
+    if (operator == 2 and token.to_s =~ /[*?]/)
       operator = 22
     end
 
@@ -4939,8 +4946,8 @@ class Worksheet < BIFFWriter
     # Convert a column range: 'A:A' or 'B:G'.
     # A range such as A:A is equivalent to A1:65536, so add rows as required
     if cell =~ /\$?([A-I]?[A-Z]):\$?([A-I]?[A-Z])/
-      row1, col1 =  cell_to_rowcol($1 +'1')
-      row2, col2 =  cell_to_rowcol($2 +'65536')
+      row1, col1 =  cell_to_rowcol($1 + '1')
+      row2, col2 =  cell_to_rowcol($2 + '65536')
       return [row1, col1, row2, col2, *args]
     end
 
@@ -5175,8 +5182,8 @@ class Worksheet < BIFFWriter
     # Convert an Ascii URL type and to a null terminated wchar string.
     if encoding == 0
       url  =
-        ruby_18 { url + "\0" } ||
-        ruby_19 { url.force_encoding('BINARY') + "\0".force_encoding('BINARY') }
+        ruby_18 { url.dup + "\0" } ||
+        ruby_19 { url.dup.force_encoding('BINARY') + "\0" }
       url  = url.unpack('c*').pack('v*')
     end
 
@@ -5264,12 +5271,12 @@ class Worksheet < BIFFWriter
   end
 
   def sheetname_from_url(url)
-    sheetname, cell = url.split('!')
+    sheetname = url.split('!')[0]
     sheetname
   end
 
   def cell_from_url(url)
-    sheetname, cell = url.split('!')
+    cell = url.split('!')[1]
     cell
   end
 
@@ -6366,9 +6373,9 @@ class Worksheet < BIFFWriter
 
       # The relationship is different for user units less than 1.
       if width < 1
-        (width *12).to_i
+        (width * 12).to_i
       else
-        (width *7 +5 ).to_i
+        (width * 7 + 5 ).to_i
       end
     else
       64
@@ -6425,7 +6432,7 @@ class Worksheet < BIFFWriter
 
     col1.upto(col2) do |i|
       # Reverse order since records are being pre-pended.
-      col = col2 -i
+      col = col2 - i
 
       # Skip if column doesn't have an active filter.
       next unless @filter_cols[col]
@@ -6950,7 +6957,7 @@ class Worksheet < BIFFWriter
   def row_col_notation(args)   # :nodoc:
     # ruby 3.2 no longer handles =~ for various types
     return args unless args[0].respond_to?(:=~)
-    
+
     if args[0] =~ /^\D/
       substitute_cellref(*args)
     else

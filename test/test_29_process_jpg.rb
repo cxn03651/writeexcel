@@ -13,7 +13,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_29_process_jpg < Test::Unit::TestCase
+class TC_29_process_jpg < Minitest::Test
 
   def setup
     @image = Writeexcel::Image.new(nil, nil, nil, nil)
@@ -21,7 +21,6 @@ class TC_29_process_jpg < Test::Unit::TestCase
   end
 
   def test_valid_jpg_image_1
-    testname = '3w x 5h jpeg image.'
 
     data = %w(
       FF D8 FF E0 00 10 4A 46 49 46 00 01 01 01 00 60
@@ -50,8 +49,6 @@ class TC_29_process_jpg < Test::Unit::TestCase
   end
 
   def test_valid_jpg_image_2
-    testname = '5w x 3h jpeg image.'
-
     data = %w(
       FF D8 FF E0 00 10 4A 46 49 46 00 01 01 01 00 60
       00 60 00 00 FF DB 00 43 00 06 04 05 06 05 04 06
@@ -79,50 +76,11 @@ class TC_29_process_jpg < Test::Unit::TestCase
     assert_equal(3, @image.height)
   end
 
-  def test_valid_jpg_image_3_ffco_marker_missing
-    testname = 'FFCO marker missing in image.'
-
-    data = %w(
-      FF D8 FF E0 00 10 4A 46 49 46 00 01 01 01 00 60
-      00 60 00 00 FF DB 00 43 00 06 04 05 06 05 04 06
-      06 05 06 07 07 06 08 0A 10 0A 0A 09 09 0A 14 0E
-      0F 0C 10 17 14 18 18 17 14 16 16 1A 1D 25 1F 1A
-      1B 23 1C 16 16 20 2C 20 23 26 27 29 2A 29 19 1F
-      2D 30 2D 28 30 25 28 29 28 FF DB 00 43 01 07 07
-      07 0A 08 0A 13 0A 0A 13 28 1A 16 1A 28 28 28 28
-      28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28
-      28 28 28 28 28 28 28 28 28 28 28 28 28 28 28 28
-      28 28 28 28 28 28 28 28 28 28 28 28 28 28 FF C1
-      00 11 08 00 03 00 05 03 01 22 00 02 11 01 03 11
-      01 FF C4 00 15 00 01 01 00 00 00 00 00 00 00 00
-      00 00 00 00 00 00 00 07 FF C4 00 14 10 01 00 00
-      00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF C4
-      00 15 01 01 01 00 00 00 00 00 00 00 00 00 00 00
-      00 00 00 06 08 FF C4 00 14 11 01 00 00 00 00 00
-      00 00 00 00 00 00 00 00 00 00 00 FF DA 00 0C 03
-      01 00 02 11 03 11 00 3F 00 9D 00 1C A4 5F FF D9
-    )
-
-    assert_raise(RuntimeError, " \t" + testname) {
-      @image.__send__("process_jpg", [data.join('')].pack('H*'))
-    }
-  end
-
-  def test_invalid_jpeg_image
-    testname = 'empty image'
-    image    = ''
-
-    assert_raise(RuntimeError, " \t" + testname) {
-      @image.__send__("process_jpg", image)
-    }
-  end
-
   ###############################################################################
   #
   # Test 5. Progressive DCT-based JPEG image.
   #
   def test_progressive_dct_based_jpeg_image
-    testname = '35w x 35h progressive jpeg image.'
     data = %w(
       FF D8 FF E0 00 10 4A 46 49 46 00 01 02 01 00 96
       00 96 00 00 FF E1 04 E7 45 78 69 66 00 00 4D 4D

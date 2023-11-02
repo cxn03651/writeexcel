@@ -13,7 +13,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_Name_Print_Titles < Test::Unit::TestCase
+class TC_Name_Print_Titles < Minitest::Test
   def setup
     @test_file = StringIO.new
     @workbook   = WriteExcel.new(@test_file)
@@ -33,7 +33,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -47,7 +46,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 00 00 00 00 FF 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!1:1 )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -66,7 +64,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -80,7 +77,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 09 00 00 00 FF 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!1:10 )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -99,7 +95,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -113,7 +108,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 FF FF 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!A:A )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -132,7 +126,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -146,7 +139,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 FF FF 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!A:A )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -165,7 +157,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -179,7 +170,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 FF FF 00 00 09 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!A:J )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -198,7 +188,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -212,7 +201,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 00 00 00 00 FF FF 00 00 09 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!A:J )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -236,7 +224,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         01 00 00 00 02 00 02 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -256,7 +243,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 02 00 06 00 07 00 00 00 FF 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!1:2, Sheet2!4:5, Sheet3!7:8 )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -264,9 +250,9 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
 
   def test_repeat_rows_on_multiple_sheets_with_sheets_spaced_out
     worksheet1 = @workbook.add_worksheet
-    worksheet2 = @workbook.add_worksheet
+    @workbook.add_worksheet
     worksheet3 = @workbook.add_worksheet
-    worksheet4 = @workbook.add_worksheet
+    @workbook.add_worksheet
     worksheet5 = @workbook.add_worksheet
 
     worksheet1.repeat_rows(0, 1)
@@ -282,7 +268,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         02 00 00 00 04 00 04 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -302,7 +287,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         00 00 00 07 3B 02 00 06 00 07 00 00 00 FF 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!1:2, Sheet3!4:5, Sheet5!7:8 )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -322,7 +306,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -337,7 +320,6 @@ class TC_Name_Print_Titles < Test::Unit::TestCase
         04 00 3B 00 00 01 00 02 00 00 00 FF 00 10
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name repeats ( Sheet1!2:3, Sheet1!D:E )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)

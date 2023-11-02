@@ -13,7 +13,7 @@ require 'stringio'
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-class TC_ChartGeneric < Test::Unit::TestCase
+class TC_ChartGeneric < Minitest::Test
   def setup
     io = StringIO.new
     workbook = WriteExcel.new(io)
@@ -52,7 +52,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
     values = [0x0000, 0x0000, 0x02DD51E0, 0x01C2B838]
     got = unpack_record(@chart.__send__("store_chart", *values))
     assert_equal(expected, got, caption)
- end
+  end
 
   ###############################################################################
   #
@@ -65,7 +65,7 @@ class TC_ChartGeneric < Test::Unit::TestCase
       ).join(' ')
     got = unpack_record(@chart.__send__("store_series", 8, 8))
     assert_equal(expected, got, caption)
- end
+  end
 
   ###############################################################################
   #

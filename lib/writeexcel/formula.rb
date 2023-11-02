@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# frozen_string_literal: true
 ###############################################################################
 #
 # Formula - A class for generating Excel formulas.
@@ -62,7 +63,6 @@ class Formula < ExcelFormulaParser       #:nodoc:
   #
   def parse_tokens(tokens)
     parse_str   = ''
-    last_type   = ''
     modifier    = ''
     num_args    = 0
     _class      = 0

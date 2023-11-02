@@ -13,7 +13,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_28_autofilter < Test::Unit::TestCase
+class TC_28_autofilter < Minitest::Test
 
   def test_28_autofilter
     @tests.each do |test|

@@ -18,7 +18,7 @@ class ForTest
   include ConvertDateTime
 end
 
-class TC_data_only < Test::Unit::TestCase
+class TC_data_only < Minitest::Test
 
   def setup
     @obj = ForTest.new

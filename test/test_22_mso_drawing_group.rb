@@ -19,7 +19,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_mso_drawing_group < Test::Unit::TestCase
+class TC_mso_drawing_group < Minitest::Test
 
   def test_dummy
     assert(true)

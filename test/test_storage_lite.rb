@@ -2,7 +2,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_OLEStorageLite < Test::Unit::TestCase
+class TC_OLEStorageLite < Minitest::Test
   TEST_DIR    = File.expand_path(File.dirname(__FILE__))
   PERL_OUTDIR = File.join(TEST_DIR, 'perl_output')
   EXCEL_OUTDIR = File.join(TEST_DIR, 'excelfile')
@@ -45,7 +45,7 @@ class TC_OLEStorageLite < Test::Unit::TestCase
   end
 end
 
-class TC_OLEStorageLitePPSFile < Test::Unit::TestCase
+class TC_OLEStorageLitePPSFile < Minitest::Test
   def test_constructor
     data = [
         { :name => 'name', :data => 'data' },

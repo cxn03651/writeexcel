@@ -14,7 +14,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_validation_dv_strings < Test::Unit::TestCase
+class TC_validation_dv_strings < Minitest::Test
 
   def setup
     workbook   = WriteExcel.new(StringIO.new)

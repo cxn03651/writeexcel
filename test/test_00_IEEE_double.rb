@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'helper'
 
-class TC_BIFFWriter < Test::Unit::TestCase
+class TC_BIFFWriter < Minitest::Test
 
   def test_IEEE_double
     teststr = [1.2345].pack("d")

@@ -13,7 +13,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_autofilter < Test::Unit::TestCase
+class TC_autofilter < Minitest::Test
   def setup
     @test_file = StringIO.new
     @workbook   = WriteExcel.new(@test_file)
@@ -33,7 +33,6 @@ class TC_autofilter < Test::Unit::TestCase
         17 00 08 00 01 00 00 00 00 00 00 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -47,7 +46,6 @@ class TC_autofilter < Test::Unit::TestCase
         00 00 00 0D 3B 00 00 00 00 04 00 00 00 02 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name = autofilter ( Sheet1!A1:C5 )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)
@@ -69,7 +67,6 @@ class TC_autofilter < Test::Unit::TestCase
         01 00
      ).join('')].pack('H*')
 
-    caption    = " \tExternsheet"
     result     = _unpack_externsheet(@workbook.data)
     target     = _unpack_externsheet(target)
     assert_equal(target, result)
@@ -86,7 +83,6 @@ class TC_autofilter < Test::Unit::TestCase
         00 00 00 0D 3B 01 00 00 00 04 00 00 00 02 00
      ).join('')].pack('H*')
 
-    caption    = " \t+ Name = autofilter ( Sheet1!A1:C5, Sheet2!A1:C5 )";
     result     = _unpack_name(@workbook.data)
     target     = _unpack_name(target)
     assert_equal(target, result)

@@ -18,7 +18,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_extsst < Test::Unit::TestCase
+class TC_extsst < Minitest::Test
 
   def setup
     @tests = [

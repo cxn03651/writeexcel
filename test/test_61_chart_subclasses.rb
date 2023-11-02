@@ -13,7 +13,8 @@ require 'stringio'
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
-class TC_chart_subclasses < Test::Unit::TestCase
+class TC_chart_subclasses < Minitest::Test
+
   def setup
     io = StringIO.new
     @workbook = WriteExcel.new(io)

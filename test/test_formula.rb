@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'helper'
 
-class TC_Formula < Test::Unit::TestCase
+class TC_Formula < Minitest::Test
 
   def setup
     @formula = Writeexcel::Formula.new(0)

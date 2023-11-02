@@ -14,7 +14,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_data_seconds < Test::Unit::TestCase
+class TC_data_seconds < Minitest::Test
 
   def setup
     @workbook  = WriteExcel.new(StringIO.new)

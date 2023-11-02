@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# frozen_string_literal: true
 ###############################################################################
 #
 # Workbook - A writer class for Excel Workbooks.
@@ -652,7 +653,6 @@ class Workbook < BIFFWriter
   #
   def define_name(name, formula, encoding = 0)
     sheet_index = 0
-    full_name   = name.downcase
 
     if name =~ /^(.*)!(.*)$/
       sheetname   = $1
@@ -1266,7 +1266,7 @@ class Workbook < BIFFWriter
     # Add the length of the MSODRAWINGGROUP records including an extra 4 bytes
     # for any CONTINUE headers. See add_mso_drawing_group_continue().
     mso_size = @mso_size
-    mso_size += 4 * Integer((mso_size -1) / Float(@limit))
+    mso_size += 4 * Integer((mso_size - 1) / Float(@limit))
     offset   += mso_size
 
     @worksheets.each do |sheet|
@@ -1374,7 +1374,7 @@ class Workbook < BIFFWriter
           image_id += 1
         else
           # We've processed this file already.
-          index = images_seen[image.filename] -1
+          index = images_seen[image.filename] - 1
 
           # Increase image reference count.
           image_data[index].ref_count += 1
@@ -2053,7 +2053,6 @@ class Workbook < BIFFWriter
   def store_shared_strings       #:nodoc:
     record              = 0x00FC   # Record identifier
     length              = 0x0008   # Number of bytes to follow
-    total               = 0x0000
 
     # Iterate through the strings to calculate the CONTINUE block sizes
     continue_limit = 8208
@@ -2136,10 +2135,10 @@ class Workbook < BIFFWriter
           append(tmp)
 
           # The remainder will be written in the next block(s)
-          string = string[space_remaining .. string.length-1]
+          string = string[space_remaining .. string.length - 1]
 
           # Reduce the current block length by the amount written
-          block_length -= continue_limit -continue -align
+          block_length -= continue_limit - continue - align
 
           # If the current string was split then the next CONTINUE block
           # should have the string continue flag (grbit) set unless the
@@ -2152,7 +2151,7 @@ class Workbook < BIFFWriter
           end
         else
           # Not enough space to start the string in the current block
-          block_length -= continue_limit -space_remaining -continue
+          block_length -= continue_limit - space_remaining - continue
           continue = 0
         end
 
@@ -2206,7 +2205,7 @@ class Workbook < BIFFWriter
       bucket_size = 1 + Integer(unique_strings / 128.0)
     end
 
-    buckets = Integer((unique_strings + bucket_size -1)  / Float(bucket_size))
+    buckets = Integer((unique_strings + bucket_size - 1) / Float(bucket_size))
 
     @extsst_buckets        = buckets
     @extsst_bucket_size    = bucket_size
@@ -2278,7 +2277,7 @@ class Workbook < BIFFWriter
   #     Case 3:  >  2*8224 bytes      2 MSODRAWINGGROUP + n CONTINUE
   #
   def add_mso_drawing_group_continue(data)       #:nodoc:
-    limit       = 8228 -4
+    limit       = 8228 - 4
     mso_group   = 0x00EB # Record identifier
     continue    = 0x003C # Record identifier
     block_count = 1
@@ -2334,7 +2333,7 @@ class Workbook < BIFFWriter
     version     = 15
     instance    = 0
     data        = ''
-    length      = @mso_size -12 # -4 (biff header) -8 (for this).
+    length      = @mso_size - 12 # -4 (biff header) -8 (for this).
 
     add_mso_generic(type, version, instance, data, length)
   end
@@ -2372,7 +2371,7 @@ class Workbook < BIFFWriter
     version     = 15
     instance    = @images_data.size          # Number of images.
     data        = ''
-    length      = @images_size +8 *instance
+    length      = @images_size + 8 * instance
 
     add_mso_generic(type, version, instance, data, length)
   end
@@ -2399,12 +2398,12 @@ class Workbook < BIFFWriter
     type        = 0xF007
     version     = 2
     instance    = image_type
-    length      = size +61
+    length      = size + 61
     data        = [image_type].pack('C')  +    # Win32
     [image_type].pack('C')  +    # Mac
     [checksum1].pack('H*')  +    # Uid checksum
     [0xFF].pack('v')        +    # Tag
-    [size +25].pack('V')    +    # Next Blip size
+    [size + 25].pack('V')   +    # Next Blip size
     [ref_count].pack('V')   +    # Image ref count
     [0x00000000].pack('V')  +    # File offset
     [0x00].pack('C')        +    # Usage
@@ -2430,7 +2429,7 @@ class Workbook < BIFFWriter
 
     type        = 0xF018 + image_type
     version     = 0x0000
-    length      = size +17
+    length      = size + 17
     data        = [checksum1].pack('H*')  +     # Uid checksum
     [0xFF].pack('C')        +     # Tag
     image_data                   # Image

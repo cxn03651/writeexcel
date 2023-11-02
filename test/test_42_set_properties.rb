@@ -19,7 +19,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_set_properties < Test::Unit::TestCase
+class TC_set_properties < Minitest::Test
 
   def test_dummy
     assert(true)
@@ -42,7 +42,7 @@ class TC_set_properties < Test::Unit::TestCase
     smiley = '☺'   # chr 0x263A;    in perl
 
     workbook  = WriteExcel.new(@test_file)
-    worksheet = workbook.add_worksheet
+    workbook.add_worksheet
 
 =begin
     ###############################################################################

@@ -2,7 +2,7 @@
 require 'helper'
 require 'nkf'
 
-class TC_Compatibility < Test::Unit::TestCase
+class TC_Compatibility < Minitest::Test
   def test_ord
     a = 'a'
     abc = 'abc'

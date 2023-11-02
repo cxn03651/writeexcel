@@ -14,7 +14,7 @@
 require 'helper'
 require 'stringio'
 
-class TC_rows < Test::Unit::TestCase
+class TC_rows < Minitest::Test
 
   def setup
   end

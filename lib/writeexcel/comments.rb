@@ -252,7 +252,7 @@ class Worksheet < BIFFWriter
       when 65533 then 65529
       when 65534 then 65530
       when 65535 then 65531
-      else            @row -1
+      else            @row - 1
       end
     end
 

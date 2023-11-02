@@ -12,7 +12,7 @@
 #########################################################################
 require 'helper'
 
-class TC_properties < Test::Unit::TestCase
+class TC_properties < Minitest::Test
 
   def setup
     @smiley = '☺'   # chr 0x263A;    in perl

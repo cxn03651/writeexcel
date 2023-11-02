@@ -81,7 +81,7 @@ module ConvertDateTime
     epoch   = date_1904 ? 1904 : 1900
     offset  = date_1904 ?    4 :    0
     norm    = 300
-    range   = year -epoch
+    range   = year - epoch
 
     # Set month days and check for leap year.
     mdays   = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -92,15 +92,15 @@ module ConvertDateTime
     # Some boundary checks
     return nil if year  < epoch or year  > 9999
     return nil if month < 1     or month > 12
-    return nil if day   < 1     or day   > mdays[month -1]
+    return nil if day   < 1     or day   > mdays[month - 1]
 
     # Accumulate the number of days since the epoch.
     days = mdays[0, month - 1].inject(day) {|result, mday| result + mday} # days from 1, Jan
-    days += range *365                       # Add days for past years
-    days += ((range)                /  4)    # Add leapdays
-    days -= ((range + offset)       /100)    # Subtract 100 year leapdays
-    days += ((range + offset + norm)/400)    # Add 400 year leapdays
-    days -= leap                             # Already counted above
+    days += range * 365                        # Add days for past years
+    days += ((range)                 /   4)    # Add leapdays
+    days -= ((range + offset)        / 100)    # Subtract 100 year leapdays
+    days += ((range + offset + norm) / 400)    # Add 400 year leapdays
+    days -= leap                               # Already counted above
 
     # Adjust for Excel erroneously treating 1900 as a leap year.
     days += 1 if !date_1904 and days > 59

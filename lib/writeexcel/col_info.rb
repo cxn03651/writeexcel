@@ -54,9 +54,9 @@ class Worksheet < BIFFWriter
 
     def ixfe
       if @format && @format.respond_to?(:xf_index)
-        ixfe = @format.xf_index
+        @format.xf_index
       else
-        ixfe = 0x0F
+        0x0F
       end
     end
 
