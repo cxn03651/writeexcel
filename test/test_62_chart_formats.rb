@@ -90,25 +90,19 @@ class TC_ChartFormats < Minitest::Test
     caption1 = " \tChart: index   = get_color_indices(#{color})"
     caption2 = " \tChart: rgb     = get_color_indices(#{color})"
 
-    expected_index = nil
-    expected_rgb   = nil
-
     got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
-    assert_equal(expected_index, got_index, caption1)
-    assert_equal(expected_rgb,   got_rgb,   caption2)
+    assert_nil(got_index, caption1)
+    assert_nil(got_rgb,   caption2)
 
     color    = 64
     caption1 = " \tChart: index   = get_color_indices(#{color})"
     caption2 = " \tChart: rgb     = get_color_indices(#{color})"
 
-    expected_index = nil
-    expected_rgb   = nil
-
     got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
-    assert_equal(expected_index, got_index, caption1)
-    assert_equal(expected_rgb,   got_rgb,   caption2)
+    assert_nil(got_index, caption1)
+    assert_nil(got_rgb,   caption2)
   end
 
   ###############################################################################
@@ -120,13 +114,10 @@ class TC_ChartFormats < Minitest::Test
     caption1 = " \tChart: index   = get_color_indices(#{color})"
     caption2 = " \tChart: rgb     = get_color_indices(#{color})"
 
-    expected_index = nil
-    expected_rgb   = nil
-
     got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
-    assert_equal(expected_index, got_index, caption1)
-    assert_equal(expected_rgb,   got_rgb,   caption2)
+    assert_nil(got_index, caption1)
+    assert_nil(got_rgb,   caption2)
   end
 
   ###############################################################################
@@ -138,13 +129,10 @@ class TC_ChartFormats < Minitest::Test
     caption1 = " \tChart: index   = get_color_indices(#{color})"
     caption2 = " \tChart: rgb     = get_color_indices(#{color})"
 
-    expected_index = nil
-    expected_rgb   = nil
-
     got_index, got_rgb = @chart.__send__("get_color_indices", color)
 
-    assert_equal(expected_index, got_index, caption1)
-    assert_equal(expected_rgb,   got_rgb,   caption2)
+    assert_nil(got_index, caption1)
+    assert_nil(got_rgb,   caption2)
   end
 
   ###############################################################################
