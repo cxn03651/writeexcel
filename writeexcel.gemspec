@@ -7,7 +7,7 @@ Gem::Specification.new do |gem|
   gem.name          = "writeexcel"
   gem.version       = WriteExcel::VERSION
   gem.authors       = ["Hideo NAKAMURA"]
-  gem.email         = ["cxn03651@msj.biglobe.ne.jp"]
+  gem.email         = ["nakamura.hideo@gmail.com"]
   gem.description   = "Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells."
   gem.summary       = "Write to a cross-platform Excel binary file."
   gem.homepage      = "http://github.com/cxn03651/writeexcel#readme"
