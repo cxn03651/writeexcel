@@ -6,7 +6,7 @@
 # from Racc grammer file "".
 #
 
-require 'racc/parser.rb'
+require 'racc/parser'
 class ExcelFormulaParser < Racc::Parser  # :nodoc:
 ##### State transition tables begin ###
 
