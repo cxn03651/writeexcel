@@ -49,7 +49,7 @@ class TC_mso_drawing_group < Minitest::Test
     end
     @workbook.calc_mso_sizes
 
-    caption = sprintf(" \tSheet1: %4d comments.", count)
+    #caption = sprintf(" \tSheet1: %4d comments.", count)
     target  = %w(
         EB 00 5A 00 0F 00 00 F0 52 00 00 00 00 00 06 F0
         18 00 00 00 02 04 00 00 02 00 00 00 02 00 00 00
@@ -63,7 +63,7 @@ class TC_mso_drawing_group < Minitest::Test
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 2, 1025,
@@ -92,13 +92,13 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments.", count)
+    #caption    = sprintf( " \tSheet1: %4d comments.", count)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 3, 1026,
@@ -126,13 +126,13 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments.", count)
+    #caption    = sprintf( " \tSheet1: %4d comments.", count)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 4, 1027
@@ -160,13 +160,13 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments.", count)
+    #caption    = sprintf( " \tSheet1: %4d comments.", count)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047
@@ -195,13 +195,13 @@ class TC_mso_drawing_group < Minitest::Test
         1E F1 10 00 00 00 0D 00 00 08 0C 00 00 08 17 00
         00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments.", count)
+    #caption    = sprintf( " \tSheet1: %4d comments.", count)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048
@@ -230,13 +230,13 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments.", count)
+    #caption    = sprintf( " \tSheet1: %4d comments.", count)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 2049, 3072
@@ -269,14 +269,14 @@ class TC_mso_drawing_group < Minitest::Test
         1E F1 10 00 00 00 0D 00 00 08 0C 00 00 08 17 00
         00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
                                  count1, count2)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 2, 1025,
@@ -310,14 +310,14 @@ class TC_mso_drawing_group < Minitest::Test
         1E F1 10 00 00 00 0D 00 00 08 0C 00 00 08 17 00
         00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
                                  count1, count2)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 3, 1026,
@@ -351,14 +351,14 @@ class TC_mso_drawing_group < Minitest::Test
         1E F1 10 00 00 00 0D 00 00 08 0C 00 00 08 17 00
         00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
                                  count1, count2)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -392,14 +392,14 @@ class TC_mso_drawing_group < Minitest::Test
         1E F1 10 00 00 00 0D 00 00 08 0C 00 00 08 17 00
         00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
                                  count1, count2)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -434,14 +434,14 @@ class TC_mso_drawing_group < Minitest::Test
         1E F1 10 00 00 00 0D 00 00 08 0C 00 00 08 17 00
         00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
                                  count1, count2)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -475,14 +475,14 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments..",
                                  count1, count2)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -520,14 +520,14 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
                           "Sheet3: %4d comments.", count1, count2, count3)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -566,14 +566,14 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
                           "Sheet3: %4d comments.", count1, count2, count3)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1024, 2047,
@@ -613,14 +613,14 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
                           "Sheet3: %4d comments.", count1, count2, count3)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -660,14 +660,14 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
                           "Sheet3: %4d comments.", count1, count2, count3)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
@@ -717,14 +717,14 @@ class TC_mso_drawing_group < Minitest::Test
         C0 01 40 00 00 08 40 00 1E F1 10 00 00 00 0D 00
         00 08 0C 00 00 08 17 00 00 08 F7 00 00 10
     ).join(' ')
-    caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
+    #caption    = sprintf( " \tSheet1: %4d comments, Sheet2: %4d comments,"+
                           "Sheet3: %4d comments.", count1, count2, count3)
     result     = unpack_record(@workbook.add_mso_drawing_group)
     assert_equal(target, result, caption)
 
 
     # Test the parameters pass to the worksheets
-    caption   += ' (params)'
+    #caption   += ' (params)'
     result_ids = []
     target_ids = [
                 1024, 1, 1025, 2048,
