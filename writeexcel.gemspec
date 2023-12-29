@@ -5,7 +5,7 @@ require 'writeexcel/version'
 
 Gem::Specification.new do |gem|
   gem.name          = "writeexcel"
-  gem.version       = WriteExcel::VERSION
+  gem.version       = Writeexcel::VERSION
   gem.authors       = ["Hideo NAKAMURA"]
   gem.email         = ["nakamura.hideo@gmail.com"]
   gem.description   = "Multiple worksheets can be added to a workbook and formatting can be applied to cells. Text, numbers, formulas, hyperlinks and images can be written to the cells."

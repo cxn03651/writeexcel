@@ -10,12 +10,13 @@
 # original written in Perl by John McNamara
 # converted to Ruby by Hideo Nakamura, cxn03651@msj.biglobe.ne.jp
 #
+require 'writeexcel/version'
 require 'writeexcel/biffwriter'
 require 'writeexcel/olewriter'
 require 'writeexcel/formula'
 require 'writeexcel/format'
-require 'writeexcel/worksheet'
-require "writeexcel/workbook"
+require 'writeexcel/worksheets'
+require 'writeexcel/workbook'
 require 'writeexcel/chart'
 require 'writeexcel/charts/area'
 require 'writeexcel/charts/bar'

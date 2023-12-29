@@ -1,6 +1,4 @@
 class Workbook < BIFFWriter
-  require 'writeexcel/properties'
-  require 'writeexcel/helper'
 
   class Worksheets < Array
     attr_accessor :activesheet

@@ -14,20 +14,9 @@
 #
 require 'nkf'
 require 'forwardable'
-require 'writeexcel/biffwriter'
-require 'writeexcel/worksheet'
-require 'writeexcel/chart'
-require 'writeexcel/format'
-require 'writeexcel/formula'
-require 'writeexcel/olewriter'
-require 'writeexcel/storage_lite'
-require 'writeexcel/compatibility'
 require 'writeexcel/shared_string_table'
-require 'writeexcel/worksheets'
 
 class Workbook < BIFFWriter
-  require 'writeexcel/properties'
-  require 'writeexcel/helper'
 
   extend Forwardable
 
