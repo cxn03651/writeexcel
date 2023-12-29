@@ -37,8 +37,6 @@ class TC_Name_Stored < Minitest::Test
                00 00 00 06 3B 00 00 00 00 0B 00 00 00 01 00
              ).join('')].pack('H*')
 
-#    result         = _unpack_name(result)
-#    target         = _unpack_name(target)
     assert_equal(unpack_record(target), unpack_record(result))
   end
 
@@ -60,8 +58,6 @@ class TC_Name_Stored < Minitest::Test
               00 00 00 06 3B 02 00 06 00 07 00 06 00 07 00
       ).join('')].pack('H*')
 
-#    result         = _unpack_name(result)
-#    target         = _unpack_name(target)
     assert_equal(unpack_record(target), unpack_record(result))
   end
 
@@ -83,8 +79,6 @@ class TC_Name_Stored < Minitest::Test
         00 00 00 07 3B 00 00 00 00 09 00 00 00 FF 00
      ).join('')].pack('H*')
 
-#    result         = _unpack_name(result)
-#    target         = _unpack_name(target)
     assert_equal(unpack_record(target), unpack_record(result))
   end
 
@@ -129,8 +123,6 @@ class TC_Name_Stored < Minitest::Test
         00 00 00 07 3B 00 00 00 00 FF FF 00 00 09 00
      ).join('')].pack('H*')
 
-#    result         = _unpack_name(result)
-#    target         = _unpack_name(target)
     assert_equal(unpack_record(target), unpack_record(result))
   end
 
@@ -176,8 +168,6 @@ class TC_Name_Stored < Minitest::Test
         00 00 00 0D 3B 00 00 00 00 04 00 00 00 02 00
      ).join('')].pack('H*')
 
-#    result         = _unpack_name(result)
-#    target         = _unpack_name(target)
     assert_equal(unpack_record(target), unpack_record(result))
   end
 
