@@ -17,17 +17,17 @@ require 'stringio'
 class TC_validation_dv_strings < Minitest::Test
 
   def setup
-    workbook   = WriteExcel.new(StringIO.new)
-    worksheet  = workbook.add_worksheet
-    @data_validation = Writeexcel::Worksheet::DataValidation.new(worksheet.__send__("parser"), {})
+    @workbook  = WriteExcel.new(StringIO.new)
+    @worksheet = @workbook.add_worksheet
+    @data_validation = Writeexcel::Worksheet::DataValidation.new(@worksheet.__send__("parser"), {})
   end
 
   def teardown
-    if @workbook.instance_variable_get(:@filehandle)
-      @workbook.instance_variable_get(:@filehandle).close(true)
+    if @workbook.instance_variable_get("@filehandle")
+      @workbook.instance_variable_get("@filehandle").close(true)
     end
-    if @worksheet.instance_variable_get(:@filehandle)
-      @worksheet.instance_variable_get(:@filehandle).close(true)
+    if @worksheet.instance_variable_get("@filehandle")
+      @worksheet.instance_variable_get("@filehandle").close(true)
     end
   end
 

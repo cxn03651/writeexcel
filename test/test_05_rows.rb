@@ -20,25 +20,22 @@ class TC_rows < Minitest::Test
   end
 
   def teardown
-    if @workbook.instance_variable_get(:@filehandle)
-      @workbook.instance_variable_get(:@filehandle).close(true)
-    end
-    if @worksheet.instance_variable_get(:@filehandle)
-      @worksheet.instance_variable_get(:@filehandle).close(true)
+    if @workbook.instance_variable_get("@filehandle")
+      @workbook.instance_variable_get("@filehandle").close(true)
     end
   end
 
   def test_1
     file  = StringIO.new
-    workbook = WriteExcel.new(file)
-    workbook.compatibility_mode(1)
+    @workbook = WriteExcel.new(file)
+    @workbook.compatibility_mode(1)
     @tests               = []
 
     # for test case 1
     row  = 1
     col1 = 0
     col2 = 0
-    worksheet = workbook.add_worksheet
+    worksheet = @workbook.add_worksheet
     worksheet.set_row(row, 15)
     @tests.push(
                  [
@@ -54,7 +51,7 @@ class TC_rows < Minitest::Test
     row  = 2
     col1 = 0
     col2 = 0
-    worksheet = workbook.add_worksheet
+    worksheet = @workbook.add_worksheet
     worksheet.write(row, col1, 'Test')
     worksheet.write(row, col2, 'Test')
     @tests.push(
@@ -72,7 +69,7 @@ class TC_rows < Minitest::Test
     row  = 3
     col1 = 0
     col2 = 1
-    worksheet = workbook.add_worksheet
+    worksheet = @workbook.add_worksheet
     worksheet.write(row, col1, 'Test')
     worksheet.write(row, col2, 'Test')
     @tests.push(
@@ -89,7 +86,7 @@ class TC_rows < Minitest::Test
     row  = 4
     col1 = 1
     col2 = 1
-    worksheet = workbook.add_worksheet
+    worksheet = @workbook.add_worksheet
     worksheet.write(row, col1, 'Test')
     worksheet.write(row, col2, 'Test')
     @tests.push(
@@ -106,7 +103,7 @@ class TC_rows < Minitest::Test
     row  = 5
     col1 = 1
     col2 = 255
-    worksheet = workbook.add_worksheet
+    worksheet = @workbook.add_worksheet
     worksheet.write(row, col1, 'Test')
     worksheet.write(row, col2, 'Test')
     @tests.push(
@@ -123,7 +120,7 @@ class TC_rows < Minitest::Test
     row  = 6
     col1 = 255
     col2 = 255
-    worksheet = workbook.add_worksheet
+    worksheet = @workbook.add_worksheet
     worksheet.write(row, col1, 'Test')
     worksheet.write(row, col2, 'Test')
     @tests.push(
@@ -140,7 +137,7 @@ class TC_rows < Minitest::Test
     row  = 7
     col1 = 2
     col2 = 9
-    worksheet = workbook.add_worksheet
+    worksheet = @workbook.add_worksheet
     worksheet.set_row(row, 15)
     worksheet.write(row, col1, 'Test')
     worksheet.write(row, col2, 'Test')
@@ -154,8 +151,8 @@ class TC_rows < Minitest::Test
                 ]
             )
 
-    workbook.biff_only  = 1
-    workbook.close
+    @workbook.biff_only  = 1
+    @workbook.close
     # Read in the row records
     rows = []
 

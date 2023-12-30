@@ -103,6 +103,7 @@ class Worksheet < BIFFWriter
     @title_range         = TitleRange.new(self)
     @print_range         = PrintRange.new(self)
 
+    @print_headers       = 0
     @print_gridlines     = 1
     @screen_gridlines    = 1
 
@@ -155,6 +156,18 @@ class Worksheet < BIFFWriter
 
     @table               = []
     @row_data            = {}
+    @header              = ''
+    @header_encoding     = nil
+    @footer              = ''
+    @footer_encoding     = nil
+    @hidden              = nil
+    @selected            = nil
+    @protect             = nil
+    @hcenter             = nil
+    @vcenter             = nil
+    @display_arabic      = nil
+    @frozen              = nil
+    @hide_zeros          = nil
   end
 
   #
@@ -353,8 +366,8 @@ class Worksheet < BIFFWriter
   #     worksheet2.activate
   #     worksheet1.hide
   #
-  def hide
-    @hidden = true
+  def hide(hidden = :hidden)
+    @hidden = hidden
 
     # A hidden worksheet shouldn't be active or selected.
     @selected  = false
@@ -673,7 +686,7 @@ class Worksheet < BIFFWriter
   #
   def set_column(*args)
     # Check for a cell reference in A1 notation and substitute row and column
-    if args[0].respond_to?(:=~) && args[0] =~ /^\D/
+    if args[0].respond_to?(:match) && args[0] =~ /^\D/
       array = substitute_cellref(*args)
       firstcol = array[1]
       lastcol = array[3]
@@ -963,11 +976,11 @@ class Worksheet < BIFFWriter
     format   = args[5]
     encoding = args[6] ? 1 : 0
 
-    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |rwFirst, colFirst, string, format, encoding|
-      if encoding != 0
-        write_utf16be_string(rwFirst, colFirst, string, format)
+    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |_rwFirst, _colFirst, _string, _format, _encoding|
+      if _encoding != 0
+        write_utf16be_string(_rwFirst, _colFirst, _string, _format)
       else
-        write(rwFirst, colFirst, string, format)
+        write(_rwFirst, _colFirst, _string, _format)
       end
     end
   end
@@ -994,8 +1007,8 @@ class Worksheet < BIFFWriter
     format   = args[5]
     encoding = nil
 
-    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |rwFirst, colFirst, string, format, encoding|
-      write_date_time(rwFirst, colFirst, string, format)
+    merge_range_core(rwFirst, colFirst, rwLast, colLast, string, format, encoding) do |_rwFirst, _colFirst, _string, _format, _encoding|
+      write_date_time(_rwFirst, _colFirst, _string, _format)
     end
   end
 
@@ -2227,7 +2240,7 @@ class Worksheet < BIFFWriter
         match = eval("#{sub} self, args")
         return match if match
       end
-    end if token.respond_to?(:=~)
+    end if token.respond_to?(:match)
 
     # Match an array ref.
     if token.respond_to?(:to_ary)
@@ -2235,16 +2248,16 @@ class Worksheet < BIFFWriter
     elsif token.respond_to?(:coerce)  # Numeric
       write_number(*args)
       # Match http, https or ftp URL
-    elsif token.respond_to?(:=~) && token =~ %r|^[fh]tt?ps?://|
+    elsif token.respond_to?(:match) && token =~ %r|^[fh]tt?ps?://|
       write_url(*args)
       # Match mailto:
-    elsif token.respond_to?(:=~) && token =~ %r|^mailto:|
+    elsif token.respond_to?(:match) && token =~ %r|^mailto:|
       write_url(*args)
       # Match internal or external sheet link
-    elsif token.respond_to?(:=~) && token =~ %r!^(?:in|ex)ternal:!
+    elsif token.respond_to?(:match) && token =~ %r!^(?:in|ex)ternal:!
       write_url(*args)
       # Match formula
-    elsif token.respond_to?(:=~) && token =~ /^=/
+    elsif token.respond_to?(:match) && token =~ /^=/
       write_formula(*args)
       # Match blank
     elsif token == ''
@@ -4313,7 +4326,7 @@ class Worksheet < BIFFWriter
   end
 
   def hidden?  # :nodoc:
-    @hidden
+    @hidden == :hidden
   end
 
   def hidden=(val)  # :nodoc:
@@ -4941,31 +4954,27 @@ class Worksheet < BIFFWriter
   def substitute_cellref(cell, *args)       #:nodoc:
     return [cell, *args] if cell.respond_to?(:coerce) # Numeric
 
-    cell.upcase!
+    normalized_cell = cell.upcase
 
+    case normalized_cell
     # Convert a column range: 'A:A' or 'B:G'.
     # A range such as A:A is equivalent to A1:65536, so add rows as required
-    if cell =~ /\$?([A-I]?[A-Z]):\$?([A-I]?[A-Z])/
+    when /\$?([A-I]?[A-Z]):\$?([A-I]?[A-Z])/
       row1, col1 =  cell_to_rowcol($1 + '1')
       row2, col2 =  cell_to_rowcol($2 + '65536')
       return [row1, col1, row2, col2, *args]
-    end
-
     # Convert a cell range: 'A1:B7'
-    if cell =~ /\$?([A-I]?[A-Z]\$?\d+):\$?([A-I]?[A-Z]\$?\d+)/
+    when /\$?([A-I]?[A-Z]\$?\d+):\$?([A-I]?[A-Z]\$?\d+)/
       row1, col1 =  cell_to_rowcol($1)
       row2, col2 =  cell_to_rowcol($2)
       return [row1, col1, row2, col2, *args]
-    end
-
     # Convert a cell reference: 'A1' or 'AD2000'
-    if (cell =~ /\$?([A-I]?[A-Z]\$?\d+)/)
+    when /\$?([A-I]?[A-Z]\$?\d+)/
       row1, col1 =  cell_to_rowcol($1)
       return [row1, col1, *args]
-
+    else
+      raise("Unknown cell reference #{normalized_cell}")
     end
-
-    raise("Unknown cell reference #{cell}")
   end
 
   #
@@ -6958,7 +6967,7 @@ class Worksheet < BIFFWriter
     # ruby 3.2 no longer handles =~ for various types
     return args unless args[0].respond_to?(:=~)
 
-    if args[0] =~ /^\D/
+    if args[0].respond_to?(:match) && args[0] =~ /^\D/
       substitute_cellref(*args)
     else
       args

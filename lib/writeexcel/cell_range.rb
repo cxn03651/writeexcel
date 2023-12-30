@@ -6,6 +6,7 @@ class Worksheet < BIFFWriter
 
     def initialize(worksheet)
       @worksheet = worksheet
+      @row_min = @row_max = @col_min = @col_max = nil
     end
 
     def increment_row_max

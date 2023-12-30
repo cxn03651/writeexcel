@@ -56,27 +56,24 @@ class TC_extsst < Minitest::Test
   end
 
   def teardown
-    if @workbook.instance_variable_get(:@filehandle)
-      @workbook.instance_variable_get(:@filehandle).close(true)
-    end
-    if @worksheet.instance_variable_get(:@filehandle)
-      @worksheet.instance_variable_get(:@filehandle).close(true)
+    if @workbook.instance_variable_get("@filehandle")
+      @workbook.instance_variable_get("@filehandle").close(true)
     end
   end
 
   def test_to_tests
     @tests.each do |test|
       io = StringIO.new
-      workbook    = WriteExcel.new(io)
-      workbook.not_using_tmpfile
+      @workbook    = WriteExcel.new(io)
+      @workbook.not_using_tmpfile
 
       str_unique = test[0]
 
-      workbook.__send__("calculate_extsst_size", str_unique)
+      @workbook.__send__("calculate_extsst_size", str_unique)
 
-      assert_equal(test[1], workbook.extsst_buckets,
+      assert_equal(test[1], @workbook.extsst_buckets,
         " \tBucket number for #{str_unique}  strings")
-      assert_equal(test[2], workbook.extsst_bucket_size,
+      assert_equal(test[2], @workbook.extsst_bucket_size,
         " \tBucket size for #{str_unique}  strings")
     end
   end

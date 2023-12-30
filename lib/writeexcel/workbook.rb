@@ -116,6 +116,7 @@ class Workbook < BIFFWriter
     @localtime             = Time.now
 
     @defined_names         = []
+    @fileclosed            = nil
 
     setup_built_in_formats(default_formats)
 

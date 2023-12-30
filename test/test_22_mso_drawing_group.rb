@@ -33,11 +33,8 @@ class TC_mso_drawing_group < Minitest::Test
   end
 
   def teardown
-    if @workbook.instance_variable_get(:@filehandle)
-      @workbook.instance_variable_get(:@filehandle).close(true)
-    end
-    if @worksheet.instance_variable_get(:@filehandle)
-      @worksheet.instance_variable_get(:@filehandle).close(true)
+    if @workbook.instance_variable_get("@filehandle")
+      @workbook.instance_variable_get("@filehandle").close(true)
     end
   end
 

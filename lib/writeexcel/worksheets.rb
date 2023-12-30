@@ -8,6 +8,7 @@ class Workbook < BIFFWriter
 
     def initialize
       @activesheet = nil
+      @firstsheet  = nil
     end
 
     def activesheet_index

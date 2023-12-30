@@ -21,28 +21,21 @@ require 'stringio'
 
 class TC_set_properties < Minitest::Test
 
-  def test_dummy
-    assert(true)
-  end
-
   def setup
     @test_file = StringIO.new
   end
 
   def teardown
-    if @workbook.instance_variable_get(:@filehandle)
-      @workbook.instance_variable_get(:@filehandle).close(true)
-    end
-    if @worksheet.instance_variable_get(:@filehandle)
-      @worksheet.instance_variable_get(:@filehandle).close(true)
+    if @workbook.instance_variable_get("@filehandle")
+      @workbook.instance_variable_get("@filehandle").close(true)
     end
   end
 
   def test_same_as_previous_plus_creation_date
     smiley = '☺'   # chr 0x263A;    in perl
 
-    workbook  = WriteExcel.new(@test_file)
-    workbook.add_worksheet
+    @workbook  = WriteExcel.new(@test_file)
+    @workbook.add_worksheet
 
 =begin
     ###############################################################################
@@ -122,7 +115,7 @@ class TC_set_properties < Minitest::Test
   # Test 4. Codepage only.
   #
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :created     => nil
                            )
 
@@ -135,7 +128,7 @@ class TC_set_properties < Minitest::Test
                               02 00 00 00 E4 04 00 00
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -143,7 +136,7 @@ class TC_set_properties < Minitest::Test
   # Test 5. Same as previous + Title.
   #
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :created     => nil
                            )
@@ -158,7 +151,7 @@ class TC_set_properties < Minitest::Test
                               1E 00 00 00 06 00 00 00 54 69 74 6C 65 00 00 00
                 ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -166,7 +159,7 @@ class TC_set_properties < Minitest::Test
   # Test 6. Same as previous + Subject.
   #
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :created     => nil
@@ -184,7 +177,7 @@ class TC_set_properties < Minitest::Test
                               53 75 62 6A 65 63 74 00
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -192,7 +185,7 @@ class TC_set_properties < Minitest::Test
   # Test 7. Same as previous + Author.
   #
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :author      => 'Author',
@@ -212,7 +205,7 @@ class TC_set_properties < Minitest::Test
                               1E 00 00 00 07 00 00 00 41 75 74 68 6F 72 00 00
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -220,7 +213,7 @@ class TC_set_properties < Minitest::Test
   # Test 8. Same as previous + Keywords.
   #
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :author      => 'Author',
@@ -243,7 +236,7 @@ class TC_set_properties < Minitest::Test
                               4B 65 79 77 6F 72 64 73 00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -251,7 +244,7 @@ class TC_set_properties < Minitest::Test
   # Test 9. Same as previous + Comments.
   #
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :author      => 'Author',
@@ -277,7 +270,7 @@ class TC_set_properties < Minitest::Test
                               65 6E 74 73 00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -285,7 +278,7 @@ class TC_set_properties < Minitest::Test
   # Test 10. Same as previous + Last author.
   #
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :author      => 'Author',
@@ -314,7 +307,7 @@ class TC_set_properties < Minitest::Test
                             00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -328,7 +321,7 @@ class TC_set_properties < Minitest::Test
   # different timezones.
 
   filetime   = Time.gm(2008,8,19,23,20,13)
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :author      => 'Author',
@@ -358,7 +351,7 @@ class TC_set_properties < Minitest::Test
                             80 74 89 21 52 02 C9 01
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -370,9 +363,9 @@ class TC_set_properties < Minitest::Test
   # $sec,$min,$hour,$mday,$mon,$year
   # We normalise the time using timegm() so that the tests don't fail due to
   # different timezones.
-  workbook.localtime  = Time.gm(2008,8,19,23,20,13)
+  @workbook.localtime  = Time.gm(2008,8,19,23,20,13)
 
-  workbook.set_properties(
+  @workbook.set_properties(
                               :title       => 'Title',
                               :subject     => 'Subject',
                               :author      => 'Author',
@@ -401,7 +394,7 @@ class TC_set_properties < Minitest::Test
                               80 74 89 21 52 02 C9 01
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
   ###############################################################################
@@ -409,10 +402,10 @@ class TC_set_properties < Minitest::Test
   # Test 14. UTF-8 string used.
   #
 
-  workbook.set_properties(
-                              :title       => 'Title' + smiley,
-                              :created     => nil
-                           )
+  @workbook.set_properties(
+    :title       => 'Title' + smiley,
+    :created     => nil
+  )
 
   caption    = " \tset_properties(utf8)"
   target     = %w(
@@ -425,10 +418,10 @@ class TC_set_properties < Minitest::Test
                               00 00 00 00
                  ).join(' ')
 
-  result     = unpack_record(workbook.summary)
+  result     = unpack_record(@workbook.summary)
   assert_equal(target, result, caption)
 
-  workbook.close
+  @workbook.close
 
   end
 end

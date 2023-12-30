@@ -6,6 +6,7 @@ class Worksheet < BIFFWriter
   class Collection
     def initialize
       @items = {}
+      @array = nil
     end
 
     def <<(item)
