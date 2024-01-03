@@ -13,6 +13,16 @@ class TC_Workbook < Minitest::Test
     assert_kind_of(Workbook, @workbook)
   end
 
+  def test_new_with_block
+    test_file = StringIO.new
+    workbook = Workbook.new(test_file) do |book|
+      book.add_worksheet('test_block')
+    end
+
+    assert_kind_of(Workbook, workbook)
+    assert_true(test_file.closed?)
+  end
+
   def test_add_worksheet
     sheetnames = ['sheet1', 'sheet2']
     (0 .. sheetnames.size-1).each do |i|
