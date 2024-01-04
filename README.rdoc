@@ -112,8 +112,8 @@ v1.0.0
 
 Original was written in Perl by John McNamara (jmcnamara@cpan.org).
 
-Convert to ruby by Hideo Nakamura (cxn03651@msj.biglobe.ne.jp)
-Copyright (c) 2009-2014 Hideo NAKAMURA. See LICENSE.txt for details.
+Convert to ruby by Hideo Nakamura (nakamura.hideo@gmail.com)
+Copyright (c) 2009-2024 Hideo NAKAMURA. See LICENSE.txt for details.
 
 == License
 
