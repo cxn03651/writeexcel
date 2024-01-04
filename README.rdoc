@@ -85,6 +85,10 @@ Example Code:
 * and ......
 
 == Recent Change
+v1.0.7
+* support Ruby 3.3
+* support Ruby 2.4 or later
+
 v1.0.6
 * support Ruby 3.2
 * use minitest gem instead of test-unit.
