@@ -85,6 +85,9 @@ Example Code:
 * and ......
 
 == Recent Change
+v1.0.8
+* add nkf gem as runtime dependent gem for future Ruby 3.4.
+
 v1.0.7
 * support Ruby 3.3
 * support Ruby 2.4 or later
