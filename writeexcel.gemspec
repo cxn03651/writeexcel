@@ -20,6 +20,7 @@ Gem::Specification.new do |gem|
   gem.required_ruby_version = '>= 2.4.0'
   gem.add_development_dependency 'minitest'
   gem.add_runtime_dependency 'racc' if RUBY_VERSION >= '3.3'
+  gem.add_runtime_dependency 'nkf'
   gem.add_development_dependency 'rake'
   gem.extra_rdoc_files = [
     "LICENSE.txt",
