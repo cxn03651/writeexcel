@@ -5184,7 +5184,7 @@ class Worksheet < BIFFWriter
       url = utf8_to_16be(url)
       # URL is null terminated.
       ruby_18 { url += "\0\0" } ||
-      ruby_19 { url += "\0\0".force_encoding('UTF-16BE') }
+      ruby_19 { url += "\0\0".dup.force_encoding('UTF-16BE') }
       encoding = 1
     end
 
